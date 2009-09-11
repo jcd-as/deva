@@ -1,0 +1,481 @@
+===========================================================
+
+const a.b = 75.3e19;
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+const x = 43;
+parsed successfully
+In eval_expression. i->value = = i->children.size() = 3
+assignment_op: =
+	In eval_expression. i->value =  i->children.size() = 2
+	const_decl: 
+		In eval_expression. i->value = const i->children.size() = 0
+		const: const
+		In eval_expression. i->value = x i->children.size() = 0
+		identifier: x
+	In eval_expression. i->value = 43 i->children.size() = 0
+	num: 43
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+const a = 75.3e19;	# eol comment
+parsed successfully
+In eval_expression. i->value = = i->children.size() = 3
+assignment_op: =
+	In eval_expression. i->value =  i->children.size() = 2
+	const_decl: 
+		In eval_expression. i->value = const i->children.size() = 0
+		const: const
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+	In eval_expression. i->value = 75.3e19 i->children.size() = 0
+	num: 75.3e19
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+# this is a comment
+const z = "foo";
+parsed successfully
+In eval_expression. i->value = = i->children.size() = 3
+assignment_op: =
+	In eval_expression. i->value =  i->children.size() = 2
+	const_decl: 
+		In eval_expression. i->value = const i->children.size() = 0
+		const: const
+		In eval_expression. i->value = z i->children.size() = 0
+		identifier: z
+	In eval_expression. i->value = "foo" i->children.size() = 0
+	string: "foo"
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+def foo(){ }
+parsed successfully
+In eval_expression. i->value = def i->children.size() = 3
+func: def
+	In eval_expression. i->value = foo i->children.size() = 0
+	identifier: foo
+	In eval_expression. i->value =  i->children.size() = 2
+	arg_list_decl: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value =  i->children.size() = 0
+	compound_statement: 
+===========================================================
+===========================================================
+
+def bar( x, y ){}
+parsed successfully
+In eval_expression. i->value = def i->children.size() = 3
+func: def
+	In eval_expression. i->value = bar i->children.size() = 0
+	identifier: bar
+	In eval_expression. i->value =  i->children.size() = 4
+	arg_list_decl: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = x i->children.size() = 0
+		identifier: x
+		In eval_expression. i->value = y i->children.size() = 0
+		identifier: y
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value =  i->children.size() = 0
+	compound_statement: 
+===========================================================
+===========================================================
+
+def goo( x, y ){ x; }
+parsed successfully
+In eval_expression. i->value = def i->children.size() = 3
+func: def
+	In eval_expression. i->value = goo i->children.size() = 0
+	identifier: goo
+	In eval_expression. i->value =  i->children.size() = 4
+	arg_list_decl: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = x i->children.size() = 0
+		identifier: x
+		In eval_expression. i->value = y i->children.size() = 0
+		identifier: y
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value = x i->children.size() = 1
+	identifier: x
+		In eval_expression. i->value = ; i->children.size() = 0
+		semicolon_op: ;
+===========================================================
+===========================================================
+
+def jam( a, fdkasf_x )
+{	# oddly placed comment
+	a = # and another
+42;
+	b = true;
+	return a + fdkasf_x; 	# more typically placed comment
+}
+parsed successfully
+In eval_expression. i->value = def i->children.size() = 3
+func: def
+	In eval_expression. i->value = jam i->children.size() = 0
+	identifier: jam
+	In eval_expression. i->value =  i->children.size() = 4
+	arg_list_decl: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = fdkasf_x i->children.size() = 0
+		identifier: fdkasf_x
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value =  i->children.size() = 3
+	compound_statement: 
+		In eval_expression. i->value = = i->children.size() = 3
+		assignment_op: =
+			In eval_expression. i->value = a i->children.size() = 0
+			identifier: a
+			In eval_expression. i->value = 42 i->children.size() = 0
+			num: 42
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = = i->children.size() = 3
+		assignment_op: =
+			In eval_expression. i->value = b i->children.size() = 0
+			identifier: b
+			In eval_expression. i->value = true i->children.size() = 0
+			boolean: true
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = return i->children.size() = 2
+		return_statement: return
+			In eval_expression. i->value = + i->children.size() = 2
+			add_op: +
+				In eval_expression. i->value = a i->children.size() = 0
+				identifier: a
+				In eval_expression. i->value = fdkasf_x i->children.size() = 0
+				identifier: fdkasf_x
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+===========================================================
+===========================================================
+
+while( a < 1 + a && b >= 4 % 5.3 * 6 )
+{
+	do_something();
+}
+parsed successfully
+In eval_expression. i->value = while i->children.size() = 2
+while_s: while
+	In eval_expression. i->value = && i->children.size() = 2
+	logical_op: &&
+		In eval_expression. i->value = < i->children.size() = 2
+		relational_op: <
+			In eval_expression. i->value = a i->children.size() = 0
+			identifier: a
+			In eval_expression. i->value = + i->children.size() = 2
+			add_op: +
+				In eval_expression. i->value = 1 i->children.size() = 0
+				num: 1
+				In eval_expression. i->value = a i->children.size() = 0
+				identifier: a
+		In eval_expression. i->value = >= i->children.size() = 2
+		relational_op: >=
+			In eval_expression. i->value = b i->children.size() = 0
+			identifier: b
+			In eval_expression. i->value = * i->children.size() = 2
+			mult_op: *
+				In eval_expression. i->value = % i->children.size() = 2
+				mult_op: %
+					In eval_expression. i->value = 4 i->children.size() = 0
+					num: 4
+					In eval_expression. i->value = 5.3 i->children.size() = 0
+					num: 5.3
+				In eval_expression. i->value = 6 i->children.size() = 0
+				num: 6
+	In eval_expression. i->value = do_something i->children.size() = 2
+	identifier: do_something
+		In eval_expression. i->value =  i->children.size() = 2
+		arg_list_exp: 
+			In eval_expression. i->value = ( i->children.size() = 0
+			(open|close)_paren_op: (
+			In eval_expression. i->value = ) i->children.size() = 0
+			(open|close)_paren_op: )
+		In eval_expression. i->value = ; i->children.size() = 0
+		semicolon_op: ;
+===========================================================
+===========================================================
+
+while( a < 1 )
+{
+	a = a + 1;
+	do_something();
+}
+parsed successfully
+In eval_expression. i->value = while i->children.size() = 2
+while_s: while
+	In eval_expression. i->value = < i->children.size() = 2
+	relational_op: <
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = 1 i->children.size() = 0
+		num: 1
+	In eval_expression. i->value =  i->children.size() = 2
+	compound_statement: 
+		In eval_expression. i->value = = i->children.size() = 3
+		assignment_op: =
+			In eval_expression. i->value = a i->children.size() = 0
+			identifier: a
+			In eval_expression. i->value = + i->children.size() = 2
+			add_op: +
+				In eval_expression. i->value = a i->children.size() = 0
+				identifier: a
+				In eval_expression. i->value = 1 i->children.size() = 0
+				num: 1
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = do_something i->children.size() = 2
+		identifier: do_something
+			In eval_expression. i->value =  i->children.size() = 2
+			arg_list_exp: 
+				In eval_expression. i->value = ( i->children.size() = 0
+				(open|close)_paren_op: (
+				In eval_expression. i->value = ) i->children.size() = 0
+				(open|close)_paren_op: )
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+===========================================================
+===========================================================
+
+for( a in b )
+{
+}
+parsed successfully
+In eval_expression. i->value = for i->children.size() = 3
+for_s: for
+	In eval_expression. i->value = a i->children.size() = 0
+	identifier: a
+	In eval_expression. i->value = in i->children.size() = 1
+	in_op: in
+		In eval_expression. i->value = b i->children.size() = 0
+		identifier: b
+	In eval_expression. i->value =  i->children.size() = 0
+	compound_statement: 
+===========================================================
+===========================================================
+
+for( a, b in c[x] )
+{	# ill-placed comment
+	do_something();
+	a[x] = b( y );
+}	# some weird stuff
+parsed successfully
+In eval_expression. i->value = for i->children.size() = 4
+for_s: for
+	In eval_expression. i->value = a i->children.size() = 0
+	identifier: a
+	In eval_expression. i->value = b i->children.size() = 0
+	identifier: b
+	In eval_expression. i->value = in i->children.size() = 1
+	in_op: in
+		In eval_expression. i->value = c i->children.size() = 1
+		identifier: c
+			In eval_expression. i->value =  i->children.size() = 3
+			key_exp: 
+				In eval_expression. i->value = [ i->children.size() = 0
+				(open|close)_bracket_op: [
+				In eval_expression. i->value = x i->children.size() = 0
+				identifier: x
+				In eval_expression. i->value = ] i->children.size() = 0
+				(open|close)_bracket_op: ]
+	In eval_expression. i->value =  i->children.size() = 2
+	compound_statement: 
+		In eval_expression. i->value = do_something i->children.size() = 2
+		identifier: do_something
+			In eval_expression. i->value =  i->children.size() = 2
+			arg_list_exp: 
+				In eval_expression. i->value = ( i->children.size() = 0
+				(open|close)_paren_op: (
+				In eval_expression. i->value = ) i->children.size() = 0
+				(open|close)_paren_op: )
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = = i->children.size() = 3
+		assignment_op: =
+			In eval_expression. i->value = a i->children.size() = 1
+			identifier: a
+				In eval_expression. i->value =  i->children.size() = 3
+				key_exp: 
+					In eval_expression. i->value = [ i->children.size() = 0
+					(open|close)_bracket_op: [
+					In eval_expression. i->value = x i->children.size() = 0
+					identifier: x
+					In eval_expression. i->value = ] i->children.size() = 0
+					(open|close)_bracket_op: ]
+			In eval_expression. i->value = b i->children.size() = 1
+			identifier: b
+				In eval_expression. i->value =  i->children.size() = 3
+				arg_list_exp: 
+					In eval_expression. i->value = ( i->children.size() = 0
+					(open|close)_paren_op: (
+					In eval_expression. i->value = y i->children.size() = 0
+					identifier: y
+					In eval_expression. i->value = ) i->children.size() = 0
+					(open|close)_paren_op: )
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+===========================================================
+===========================================================
+
+if( a > b )
+{
+	A();
+}
+else if( b > c )
+{
+	B();
+}
+else
+{
+	C();
+}
+parsed successfully
+In eval_expression. i->value = if i->children.size() = 3
+if_s: if
+	In eval_expression. i->value = > i->children.size() = 2
+	relational_op: >
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = b i->children.size() = 0
+		identifier: b
+	In eval_expression. i->value = A i->children.size() = 2
+	identifier: A
+		In eval_expression. i->value =  i->children.size() = 2
+		arg_list_exp: 
+			In eval_expression. i->value = ( i->children.size() = 0
+			(open|close)_paren_op: (
+			In eval_expression. i->value = ) i->children.size() = 0
+			(open|close)_paren_op: )
+		In eval_expression. i->value = ; i->children.size() = 0
+		semicolon_op: ;
+	In eval_expression. i->value = else i->children.size() = 1
+	else_s: else
+		In eval_expression. i->value = if i->children.size() = 3
+		if_s: if
+			In eval_expression. i->value = > i->children.size() = 2
+			relational_op: >
+				In eval_expression. i->value = b i->children.size() = 0
+				identifier: b
+				In eval_expression. i->value = c i->children.size() = 0
+				identifier: c
+			In eval_expression. i->value = B i->children.size() = 2
+			identifier: B
+				In eval_expression. i->value =  i->children.size() = 2
+				arg_list_exp: 
+					In eval_expression. i->value = ( i->children.size() = 0
+					(open|close)_paren_op: (
+					In eval_expression. i->value = ) i->children.size() = 0
+					(open|close)_paren_op: )
+				In eval_expression. i->value = ; i->children.size() = 0
+				semicolon_op: ;
+			In eval_expression. i->value = else i->children.size() = 1
+			else_s: else
+				In eval_expression. i->value = C i->children.size() = 2
+				identifier: C
+					In eval_expression. i->value =  i->children.size() = 2
+					arg_list_exp: 
+						In eval_expression. i->value = ( i->children.size() = 0
+						(open|close)_paren_op: (
+						In eval_expression. i->value = ) i->children.size() = 0
+						(open|close)_paren_op: )
+					In eval_expression. i->value = ; i->children.size() = 0
+					semicolon_op: ;
+===========================================================
+===========================================================
+
+if( a ) A;
+if( b ){ B; }
+else if( c ){ C; }
+else{ D; }
+parsed successfully
+In eval_expression. i->value =  i->children.size() = 2
+translation_unit: 
+	In eval_expression. i->value = if i->children.size() = 2
+	if_s: if
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = A i->children.size() = 1
+		identifier: A
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+	In eval_expression. i->value = if i->children.size() = 3
+	if_s: if
+		In eval_expression. i->value = b i->children.size() = 0
+		identifier: b
+		In eval_expression. i->value = B i->children.size() = 1
+		identifier: B
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = else i->children.size() = 1
+		else_s: else
+			In eval_expression. i->value = if i->children.size() = 3
+			if_s: if
+				In eval_expression. i->value = c i->children.size() = 0
+				identifier: c
+				In eval_expression. i->value = C i->children.size() = 1
+				identifier: C
+					In eval_expression. i->value = ; i->children.size() = 0
+					semicolon_op: ;
+				In eval_expression. i->value = else i->children.size() = 1
+				else_s: else
+					In eval_expression. i->value = D i->children.size() = 1
+					identifier: D
+						In eval_expression. i->value = ; i->children.size() = 0
+						semicolon_op: ;
+===========================================================
+===========================================================
+
+if( a ){ A; }
+if( b ){ B; }
+else C;
+parsed successfully
+In eval_expression. i->value =  i->children.size() = 2
+translation_unit: 
+	In eval_expression. i->value = if i->children.size() = 2
+	if_s: if
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = A i->children.size() = 1
+		identifier: A
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+	In eval_expression. i->value = if i->children.size() = 3
+	if_s: if
+		In eval_expression. i->value = b i->children.size() = 0
+		identifier: b
+		In eval_expression. i->value = B i->children.size() = 1
+		identifier: B
+			In eval_expression. i->value = ; i->children.size() = 0
+			semicolon_op: ;
+		In eval_expression. i->value = else i->children.size() = 1
+		else_s: else
+			In eval_expression. i->value = C i->children.size() = 1
+			identifier: C
+				In eval_expression. i->value = ; i->children.size() = 0
+				semicolon_op: ;
+===========================================================
+total tests: 15
+tests failed: 1
+exiting...

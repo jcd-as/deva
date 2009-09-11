@@ -1,0 +1,431 @@
+===========================================================
+
+enum foo { ah, bk  };
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+enum{ ah, bk  };
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+enum
+{
+	ah,
+	bk
+};
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+!
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+jam and toast
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+45foo;
+Syntax error at line 2: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+"8enum bar 
+{
+	ah,
+	bk
+}";
+parsed successfully
+In eval_expression. i->value = "8enum bar 
+{
+	ah,
+	bk
+}" i->children.size() = 1
+string: "8enum bar 
+{
+	ah,
+	bk
+}"
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+'89foobar';
+parsed successfully
+In eval_expression. i->value = '89foobar' i->children.size() = 1
+string: '89foobar'
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+foobar;
+parsed successfully
+In eval_expression. i->value = foobar i->children.size() = 1
+identifier: foobar
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+_foobar;
+parsed successfully
+In eval_expression. i->value = _foobar i->children.size() = 1
+identifier: _foobar
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+_foobar47;
+parsed successfully
+In eval_expression. i->value = _foobar47 i->children.size() = 1
+identifier: _foobar47
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+!_foobar47;
+parsed successfully
+In eval_expression. i->value = ! i->children.size() = 2
+unary_op: !
+	In eval_expression. i->value = _foobar47 i->children.size() = 0
+	identifier: _foobar47
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+45.34e-1;
+parsed successfully
+In eval_expression. i->value = 45.34e-1 i->children.size() = 1
+num: 45.34e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+-45.34e-1;
+parsed successfully
+In eval_expression. i->value = -45.34e-1 i->children.size() = 1
+num: -45.34e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+54+11/3*45.3%2.0e-1;
+parsed successfully
+In eval_expression. i->value = + i->children.size() = 3
+add_op: +
+	In eval_expression. i->value = 54 i->children.size() = 0
+	num: 54
+	In eval_expression. i->value = % i->children.size() = 2
+	mult_op: %
+		In eval_expression. i->value = * i->children.size() = 2
+		mult_op: *
+			In eval_expression. i->value = / i->children.size() = 2
+			mult_op: /
+				In eval_expression. i->value = 11 i->children.size() = 0
+				num: 11
+				In eval_expression. i->value = 3 i->children.size() = 0
+				num: 3
+			In eval_expression. i->value = 45.3 i->children.size() = 0
+			num: 45.3
+		In eval_expression. i->value = 2.0e-1 i->children.size() = 0
+		num: 2.0e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+54+11/3*45.3%2.0e-1;
+parsed successfully
+In eval_expression. i->value = + i->children.size() = 3
+add_op: +
+	In eval_expression. i->value = 54 i->children.size() = 0
+	num: 54
+	In eval_expression. i->value = % i->children.size() = 2
+	mult_op: %
+		In eval_expression. i->value = * i->children.size() = 2
+		mult_op: *
+			In eval_expression. i->value = / i->children.size() = 2
+			mult_op: /
+				In eval_expression. i->value = 11 i->children.size() = 0
+				num: 11
+				In eval_expression. i->value = 3 i->children.size() = 0
+				num: 3
+			In eval_expression. i->value = 45.3 i->children.size() = 0
+			num: 45.3
+		In eval_expression. i->value = 2.0e-1 i->children.size() = 0
+		num: 2.0e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+45+11-3+1;
+parsed successfully
+In eval_expression. i->value = + i->children.size() = 3
+add_op: +
+	In eval_expression. i->value = - i->children.size() = 2
+	add_op: -
+		In eval_expression. i->value = + i->children.size() = 2
+		add_op: +
+			In eval_expression. i->value = 45 i->children.size() = 0
+			num: 45
+			In eval_expression. i->value = 11 i->children.size() = 0
+			num: 11
+		In eval_expression. i->value = 3 i->children.size() = 0
+		num: 3
+	In eval_expression. i->value = 1 i->children.size() = 0
+	num: 1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+(4);
+parsed successfully
+In eval_expression. i->value = 4 i->children.size() = 1
+num: 4
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+jam;
+parsed successfully
+In eval_expression. i->value = jam i->children.size() = 1
+identifier: jam
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+jam ;
+parsed successfully
+In eval_expression. i->value = jam i->children.size() = 1
+identifier: jam
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+((54+11)/(3*(45.3%2.0e-1)));
+parsed successfully
+In eval_expression. i->value = / i->children.size() = 3
+mult_op: /
+	In eval_expression. i->value = + i->children.size() = 2
+	add_op: +
+		In eval_expression. i->value = 54 i->children.size() = 0
+		num: 54
+		In eval_expression. i->value = 11 i->children.size() = 0
+		num: 11
+	In eval_expression. i->value = * i->children.size() = 2
+	mult_op: *
+		In eval_expression. i->value = 3 i->children.size() = 0
+		num: 3
+		In eval_expression. i->value = % i->children.size() = 2
+		mult_op: %
+			In eval_expression. i->value = 45.3 i->children.size() = 0
+			num: 45.3
+			In eval_expression. i->value = 2.0e-1 i->children.size() = 0
+			num: 2.0e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+( (54 + 11) / (3 * (45.3 % 2.0e-1)) );
+parsed successfully
+In eval_expression. i->value = / i->children.size() = 3
+mult_op: /
+	In eval_expression. i->value = + i->children.size() = 2
+	add_op: +
+		In eval_expression. i->value = 54 i->children.size() = 0
+		num: 54
+		In eval_expression. i->value = 11 i->children.size() = 0
+		num: 11
+	In eval_expression. i->value = * i->children.size() = 2
+	mult_op: *
+		In eval_expression. i->value = 3 i->children.size() = 0
+		num: 3
+		In eval_expression. i->value = % i->children.size() = 2
+		mult_op: %
+			In eval_expression. i->value = 45.3 i->children.size() = 0
+			num: 45.3
+			In eval_expression. i->value = 2.0e-1 i->children.size() = 0
+			num: 2.0e-1
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+(!a);
+parsed successfully
+In eval_expression. i->value = ! i->children.size() = 2
+unary_op: !
+	In eval_expression. i->value = a i->children.size() = 0
+	identifier: a
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+foo.bar;
+parsed successfully
+In eval_expression. i->value = . i->children.size() = 3
+dot_op: .
+	In eval_expression. i->value = foo i->children.size() = 0
+	identifier: foo
+	In eval_expression. i->value = bar i->children.size() = 0
+	identifier: bar
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+goo(a);
+parsed successfully
+In eval_expression. i->value = goo i->children.size() = 2
+identifier: goo
+	In eval_expression. i->value =  i->children.size() = 3
+	arg_list_exp: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+foo( a, b,c);
+parsed successfully
+In eval_expression. i->value = foo i->children.size() = 2
+identifier: foo
+	In eval_expression. i->value =  i->children.size() = 5
+	arg_list_exp: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = b i->children.size() = 0
+		identifier: b
+		In eval_expression. i->value = c i->children.size() = 0
+		identifier: c
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+foo['key' ];
+parsed successfully
+In eval_expression. i->value = foo i->children.size() = 2
+identifier: foo
+	In eval_expression. i->value =  i->children.size() = 3
+	key_exp: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = 'key' i->children.size() = 0
+		string: 'key'
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+barjam_goo[7 *(4-2) /a];
+parsed successfully
+In eval_expression. i->value = barjam_goo i->children.size() = 2
+identifier: barjam_goo
+	In eval_expression. i->value =  i->children.size() = 3
+	key_exp: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = / i->children.size() = 2
+		mult_op: /
+			In eval_expression. i->value = * i->children.size() = 2
+			mult_op: *
+				In eval_expression. i->value = 7 i->children.size() = 0
+				num: 7
+				In eval_expression. i->value = - i->children.size() = 2
+				add_op: -
+					In eval_expression. i->value = 4 i->children.size() = 0
+					num: 4
+					In eval_expression. i->value = 2 i->children.size() = 0
+					num: 2
+			In eval_expression. i->value = a i->children.size() = 0
+			identifier: a
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+fcn( );
+parsed successfully
+In eval_expression. i->value = fcn i->children.size() = 2
+identifier: fcn
+	In eval_expression. i->value =  i->children.size() = 2
+	arg_list_exp: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+===========================================================
+
+fcn2(7, a, 6 + b * 3.3, "a string"	) ;
+parsed successfully
+In eval_expression. i->value = fcn2 i->children.size() = 2
+identifier: fcn2
+	In eval_expression. i->value =  i->children.size() = 6
+	arg_list_exp: 
+		In eval_expression. i->value = ( i->children.size() = 0
+		(open|close)_paren_op: (
+		In eval_expression. i->value = 7 i->children.size() = 0
+		num: 7
+		In eval_expression. i->value = a i->children.size() = 0
+		identifier: a
+		In eval_expression. i->value = + i->children.size() = 2
+		add_op: +
+			In eval_expression. i->value = 6 i->children.size() = 0
+			num: 6
+			In eval_expression. i->value = * i->children.size() = 2
+			mult_op: *
+				In eval_expression. i->value = b i->children.size() = 0
+				identifier: b
+				In eval_expression. i->value = 3.3 i->children.size() = 0
+				num: 3.3
+		In eval_expression. i->value = "a string" i->children.size() = 0
+		string: "a string"
+		In eval_expression. i->value = ) i->children.size() = 0
+		(open|close)_paren_op: )
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
+===========================================================
+total tests: 30
+tests failed: 6
+exiting...

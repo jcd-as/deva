@@ -1,0 +1,123 @@
+# test.dv
+# file for testing the devac compiler
+
+b = 42;	# eol comment
+a = b + dea_d;
+
+# comment
+const a = 75.3e19;
+a = a.b + (foo.jam( x, y % 2 ) - !(bar.goo( y.z, x > 3 )));
+a || b = c;
+a = [];
+b.c = {};
+foo.bar() = [];
+foo.bar() = [ ];
+
+x = null;
+y = true;
+z = (a == false);
+break;
+continue;
+
+return;
+return false;
+return x.a%y();
+(a()).b;
+(a(x)).b;
+
+{ foo; }
+
+const a = 75.3e19;
+
+const z = "foo";
+
+def foo(){ }
+
+def bar( x, y ){}
+
+def goo( x, y ){ x; }
+
+def jam( a, fdkasf_x )
+{
+	a = 42;	# eol comment
+	return a + fdkasf_x; 
+}
+
+def foobar()
+{
+	{
+		a = b = c;
+	}
+}
+
+while( true )
+{
+	do_something();
+}
+
+for( a, b in c( d ) )
+{
+	do_some_stuff(); and_some_more_stuff();
+	a = b + d;
+}	# werd
+
+# if/else
+if( a > b )
+{
+	A();
+}
+else if( b > c )
+{
+	B();
+}
+else
+{
+	C();
+}
+
+if( a > b )
+{
+	A();
+}
+else if( b > c )
+{
+	B();
+}
+else
+{
+	C();
+}
+### SECTION ###
+if( a ) A;
+if( b ){ B; }
+else if( c ){ C; }
+else{ D; }
+### SECTION ###
+if( a ){ A; }
+if( b ){ B; }
+else C;
+### SECTION ###
+
+if( x )
+{
+	if( y )
+	{
+		if( z )
+		{
+		}
+		else
+		{
+			{
+				foobar();
+			}
+		}
+	}
+	else 
+	{
+		barfoo();
+	}
+}
+else
+{
+	no_way( man, that, be, crazy, talk );
+}

@@ -1,0 +1,76 @@
+### IGNORE ##########################################################
+### IGNORE - statements expected to fail:
+x.(a+b);
+### SECTION ###
+y = .a(foo, bar);
+### SECTION ###
+{ ; }
+### SECTION ###
+foo.bar() = [ 'duh' ];
+### SECTION ###
+### IGNORE ##########################################################
+### IGNORE - statements expected to succeed:
+x;
+### SECTION ###
+x.a(foo, bar);
+### SECTION ###
+y = x.a(foo, bar);
+### SECTION ###
+a = a + (foo( x, y % 2 ));
+### SECTION ###
+a = a + foo() - bar();
+### SECTION ###
+a = a + (foo() - bar( ) );
+### SECTION ###
+a = a + (foo( x, y % 2 ) - !(bar( y, x > 3 )));
+### SECTION ###
+a = a.b + (foo.bar( x, y % 2 ));
+### SECTION ###
+a = a.b + foo() - bar.goo();
+### SECTION ###
+a = a.b + (foo.jam() - bar( ) );
+### SECTION ###
+a = a.b + (foo.jam( x, y % 2 ) - !(bar.goo( y.z, x > 3 )));
+### SECTION ###
+a.b = c;
+### SECTION ###
+a || b = c;
+### SECTION ###
+a = [];
+### SECTION ###
+b.c = {};
+### SECTION ###
+foo.bar() = [];
+### SECTION ###
+foo.bar() = [ ];
+### SECTION ###
+{}
+### SECTION ###
+{ }
+### SECTION ###
+{ foo; }
+### SECTION ###
+{ foo; bar; jam; }
+### SECTION ###
+x = null;
+### SECTION ###
+y = true;
+### SECTION ###
+z = (a == false);
+### SECTION ###
+break;
+### SECTION ###
+continue;
+### SECTION ###
+{( x == null );continue;}
+### SECTION ###
+return;
+### SECTION ###
+return false;
+### SECTION ###
+return x.a%y();
+### SECTION ###
+(a()).b;
+### SECTION ###
+(a(x)).b;
+### SECTION ###
