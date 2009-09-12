@@ -7,8 +7,8 @@
 // * prevent multiple errors on same line (e.g. 'invalid if' and 'invalid statement')
 // * misc:
 //		- import statement
-// * more error reporting
-// * add scopes (a map of integer ids to symbol tables) to nodes
+// * more & better error reporting (try to avoid multiple reports on the same
+// 	 line/problem)
 
 #ifndef __GRAMMAR_H__
 #define __GRAMMAR_H__

@@ -4,7 +4,8 @@
 
 // TODO:
 // * handle imports (parse recursively)
-// * handle out-of-memory condition
+// 		- break compiling a module into a separate fcn from main()
+// * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
 // * handle stdin as input (?)
 
 //#define BOOST_SPIRIT_DEBUG
@@ -166,11 +167,11 @@ int main( int argc, char** argv )
 
 	// clean-up:
 
-	// TODO: free the global scopes table
-//	for( SymbolTable::iterator i = scopes.begin(); i != scopes.end(); ++i )
-//	{
-//		delete i->second;
-//	}
+	// free SymbolTable pointers in the global scopes table
+	for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
+	{
+		delete i->second;
+	}
 
 	// free the buffer with the code in it
 	delete[] buf;
