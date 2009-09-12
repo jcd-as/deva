@@ -19,6 +19,7 @@
 #include <boost/program_options/parsers.hpp>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -26,13 +27,32 @@ namespace po = boost::program_options;
 // the type of the iterator for the parser
 typedef position_iterator<char const*> iterator_t;
 
-// the (temporarily) global symbol table
-SymbolTable symTab;
+// the global scope table
+Scopes scopes;
+
+// stack of scopes, for building the global scope table
+ScopeBuilder scope_bldr;
 
 void add_symbol( iterator_t start, iterator_t end )
 {
 	string s( start, end );
-	symTab[s] = SymbolInfo( sym_unknown );
+	s = strip_symbol( s );
+	
+	// don't add keywords
+	if( is_keyword( s ) )
+		return;
+	// only add to the current scope if it can't be found in a parent scope
+	if( find_identifier_in_parent_scopes( s, scope_bldr.back().second, scopes ) )
+	{
+		cout << "NOT ADDING " << s << endl;
+		return;
+	}
+	cout << "ADDING " << s << endl;
+
+	// the current scope is the top of the scope_bldr stack
+	// TODO: enter correct sym type, if discernable
+//	scope_bldr.back().second[s] = SymbolInfo( sym_unknown );
+	scope_bldr.back().second->operator[](s) = SymbolInfo( sym_unknown );
 }
 
 int main( int argc, char** argv )
@@ -109,6 +129,10 @@ int main( int argc, char** argv )
 	iterator_t begin( buf, buf+length );
 	iterator_t end;
 
+	// create our initial (global) scope
+	SymbolTable* globals = new SymbolTable();
+	pair<int, SymbolTable*> sym( 0, globals );
+	scope_bldr.push_back( sym );
 
 	// parse 
 	//
@@ -132,12 +156,25 @@ int main( int argc, char** argv )
 		evaluate( info );
 
 		// dump the symbol table:
-		cout << "symbols:" << endl;
-		for( SymbolTable::iterator i = symTab.begin(); i != symTab.end(); ++i )
+		cout << "Symbols:" << endl;
+		// for each item in the scopes map
+		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
 		{
-			cout << i->first << endl;
+			cout << "Scope " << i->first << ", parent = " << i->second->parent_id << endl;
+			for( SymbolTable::iterator j = i->second->begin(); j != i->second->end(); ++j )
+			{
+				cout << "\t" << j->first << endl;
+			}
 		}
 	}
+
+	// clean-up:
+
+	// TODO: free the global scopes table
+//	for( SymbolTable::iterator i = scopes.begin(); i != scopes.end(); ++i )
+//	{
+//		delete i->second;
+//	}
 
 	// free the buffer with the code in it
 	delete[] buf;

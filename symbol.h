@@ -32,10 +32,22 @@ struct SymbolInfo
     { }
 };
 
-typedef map<string, SymbolInfo> SymbolTable;
+//typedef map<string, SymbolInfo> SymbolTable;
+struct SymbolTable : public map<string, SymbolInfo>
+{
+	// also need the id of our parent
+	int parent_id;
+
+	SymbolTable() : parent_id( -1 )
+	{ }
+};
+	
 
 // strip the whitespace and leading comments from a string,
 // to create a valid symbol name
 string strip_symbol( const string& src, const string& c = " \t\r\n" );
+
+// is this identifier a keyword?
+bool is_keyword( const string & s );
 
 #endif // __SYMBOL_H__

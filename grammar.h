@@ -8,7 +8,7 @@
 // * misc:
 //		- import statement
 // * more error reporting
-// * add scopes
+// * add scopes (a map of integer ids to symbol tables) to nodes
 
 #ifndef __GRAMMAR_H__
 #define __GRAMMAR_H__
@@ -17,6 +17,10 @@
 #include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_parse_tree.hpp>
 #include <boost/spirit/include/classic_functor_parser.hpp>
+
+#include <utility>
+
+#include "scope.h"
 
 using namespace std;
 using namespace boost::spirit;
@@ -98,14 +102,6 @@ extern parser_id identifier_id;
 ///////////////////////////////////////////////////////////////////////////////
 //  Error reporting parsers
 ///////////////////////////////////////////////////////////////////////////////
-//std::ostream& operator<<(std::ostream& out, file_position const& lc)
-//{
-//    return out <<
-//            "\nFile:\t" << lc.file <<
-//            "\nLine:\t" << lc.line <<
-//            "\nCol:\t" << lc.column << endl;
-//}
-
 struct error_report_parser 
 {
     char const* eol_msg;
@@ -172,12 +168,61 @@ struct NodeInfo
 // the node data factor type
 typedef node_val_data_factory<NodeInfo> factory_t;
 
+// the global scope table
+extern Scopes scopes;
+
+// stack of scopes, for building the global scope table
+extern ScopeBuilder scope_bldr;
+
+// new scope
+static inline void enter_scope( iterator_t begin, iterator_t end )
+{
+	// the scope id counter (0 is global scope)
+	static int scope_id = 1;
+
+	// if this is the first local (non-global) scope,
+	// enter the global scope into the global table
+	if( scope_id == 1 )
+	{
+		pair<int, SymbolTable*> sym = scope_bldr.back();
+		scopes[sym.first] = sym.second;
+	}
+	// dump debug info
+//	cout << "entering new scope: " << scope_id << endl;
+
+	// push a new scope
+	SymbolTable* sym_tab = new SymbolTable();
+
+	// set the parent scope id
+	sym_tab->parent_id = scope_bldr.back().first;
+	scope_bldr.push_back( pair<int, SymbolTable*>( scope_id, sym_tab ) );
+
+	scopes[scope_id] = sym_tab;
+
+	// next scope id
+	++scope_id;
+}
+
+// pop scope and add to global table
+static inline void exit_scope( iterator_t begin, iterator_t end )
+{
+	// pop the scope off our stack
+	scope_bldr.pop_back();
+
+	// dump debug info
+//	cout << "leaving scope " << sym.first << " with parent " << sym.second.parent_id << endl;
+}
+
+// the node set-up function
 static inline void set_node( tree_match<iterator_t, factory_t>::node_t & n, iterator_t begin, iterator_t end )
 {
-//	cout << "set_node() called" << endl;
 	NodeInfo ni;
+
+	// set the line for this construct
 	file_position fpos = begin.get_position();
 	ni.line = fpos.line;
+	// TODO: set the scope
+
 	n.value.value( ni );
 }
 
@@ -293,12 +338,10 @@ public:
 				;
 
 			compound_statement =
-//				access_node_d[
-				no_node_d[ch_p( "{" )] 
+				no_node_d[ch_p( "{" )][&enter_scope]
 				>> *statement 
-				>> (no_node_d[ch_p( "}" )] | error_missing_closing_brace) 
+				>> (no_node_d[ch_p( "}" )][&exit_scope] | error_missing_closing_brace) 
 				>> !end_p
-//				][&set_node]
 				;
 
 			jump_statement =

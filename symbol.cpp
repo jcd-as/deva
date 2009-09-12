@@ -31,3 +31,20 @@ string strip_symbol( const string& src, const string& c )
 		p1 = 0;
 	return src2.substr( p1, (p2 - p1) + 1 );
 }
+
+// is this identifier a keyword?
+bool is_keyword( const string & s )
+{
+	if( s == "null" 
+		|| s == "true"
+		|| s == "false"
+		|| s == "def"
+		|| s == "if"
+		|| s == "else"
+		|| s == "while"
+		|| s == "for"
+		|| s == "import" )
+		return true;
+	else
+		return false;
+}

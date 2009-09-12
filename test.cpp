@@ -16,6 +16,12 @@
 // the (temporarily) global symbol table
 SymbolTable symTab;
 
+// the global scope table
+Scopes scopes;
+
+// stack of scopes, for building the global scope table
+ScopeBuilder scope_bldr;
+
 void add_symbol( iterator_t start, iterator_t end )
 {
 	string s( start, end );
