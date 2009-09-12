@@ -10,9 +10,7 @@
 
 //#define BOOST_SPIRIT_DEBUG
 
-#include "symbol.h"
-#include "grammar.h"
-#include "debug.h"
+#include "compile.h"
 #include <boost/spirit/iterator/position_iterator.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/positional_options.hpp>
@@ -30,27 +28,6 @@ typedef position_iterator<char const*> iterator_t;
 
 // the global scope table
 Scopes scopes;
-
-// stack of scopes, for building the global scope table
-ScopeBuilder scope_bldr;
-
-void add_symbol( iterator_t start, iterator_t end )
-{
-	string s( start, end );
-	s = strip_symbol( s );
-	
-	// don't add keywords
-	if( is_keyword( s ) )
-		return;
-	// only add to the current scope if it can't be found in a parent scope
-	if( find_identifier_in_parent_scopes( s, scope_bldr.back().second, scopes ) )
-		return;
-
-	// the current scope is the top of the scope_bldr stack
-	// TODO: enter correct sym type, if discernable
-//	scope_bldr.back().second[s] = SymbolInfo( sym_unknown );
-	scope_bldr.back().second->operator[](s) = SymbolInfo( sym_unknown );
-}
 
 int main( int argc, char** argv )
 {
@@ -108,36 +85,10 @@ int main( int argc, char** argv )
 		exit( -1 );
 	}
 
-	// get the length of the file
-	file.seekg( 0, ios::end );
-	int length = file.tellg();
-	file.seekg( 0, ios::beg );
-	// allocate memory to read the file into
-	char* buf = new char[length];
-	// read the file
-	file.read( buf, length );
-	// close the file
-	file.close();
-
-	// create our grammar parser
-	DevaGrammar deva_p;
-
-	// create the position iterator for the parser
-	iterator_t begin( buf, buf+length );
-	iterator_t end;
-
-	// create our initial (global) scope
-	SymbolTable* globals = new SymbolTable();
-	pair<int, SymbolTable*> sym( 0, globals );
-	scope_bldr.push_back( sym );
-
-	// parse 
-	//
-	tree_parse_info<iterator_t, factory_t> info;
-	info = ast_parse<factory_t>( begin, end, deva_p, (space_p | comment_p( "#" )) );
+	tree_parse_info<iterator_t, factory_t> info = ParseFile( file );
 	if( !info.full )
 	{
-		cout << "error parsing " << input_filename << endl;
+		cout << "error parsing " << input << endl;
 		return -1;
 	}
 
@@ -173,11 +124,8 @@ int main( int argc, char** argv )
 		delete i->second;
 	}
 
-	// free the buffer with the code in it
-	delete[] buf;
-
 	// compile completion message for non-terse settings
 	if( verbosity > 0 )
-		cout << "compiled " << input_filename << " successfully" << endl;
+		cout << "compiled " << input << " successfully" << endl;
 	return 0;
 }
