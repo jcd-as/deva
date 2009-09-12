@@ -43,11 +43,7 @@ void add_symbol( iterator_t start, iterator_t end )
 		return;
 	// only add to the current scope if it can't be found in a parent scope
 	if( find_identifier_in_parent_scopes( s, scope_bldr.back().second, scopes ) )
-	{
-		cout << "NOT ADDING " << s << endl;
 		return;
-	}
-	cout << "ADDING " << s << endl;
 
 	// the current scope is the top of the scope_bldr stack
 	// TODO: enter correct sym type, if discernable

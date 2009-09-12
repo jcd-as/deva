@@ -174,11 +174,14 @@ extern Scopes scopes;
 // stack of scopes, for building the global scope table
 extern ScopeBuilder scope_bldr;
 
+// the scope id counter (0 is global scope)
+static int scope_id = 0;
+
 // new scope
 static inline void enter_scope( iterator_t begin, iterator_t end )
 {
-	// the scope id counter (0 is global scope)
-	static int scope_id = 1;
+	// next scope id
+	++scope_id;
 
 	// if this is the first local (non-global) scope,
 	// enter the global scope into the global table
@@ -198,9 +201,6 @@ static inline void enter_scope( iterator_t begin, iterator_t end )
 	scope_bldr.push_back( pair<int, SymbolTable*>( scope_id, sym_tab ) );
 
 	scopes[scope_id] = sym_tab;
-
-	// next scope id
-	++scope_id;
 }
 
 // pop scope and add to global table
@@ -221,7 +221,8 @@ static inline void set_node( tree_match<iterator_t, factory_t>::node_t & n, iter
 	// set the line for this construct
 	file_position fpos = begin.get_position();
 	ni.line = fpos.line;
-	// TODO: set the scope
+	// set the scope
+	ni.scope = scope_bldr.back().first;
 
 	n.value.value( ni );
 }

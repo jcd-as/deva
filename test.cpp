@@ -433,6 +433,11 @@ int main( int argc, char** argv )
 		exit( -1 );
 	}
 
+	// create our initial (global) scope
+	SymbolTable* globals = new SymbolTable();
+	pair<int, SymbolTable*> sym( 0, globals );
+	scope_bldr.push_back( sym );
+
 	int num_tests = 0;
 	int num_failed = 0;
 	string line, input;

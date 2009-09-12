@@ -33,9 +33,9 @@ void indent( int ind )
 
 void dumpNode( const char* name, iter_t const& i, int & indents )
 {
-	// dump line information
+	// dump scope and line information
 	indent( indents );
-	cout << "at line: " << i->value.value().line << endl;
+	cout << "in scope " << i->value.value().scope << ", at line: " << i->value.value().line << endl;
 	// dump node name
 	indent( indents );
 	string s( i->value.begin(), i->value.end() );
