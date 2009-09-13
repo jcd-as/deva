@@ -11,13 +11,6 @@
 #include "symbol.h"
 #include "grammar.h"
 
-// types
-////////////////////////
-typedef position_iterator<char const*> iterator_t;
-typedef tree_match<iterator_t, factory_t> parse_tree_match_t;
-typedef parse_tree_match_t::tree_iterator iter_t;
-
-
 // utility fcns:
 ////////////////////////
 void indent( int ind );

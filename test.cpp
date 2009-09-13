@@ -117,8 +117,8 @@ void eval_expression( iter_t const& i )
 	// func (keyword 'def' for defining functions)
 	else if( i->value.id() == parser_id( func_id ) )
 	{
-		// self and possibly semi-colon
-//        assert( i->children.size() == 0 || i->children.size() == 1 );
+		// children: id, arg_list, compound_statement | statement
+        assert( i->children.size() == 3 );
 		dumpNode( "func", i, indents );
 	}
 	// while_s (keyword 'while')
@@ -157,15 +157,6 @@ void eval_expression( iter_t const& i )
 
 		dumpNode( "identifier", i, indents );
 	}
-	// comment
-	// TODO: should comments be in the AST?? (they complicate things quite a
-	// bit)
-//	else if( i->value.id() == parser_id( comment_id ) )
-//	{
-//        assert( i->children.size() == 0 );
-//
-//		dumpNode( "comment", i, indents );
-//	}
 	// in op ('in' keyword in for loops)
 	else if( i->value.id() == parser_id( in_op_id ) )
 	{
@@ -265,18 +256,20 @@ void eval_expression( iter_t const& i )
 		dumpNode( "(open|close)_bracket_op", i, indents );
 	}
 	// comma_op
-	else if( i->value.id() == parser_id( comma_op_id ) )
-	{
-        assert( i->children.size() == 0 );
-
-		dumpNode( "comma_op", i, indents );
-	}
+	// nodes of this type not created
+//	else if( i->value.id() == parser_id( comma_op_id ) )
+//	{
+//        assert( i->children.size() == 0 );
+//
+//		dumpNode( "comma_op", i, indents );
+//	}
 	// factor_exp
-	else if( i->value.id() == parser_id( factor_exp_id ) )
-	{
-		// TODO: assert on number of children (?)
-		dumpNode( "factor_exp", i, indents );
-	}
+	// nodes of this type not created
+//	else if( i->value.id() == parser_id( factor_exp_id ) )
+//	{
+//		// TODO: assert on number of children (?)
+//		dumpNode( "factor_exp", i, indents );
+//	}
 	// postfix only exp
 //	else if( i->value.id() == parser_id( postfix_only_exp_id ) )
 //	{
@@ -339,10 +332,11 @@ void eval_expression( iter_t const& i )
 		dumpNode( "translation_unit", i, indents );
 	}
 	// function decl
-	else if( i->value.id() == parser_id( func_decl_id ) )
-	{
-		dumpNode( "func_decl", i, indents );
-	}
+	// nodes of this type not created
+//	else if( i->value.id() == parser_id( func_decl_id ) )
+//	{
+//		dumpNode( "func_decl", i, indents );
+//	}
 //	// while statement
 //	else if( i->value.id() == parser_id( while_statement_id ) )
 //	{
@@ -369,10 +363,11 @@ void eval_expression( iter_t const& i )
 		dumpNode( "compound_statement", i, indents );
 	}
 	// jump statement
-	else if( i->value.id() == parser_id( jump_statement_id ) )
-	{
-		dumpNode( "jump_statement", i, indents );
-	}
+	// nodes of this type not created
+//	else if( i->value.id() == parser_id( jump_statement_id ) )
+//	{
+//		dumpNode( "jump_statement", i, indents );
+//	}
 	// break statement
 	else if( i->value.id() == parser_id( break_statement_id ) )
 	{

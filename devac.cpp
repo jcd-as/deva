@@ -24,7 +24,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 // the type of the iterator for the parser
-typedef position_iterator<char const*> iterator_t;
+//typedef position_iterator<char const*> iterator_t;
 
 // the global scope table
 Scopes scopes;
@@ -85,6 +85,7 @@ int main( int argc, char** argv )
 		exit( -1 );
 	}
 
+	// parse the file
 	tree_parse_info<iterator_t, factory_t> info = ParseFile( file );
 	if( !info.full )
 	{
@@ -93,6 +94,10 @@ int main( int argc, char** argv )
 	}
 
 	// TODO: semantic checking
+	if( !CheckSemantics( info ) )
+	{
+		cout << "error checking semantics in " << input << endl;
+	}
 	// TODO: generate IL
 	// TODO: optimize IL
 	// TODO: generate bytecode

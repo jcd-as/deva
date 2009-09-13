@@ -13,91 +13,20 @@
 #ifndef __GRAMMAR_H__
 #define __GRAMMAR_H__
 
-#include <boost/spirit.hpp>
-#include <boost/spirit/include/classic_ast.hpp>
-#include <boost/spirit/include/classic_parse_tree.hpp>
-#include <boost/spirit/include/classic_functor_parser.hpp>
-
 #include <utility>
 
+#include "types.h"
 #include "scope.h"
+#include "parser_ids.h"
 
 using namespace std;
 using namespace boost::spirit;
-
-// the iterator type the parser uses
-typedef position_iterator<char const*> iterator_t;
 
 // function (external) to add symbols to the symbol table(s)
 void add_symbol( iterator_t start, iterator_t end );
 
 // function (external) to output an error message
 void report_error( file_position pos, char const* msg );
-
-// declare ids for the rules
-// statements
-extern parser_id translation_unit_id;
-extern parser_id top_level_statement_id;
-extern parser_id statement_id;
-extern parser_id if_statement_id;
-extern parser_id else_statement_id;
-extern parser_id while_statement_id;
-extern parser_id for_statement_id;
-extern parser_id jump_statement_id;
-extern parser_id break_statement_id;
-extern parser_id continue_statement_id;
-extern parser_id return_statement_id;
-extern parser_id func_decl_id;
-extern parser_id compound_statement_id;
-extern parser_id exp_statement_id;
-extern parser_id open_brace_op_id;
-extern parser_id close_brace_op_id;
-extern parser_id semicolon_op_id;
-// expressions
-extern parser_id exp_id;
-extern parser_id const_decl_id;
-extern parser_id assignment_exp_id;
-extern parser_id logical_exp_id;
-extern parser_id relational_exp_id;
-extern parser_id add_exp_id;
-extern parser_id mult_exp_id;
-extern parser_id unary_exp_id;
-extern parser_id postfix_exp_id;
-extern parser_id postfix_only_exp_id;
-extern parser_id arg_list_exp_id;
-extern parser_id arg_list_decl_id;
-extern parser_id key_exp_id;
-extern parser_id in_exp_id;
-extern parser_id primary_exp_id;
-extern parser_id factor_exp_id;
-// operators
-extern parser_id relational_op_id;
-extern parser_id unary_op_id;
-extern parser_id mult_op_id;
-extern parser_id add_op_id;
-extern parser_id dot_op_id;
-extern parser_id open_paren_op_id;
-extern parser_id close_paren_op_id;
-extern parser_id open_bracket_op_id;
-extern parser_id close_bracket_op_id;
-extern parser_id comma_op_id;
-extern parser_id logical_op_id;
-extern parser_id assignment_op_id;
-extern parser_id map_op_id;
-extern parser_id vec_op_id;
-extern parser_id in_op_id;
-// constants
-extern parser_id string_id;
-extern parser_id number_id;
-extern parser_id boolean_id;
-extern parser_id null_id;
-extern parser_id constant_id;
-extern parser_id func_id;
-extern parser_id while_s_id;
-extern parser_id for_s_id;
-extern parser_id if_s_id;
-extern parser_id else_s_id;
-extern parser_id identifier_id;
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Error reporting parsers
@@ -149,24 +78,8 @@ extern error_report_p error_invalid_for;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// AST node-related types and functions
+// AST node-related variables and functions
 ///////////////////////////////////////////////////////////////////////////////
-struct NodeInfo
-{
-	// the scope this node is in. can be looked up in the global scope table
-	int scope;
-	// the line of code corresponding to this node
-	int line;
-
-	// default constructor
-	NodeInfo() : scope( 0 ), line( -1 )
-	{ }
-
-	NodeInfo( int s, int l ) : scope( s ), line( l	)
-	{ }
-};
-// the node data factor type
-typedef node_val_data_factory<NodeInfo> factory_t;
 
 // the global scope table
 extern Scopes scopes;
