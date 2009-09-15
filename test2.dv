@@ -15,6 +15,87 @@ def foo( bar )
 			{
 				e = a;
 			}
+			else
+			{
+				do_some_stuff( a, b, c, d, e );
+			}
 		}
 	}
 }
+
+def goo( x, y, z ){}
+# valid:
+"foo" + a( x, y, z );
+x["foo" + a];
+a.b() % c.d[e];
+c[d] / a.b();
+!a;
+!b();
+-a;
+-c.d["foo"];
+-(foo() + a.bar[43]);
+!true;
+!null;
+if( !false ){ while( !(true || false) ){ } }
+if( !false ){ while( !(a && (true || z.x())) ){ do_stuff(); } }
+if( !false ){ while( !(a.c["foo"]+b) ){ } }
+x < y;
+x == y;
+6.9 != a();
+"foo" == "bar";
+"jam" >= z[a];
+false == true;
+g = [];
+h = {};
+x = a["foo" + "bar"];
+z = b["foo" + c];
+z[c() + d.e( f, g, h )];
+const a = 4.5;
+for( a in c ){}
+for( a, b in d() ){}
+for( a, b in d["i"] ){}
+# iterate over empty map:
+for( a in b = {} ){}
+# iterate over empty vector:
+for( a in b = [ ] ){}
+while( 4.5 ){}
+while( foo() ){}
+while( foo[o] ){}
+while( g = [] ){}
+for( x in b + c ){}
+for( x, a() in b + c ){}
+if( true ) x;
+if( null ) x;
+if( -42.5 ) x;
+if( - 42.5 ) x;
+if( x[n] * 0.1 ) y;
+if( "foo" + "bar" ) y;
+
+# invalid:
+#true + 56;
+#"foo" + 7;
+#"foo" - "bar";
+#56 + "x";
+#64.34e-3 - false;
+#45 * "foo";
+#a / true;
+#true % a.b();
+#(c["d"] * a) + "foo";
+#-"foo";
+#-("foo" + "bar");
+#false == 5;
+#"foo" > true;
+#null == 0.0;
+#a[false];
+#q = b[null] + c;
+#const b[] = 5.1;
+#const c() = "foobar";
+#const c(a) = 0;
+#const c() = 0;
+#def foo( true ){}
+#for( a in true ){}
+#for( a in null ){}
+# this fails to compile, but gives the wrong error message:
+#while( true );
+#for( x, [] in b + c ){}
+#if( + ) x;

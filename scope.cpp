@@ -28,3 +28,28 @@ bool find_identifier_in_parent_scopes( string id, SymbolTable* sym, Scopes s )
 	}
 	return false;
 }
+
+// locate a symbol
+SymbolInfo* find_symbol( string id, SymbolTable* sym, Scopes s )
+{
+	// look in the current symbol table first
+	if( sym->count( id ) != 0 )
+		return sym->operator[]( id );
+
+	// then check in the parents
+	int parent = sym->parent_id;
+	while( parent != -1 )
+	{
+		// get the parent scope object
+		SymbolTable* p = s[parent];
+
+		// check for the symbol
+		if( p->count( id ) != 0 )
+			return p->operator[]( id );
+
+		// get this scope's parent
+		parent = p->parent_id;
+	}
+	return NULL;
+}
+

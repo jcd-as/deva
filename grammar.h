@@ -3,7 +3,9 @@
 // created by jcs, august 29, 2009 
 
 // TODO:
+// * BUG: accept a.b.c
 // * BUG: accept 'f().x'/'f[a].x' (currently '(f()).x' will work but not 'f().x')
+// * missing semi-colon ends up with generic "Invalid statement" error :(
 // * prevent multiple errors on same line (e.g. 'invalid if' and 'invalid statement')
 // * misc:
 //		- import statement
@@ -98,11 +100,11 @@ static inline void enter_scope( iterator_t begin, iterator_t end )
 
 	// if this is the first local (non-global) scope,
 	// enter the global scope into the global table
-	if( scope_id == 1 )
-	{
-		pair<int, SymbolTable*> sym = scope_bldr.back();
-		scopes[sym.first] = sym.second;
-	}
+//	if( scope_id == 1 )
+//	{
+//		pair<int, SymbolTable*> sym = scope_bldr.back();
+//		scopes[sym.first] = sym.second;
+//	}
 	// dump debug info
 //	cout << "entering new scope: " << scope_id << endl;
 
@@ -131,9 +133,10 @@ static inline void set_node( tree_match<iterator_t, factory_t>::node_t & n, iter
 {
 	NodeInfo ni;
 
-	// set the line for this construct
+	// set the file and line number for this construct
 	file_position fpos = begin.get_position();
 	ni.line = fpos.line;
+	ni.file = fpos.file;
 	// set the scope
 	ni.scope = scope_bldr.back().first;
 
@@ -185,9 +188,9 @@ public:
 			func_decl =
 				access_node_d[
 				root_node_d[func] 
-					>> (identifier | error_invalid_func_decl) 
+					>> (identifier | error_invalid_func_decl)[&enter_scope]
 					>> (access_node_d[arg_list_decl][&set_node] | error_invalid_func_decl) 
-					>> (access_node_d[compound_statement][&set_node] | error_invalid_func_decl)
+					>> (access_node_d[compound_statement][&set_node] | error_invalid_func_decl)[&exit_scope]
 				][&set_node]
 				;
 
@@ -212,7 +215,7 @@ public:
 					>> 
 					(
 						(
-						 	no_node_d[ch_p( "(" )] 
+						 	no_node_d[ch_p( "(" )][&enter_scope]
 								>> 
 								(
 									exp 
@@ -220,7 +223,7 @@ public:
 								) 
 								>> in_exp >> no_node_d[ch_p( ")" )] 
 								>> access_node_d[compound_statement][&set_node]
-						)
+						)[&exit_scope]
 						| error_invalid_for
 					)
 				][&set_node]

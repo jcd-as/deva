@@ -86,21 +86,25 @@ int main( int argc, char** argv )
 	}
 
 	// parse the file
-	tree_parse_info<iterator_t, factory_t> info = ParseFile( file );
+	tree_parse_info<iterator_t, factory_t> info = ParseFile( input_filename, file );
 	if( !info.full )
 	{
 		cout << "error parsing " << input << endl;
 		return -1;
 	}
 
-	// TODO: semantic checking
+	// check the semantics of the AST
 	if( !CheckSemantics( info ) )
 	{
 		cout << "error checking semantics in " << input << endl;
 	}
-	// TODO: generate IL
-	// TODO: optimize IL
-	// TODO: generate bytecode
+
+	// generate IL
+	InstructionStream inst;
+	GenerateIL( info, inst );
+
+	// TODO: optimize IL (???)
+	// TODO: generate final IL bytecode (???)
 
 	// debug & verbose diagnostics/output:
 	if( debug && verbosity >= 3 )
@@ -116,8 +120,26 @@ int main( int argc, char** argv )
 			cout << "Scope " << i->first << ", parent = " << i->second->parent_id << endl;
 			for( SymbolTable::iterator j = i->second->begin(); j != i->second->end(); ++j )
 			{
-				cout << "\t" << j->first << endl;
+				cout << "\t" << j->first;
+				if( j->second->is_const )
+					cout << " : constant";
+				if( j->second->is_argument )
+					cout << " : argument";
+				if( j->second->Type() == sym_function )
+					cout << " : function";
+				cout << endl;
 			}
+		}
+
+		// dump the instruction stream
+		cout << endl << "Instructions:" << endl;
+		for( vector<Instruction>::iterator i = inst.instructions.begin(); i != inst.instructions.end(); ++i )
+		{
+			cout << i->op << " : ";
+			// dump args (vector of DevaObjects) too (need >> op for Objects)
+			for( vector<DevaObject>::iterator j = i->args.begin(); j != i->args.end(); ++j )
+				cout << *j;
+			cout << endl;
 		}
 	}
 

@@ -25,7 +25,7 @@ ScopeBuilder scope_bldr;
 void add_symbol( iterator_t start, iterator_t end )
 {
 	string s( start, end );
-	symTab[s] = SymbolInfo( sym_unknown );
+	symTab[s] = new SymbolInfo( sym_unknown );
 }
 
 // output whether something succeeded or failed
@@ -457,7 +457,7 @@ int main( int argc, char** argv )
 			cout << "===========================================================" << endl;
             cout << input.c_str() << endl;
 			// create the position iterator for the parser
-			iterator_t begin( input.c_str(), input.c_str() + input.length() );
+			iterator_t begin( input.c_str(), input.c_str() + input.length(), input_filename );
 			iterator_t end;
 			tree_parse_info<iterator_t, factory_t> info;
 			info = ast_parse<factory_t>( begin, end, deva_p, (space_p | comment_p( "#" )) );

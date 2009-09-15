@@ -1,13 +1,13 @@
 ===========================================================
 
 enum foo { ah, bk  };
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 enum{ ah, bk  };
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
@@ -17,25 +17,25 @@ enum
 	ah,
 	bk
 };
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 !
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 jam and toast
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 45foo;
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================

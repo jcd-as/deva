@@ -3,16 +3,15 @@
 
 import os
 
-# change directory into the 'tests' directory
-
 home = os.getenv( "HOME" )
 dotest = os.path.join( home, "src/deva/dotest" )
+init_dir = os.getcwd()
 
 # run 'dotest input.dv baseline' in each sub-dir
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
     if "baseline" in files:
         print( "processing " + root + " ..." )
-        input = os.path.join( root, "input.dv" )
-        baseline = os.path.join( root, "baseline" )
-        os.spawnl( os.P_WAIT, dotest, "dotest", input, baseline )
+        os.chdir( root )
+        os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", "baseline" )
         
+os.chdir( init_dir )

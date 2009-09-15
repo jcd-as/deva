@@ -2,7 +2,7 @@
 
 TEST_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp
 TEST_OBJS=$(patsubst %.cpp, %.o, ${TEST_SOURCES})
-DEVAC_SOURCES=devac.cpp symbol.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp
+DEVAC_SOURCES=devac.cpp symbol.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp
 DEVAC_OBJS=$(patsubst %.cpp, %.o, ${DEVAC_SOURCES})
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
 DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
@@ -17,6 +17,9 @@ all : tags test devac
 
 tags : devac
 	ctags -R 
+
+ID : devac
+	mkid -i "C++"
 
 test : ${TEST_OBJS}
 	g++ ${LDFLAGS} -o test ${TEST_OBJS}

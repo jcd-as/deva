@@ -1,26 +1,26 @@
 ===========================================================
 
 x.(a+b);
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 y = .a(foo, bar);
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 { ; }
-Syntax error at line 2: Expecting a closing brace, but found something else
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Expecting a closing brace, but found something else
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================
 
 foo.bar() = [ 'duh' ];
-Syntax error at line 2: Invalid statement
+input.dv:2: error: Invalid statement
 parse failed!
 ===========================================================
 ===========================================================

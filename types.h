@@ -13,31 +13,56 @@
 #include <boost/spirit/include/classic_parse_tree.hpp>
 #include <boost/spirit/include/classic_functor_parser.hpp>
 
+#include <string>
+
+using namespace std;
 using namespace boost::spirit;
 
 // types
 ////////////////////////
+enum expression_t
+{
+	null_type,			// null keyword
+	boolean_type,		// true/false keywords
+	string_type,		// string constant
+	number_type,		// number constant
+	vector_type,		// vector variable
+	map_type,			// map variable
+	variable_type,		// variable (incl function call, map/vector lookup)
+	function_decl_type,	// function declaration
+	no_type				// non-typed construct (e.g. 'if' statement)
+};
+
 struct NodeInfo
 {
+	// filename the node came from
+	string file;
+	// the text of the node
+	string sym;
 	// the scope this node is in. can be looked up in the global scope table
 	int scope;
 	// the line of code corresponding to this node
 	int line;
+	// the expression type that this node evaluates to, if any
+	// (set by the semantic checker)
+	expression_t type;
 
 	// default constructor
-	NodeInfo() : scope( 0 ), line( -1 )
+	NodeInfo() : sym( "" ), scope( 0 ), line( -1 ), type( no_type )
 	{ }
 
-	NodeInfo( int s, int l ) : scope( s ), line( l	)
+	NodeInfo( int s, int l ) : sym( "" ), scope( s ), line( l ), type( no_type )
 	{ }
 };
 
 struct SemanticException
 {
-	const char* const  err;
-	int line;
+	const char* const err;
+//	int line;
+	NodeInfo node;
 
-	SemanticException( const char* const s, int l ) : err( s ), line( l )
+//	SemanticException( const char* const s, int l ) : err( s ), line( l )
+	SemanticException( const char* const s, NodeInfo ni ) : err( s ), node( ni )
 	{ }
 };
 

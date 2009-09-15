@@ -25,4 +25,7 @@ typedef vector<pair<int, SymbolTable*> > ScopeBuilder;
 // utility function to locate a symbol in parent scopes
 extern bool find_identifier_in_parent_scopes( string id, SymbolTable* sym, Scopes s );
 
+// locate a symbol
+extern SymbolInfo* find_symbol( string id, SymbolTable* sym, Scopes s );
+
 #endif // __SCOPE_H__

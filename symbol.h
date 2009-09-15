@@ -21,25 +21,40 @@ enum SymbolType
     sym_unknown
 };
 
-struct SymbolInfo
+class SymbolInfo
 {
+protected:
     SymbolType type;
-    // TODO: what else do we need?
 
-    SymbolInfo() : type( sym_null )
+public:
+    // is this a constant?
+	bool is_const;
+	// is this a function argument?
+	bool is_argument;
+
+    SymbolInfo() : type( sym_unknown ), is_const( false ), is_argument( false )
     { }
-    SymbolInfo( SymbolType t ) : type( t )
+    SymbolInfo( SymbolType t ) : type( t ), is_const( false ), is_argument( false )
     { }
+
+	SymbolType Type(){ return type; }
 };
 
-//typedef map<string, SymbolInfo> SymbolTable;
-struct SymbolTable : public map<string, SymbolInfo>
+struct SymbolTable : public map<string, SymbolInfo*>
 {
 	// also need the id of our parent
 	int parent_id;
 
 	SymbolTable() : parent_id( -1 )
 	{ }
+	~SymbolTable()
+	{
+		// delete all the SymbolInfo ptrs
+		for( map<string, SymbolInfo*>::iterator i = begin(); i != end(); ++i )
+		{
+			delete i->second;
+		}
+	}
 };
 	
 

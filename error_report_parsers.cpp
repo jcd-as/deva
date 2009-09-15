@@ -7,11 +7,17 @@
 // *
 
 #include "grammar.h"
+#include "compile.h"
 
 // error printing helper function
 void report_error( file_position pos, char const* msg )
 {
-	cout << "Syntax error at line " << pos.line << ": " << msg << endl;
+//	cout << "Syntax error at line " << pos.line << ": " << msg << endl;
+	// format = filename:linenum: msg
+	// TODO: filename!
+	// also, this should call emit_error(), but the test program can't link to
+	// compile.cpp
+	cout << pos.file << ":" << pos.line << ":" << " error: " << msg << endl;
 }
 
 
