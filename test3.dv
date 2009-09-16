@@ -1,0 +1,11 @@
+# a, b and foo are at global scope (scope 0)
+a = +5;
+b = [];
+
+# c and d are in scope 1 (parent for function, child of scope 0)
+def foo( c, d )
+{
+	# e is in scope 2 (function body scope, child of scope 1)
+	e = b[c] + a;
+	return e;
+}

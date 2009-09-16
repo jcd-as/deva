@@ -15,6 +15,7 @@ enum SymbolType
     sym_null,
     sym_number,
     sym_string,
+	sym_boolean,
     sym_vector,
 	sym_map,
     sym_function,

@@ -4,6 +4,7 @@
 # invalid:
 #a || b = c;
 
+z = (a == true);
 b = 42;	# eol comment
 a = b + dea_d;
 

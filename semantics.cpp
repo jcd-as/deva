@@ -113,8 +113,9 @@ void check_else_s( iter_t const & i )
 
 void check_identifier( iter_t const & i )
 {
+	string s = i->value.value().sym;
 	// disallow keywords
-	if( is_keyword( i->value.value().sym ) )
+	if( is_keyword( s ) )
 		throw SemanticException( "Keyword used where variable name expected", i->value.value() );
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
@@ -163,6 +164,21 @@ void check_assignment_op( iter_t const & i )
 		&& rhs.type != variable_type && i->children[1].value.id() != vec_op_id
 		&& i->children[1].value.id() != map_op_id )
 		throw SemanticException( "Right-hand side of assignment operation not an r-value", rhs );
+
+	if( lhs.type == variable_type )
+	{
+		// TODO: only warn once per scope (this warns on every place it's a lhs
+		// to an assignment)
+		// warn if redef'ing a symbol
+		SymbolTable* st = scopes[i->value.value().scope];
+		SymbolTable* parent_st = scopes[st->parent_id];
+		if( parent_st )
+		{
+			SymbolInfo* si = find_symbol( lhs.sym, parent_st, scopes );
+			if( si )
+				emit_warning( i->value.value(), string( string( "Redefining symbol. '" ) + lhs.sym + "' already defined in higher scope" ).c_str() );
+		}
+	}
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;

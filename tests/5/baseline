@@ -1,0 +1,46 @@
+===========================================================
+
+if( true )
+	Yay();
+else }
+input.dv:4: error: Malformed else clause
+input.dv:4: error: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+if( true )
+[]	
+input.dv:2: error: Malformed if clause
+input.dv:2: error: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+def foo[]
+{}
+input.dv:2: error: Invalid function declaration
+input.dv:2: error: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+while[( x == 4 )]
+{}
+input.dv:2: error: Invalid while statement
+input.dv:2: error: Invalid statement
+parse failed!
+===========================================================
+===========================================================
+
+for x in a
+{
+	do();
+}
+input.dv:2: error: Invalid for statement
+input.dv:2: error: Invalid statement
+parse failed!
+===========================================================
+total tests: 5
+tests failed: 5
+exiting...
