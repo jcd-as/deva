@@ -12,6 +12,7 @@
 #include "symbol.h"
 #include "types.h"
 #include <vector>
+#include <cstring>
 
 using namespace std;
 
@@ -35,17 +36,67 @@ struct DevaObject : public SymbolInfo
 		Function* func_val;
 	};
 
-	DevaObject( double n ) : SymbolInfo( sym_number ), num_val( n )
+	// name that the object (variable) is referred to with
+	// (empty string for constants)
+	string name;
+
+	// copy constructor needed to ensure each object has a separate copy of data
+	DevaObject( const DevaObject & o ) : SymbolInfo()
+	{
+		name = o.name;
+		type = o.type;
+		switch( type )
+		{
+		case sym_number:
+			num_val = o.num_val;
+			break;
+		case sym_string:
+			str_val = new char[strlen( o.str_val ) + 1];
+			strcpy( str_val, o.str_val );
+			break;
+		case sym_boolean:
+			bool_val = o.bool_val;
+			break;
+		case sym_map:
+			// TODO: verify this
+			map_val = new map<DevaObject, DevaObject>();
+			*map_val = *(o.map_val);
+			break;
+		case sym_vector:
+			// TODO: verify this
+			vec_val = new vector<DevaObject>();
+			*vec_val = *(o.vec_val);
+			break;
+		case sym_function:
+			// TODO: any better default value for fcn types?
+			// TODO: need to create copy??
+			func_val = o.func_val;
+			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, no known value/type
+			break;
+		}
+
+	}
+	DevaObject( string nm, double n ) : SymbolInfo( sym_number ), num_val( n ), name( nm )
 	{}
-	DevaObject( char* s ) : SymbolInfo( sym_string ), str_val( s )
+	DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( nm )
+	{
+		// make a copy of the string passed to us, DON'T take ownership of it!
+		str_val = new char[s.size() + 1];
+		strcpy( str_val, s.c_str() );
+	}
+	DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm )
 	{}
-	DevaObject( bool b ) : SymbolInfo( sym_boolean ), bool_val( b )
+	DevaObject( string nm, Function* f ) : SymbolInfo( sym_function ), func_val( f ), name( nm )
 	{}
-	DevaObject( Function* f ) : SymbolInfo( sym_function ), func_val( f )
-	{}
-	DevaObject( SymbolType t )
+//	DevaObject( string nm, SymbolType t ) : name( nm )
+	DevaObject( string nm, SymbolType t )
 	{
 		type = t;
+		name = nm;
 		switch( t )
 		{
 		case sym_number:
@@ -67,13 +118,17 @@ struct DevaObject : public SymbolInfo
 			// TODO: any better default value for fcn types?
 			func_val = NULL;
 			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, no known value/type
+			break;
 		}
 	}
 	~DevaObject()
 	{
 		if( type == sym_string )
-		{}
-//			if( str_val ) delete [] str_val;
+			if( str_val ) delete [] str_val;
 		else if( type == sym_map )
 			if( map_val ) delete map_val;
 		else if( type == sym_vector )
@@ -119,6 +174,11 @@ struct DevaObject : public SymbolInfo
 		case sym_function:
 			// TODO: any better default value for fcn types?
 			func_val = NULL;
+			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, no known value/type
 			break;
 		}
 	}
@@ -182,6 +242,7 @@ void gen_IL_key_exp( iter_t const & i, InstructionStream & is );
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is );
 void gen_IL_constant( iter_t const & i, InstructionStream & is );
 void gen_IL_translation_unit( iter_t const & i, InstructionStream & is );
+void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is );

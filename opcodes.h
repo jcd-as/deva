@@ -8,27 +8,39 @@
 #ifndef __OPCODES_H__
 #define __OPCODES_H__
 
-// TODO: size enum to fit in unsigned char??
+// format for virtual machine instructions:
+// byte: opcode
+// [byte: argument type
+// 64bit: argument]
+// ... for each arg
+
+// virtual machine & IL opcodes:
 enum Opcode
 {
 	// TODO: need pop/push for each object type?
 	op_pop,			// pop top item off stack
 //	op_peek,		// look at top item on stack without removing it
 	op_push,		// push item onto top of stack
-	// TODO: need load/store for each object type?
 	op_load,		// load a variable from memory to the stack
 	op_store,		// store a variable from the stack to memory
 	// TODO: need new for each object type??
 	op_new,			// create a new object and place on top of stack
-	// TODO: need vector load/store for each object type?
+	op_new_map,		// create a new map object and push onto stack
+	op_new_vec,		// create a new vector object and push onto stack
 	op_vec_load,	// get item from vector
 	op_vec_store,	// set item in vector. args: index, value
-	// TODO: need map load/store for each object type?
 	op_map_load,	// get item from map
 	op_map_store,	// set item in map. args: index, value
 	op_jmp,			// unconditional jump to the address on top of the stack
 	op_jmpf,		// jump on false
-	op_cmp,			// compare top two values on stack
+	op_eq,			// == compare top two values on stack
+	op_neq,			// != compare top two values on stack
+	op_lt,			// < compare top two values on stack
+	op_lte,			// <= compare top two values on stack
+	op_gt,			// > compare top two values on stack
+	op_gte,			// >= compare top two values on stack
+	op_or,			// || the top two values
+	op_and,			// && the top two values
 	op_neg,			// negate the top value ('-' operator)
 	op_not,			// boolean not the top value ('!' operator)
 	op_add,			// add top two values on stack
@@ -40,6 +52,8 @@ enum Opcode
 	op_call,		// call a function. arguments on stack
 	op_return,		// pop the return address and unconditionally jump to it
 	op_returnv,		// as return, but stack holds return value and then (at top) return address
+	op_enter,		// enter new scope
+	op_leave,		// leave scope
 	op_nop			// no op
 };
 

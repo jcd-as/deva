@@ -165,18 +165,25 @@ void check_assignment_op( iter_t const & i )
 		&& i->children[1].value.id() != map_op_id )
 		throw SemanticException( "Right-hand side of assignment operation not an r-value", rhs );
 
+	// TODO: something in here causes a crash when dumping symbols! (in
+	// devac.cpp)
 	if( lhs.type == variable_type )
 	{
 		// TODO: only warn once per scope (this warns on every place it's a lhs
 		// to an assignment)
 		// warn if redef'ing a symbol
 		SymbolTable* st = scopes[i->value.value().scope];
-		SymbolTable* parent_st = scopes[st->parent_id];
-		if( parent_st )
+		int idx = st->parent_id;
+		// global scope has no parent
+		if( idx != -1 )
 		{
-			SymbolInfo* si = find_symbol( lhs.sym, parent_st, scopes );
-			if( si )
-				emit_warning( i->value.value(), string( string( "Redefining symbol. '" ) + lhs.sym + "' already defined in higher scope" ).c_str() );
+			SymbolTable* parent_st = scopes[st->parent_id];
+			if( parent_st )
+			{
+				SymbolInfo* si = find_symbol( lhs.sym, parent_st, scopes );
+				if( si )
+					emit_warning( i->value.value(), string( string( "Redefining symbol. '" ) + lhs.sym + "' already defined in higher scope" ).c_str() );
+			}
 		}
 	}
 

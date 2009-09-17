@@ -516,6 +516,9 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
 	// walk the tree, generating the IL for each node
 	iter_t i = info.trees.begin();
 	generate_IL_for_node( i, is );
+
+	// TODO: ever returns false??
+	return true;
 }
 
 void walk_children( iter_t const & i, InstructionStream & is )
@@ -725,6 +728,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// compound statement
 	else if( i->value.id() == parser_id( compound_statement_id ) )
 	{
+		pre_gen_IL_compound_statement( i, is );
 		walk_children( i, is );
 		gen_IL_compound_statement( i, is );
 	}
