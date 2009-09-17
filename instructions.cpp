@@ -331,6 +331,7 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 {
+	// TODO: impl
 }
 
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is )

@@ -3,8 +3,6 @@
 // created by jcs, august 29, 2009 
 
 // TODO:
-// * BUG: accept a.b.c
-// * BUG: accept 'f().x'/'f[a].x' (currently '(f()).x' will work but not 'f().x')
 // * missing semi-colon ends up with generic "Invalid statement" error :(
 // * prevent multiple errors on same line (e.g. 'invalid if' and 'invalid statement')
 // * misc:
@@ -349,16 +347,14 @@ public:
 
 			postfix_exp = 
 				access_node_d[
-				// these two lines prevent 'f().x' and 'f[a].x' from parsing
-				// (see TODO at top of file)
-				root_node_d[identifier] >> access_node_d[arg_list_exp][&set_node]
+				no_node_d[ch_p( "(" )] >> postfix_only_exp >> no_node_d[ch_p( ")" )] >> +(root_node_d[dot_op] >> postfix_only_exp)
+				| postfix_only_exp >> +(root_node_d[dot_op] >> postfix_only_exp)
+				| root_node_d[identifier] >> access_node_d[arg_list_exp][&set_node]
 				| root_node_d[identifier] >> access_node_d[key_exp][&set_node]
-				////////////
-				| primary_exp >> root_node_d[dot_op] >> postfix_only_exp
 				| primary_exp
 				][&set_node]
 				;
-			
+
 			// postfix-only exp: only matches an arg list or map key expression,
 			// not any arbitrary expression
 			postfix_only_exp = 

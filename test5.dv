@@ -1,7 +1,17 @@
+a.b;
+a.b.c.d;
+a.b.c.d["foo"];
+a[b].c;
+a().b;
 # test opcodes
 #"foo";
-a = 1;
+#a = 1;
 # 5
 #(5 + 5) / 2;
 # 2
 #(2 * 2) % 3 + 1;
+
+# equivalent of
+# a.b => a["b"]
+# a["b"]["c"]["d"]["foo"];
+# and a.b.c.d.foo;
