@@ -428,7 +428,6 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 	{
 		if( i->children[j].value.id() == identifier_id )
 		{
-//			string name = i->children[j].value.value().sym;
 			string name = strip_symbol( string( i->children[j].value.begin(), i->children[j].value.end() ) );
 			// create an argument 
 			is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ) ) );
