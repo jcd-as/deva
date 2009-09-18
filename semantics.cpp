@@ -97,7 +97,7 @@ void check_for_s( iter_t const & i )
 
 void check_if_s( iter_t const & i )
 {
-	// 2 children: condition, statement|compound_statement
+	// 2 or 3 children: condition, statement|compound_statement, [optional] else
 	NodeInfo condition = i->children[0].value.value();
 //	NodeInfo statement = i->children[1].value.value();
 	if( condition.type != boolean_type && condition.type != variable_type 

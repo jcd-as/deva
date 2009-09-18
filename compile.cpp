@@ -517,6 +517,9 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
 	iter_t i = info.trees.begin();
 	generate_IL_for_node( i, is );
 
+	// last node always a halt
+	is.push( Instruction( op_halt ) );
+
 	// TODO: ever returns false??
 	return true;
 }
@@ -586,14 +589,32 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// if_s (keyword 'if')
 	else if( i->value.id() == parser_id( if_s_id ) )
 	{
-		walk_children( i, is );
+		// first child has the conditional, walk it
+		generate_IL_for_node( i->children.begin(), is );
+		// generate the jump-placeholder
+		pre_gen_IL_if_s( i, is );
+		// second child has the statement|compound_statement, walk it
+		generate_IL_for_node( i->children.begin() + 1, is );
+
+		// back-patch the jump-placeholder
 		gen_IL_if_s( i, is );
+
+		// third child, if any, has the else clause
+		if( i->children.size() == 3 )
+		{
+
+			// generate the jump-placeholder...
+			pre_gen_IL_else_s( i, is );
+			// ...then walk it...
+			generate_IL_for_node( i->children.begin() + 2, is );
+			// ...and then back-patch the jump
+			gen_IL_else_s( i, is );
+		}
 	}
 	// else_s (keyword 'else')
 	else if( i->value.id() == parser_id( else_s_id ) )
 	{
-		walk_children( i, is );
-		gen_IL_else_s( i, is );
+		// always a child of an 'if', which handles this, see above
 	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )

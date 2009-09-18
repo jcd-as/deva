@@ -133,11 +133,12 @@ int main( int argc, char** argv )
 
 		// dump the instruction stream
 		cout << endl << "Instructions:" << endl;
-		for( vector<Instruction>::iterator i = inst.instructions.begin(); i != inst.instructions.end(); ++i )
+//		for( vector<Instruction>::iterator i = inst.instructions.begin(); i != inst.instructions.end(); ++i )
+		for( int i = 0; i < inst.size(); ++i )
 		{
-			cout << i->op << " : ";
+			cout << inst[i].op << " : ";
 			// dump args (vector of DevaObjects) too (need >> op for Objects)
-			for( vector<DevaObject>::iterator j = i->args.begin(); j != i->args.end(); ++j )
+			for( vector<DevaObject>::iterator j = inst[i].args.begin(); j != inst[i].args.end(); ++j )
 				cout << *j;
 			cout << endl;
 		}

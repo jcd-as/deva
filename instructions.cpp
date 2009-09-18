@@ -94,7 +94,7 @@ ostream & operator << ( ostream & os, Opcode & op )
 		os << "map_store";
 		break;
 	case op_jmp:			// unconditional jump to the address on top of the stack
-		os << "jump";
+		os << "jmp";
 		break;
 	case op_jmpf:			// jump on false
 		os << "jmpf";
@@ -156,8 +156,23 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_returnv:		// as return, but stack holds return value and then (at top) return address
 		os << "returnv";
 		break;
+	case op_enter:
+		os << "enter";
+		break;
+	case op_leave:
+		os << "leave";
+		break;
 	case op_nop:			// no op
 		os << "nop";
+		break;
+	case op_halt:
+		os << "halt";
+		break;
+	case op_illegal:
+		os << "ILLEGAL OPCODE. COMPILER ERROR";
+		break;
+	default:
+		os << "INVALID OPCODE";
 		break;
 	}
 	return os;
@@ -169,14 +184,14 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 	double n;
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	n = atof( s.c_str() );
-	is.instructions.push_back( Instruction( op_push, DevaObject( "", n ) ) );
+	is.push( Instruction( op_push, DevaObject( "", n ) ) );
 }
 
 void gen_IL_string( iter_t const & i, InstructionStream & is )
 {
 	// push the string onto the stack
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
-	is.instructions.push_back( Instruction( op_push, DevaObject( "", s ) ) );
+	is.push( Instruction( op_push, DevaObject( "", s ) ) );
 }
 
 void gen_IL_boolean( iter_t const & i, InstructionStream & is )
@@ -184,15 +199,15 @@ void gen_IL_boolean( iter_t const & i, InstructionStream & is )
 	// push the boolean onto the stack
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "true" )
-		is.instructions.push_back( Instruction( op_push, DevaObject( "", true ) ) );
+		is.push( Instruction( op_push, DevaObject( "", true ) ) );
 	else
-		is.instructions.push_back( Instruction( op_push, DevaObject( "", false ) ) );
+		is.push( Instruction( op_push, DevaObject( "", false ) ) );
 }
 
 void gen_IL_null( iter_t const & i, InstructionStream & is )
 {
 	// push the null onto the stack
-	is.instructions.push_back( Instruction( op_push, DevaObject( "", sym_null ) ) );
+	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 }
 
 // 'def' keyword
@@ -211,14 +226,64 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// TODO
 }
 
+static vector<int> if_stack;
+
+void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
+{
+	// general format of an if/else, AST, and IL:
+	// if( x ) y(); else z(); =>
+	// AST:
+	// -if
+	// 		-x
+	// 		-y()
+	// 		-else
+	// 			-z()
+	// IL:
+	// push x
+	// jumpf else_label
+	// y()
+	// jump end_else_label
+	// else_label: 
+	// z()
+	// end_else_label:
+
+	// push the current location in the instruction stream onto the 'if stack'
+	if_stack.push_back( is.size() );
+	// generate a jump placeholder 
+	// for a jump *over* the child (statement|compound_statement)
+	is.push( Instruction( op_illegal ) );
+}
+
 void gen_IL_if_s( iter_t const & i, InstructionStream & is )
 {
 	// TODO
+	// generate jump destination, back-patching the placeholder from the 'if'
+	// with the correct (current) offset in the instruction stream
+	// pop the last 'if' location off the 'if stack'
+	int if_loc = if_stack.back();
+	if_stack.pop_back();
+	// back-patch the jumpf instruction
+	is[if_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.size() ) );
+}
+
+static vector<int> else_stack;
+void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
+{
+	// push the current location in the instruction stream onto the 'else' stack
+	else_stack.push_back( is.size() );
+	// generate the jump placeholder
+	is.push( Instruction( op_illegal ) );
 }
 
 void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 {
-	// TODO
+	// generate the jump destination, back-patching the placeholder from
+	// 'pre-gen' with the correct (current) offset in the instruction stream
+	// pop the last 'else' location off the 'else stack'
+	int else_loc = else_stack.back();
+	else_stack.pop_back();
+	// back-patch the jumpf instruction
+	is[else_loc] = Instruction( op_jmp, DevaObject( "", (double)is.size() ) );
 }
 
 void gen_IL_identifier( iter_t const & i, InstructionStream & is )
@@ -227,7 +292,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is )
 	if(i->children.size() == 0 )
 	{
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
-		is.instructions.push_back( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+		is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 	}
 	// TODO: if it has children it can be a function call, a map/vector lookup,
 	// or part of a '.' operator look-up (syntactic sugar for a map lookup)
@@ -241,13 +306,13 @@ void gen_IL_in_op( iter_t const & i, InstructionStream & is )
 void gen_IL_map_op( iter_t const & i, InstructionStream & is )
 {
 	// new map
-	is.instructions.push_back( Instruction( op_new_map ) );
+	is.push( Instruction( op_new_map ) );
 }
 
 void gen_IL_vec_op( iter_t const & i, InstructionStream & is )
 {
 	// new vector
-	is.instructions.push_back( Instruction( op_new_vec ) );
+	is.push( Instruction( op_new_vec ) );
 }
 
 void gen_IL_semicolon_op( iter_t const & i, InstructionStream & is )
@@ -259,7 +324,7 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 {
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
 	// the stack)
-	is.instructions.push_back( Instruction( op_store ) );
+	is.push( Instruction( op_store ) );
 }
 
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
@@ -267,9 +332,9 @@ void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
 	// '||' or '&&'
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "||" )
-		is.instructions.push_back( Instruction( op_or ) );
+		is.push( Instruction( op_or ) );
 	else if( s == "&&" )
-		is.instructions.push_back( Instruction( op_and ) );
+		is.push( Instruction( op_and ) );
 	// else?
 }
 
@@ -277,17 +342,17 @@ void gen_IL_relational_op( iter_t const & i, InstructionStream & is )
 {
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "==" )
-		is.instructions.push_back( Instruction( op_eq ) );
+		is.push( Instruction( op_eq ) );
 	else if( s == "!=" )
-		is.instructions.push_back( Instruction( op_neq ) );
+		is.push( Instruction( op_neq ) );
 	else if( s == "<" )
-		is.instructions.push_back( Instruction( op_lt ) );
+		is.push( Instruction( op_lt ) );
 	else if( s == "<=" )
-		is.instructions.push_back( Instruction( op_lte ) );
+		is.push( Instruction( op_lte ) );
 	else if( s == ">" )
-		is.instructions.push_back( Instruction( op_gt ) );
+		is.push( Instruction( op_gt ) );
 	else if( s == ">=" )
-		is.instructions.push_back( Instruction( op_gte ) );
+		is.push( Instruction( op_gte ) );
 	// else?
 }
 
@@ -296,13 +361,13 @@ void gen_IL_mult_op( iter_t const & i, InstructionStream & is )
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	// multiply
 	if( s == "*" )
-		is.instructions.push_back( Instruction( op_mul ) );
+		is.push( Instruction( op_mul ) );
 	// divide
 	else if( s == "/" )
-		is.instructions.push_back( Instruction( op_div ) );
+		is.push( Instruction( op_div ) );
 	// modulus
 	else if( s == "%" )
-		is.instructions.push_back( Instruction( op_mod ) );
+		is.push( Instruction( op_mod ) );
 	// else?
 }
 
@@ -311,10 +376,10 @@ void gen_IL_add_op( iter_t const & i, InstructionStream & is )
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	// add 
 	if( s == "+" )
-		is.instructions.push_back( Instruction( op_add ) );
+		is.push( Instruction( op_add ) );
 	// subract
 	else if( s == "-" )
-		is.instructions.push_back( Instruction( op_sub ) );
+		is.push( Instruction( op_sub ) );
 	// else?
 }
 
@@ -323,10 +388,10 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	// negate operator
 	if( s == "-" )
-		is.instructions.push_back( Instruction( op_neg ) );
+		is.push( Instruction( op_neg ) );
 	// not operator
 	else if( s == "!" )
-		is.instructions.push_back( Instruction( op_not ) );
+		is.push( Instruction( op_not ) );
 }
 
 void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
@@ -374,13 +439,13 @@ void gen_IL_translation_unit( iter_t const & i, InstructionStream & is )
 void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate enter
-	is.instructions.push_back( Instruction( op_enter ) );
+	is.push( Instruction( op_enter ) );
 }
 
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate leave
-	is.instructions.push_back( Instruction( op_leave ) );
+	is.push( Instruction( op_leave ) );
 }
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
@@ -398,9 +463,9 @@ void gen_IL_return_statement( iter_t const & i, InstructionStream & is )
 	// last child is always semi-colon
 	// TODO: generate return/returnv
 	if( i->children.size() > 1 )
-		is.instructions.push_back( Instruction( op_returnv ) );
+		is.push( Instruction( op_returnv ) );
 	else if( i->children.size() == 1 )
-		is.instructions.push_back( Instruction( op_return ) );
+		is.push( Instruction( op_return ) );
 	// else?
 }
 

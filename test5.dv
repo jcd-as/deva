@@ -1,8 +1,61 @@
-a.b;
-a.b.c.d;
-a.b.c.d["foo"];
-a[b].c;
-a().b;
+if( x )
+{
+	if( y )
+	{
+		z();
+	}
+}
+# ==>
+# 0: push x
+# 1: jmpf 4
+# 2: push y
+# 3: jumpf 4
+# [call z; but NYI]
+# 4: halt ('m', 'n')
+#
+
+#if( x )
+#{
+#	if( y )
+#	{
+#		z();
+#	}
+#	a = b;
+#}
+# ==>
+# 0: push x
+# 1: jmpf 9
+# 2: enter
+# 3: push y
+# 4: jmpf 5
+# [missing: z]
+# 5: push a
+# 6: push b
+# 7: store
+# 8: leave
+# 9: halt 
+
+#if( x )
+#{
+#	y;
+#}
+#else
+#{
+#	z;
+#}
+# ==>
+# 0: push x
+# 1: jmpf 2
+# [missing: y]
+# 2: jmp 3
+# [missing: z]
+# 3: halt
+
+#a.b;
+#a.b.c.d;
+#a.b.c.d["foo"];
+#a[b].c;
+#a().b;
 # test opcodes
 #"foo";
 #a = 1;

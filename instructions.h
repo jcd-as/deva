@@ -206,10 +206,15 @@ struct Instruction
 	}
 };
 
-struct InstructionStream
+class InstructionStream
 {
 	// list of instructions
 	vector<Instruction> instructions;
+
+public:
+	void push( const Instruction & i ){ instructions.push_back( i ); }
+	size_t size(){ return instructions.size(); }
+	Instruction & operator[]( size_t idx ){ return instructions[idx]; }
 };
 
 // declare IL gen functions
@@ -220,7 +225,9 @@ void gen_IL_null( iter_t const & i, InstructionStream & is );
 void gen_IL_func( iter_t const & i, InstructionStream & is );
 void gen_IL_while_s( iter_t const & i, InstructionStream & is );
 void gen_IL_for_s( iter_t const & i, InstructionStream & is );
+void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is );
 void gen_IL_if_s( iter_t const & i, InstructionStream & is );
+void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is );
 void gen_IL_else_s( iter_t const & i, InstructionStream & is );
 void gen_IL_identifier( iter_t const & i, InstructionStream & is );
 void gen_IL_in_op( iter_t const & i, InstructionStream & is );

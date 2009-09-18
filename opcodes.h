@@ -32,7 +32,7 @@ enum Opcode
 	op_map_load,	// get item from map
 	op_map_store,	// set item in map. args: index, value
 	op_jmp,			// unconditional jump to the address on top of the stack
-	op_jmpf,		// jump on false
+	op_jmpf,		// jump on top of stack evaluating to false 
 	op_eq,			// == compare top two values on stack
 	op_neq,			// != compare top two values on stack
 	op_lt,			// < compare top two values on stack
@@ -54,7 +54,9 @@ enum Opcode
 	op_returnv,		// as return, but stack holds return value and then (at top) return address
 	op_enter,		// enter new scope
 	op_leave,		// leave scope
-	op_nop			// no op
+	op_nop,			// no op
+	op_halt,		// finish program, 0 or 1 ops (return code)
+	op_illegal		// illegal operation, if exists there was a compiler error/fault
 };
 
 #endif // __OPCODES_H__
