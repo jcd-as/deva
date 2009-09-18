@@ -72,6 +72,12 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_store:
 		os << "store";
 		break;
+	case op_defun:
+		os << "defun";
+		break;
+	case op_defarg:
+		os << "defarg";
+		break;
 	case op_new:
 		os << "new";
 		break;
@@ -213,7 +219,7 @@ void gen_IL_null( iter_t const & i, InstructionStream & is )
 // 'def' keyword
 void gen_IL_func( iter_t const & i, InstructionStream & is )
 {
-	// TODO: enter a function into the scope symbol tbl
+	// no-op
 }
 
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
@@ -416,7 +422,18 @@ void gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 
 void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 {
-	// no op, parent handles
+	// for each arg that is an identifier,
+	int num_children = i->children.size();
+	for( int j = 0; j < num_children; ++j )
+	{
+		if( i->children[j].value.id() == identifier_id )
+		{
+//			string name = i->children[j].value.value().sym;
+			string name = strip_symbol( string( i->children[j].value.begin(), i->children[j].value.end() ) );
+			// create an argument 
+			is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ) ) );
+		}
+	}
 }
 
 void gen_IL_key_exp( iter_t const & i, InstructionStream & is )

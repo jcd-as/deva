@@ -1,10 +1,14 @@
-if( x )
+def foo( a, b, c )
 {
-	if( y )
-	{
-		z();
-	}
 }
+
+#if( x )
+#{
+#	if( y )
+#	{
+#		z();
+#	}
+#}
 # ==>
 # 0: push x
 # 1: jmpf 4

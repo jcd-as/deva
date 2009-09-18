@@ -571,8 +571,17 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	else if( i->value.id() == parser_id( func_id ) )
 	{
 		// children: id, arg_list, compound_statement | statement
-		walk_children( i, is );
-		gen_IL_func( i, is );
+//		gen_IL_func( i, is );
+
+		// create a function at this loc
+		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+		is.push( Instruction( op_defun, DevaObject( name, (double)is.size() ) ) );
+
+		// second child is the arg_list, process it
+		generate_IL_for_node( i->children.begin() + 1, is );
+
+		// third child is statement|compound_statement, process it
+		generate_IL_for_node( i->children.begin() + 2, is );
 	}
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
@@ -719,7 +728,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// arg list decl
 	else if( i->value.id() == parser_id( arg_list_decl_id ) )
 	{
-		walk_children( i, is );
+//		walk_children( i, is );
 		gen_IL_arg_list_decl( i, is );
 	}
 	// key exp

@@ -23,6 +23,8 @@ enum Opcode
 	op_push,		// push item onto top of stack
 	op_load,		// load a variable from memory to the stack
 	op_store,		// store a variable from the stack to memory
+	op_defun,		// define function. arg is location in instruction stream, named the fcn name
+	op_defarg,		// define an argument to a fcn. argument (to opcode) is arg name
 	// TODO: need new for each object type??
 	op_new,			// create a new object and place on top of stack
 	op_new_map,		// create a new map object and push onto stack
