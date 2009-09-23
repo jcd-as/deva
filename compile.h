@@ -29,7 +29,7 @@ void emit_warning( SemanticException & e );
 
 // parse a file
 // syntax errors output to stdout
-tree_parse_info<iterator_t, factory_t> ParseFile( string filename, ifstream & file );
+tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file );
 
 // check the semantics of a parsed AST
 // semantic errors output to stdout

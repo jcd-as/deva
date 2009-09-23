@@ -1,10 +1,13 @@
 #!/usr/bin/python
 # python script to run all the deva lang tests
+# walks the 'tests' sub-dir looking for directories with a file called
+# 'baseline'. when found, it tries to run "dotest" in the local directory, which
+# should be a program or link to a program to run the actual test on an input
+# file called "input.dv" and comparing the results to the 'baseline' file
 
 import os
 
 home = os.getenv( "HOME" )
-dotest = os.path.join( home, "src/deva/dotest" )
 init_dir = os.getcwd()
 
 # run 'dotest input.dv baseline' in each sub-dir
@@ -12,6 +15,6 @@ for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
     if "baseline" in files:
         print( "processing " + root + " ..." )
         os.chdir( root )
-        os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", "baseline" )
+        os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
         
 os.chdir( init_dir )

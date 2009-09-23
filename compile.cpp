@@ -77,7 +77,7 @@ void emit_warning( SemanticException & e )
 
 // parse a deva file
 // returns the AST tree
-tree_parse_info<iterator_t, factory_t> ParseFile( string filename, ifstream & file )
+tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file )
 {
 	// get the length of the file
 	file.seekg( 0, ios::end );
@@ -87,8 +87,6 @@ tree_parse_info<iterator_t, factory_t> ParseFile( string filename, ifstream & fi
 	char* buf = new char[length];
 	// read the file
 	file.read( buf, length );
-	// close the file
-	file.close();
 
 	// create our grammar parser
 	DevaGrammar deva_p;

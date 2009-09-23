@@ -6,7 +6,9 @@
 // * handle imports (parse recursively)
 // 		- break compiling a module into a separate fcn from main()
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
-// * handle stdin as input (?)
+// * handle stdin as input (for one, so that i can unify the test driver program
+// 	 devac compiler by spawning devac from test per code section, not entire
+// 	 file)
 
 //#define BOOST_SPIRIT_DEBUG
 
@@ -76,17 +78,31 @@ int main( int argc, char** argv )
 	// get the filename to compile
 	const char* input_filename = input.c_str();
 
-	// open input file
-	ifstream file;
-	file.open( input_filename );
-	if( !file.is_open() )
+	tree_parse_info<iterator_t, factory_t> info;
+
+	// if the magic name 'stdin' is specified, read from stdin instead of file
+	if( input == "stdin" )
 	{
-		cout << "error opening " << input_filename << endl;
-		exit( -1 );
+		// read from stdin instead of a file
+		info = ParseFile( input_filename, cin );
+	}
+	else
+	{
+		// open input file
+		ifstream file;
+		file.open( input_filename );
+		if( !file.is_open() )
+		{
+			cout << "error opening " << input_filename << endl;
+			exit( -1 );
+		}
+		// parse the file
+		info = ParseFile( input_filename, file );
+		// close the file
+		file.close();
 	}
 
-	// parse the file
-	tree_parse_info<iterator_t, factory_t> info = ParseFile( input_filename, file );
+	// failed to fully parse the input?
 	if( !info.full )
 	{
 		cout << "error parsing " << input << endl;
@@ -133,7 +149,6 @@ int main( int argc, char** argv )
 
 		// dump the instruction stream
 		cout << endl << "Instructions:" << endl;
-//		for( vector<Instruction>::iterator i = inst.instructions.begin(); i != inst.instructions.end(); ++i )
 		for( int i = 0; i < inst.size(); ++i )
 		{
 			cout << inst[i].op << " : ";

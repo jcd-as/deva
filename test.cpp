@@ -12,6 +12,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <stdlib.h>
+
 
 // the (temporarily) global symbol table
 SymbolTable symTab;
@@ -461,6 +463,7 @@ int main( int argc, char** argv )
 			iterator_t end;
 			tree_parse_info<iterator_t, factory_t> info;
 			info = ast_parse<factory_t>( begin, end, deva_p, (space_p | comment_p( "#" )) );
+
 			num_failed += print_parsed( info.full );
 			if( info.full )
 				evaluate( info );
