@@ -1,6 +1,38 @@
-def foo( a, b, c )
-{
-}
+#while( a )
+#{
+#	a = 0;
+#	b = 1;
+#}
+#
+# 0: push a
+# 1: jmpf 11
+# 2: enter
+# 3: push a
+# 4: push 0
+# 5: store
+# 6: push b
+# 7: push 1
+# 8: store
+# 9: leave
+# 10: jmp 0
+# 11: halt
+
+#while( a )
+#{
+#	a = 0;
+#}
+#
+# 0: push a
+# 1: jmpf 6
+# 2: push a
+# 3: push 0
+# 4: store
+# 5: jmp 0
+# 6: halt
+
+#def foo( a, b, c )
+#{
+#}
 
 #if( x )
 #{

@@ -4,10 +4,15 @@
 
 // TODO:
 // * change asserts into (non-fatal) errors
+// * encode location (line number) into bytecode via "line_num" opcodes
+// * maps & vectors, including the dot operator and 'for' loops
 // * semantic checking functions for all valid node types that can have children
+
+#include <iomanip>
 
 #include "compile.h"
 #include "semantics.h"
+#include "fileformat.h"
 
 // helpers
 //////////////////////////////////////////////////////////////////////
@@ -19,6 +24,10 @@ void add_symbol( iterator_t start, iterator_t end )
 {
 	string s( start, end );
 	s = strip_symbol( s );
+
+	// TODO: ensure symbol is not more than 255 characters!
+//	if( s.length() > 255 )
+//		throw new SyntaxError
 	
 	// don't add keywords
 	if( is_keyword( s ) )
@@ -44,10 +53,10 @@ void emit_error( string filename, string msg, int line )
 	cout << filename << ":" << line << ":" << " error: " << msg << endl;
 }
 
-void emit_error( SemanticException & e )
+void emit_error( DevaSemanticException & e )
 {
 	// format = filename:linenum: msg
-	cout << e.node.file << ":" << e.node.line << ":" << " error: " << e.err << endl;
+	cout << e.node.file << ":" << e.node.line << ":" << " error: " << e.what() << endl;
 }
 
 // emit a warning message
@@ -63,10 +72,10 @@ void emit_warning( string filename, string msg, int line )
 	cout << filename << ":" << line << ":" << " warning: " << msg << endl;
 }
 
-void emit_warning( SemanticException & e )
+void emit_warning( DevaSemanticException & e )
 {
 	// format = filename:linenum: msg
-	cout << e.node.file << ":" << e.node.line << ":" << " warning: " << e.err << endl;
+	cout << e.node.file << ":" << e.node.line << ":" << " warning: " << e.what() << endl;
 }
 
 
@@ -125,7 +134,7 @@ bool CheckSemantics( tree_parse_info<iterator_t, factory_t> info )
 	{
 		eval_node( i );
 	}
-	catch( SemanticException & e )
+	catch( DevaSemanticException & e )
 	{
 		emit_error( e );
 		return false;
@@ -203,12 +212,14 @@ void eval_node( iter_t const & i )
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
 	{
+		pre_check_while_s( i );
 		walk_children( i );
 		check_while_s( i );
 	}
 	// for_s (keyword 'for')
 	else if( i->value.id() == parser_id( for_s_id ) )
 	{
+		pre_check_for_s( i );
 		walk_children( i );
 		check_for_s( i );
 	}
@@ -399,116 +410,116 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( comma_op_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// factor_exp
 	else if( i->value.id() == parser_id( factor_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// postfix only exp
 	else if( i->value.id() == parser_id( postfix_only_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// primary_exp
 	else if( i->value.id() == parser_id( primary_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// mult_exp
 	else if( i->value.id() == parser_id( mult_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// add_exp
 	else if( i->value.id() == parser_id( add_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// relational exp
 	else if( i->value.id() == parser_id( relational_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// logical exp
 	else if( i->value.id() == parser_id( logical_exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// exp
 	else if( i->value.id() == parser_id( exp_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// statement
 	else if( i->value.id() == parser_id( statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// top-level statement
 	else if( i->value.id() == parser_id( top_level_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// function decl
 	else if( i->value.id() == parser_id( func_decl_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// while statement
 	else if( i->value.id() == parser_id( while_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// for statement
 	else if( i->value.id() == parser_id( for_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// if statement
 	else if( i->value.id() == parser_id( if_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// else statement
 	else if( i->value.id() == parser_id( else_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
 	// jump statement
 	else if( i->value.id() == parser_id( jump_statement_id ) )
 	{
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
     else
     {
 		// error, invalid node type
 		// TODO: pass actual filename
 		emit_error( i->value.value(), "Semantic error: Encountered unknown node type" );
-		throw SemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( "invalid node type", i->value.value() );
     }
 }
 
 
 void generate_IL_for_node( iter_t const & i, InstructionStream & is );
-// generate IL bytecode
+// generate IL stream
 bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is )
 {
 	// walk the tree, generating the IL for each node
@@ -584,14 +595,30 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
 	{
-		walk_children( i, is );
+		// pre-gen stores the start value, for the jump-to-start
+		pre_gen_IL_while_s( i, is );
+		// first child has the relational op stuff, walk it
+		generate_IL_for_node( i->children.begin(), is );
+		// gen_IL adds the placeholder for the jmpf
 		gen_IL_while_s( i, is );
+		// second child has the statement|compound_statement, walk it
+		generate_IL_for_node( i->children.begin() + 1, is );
+		// post-gen-IL will to the back-patching and add the jump to start
+		post_gen_IL_while_s( i, is );
 	}
 	// for_s (keyword 'for')
 	else if( i->value.id() == parser_id( for_s_id ) )
 	{
-		walk_children( i, is );
-		gen_IL_for_s( i, is );
+		// pre-gen stores the start value, for the jump-to-start
+//		pre_gen_IL_for_s( i, is );
+//		// first child has the relational op stuff, walk it
+//		generate_IL_for_node( i->children.begin(), is );
+//		// gen_IL adds the placeholder for the jmpf
+//		gen_IL_for_s( i, is );
+//		// second child has the statement|compound_statement, walk it
+//		generate_IL_for_node( i->children.begin() + 1, is );
+//		// post-gen-IL will to the back-patching and add the jump to start
+//		post_gen_IL_for_s( i, is );
 	}
 	// if_s (keyword 'if')
 	else if( i->value.id() == parser_id( if_s_id ) )
@@ -780,3 +807,235 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	}
 }
 
+
+// write the bytecode to disk
+bool GenerateByteCode( char const* filename, InstructionStream & is )
+{
+	// open the file for writing
+	ofstream file;
+	file.open( filename, ios::binary );
+	if( file.fail() )
+		return false;
+
+	// write the header
+	FileHeader hdr;
+	file << hdr.deva;
+	file << '\0';
+	file << hdr.ver;
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+
+	// write the instructions
+	for( int i = 0; i < is.size(); ++i )
+	{
+		Instruction inst = is[i];
+		// write the byte for the opcode
+		file << (unsigned char)inst.op;
+		// for each argument:
+		for( int j = 0; j < inst.args.size(); ++j )
+		{
+			// write the byte for the type
+			file << (unsigned char)inst.args[j].Type();
+			// write the name
+			file << inst.args[j].name;
+			file << '\0';
+			// write the value
+			switch( inst.args[j].Type() )
+			{
+				case sym_number:
+					// 64 bits
+					file << inst.args[j].num_val;
+					break;
+				case sym_string:
+					// variable length, null-terminated
+					// TODO: string table / data section, write pointer
+					file << inst.args[j].str_val;
+					file << '\0';
+					break;
+				case sym_boolean:
+					// 32 bits
+					file << (long)inst.args[j].bool_val;
+					break;
+				case sym_map:
+					// TODO: implement
+					//is.args[j].map_val
+					break;
+				case sym_vector:
+					// TODO: implement
+					//is.args[j].vec_val
+					break;
+				case sym_function:
+					// TODO: can this happen??
+					//is.args[j].func_val;
+					break;
+				case sym_function_call:
+					// TODO: can this happen??
+					break;
+				case sym_null:
+					// 32 bits
+					file << (long)0;
+					break;
+				case sym_unknown:
+					// nothing to do, no known value/type
+					break;
+				default:
+					// TODO: throw error
+					break;
+			}
+		}
+		// write the instruction terminating byte
+		file << (unsigned char)255;
+	}
+	return true;
+}
+
+// de-compile a .dvc file and dump the IL to stdout
+bool DeCompileFile( char const* filename )
+{
+	// open the file for reading
+	ifstream file;
+	file.open( filename, ios::binary );
+	if( file.fail() )
+		return false;
+
+	cout << "deva IL:" << endl;
+
+	// read the header
+	char deva[5] = {0};
+	char ver[6] = {0};
+	file.read( deva, 5 );
+	//cout << deva << endl;
+	if( strcmp( deva, "deva") != 0 )
+	{
+		cout << "Invalid .dvc file: header missing 'deva' tag" << endl;
+		return false;
+	}
+	file.read( ver, 6 );
+	//cout << ver << endl;
+	if( strcmp( ver, "1.0.0" ) != 0 )
+	{
+		cout << "Invalid .dvc version number " << ver << endl;
+		return false;
+	}
+	//char pad[7] = "abcdef";
+	char pad[6] = {0};
+	file.read( pad, 5 );
+	//cout << pad << endl;
+	if( pad[0] != 0 || pad[1] != 0 || pad[2] != 0 || pad[3] != 0 || pad[4] != 0 )
+	{
+		cout << "Invalid .dvc file: malformed header after version number" << endl;
+		return false;
+	}
+
+	// read the instructions
+	char* name = new char[256];
+	while( !file.eof() )
+	{
+		double num_val;
+		char str_val[256] = {0};
+		long bool_val;
+//		map<DevaObject, DevaObject>* map_val;
+//		vector<DevaObject>* vec_val;
+//		Function* func_val;
+		// read the byte for the opcode
+		unsigned char op;
+		file.read( (char*)&op, 1 );
+		Instruction inst( (Opcode)op );
+		// for each argument:
+		unsigned char type;
+		file.read( (char*)&type, 1 );
+		while( type != sym_end )
+		{
+			// read the name of the arg
+			memset( name, 0, 256 );
+			file.getline( name, 256, '\0' );
+			// read the value
+			switch( (SymbolType)type )
+			{
+				case sym_number:
+					{
+					// must use >> op to read, since it was used to write
+					file >> num_val;
+					DevaObject ob( name, num_val );
+					inst.args.push_back( ob );
+					break;
+					}
+				case sym_string:
+					{
+					// variable length, null-terminated
+					// TODO: fix. strings can be any length!
+					file.getline( str_val, 256, '\0' );
+					DevaObject ob( name, string( str_val ) );
+					inst.args.push_back( ob );
+					break;
+					}
+				case sym_boolean:
+					{
+					// must use >> op to read, since it was used to write
+					file >> bool_val;
+					DevaObject ob( name, (bool)bool_val );
+					inst.args.push_back( ob );
+					break;
+					}
+				case sym_map:
+					// TODO: implement
+					break;
+				case sym_vector:
+					// TODO: implement
+					break;
+				case sym_function:
+					{
+					// TODO: ???
+//					DevaObject ob( name, sym_function );
+//					inst.args.push_back( ob );
+					break;
+					}
+				case sym_function_call:
+					{
+					// TODO: ???
+					DevaObject ob( name, sym_function_call );
+					inst.args.push_back( ob );
+					break;
+					}
+				case sym_null:
+					{
+					// 32 bits
+					long n = -1;
+					file >> n;
+					DevaObject ob( name, sym_null );
+					inst.args.push_back( ob );
+					break;
+					}
+				case sym_unknown:
+					{
+					// unknown (i.e. variable)
+					DevaObject ob( name, sym_unknown );
+					inst.args.push_back( ob );
+					break;
+					}
+				default:
+					// TODO: throw error
+					break;
+			}
+			memset( name, 0, 256 );
+			
+			// read the type of the next arg
+			//type = 'x';
+			// default to sym_end to drop out of loop if we can't read a byte
+			type = (unsigned char)sym_end;
+			file.read( (char*)&type, sizeof( type ) );
+		}
+
+		cout << inst.op << " : ";
+		// dump args (vector of DevaObjects) too (need >> op for Objects)
+		for( vector<DevaObject>::iterator j = inst.args.begin(); j != inst.args.end(); ++j )
+			cout << *j;
+		cout << endl;
+	}
+	delete [] name;
+	return true;
+}

@@ -3,7 +3,8 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * 
+// * maps & vectors, including the dot operator and 'for' loops
+// * encode location (line number) into InstructionStream via "line_num" opcodes
 
 #include "instructions.h"
 #include "parser_ids.h"
@@ -46,6 +47,9 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 		case sym_function:
 			os << "function: '" << obj.name << "' = ";
 			break;
+		case sym_function_call:
+			os << "function_call: '" << obj.name << "'";
+			break;
 		default:
 			os << "unknown: '" << obj.name << "'";
 	}
@@ -60,9 +64,6 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_pop:			// pop top item off stack
 		os << "pop";
 		break;
-//	case op_peek:			// look at top item on stack without removing it
-//		os << "peek";
-//		break;
 	case op_push:			// push item onto top of stack
 		os << "push";
 		break;
@@ -162,6 +163,9 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_returnv:		// as return, but stack holds return value and then (at top) return address
 		os << "returnv";
 		break;
+	case op_break:			// break out of loop, respecting scope (enter/leave)
+		os << "break";
+		break;
 	case op_enter:
 		os << "enter";
 		break;
@@ -222,12 +226,65 @@ void gen_IL_func( iter_t const & i, InstructionStream & is )
 	// no-op
 }
 
+static vector<int> loop_stack;
+
+void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
+{
+	// general format of while statement
+	// while( a < 10 ){ do_stuff(); }
+	// AST:
+	// while_s
+	// 		- relational_op <
+	// 			- identifier a
+	// 			- number 10
+	// 		- compound_statement
+	// 			- call do_stuff
+	// IL:
+	// start:
+	// (relational_op IL)
+	// jmpf done 
+	// call do_stuff
+	// jmp start
+	// done:
+	// push the current location in the instruction stream onto the 'loop stack'
+	loop_stack.push_back( is.size() );
+}
+
+// location of break statement
+static vector<int> while_jmpf_stack;
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
+{
+	// save the location for back-patching
+	while_jmpf_stack.push_back( is.size() );
+	// generate a place-holder op for the condition's jmpf
+	is.push( Instruction( op_illegal ) );
+}
+
+void post_gen_IL_while_s( iter_t const & i, InstructionStream & is )
+{
+	// add the jump-to-start
+	int loop_loc = loop_stack.back();
+	loop_stack.pop_back();
+	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
+	// back-patch the jmpf
+	// pop the last 'loop' location off the 'loop stack'
+	int jmpf_loc = while_jmpf_stack.back();
+	while_jmpf_stack.pop_back();
+	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.size() ) );
+
+}
+
+void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
 	// TODO
 }
 
 void gen_IL_for_s( iter_t const & i, InstructionStream & is )
+{
+	// TODO
+}
+
+void post_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
 	// TODO
 }
@@ -262,7 +319,6 @@ void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
 
 void gen_IL_if_s( iter_t const & i, InstructionStream & is )
 {
-	// TODO
 	// generate jump destination, back-patching the placeholder from the 'if'
 	// with the correct (current) offset in the instruction stream
 	// pop the last 'if' location off the 'if stack'
@@ -294,14 +350,18 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 
 void gen_IL_identifier( iter_t const & i, InstructionStream & is )
 {
+	string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	// if no children, simple variable
 	if(i->children.size() == 0 )
 	{
-		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 		is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 	}
-	// TODO: if it has children it can be a function call, a map/vector lookup,
-	// or part of a '.' operator look-up (syntactic sugar for a map lookup)
+	// if the first child is an arg_list_exp, it's a fcn call
+	else if( i->children[0].value.id() == arg_list_exp_id )
+	{
+		is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
+	}
+	// TODO: map/vector lookups, dot operator lookup (syntactic sugar for a map lookup)
 }
 
 void gen_IL_in_op( iter_t const & i, InstructionStream & is )
@@ -466,18 +526,21 @@ void gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
 {
-	// TODO: generate jump
+	// generate break op
+	is.push( Instruction( op_break ) );
 }
 
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
 {
-	// TODO: generate jump
+	// generate jump to beginning of loop
+	int loop_loc = loop_stack.back();
+	is.push( Instruction( op_jmp, DevaObject( "", (double)is.size() ) ) );
 }
 
 void gen_IL_return_statement( iter_t const & i, InstructionStream & is )
 {
 	// last child is always semi-colon
-	// TODO: generate return/returnv
+	// generate return/returnv
 	if( i->children.size() > 1 )
 		is.push( Instruction( op_returnv ) );
 	else if( i->children.size() == 1 )

@@ -1,11 +1,18 @@
 # makefile for test driver for deva language grammars
 
+# sources/objs for test executable
 TEST_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp
 TEST_OBJS=$(patsubst %.cpp, %.o, ${TEST_SOURCES})
+# sources/objs for devac executable
 DEVAC_SOURCES=devac.cpp symbol.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp
 DEVAC_OBJS=$(patsubst %.cpp, %.o, ${DEVAC_SOURCES})
+# sources/objs for deva executable
+DEVA_SOURCES=deva.cpp symbol.cpp scope.cpp executor.cpp 
+DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
+# dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
 DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
+DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 
 # source directories:
 #VFILES=
@@ -13,12 +20,12 @@ DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
 CPPFLAGS = -c -g
 LDFLAGS = -g
 
-all : tags test devac
+all : tags ID test devac deva
 
-tags : devac
+tags : devac deva
 	ctags -R 
 
-ID : devac
+ID : devac deva
 	mkid -i "C++"
 
 test : ${TEST_OBJS}
@@ -27,11 +34,14 @@ test : ${TEST_OBJS}
 devac : ${DEVAC_OBJS}
 	g++ ${LDFLAGS} -lboost_program_options-mt -o devac ${DEVAC_OBJS}
 
+deva : ${DEVA_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
+
 %.o : %.cpp
 	g++ ${CPPFLAGS} -o $@ $<
 
 clean:
-	rm *.o test
+	rm *.o test devac deva *.dep*
 
 # run tests
 check:
@@ -39,6 +49,7 @@ check:
 
 include ${TEST_DEP_FILES}
 include ${DEVAC_DEP_FILES}
+include ${DEVA_DEP_FILES}
 
 %.dep : %.cpp
 	@set -e; rm -f $@; \

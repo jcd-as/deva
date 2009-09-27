@@ -55,17 +55,6 @@ struct NodeInfo
 	{ }
 };
 
-struct SemanticException
-{
-	const char* const err;
-//	int line;
-	NodeInfo node;
-
-//	SemanticException( const char* const s, int l ) : err( s ), line( l )
-	SemanticException( const char* const s, NodeInfo ni ) : err( s ), node( ni )
-	{ }
-};
-
 // typedefs
 ////////////////////////
 // the parser iterator

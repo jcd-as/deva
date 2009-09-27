@@ -55,43 +55,63 @@ void check_func( iter_t const & i )
 	// check the number of children
 	// 3 children: id, arg_list, compound_statement | statement
 	if( i->children.size() != 3 )
-		throw SemanticException( "Function declaration node doesn't have three children", i->value.value() );
+		throw DevaSemanticException( "Function declaration node doesn't have three children", i->value.value() );
 	// check the types of the children
 	if( i->children[0].value.id() != parser_id( identifier_id ) )
-		throw SemanticException( "Invalid identifier for function declaration", i->value.value() );
+		throw DevaSemanticException( "Invalid identifier for function declaration", i->value.value() );
 	if( i->children[1].value.id() != arg_list_decl_id )
-		throw SemanticException( "Invalid argument list for function declaration", i->value.value() );
+		throw DevaSemanticException( "Invalid argument list for function declaration", i->value.value() );
 	// TODO: 3rd child has to be some kind of expression. identifier, assign_op
 	// etc etc
 //	if( i->children[2].value.id() != compound_statement_id 
 //		&& i->children[2].value.id() != identifier )
-//		throw SemanticException( "Invalid argument list for function declaration", i->value.value() );
+//		throw DevaSemanticException( "Invalid argument list for function declaration", i->value.value() );
+}
+
+static vector<unsigned char> in_loop_stack;
+
+void pre_check_while_s( iter_t const & i )
+{
+	in_loop_stack.push_back( 0 );
 }
 
 void check_while_s( iter_t const & i )
 {
+	// leaving the loop
+	in_loop_stack.pop_back();
+
 	// 2 children: condition (boolean/number/string/variable/null), compound or single statement
 	NodeInfo condition = i->children[0].value.value();
+	if( i->children[0].value.id() == assignment_op_id )
+		throw DevaSemanticException( "Illegal assignment inside 'while' conditional", condition );
 //	NodeInfo statement = i->children[1].value.value();
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
 		&& condition.type != null_type )
-		throw SemanticException( "Invalid condition in while statement", condition );
+		throw DevaSemanticException( "Invalid condition in while statement", condition );
+}
+
+void pre_check_for_s( iter_t const & i )
+{
+	in_loop_stack.push_back( 0 );
 }
 
 void check_for_s( iter_t const & i )
 {
+	// leaving the loop
+	in_loop_stack.pop_back();
+
 	// n children: n identifiers, in_op, statement|compound_statement
 	int num_children = i->children.size();
 	NodeInfo statements = i->children[num_children - 1].value.value();
 	NodeInfo in_op = i->children[num_children - 2].value.value();
 	if( i->children[num_children - 2].value.id() != in_op_id )
-		throw SemanticException( "Malformed for loop; missing 'in' operator", in_op );
+		throw DevaSemanticException( "Malformed for loop; missing 'in' operator", in_op );
 	for( int j = 0; j < num_children - 2; ++j )
 	{
 		NodeInfo item = i->children[j].value.value();
 		if( i->children[j].value.id() != identifier_id )
-			throw SemanticException( "Invalid loop variable in for loop", item );
+			throw DevaSemanticException( "Invalid loop variable in for loop", item );
 	}
 }
 
@@ -99,11 +119,13 @@ void check_if_s( iter_t const & i )
 {
 	// 2 or 3 children: condition, statement|compound_statement, [optional] else
 	NodeInfo condition = i->children[0].value.value();
+	if( i->children[0].value.id() == assignment_op_id )
+		throw DevaSemanticException( "Illegal assignment inside 'if' conditional", condition );
 //	NodeInfo statement = i->children[1].value.value();
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
 		&& condition.type != null_type )
-		throw SemanticException( "Invalid condition in if statement", condition );
+		throw DevaSemanticException( "Invalid condition in if statement", condition );
 }
 
 void check_else_s( iter_t const & i )
@@ -116,7 +138,7 @@ void check_identifier( iter_t const & i )
 	string s = i->value.value().sym;
 	// disallow keywords
 	if( is_keyword( s ) )
-		throw SemanticException( "Keyword used where variable name expected", i->value.value() );
+		throw DevaSemanticException( "Keyword used where variable name expected", i->value.value() );
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;
@@ -128,7 +150,7 @@ void check_in_op( iter_t const & i )
 	// 1 child: id
 	NodeInfo operand = i->children[0].value.value();
 	if( operand.type != variable_type )
-		throw SemanticException( "Attempting to loop over an invalid object or type", operand );
+		throw DevaSemanticException( "Attempting to loop over an invalid object or type", operand );
 }
 
 void check_map_op( iter_t const & i )
@@ -158,15 +180,13 @@ void check_assignment_op( iter_t const & i )
 	NodeInfo lhs = i->children[0].value.value();
 	NodeInfo rhs = i->children[1].value.value();
 	if( lhs.type != variable_type && i->children[0].value.id() != const_decl_id )
-		throw SemanticException( "Left-hand side of assignment operation not an l-value", lhs );
+		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value", lhs );
 	else if( rhs.type != number_type && rhs.type != string_type 
 		&& rhs.type != boolean_type && rhs.type != null_type
 		&& rhs.type != variable_type && i->children[1].value.id() != vec_op_id
 		&& i->children[1].value.id() != map_op_id )
-		throw SemanticException( "Right-hand side of assignment operation not an r-value", rhs );
+		throw DevaSemanticException( "Right-hand side of assignment operation not an r-value", rhs );
 
-	// TODO: something in here causes a crash when dumping symbols! (in
-	// devac.cpp)
 	if( lhs.type == variable_type )
 	{
 		// TODO: only warn once per scope (this warns on every place it's a lhs
@@ -206,14 +226,14 @@ void check_logical_op( iter_t const & i )
 		&& lhs.type != variable_type
 		&& lhs.type != boolean_type
 		&& lhs.type != null_type )
-		throw SemanticException( "Invalid left-hand operand for logical operator", lhs );
+		throw DevaSemanticException( "Invalid left-hand operand for logical operator", lhs );
 
 	if( rhs.type != number_type 
 		&& rhs.type != string_type
 		&& rhs.type != variable_type
 		&& rhs.type != boolean_type
 		&& rhs.type != null_type )
-		throw SemanticException( "Invalid right-hand operand for logical operator", rhs );
+		throw DevaSemanticException( "Invalid right-hand operand for logical operator", rhs );
 
 	// set the node
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
@@ -224,7 +244,7 @@ void check_logical_op( iter_t const & i )
 	if( i->children.size() == 3 )
 	{
 		if( i->children[2].value.id() != semicolon_op_id )
-			throw SemanticException( "Malformed logical operation", i->children[2].value.value() );
+			throw DevaSemanticException( "Malformed logical operation", i->children[2].value.value() );
 	}
 }
 
@@ -247,32 +267,32 @@ void check_relational_op( iter_t const & i )
 		if( lhs.type == number_type )
 		{
 			if( rhs.type != number_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == string_type )
 		{
 			if( rhs.type != string_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == boolean_type )
 		{
 			if( rhs.type != boolean_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == null_type )
 		{
 			if( rhs.type != null_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == variable_type )
 		{
 			if( rhs.type != variable_type && rhs.type != null_type
 				&& rhs.type != boolean_type && rhs.type != string_type
 				&& rhs.type != number_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else
-			throw SemanticException( "Invalid left-hand operand in equality test", lhs );
+			throw DevaSemanticException( "Invalid left-hand operand in equality test", lhs );
 	}
 	// relational comparison
 	else if( i->value.value().sym == ">" || i->value.value().sym == "<"
@@ -281,24 +301,24 @@ void check_relational_op( iter_t const & i )
 		if( lhs.type == number_type )
 		{
 			if( rhs.type != number_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == string_type )
 		{
 			if( rhs.type != string_type && rhs.type != variable_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else if( lhs.type == variable_type )
 		{
 			if( rhs.type != variable_type && rhs.type != string_type
 				&& rhs.type != number_type )
-				throw SemanticException( "Invalid right-hand operand in equality test", rhs );
+				throw DevaSemanticException( "Invalid right-hand operand in equality test", rhs );
 		}
 		else
-			throw SemanticException( "Invalid left-hand operand in equality test", lhs );
+			throw DevaSemanticException( "Invalid left-hand operand in equality test", lhs );
 	}
 	else
-		throw SemanticException( "Invalid comparison operator", i->value.value() );
+		throw DevaSemanticException( "Invalid comparison operator", i->value.value() );
 
 	// set the node
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
@@ -309,7 +329,7 @@ void check_relational_op( iter_t const & i )
 	if( i->children.size() == 3 )
 	{
 		if( i->children[2].value.id() != semicolon_op_id )
-			throw SemanticException( "Malformed comparison operation", i->children[2].value.value() );
+			throw DevaSemanticException( "Malformed comparison operation", i->children[2].value.value() );
 	}
 }
 
@@ -322,7 +342,7 @@ void check_mult_op( iter_t const & i )
 	if( lhs.type == number_type || lhs.type == variable_type )
 	{
 		if( rhs.type != number_type && rhs.type != variable_type )
-			throw SemanticException( "Invalid right-hand operand to multiply operation", rhs );
+			throw DevaSemanticException( "Invalid right-hand operand to multiply operation", rhs );
 
 		NodeInfo ni = ((NodeInfo)(i->value.value()));
 		ni.type = number_type;
@@ -330,13 +350,13 @@ void check_mult_op( iter_t const & i )
 	}
 	else 
 	{
-		throw SemanticException( "Invalid left-hand operand to multiply operation", lhs );
+		throw DevaSemanticException( "Invalid left-hand operand to multiply operation", lhs );
 	}
 	// optional third child must be semi-colon if it exists
 	if( i->children.size() == 3 )
 	{
 		if( i->children[2].value.id() != semicolon_op_id )
-			throw SemanticException( "Malformed multiply operation", i->children[2].value.value() );
+			throw DevaSemanticException( "Malformed multiply operation", i->children[2].value.value() );
 	}
 }
 
@@ -351,7 +371,7 @@ void check_add_op( iter_t const & i )
 	if( lhs.type == number_type )
 	{
 		if( rhs.type != number_type && rhs.type != variable_type )
-			throw SemanticException( "Mismatched operands to add operation", rhs );
+			throw DevaSemanticException( "Mismatched operands to add operation", rhs );
 
 		NodeInfo ni = ((NodeInfo)(i->value.value()));
 		if( lhs.type == number_type || rhs.type == number_type )
@@ -363,9 +383,9 @@ void check_add_op( iter_t const & i )
 	else if( lhs.type == string_type )
 	{
 		if( i->value.value().sym != "+" )
-			throw SemanticException( "Invalid string operation", rhs );
+			throw DevaSemanticException( "Invalid string operation", rhs );
 		else if( rhs.type != string_type && rhs.type != variable_type )
-			throw SemanticException( "Mismatched operands to string concatenat operation", rhs );
+			throw DevaSemanticException( "Mismatched operands to string concatenat operation", rhs );
 
 		NodeInfo ni = ((NodeInfo)(i->value.value()));
 		ni.type = string_type;
@@ -387,19 +407,19 @@ void check_add_op( iter_t const & i )
 			ni.type = variable_type;
 		}
 		else
-			throw SemanticException( "Invalid right-hand operand to add operation", rhs );
+			throw DevaSemanticException( "Invalid right-hand operand to add operation", rhs );
 
 		i->value.value( ni );
 	}
 	else
 	{
-		throw SemanticException( "Invalid left-hand operand to add operation", lhs );
+		throw DevaSemanticException( "Invalid left-hand operand to add operation", lhs );
 	}
 	// optional third child must be semi-colon if it exists
 	if( i->children.size() == 3 )
 	{
 		if( i->children[2].value.id() != semicolon_op_id )
-			throw SemanticException( "Malformed add operation", i->children[2].value.value() );
+			throw DevaSemanticException( "Malformed add operation", i->children[2].value.value() );
 	}
 }
 
@@ -427,17 +447,17 @@ void check_unary_op( iter_t const & i )
 		else if( operand.type == null_type )
 			ni.type = null_type;
 		else
-			throw SemanticException( "Invalid operand for unary operator", operand );
+			throw DevaSemanticException( "Invalid operand for unary operator", operand );
 	}
 	else if( i->value.value().sym == "-" )
 	{
 		if( operand.type != number_type && operand.type != variable_type )
-			throw SemanticException( "Invalid operand for unary operator", operand );
+			throw DevaSemanticException( "Invalid operand for unary operator", operand );
 
 		ni.type = number_type;
 	}
 	else
-		throw SemanticException( "Invalid unary operator", operand );
+		throw DevaSemanticException( "Invalid unary operator", operand );
 
 	i->value.value( ni );
 
@@ -445,7 +465,7 @@ void check_unary_op( iter_t const & i )
 	if( i->children.size() == 2 )
 	{
 		if( i->children[1].value.id() != semicolon_op_id )
-			throw SemanticException( "Malformed unary operator expression", i->children[2].value.value() );
+			throw DevaSemanticException( "Malformed unary operator expression", i->children[2].value.value() );
 	}
 }
 
@@ -467,11 +487,19 @@ void check_bracket_op( iter_t const & i )
 
 void check_arg_list_exp( iter_t const & i )
 {
+	// n children: '(', n identifiers, ')'
+	for( int j = 1; j < i->children.size()-1; ++j )
+	{
+		if( i->children[j].value.id() == assignment_op_id )
+		{
+			NodeInfo ni = i->children[j].value.value();
+			throw DevaSemanticException( "Illegal assignment inside function arguments", ni );
+		}
+	}
 }
 
 void check_arg_list_decl( iter_t const & i )
 {
-	// n children: '(', n identifiers, ')'
 }
 
 void check_key_exp( iter_t const & i )
@@ -485,14 +513,14 @@ void check_key_exp( iter_t const & i )
 	NodeInfo right = i->children[2].value.value();
 
 	if( left.sym != "[" )
-		throw SemanticException( "Invalid indexing expression", left );
+		throw DevaSemanticException( "Invalid indexing expression", left );
 	else if( right.sym != "]" )
-		throw SemanticException( "Invalid indexing expression", right );
+		throw DevaSemanticException( "Invalid indexing expression", right );
 
 	if( operand.type != number_type 
 		&& operand.type != string_type
 		&& operand.type != variable_type )
-		throw SemanticException( "Index must be a numeric, string or variable value", operand );
+		throw DevaSemanticException( "Index must be a numeric, string or variable value", operand );
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;
@@ -521,9 +549,9 @@ void check_const_decl( iter_t const & i )
 	NodeInfo keyword = i->children[0].value.value();
 	NodeInfo id = i->children[1].value.value();
 	if( keyword.sym != "const" )
-		throw SemanticException( "Invalid constant declaration", keyword );
+		throw DevaSemanticException( "Invalid constant declaration", keyword );
 	else if( id.type != variable_type )
-		throw SemanticException( "Invalid constant declaration", id );
+		throw DevaSemanticException( "Invalid constant declaration", id );
 
 	// set symbol's 'const' flag in the symbol table
 	// DON'T DO THIS: handle all variably typing and definition happen
@@ -531,7 +559,7 @@ void check_const_decl( iter_t const & i )
 //	SymbolTable* st = scopes[i->children[1].value.value().scope];
 //	SymbolInfo* si = find_symbol( i->children[1].value.value().sym, st, scopes );
 //	if( !si )
-//		throw SemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
+//		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
 //	si->is_const = true;
 }
 
@@ -551,16 +579,18 @@ void check_compound_statement( iter_t const & i )
 
 void check_break_statement( iter_t const & i )
 {
-	// must be inside of the compound_statement part of a loop/decision
-	// construct (if/else/while/for)
-	// (tbd at runtime? there's no way to walk the AST from child to parent...)
+	// must be inside of the compound_statement part of a loop construct (while/for)
+	// if the loop-tracking stack is *empty*, we are not inside a loop at all
+	if( in_loop_stack.size() == 0 )
+		throw DevaSemanticException( "'break' statement only valid inside of a loop", i->value.value() );
 }
 
 void check_continue_statement( iter_t const & i )
 {
-	// must be inside of the compound_statement part of a loop/decision
-	// construct (if/else/while/for)
-	// (tbd at runtime? there's no way to walk the AST from child to parent...)
+	// must be inside of the compound_statement part of a loop construct (while/for)
+	// if the loop-tracking stack is *empty*, we are not inside a loop at all
+	if( in_loop_stack.size() == 0 )
+		throw DevaSemanticException( "'continue' statement only valid inside of a loop", i->value.value() );
 }
 
 void check_return_statement( iter_t const & i )

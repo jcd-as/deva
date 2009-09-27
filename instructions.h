@@ -3,7 +3,7 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * 
+// * encode location (line number) into InstructionStream via "line_num" opcodes
 
 #ifndef __INSTRUCTIONS_H__
 #define __INSTRUCTIONS_H__
@@ -72,14 +72,22 @@ struct DevaObject : public SymbolInfo
 			// TODO: need to create copy??
 			func_val = o.func_val;
 			break;
+		case sym_function_call:
+			// TODO: anything???
+			break;
 		case sym_null:
 			// nothing to do, null has/needs no value
 		case sym_unknown:
 			// nothing to do, no known value/type
 			break;
+		default:
+			// TODO: throw error
+			break;
 		}
 
 	}
+	DevaObject( string nm ) : SymbolInfo( sym_end ), name( nm )
+	{}
 	DevaObject( string nm, double n ) : SymbolInfo( sym_number ), num_val( n ), name( nm )
 	{}
 	DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( nm )
@@ -92,7 +100,6 @@ struct DevaObject : public SymbolInfo
 	{}
 	DevaObject( string nm, Function* f ) : SymbolInfo( sym_function ), func_val( f ), name( nm )
 	{}
-//	DevaObject( string nm, SymbolType t ) : name( nm )
 	DevaObject( string nm, SymbolType t )
 	{
 		type = t;
@@ -118,10 +125,16 @@ struct DevaObject : public SymbolInfo
 			// TODO: any better default value for fcn types?
 			func_val = NULL;
 			break;
+		case sym_function_call:
+			// TODO: anything???
+			break;
 		case sym_null:
 			// nothing to do, null has/needs no value
 		case sym_unknown:
 			// nothing to do, no known value/type
+			break;
+		default:
+			// TODO: throw error, invalid
 			break;
 		}
 	}
@@ -180,6 +193,10 @@ struct DevaObject : public SymbolInfo
 		case sym_unknown:
 			// nothing to do, no known value/type
 			break;
+		case sym_function_call:
+		default:
+			// TODO: throw error, can't change type
+			break;
 		}
 	}
 };
@@ -223,12 +240,21 @@ void gen_IL_string( iter_t const & i, InstructionStream & is );
 void gen_IL_boolean( iter_t const & i, InstructionStream & is );
 void gen_IL_null( iter_t const & i, InstructionStream & is );
 void gen_IL_func( iter_t const & i, InstructionStream & is );
+
+void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is );
 void gen_IL_while_s( iter_t const & i, InstructionStream & is );
+void post_gen_IL_while_s( iter_t const & i, InstructionStream & is );
+
+void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is );
 void gen_IL_for_s( iter_t const & i, InstructionStream & is );
+void post_gen_IL_for_s( iter_t const & i, InstructionStream & is );
+
 void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is );
 void gen_IL_if_s( iter_t const & i, InstructionStream & is );
+
 void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is );
 void gen_IL_else_s( iter_t const & i, InstructionStream & is );
+
 void gen_IL_identifier( iter_t const & i, InstructionStream & is );
 void gen_IL_in_op( iter_t const & i, InstructionStream & is );
 void gen_IL_map_op( iter_t const & i, InstructionStream & is );
@@ -249,8 +275,10 @@ void gen_IL_key_exp( iter_t const & i, InstructionStream & is );
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is );
 void gen_IL_constant( iter_t const & i, InstructionStream & is );
 void gen_IL_translation_unit( iter_t const & i, InstructionStream & is );
+
 void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is );
+
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_return_statement( iter_t const & i, InstructionStream & is );

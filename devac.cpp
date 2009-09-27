@@ -86,6 +86,16 @@ int main( int argc, char** argv )
 		// read from stdin instead of a file
 		info = ParseFile( input_filename, cin );
 	}
+	// if the input is a .dvc (compiled) file, de-compile instead
+	else if( input.substr( input.size()-4, 4 ) == ".dvc" )
+	{
+		if( !DeCompileFile( input.c_str() ) )
+		{
+			cout << "Unable to de-compile " << input << endl;
+			return -127;
+		}
+		else return 0;
+	}	
 	else
 	{
 		// open input file
@@ -113,14 +123,25 @@ int main( int argc, char** argv )
 	if( !CheckSemantics( info ) )
 	{
 		cout << "error checking semantics in " << input << endl;
+		return -2;
 	}
 
 	// generate IL
 	InstructionStream inst;
-	GenerateIL( info, inst );
+	if( !GenerateIL( info, inst ) )
+	{
+		cout << "fatal error generating IL for " << input << endl;
+		return -3;
+	}
 
 	// TODO: optimize IL (???)
-	// TODO: generate final IL bytecode (???)
+
+	// generate final IL bytecode
+	if( !GenerateByteCode( output.c_str(), inst ) )
+	{
+		cout << "fatal error generating bytecode for " << input << endl;
+		return -4;
+	}
 
 	// debug & verbose diagnostics/output:
 	if( debug && verbosity >= 3 )

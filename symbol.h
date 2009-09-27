@@ -12,14 +12,16 @@ using namespace std;
 
 enum SymbolType
 {
-    sym_null,
-    sym_number,
-    sym_string,
-	sym_boolean,
-    sym_vector,
-	sym_map,
-    sym_function,
-    sym_unknown
+    sym_null,			// 0
+    sym_number,			// 1
+    sym_string,			// 2
+	sym_boolean,		// 3
+    sym_vector,			// 4
+	sym_map,			// 5
+    sym_function,		// 6
+    sym_function_call,	// 7
+    sym_unknown,		// 8
+	sym_end = 255		// end of enum and signal for end of instruction arg list
 };
 
 class SymbolInfo
