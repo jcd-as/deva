@@ -16,12 +16,6 @@
 
 using namespace std;
 
-struct Function
-{
-	int offset;
-	// TODO: info on arguments, if it returns a value...?
-};
-
 // the basic piece of data stored on the data stack
 struct DevaObject : public SymbolInfo
 {
@@ -33,7 +27,7 @@ struct DevaObject : public SymbolInfo
 		bool bool_val;
 		map<DevaObject, DevaObject>* map_val;
 		vector<DevaObject>* vec_val;
-		Function* func_val;
+		long func_offset;	// offset into instruction stream to function start
 	};
 
 	// name that the object (variable) is referred to with
@@ -41,10 +35,14 @@ struct DevaObject : public SymbolInfo
 	string name;
 
 	// copy constructor needed to ensure each object has a separate copy of data
-	DevaObject( const DevaObject & o ) : SymbolInfo()
+	DevaObject( const DevaObject & o )
 	{
+		if( &o == this )
+			return;
 		name = o.name;
 		type = o.type;
+		is_const = o.is_const;
+		is_argument = o.is_argument;
 		switch( type )
 		{
 		case sym_number:
@@ -70,7 +68,57 @@ struct DevaObject : public SymbolInfo
 		case sym_function:
 			// TODO: any better default value for fcn types?
 			// TODO: need to create copy??
-			func_val = o.func_val;
+			func_offset = o.func_offset;
+			break;
+		case sym_function_call:
+			// TODO: anything???
+			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, no known value/type
+			break;
+		default:
+			// TODO: throw error
+			break;
+		}
+
+	}
+	// copy construct, but with a different name
+	DevaObject( string nm, const DevaObject & o )
+	{
+		if( &o == this )
+			return;
+		name = nm;
+		type = o.type;
+		is_const = o.is_const;
+		is_argument = o.is_argument;
+		switch( type )
+		{
+		case sym_number:
+			num_val = o.num_val;
+			break;
+		case sym_string:
+			str_val = new char[strlen( o.str_val ) + 1];
+			strcpy( str_val, o.str_val );
+			break;
+		case sym_boolean:
+			bool_val = o.bool_val;
+			break;
+		case sym_map:
+			// TODO: verify this
+			map_val = new map<DevaObject, DevaObject>();
+			*map_val = *(o.map_val);
+			break;
+		case sym_vector:
+			// TODO: verify this
+			vec_val = new vector<DevaObject>();
+			*vec_val = *(o.vec_val);
+			break;
+		case sym_function:
+			// TODO: any better default value for fcn types?
+			// TODO: need to create copy??
+			func_offset = o.func_offset;
 			break;
 		case sym_function_call:
 			// TODO: anything???
@@ -98,12 +146,14 @@ struct DevaObject : public SymbolInfo
 	}
 	DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm )
 	{}
-	DevaObject( string nm, Function* f ) : SymbolInfo( sym_function ), func_val( f ), name( nm )
+	DevaObject( string nm, long offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm )
 	{}
 	DevaObject( string nm, SymbolType t )
 	{
 		type = t;
 		name = nm;
+		is_const = false;
+		is_argument = false;
 		switch( t )
 		{
 		case sym_number:
@@ -122,8 +172,7 @@ struct DevaObject : public SymbolInfo
 			vec_val = new vector<DevaObject>();
 			break;
 		case sym_function:
-			// TODO: any better default value for fcn types?
-			func_val = NULL;
+			func_offset = -1;
 			break;
 		case sym_function_call:
 			// TODO: anything???
@@ -146,8 +195,55 @@ struct DevaObject : public SymbolInfo
 			if( map_val ) delete map_val;
 		else if( type == sym_vector )
 			if( vec_val ) delete vec_val;
-		else if( type == sym_function )
-			if( func_val ) delete func_val;
+	}
+	DevaObject& operator = ( const DevaObject & o )
+	{
+		if( &o == this )
+			return *this;
+		name = o.name;
+		type = o.type;
+		is_const = o.is_const;
+		is_argument = o.is_argument;
+		switch( type )
+		{
+		case sym_number:
+			num_val = o.num_val;
+			break;
+		case sym_string:
+			str_val = new char[strlen( o.str_val ) + 1];
+			strcpy( str_val, o.str_val );
+			break;
+		case sym_boolean:
+			bool_val = o.bool_val;
+			break;
+		case sym_map:
+			// TODO: verify this
+			map_val = new map<DevaObject, DevaObject>();
+			*map_val = *(o.map_val);
+			break;
+		case sym_vector:
+			// TODO: verify this
+			vec_val = new vector<DevaObject>();
+			*vec_val = *(o.vec_val);
+			break;
+		case sym_function:
+			// TODO: any better default value for fcn types?
+			// TODO: need to create copy??
+			func_offset = o.func_offset;
+			break;
+		case sym_function_call:
+			// TODO: anything???
+			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, no known value/type
+			break;
+		default:
+			// TODO: throw error
+			break;
+		}
+		return *this;
 	}
 
 	// equivalent of destroying and re-creating
@@ -161,8 +257,6 @@ struct DevaObject : public SymbolInfo
 			delete map_val;
 		else if( type == sym_vector )
 			delete vec_val;
-		else if( type == sym_function )
-			delete func_val;
 
 		type = t;
 
@@ -185,8 +279,7 @@ struct DevaObject : public SymbolInfo
 			vec_val = new vector<DevaObject>();
 			break;
 		case sym_function:
-			// TODO: any better default value for fcn types?
-			func_val = NULL;
+			func_offset = -1;
 			break;
 		case sym_null:
 			// nothing to do, null has/needs no value
@@ -197,6 +290,80 @@ struct DevaObject : public SymbolInfo
 		default:
 			// TODO: throw error, can't change type
 			break;
+		}
+	}
+	// set the value from another object, without changing the name
+	// fails (returns false) if this is a const object
+	bool SetValue( const DevaObject & o )
+	{
+		if( is_const )
+			return false;
+
+		ChangeType( o.type );
+
+		switch( type )
+		{
+		case sym_number:
+			num_val = o.num_val;
+			break;
+		case sym_string:
+			// TODO: any better default value for string types?
+			// make a copy of the string passed to us, DON'T take ownership of it!
+			str_val = new char[strlen( o.str_val ) + 1];
+			strcpy( str_val, o.str_val );
+			break;
+		case sym_boolean:
+			bool_val = o.bool_val;
+			break;
+		case sym_map:
+			map_val = new map<DevaObject, DevaObject>();
+			// TODO: copy the map
+			break;
+		case sym_vector:
+			vec_val = new vector<DevaObject>();
+			// TODO: copy the vector
+			break;
+		case sym_function:
+			func_offset = o.func_offset;
+			break;
+		case sym_null:
+			// nothing to do, null has/needs no value
+		case sym_unknown:
+			// nothing to do, variable with no known value
+			break;
+		case sym_function_call:
+		default:
+			// TODO: throw error, can't change
+			break;
+		}
+	}
+	// size of the object on *disk*
+	long Size() const
+	{
+		// length of name (plus null terminator), plus 'type' byte
+		long sz = name.length() + 2;
+		switch( type )
+		{
+		case sym_number:
+			return sz + sizeof( double );
+		case sym_string:
+			return sz + strlen( str_val ) + 1;
+		case sym_boolean:
+			return sz + sizeof( long );
+		case sym_map:
+			// TODO: implement
+			return 0;
+		case sym_vector:
+			// TODO: implement
+			return 0;
+		case sym_function:
+			return sz + sizeof( long );
+		case sym_null:
+			return sz + sizeof( long );
+		case sym_unknown:
+		case sym_function_call:
+		default:
+			return sz;
 		}
 	}
 };
@@ -221,6 +388,17 @@ struct Instruction
 		args.push_back( ob1 );
 		args.push_back( ob2 );
 	}
+	long Size() const
+	{
+		// size of the args
+		long offs = 0;
+		for( vector<DevaObject>::const_iterator i = args.begin(); i != args.end(); ++i )
+		{
+			offs += i->Size();
+		}
+		// plus the size of the opcode AND the 'argument end' (255) byte
+		return offs + 2;
+	}
 };
 
 class InstructionStream
@@ -228,10 +406,20 @@ class InstructionStream
 	// list of instructions
 	vector<Instruction> instructions;
 
+	// file offset
+	long offset;
+
 public:
-	void push( const Instruction & i ){ instructions.push_back( i ); }
+	InstructionStream() : offset( 0 )
+	{}
+	void push( const Instruction & i )
+	{
+		instructions.push_back( i );
+		offset += i.Size();
+	}
 	size_t size(){ return instructions.size(); }
 	Instruction & operator[]( size_t idx ){ return instructions[idx]; }
+	long Offset(){ return offset; }
 };
 
 // declare IL gen functions
@@ -269,7 +457,10 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is );
 void gen_IL_dot_op( iter_t const & i, InstructionStream & is );
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is );
 void gen_IL_bracket_op( iter_t const & i, InstructionStream & is );
+
+void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is );
 void gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is );
+
 void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is );
 void gen_IL_key_exp( iter_t const & i, InstructionStream & is );
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is );

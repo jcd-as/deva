@@ -584,7 +584,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 
 		// create a function at this loc
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
-		is.push( Instruction( op_defun, DevaObject( name, (double)is.size() ) ) );
+		// write the current *file* offset, not instruction stream!
+		is.push( Instruction( op_defun, DevaObject( name, is.Offset() ) ) );
 
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is );
@@ -747,6 +748,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// arg list exp
 	else if( i->value.id() == parser_id( arg_list_exp_id ) )
 	{
+		pre_gen_IL_arg_list_exp( i, is );
 		walk_children( i, is );
 		gen_IL_arg_list_exp( i, is );
 	}
@@ -841,25 +843,26 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 			// write the byte for the type
 			file << (unsigned char)inst.args[j].Type();
 			// write the name
-			file << inst.args[j].name;
+			file.write( inst.args[j].name.c_str(), inst.args[j].name.length() );
 			file << '\0';
 			// write the value
 			switch( inst.args[j].Type() )
 			{
 				case sym_number:
-					// 64 bits
-					file << inst.args[j].num_val;
+					file.write( (char*)&(inst.args[j].num_val), sizeof( double ) );
 					break;
 				case sym_string:
 					// variable length, null-terminated
-					// TODO: string table / data section, write pointer
-					file << inst.args[j].str_val;
+					file.write( inst.args[j].str_val, strlen( inst.args[j].str_val ) );
 					file << '\0';
 					break;
 				case sym_boolean:
+					{
 					// 32 bits
-					file << (long)inst.args[j].bool_val;
+					long val = (long)inst.args[j].bool_val;
+					file.write( (char*)&val, sizeof( long ) );
 					break;
+					}
 				case sym_map:
 					// TODO: implement
 					//is.args[j].map_val
@@ -869,16 +872,18 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 					//is.args[j].vec_val
 					break;
 				case sym_function:
-					// TODO: can this happen??
-					//is.args[j].func_val;
+					file.write( (char*)&(inst.args[j].func_offset), sizeof( long ) );
 					break;
 				case sym_function_call:
 					// TODO: can this happen??
 					break;
 				case sym_null:
+					{
 					// 32 bits
-					file << (long)0;
+					long val = 0;
+					file.write( (char*)&val, sizeof( long ) );
 					break;
+					}
 				case sym_unknown:
 					// nothing to do, no known value/type
 					break;
@@ -940,7 +945,7 @@ bool DeCompileFile( char const* filename )
 		long bool_val;
 //		map<DevaObject, DevaObject>* map_val;
 //		vector<DevaObject>* vec_val;
-//		Function* func_val;
+		long func_offset;
 		// read the byte for the opcode
 		unsigned char op;
 		file.read( (char*)&op, 1 );
@@ -958,8 +963,7 @@ bool DeCompileFile( char const* filename )
 			{
 				case sym_number:
 					{
-					// must use >> op to read, since it was used to write
-					file >> num_val;
+					file.read( (char*)&num_val, sizeof( double ) );
 					DevaObject ob( name, num_val );
 					inst.args.push_back( ob );
 					break;
@@ -975,8 +979,7 @@ bool DeCompileFile( char const* filename )
 					}
 				case sym_boolean:
 					{
-					// must use >> op to read, since it was used to write
-					file >> bool_val;
+					file.read( (char*)&bool_val, sizeof( long ) );
 					DevaObject ob( name, (bool)bool_val );
 					inst.args.push_back( ob );
 					break;
@@ -989,9 +992,9 @@ bool DeCompileFile( char const* filename )
 					break;
 				case sym_function:
 					{
-					// TODO: ???
-//					DevaObject ob( name, sym_function );
-//					inst.args.push_back( ob );
+					file.read( (char*)&func_offset, sizeof( long ) );
+					DevaObject ob( name, func_offset );
+					inst.args.push_back( ob );
 					break;
 					}
 				case sym_function_call:
@@ -1005,7 +1008,7 @@ bool DeCompileFile( char const* filename )
 					{
 					// 32 bits
 					long n = -1;
-					file >> n;
+					file.read( (char*)&n, sizeof( long ) );
 					DevaObject ob( name, sym_null );
 					inst.args.push_back( ob );
 					break;

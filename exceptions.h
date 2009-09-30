@@ -3,7 +3,7 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * 
+// * derive from logic_error and runtime_error, instead of 'exception'
 
 #ifndef __EXCEPTIONS_H__
 #define __EXCEPTIONS_H__
@@ -12,6 +12,7 @@
 // generic deva exception
 class DevaException : public exception
 {
+protected:
 	const char* const msg;
 
 public:

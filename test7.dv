@@ -1,0 +1,6 @@
+# code gen test. working as of 09/29/09 with hack for 'print' built-in fcn
+def a( b )
+{
+	return b + "bar";
+}
+print( a( "foo" ) );

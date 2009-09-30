@@ -18,7 +18,7 @@ enum SymbolType
 	sym_boolean,		// 3
     sym_vector,			// 4
 	sym_map,			// 5
-    sym_function,		// 6
+    sym_function,		// 6	both fcn defs (locations) and return addresses
     sym_function_call,	// 7
     sym_unknown,		// 8
 	sym_end = 255		// end of enum and signal for end of instruction arg list
@@ -40,7 +40,7 @@ public:
     SymbolInfo( SymbolType t ) : type( t ), is_const( false ), is_argument( false )
     { }
 
-	SymbolType Type(){ return type; }
+	SymbolType Type() const { return type; }
 };
 
 struct SymbolTable : public map<string, SymbolInfo*>
@@ -64,6 +64,10 @@ struct SymbolTable : public map<string, SymbolInfo*>
 // strip the whitespace and leading comments from a string,
 // to create a valid symbol name
 string strip_symbol( const string& src, const string& c = " \t\r\n" );
+
+// strip single and double quotes (for use in getting the value of a string
+// variable, for instance)
+string strip_quotes( const string& src );
 
 // is this identifier a keyword?
 bool is_keyword( const string & s );

@@ -4,7 +4,7 @@ def foo( a, b )
 {
 	if( a )
 		return b;
-	elseif( b )
+	else if( b )
 		return a;
 	else
 	{

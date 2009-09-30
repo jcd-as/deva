@@ -32,6 +32,21 @@ string strip_symbol( const string& src, const string& c )
 	return src2.substr( p1, (p2 - p1) + 1 );
 }
 
+// strip single and double quotes (for use in getting the value of a string
+// variable, for instance)
+string strip_quotes( const string& src )
+{
+	string c( "\"'" );
+
+ 	int p2 = src.find_last_not_of( c );
+ 	if( p2 == string::npos ) 
+		return string();
+	int p1 = src.find_first_not_of( c );
+	if( p1 == string::npos )
+		p1 = 0;
+	return src.substr( p1, (p2 - p1) + 1 );
+}
+
 // is this identifier a keyword?
 bool is_keyword( const string & s )
 {
