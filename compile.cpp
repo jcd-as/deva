@@ -631,18 +631,27 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 		// second child has the statement|compound_statement, walk it
 		generate_IL_for_node( i->children.begin() + 1, is );
 
-		// back-patch the jump-placeholder
-		gen_IL_if_s( i, is );
-
-		// third child, if any, has the else clause
-		if( i->children.size() == 3 )
+		// if there's no 'else' clause
+		// (third child, if any, has the else clause)
+		if( i->children.size() < 3 )
 		{
-
-			// generate the jump-placeholder...
+			// back-patch the jump-placeholder to jump to here
+			gen_IL_if_s( i, is );
+		}
+		else
+		{
+			// generate the 'else' jump-placeholder... (i.e. the jump *over* the
+			// else, for when the 'if' path was taken)
 			pre_gen_IL_else_s( i, is );
-			// ...then walk it...
+
+			// back-patch the 'if' jump-placeholder to jump to here (for when
+			// the 'if' path *wasn't* taken)
+			gen_IL_if_s( i, is );
+
+			// ...then walk the children (statement|compound_statement)
 			generate_IL_for_node( i->children.begin() + 2, is );
-			// ...and then back-patch the jump
+
+			// ...and then back-patch the 'else' jump to jump to here
 			gen_IL_else_s( i, is );
 		}
 	}
@@ -650,6 +659,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	else if( i->value.id() == parser_id( else_s_id ) )
 	{
 		// always a child of an 'if', which handles this, see above
+		// so just walk the children
+		generate_IL_for_node( i->children.begin(), is );
 	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )

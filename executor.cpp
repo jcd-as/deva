@@ -3,7 +3,7 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * clean up & unify format of exceptions thrown
+// * line number op-code for tracking what line errors occur on
 // * maps & vectors, including the dot operator and 'for' loops
 
 #include "executor.h"
@@ -69,6 +69,40 @@ void Executor::read_double( double & d )
 {
 	memcpy( (void*)&d, (char*)(code + ip), sizeof( double ) );
 	ip += sizeof( double );
+}
+
+// helper for the comparison ops:
+// returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
+int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
+{
+	// numbers, booleans, and strings can be compared
+	if( lhs.Type() != sym_number && lhs.Type() != sym_boolean && lhs.Type() != sym_string )
+		throw DevaRuntimeException( "Invalid left-hand argument to comparison operation." );
+	if( rhs.Type() != sym_number && rhs.Type() != sym_boolean && rhs.Type() != sym_string )
+		throw DevaRuntimeException( "Invalid right-hand argument to comparison operation." );
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Left-hand side and right-hand side of comparison operation are incompatible." );
+	switch( lhs.Type() )
+	{
+	case sym_number:
+		if( lhs.num_val == rhs.num_val )
+			return 0;
+		else if( lhs.num_val > rhs.num_val )
+			return 1;
+		else
+			return -1;
+	case sym_boolean:
+		if( lhs.bool_val == rhs.bool_val )
+			return 0;
+		else if( lhs.bool_val == true )
+			return 1;
+		else
+			return -1;
+	case sym_string:
+		string lhs_s( lhs.str_val );
+		string rhs_s( rhs.str_val );
+		return lhs_s.compare( rhs_s );
+	}
 }
 
 // load the bytecode from the file
@@ -142,13 +176,14 @@ void Executor::Store( Instruction const & inst )
 {
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
 	// the stack)
-	DevaObject rhs = Pop( inst );
-	DevaObject lhs = Pop( inst );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if the rhs is a variable or function, get it from the symbol table
 	// TODO: map & vector
 	if( rhs.Type() == sym_unknown || rhs.Type() == sym_function )
 	{
-		// if not found, error
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
 			throw DevaRuntimeException( "Reference to unknown variable." );
@@ -158,7 +193,7 @@ void Executor::Store( Instruction const & inst )
 		throw DevaRuntimeException( "Attempting to assign a value into a non-variable l-value." );
 	// get the lhs from the symbol table
 	DevaObject* ob = find_symbol( lhs );
-	//  - not found? add it to the current scope
+	// not found? add it to the current scope
 	if( !ob )
 	{
 		ob = new DevaObject( lhs.name, sym_unknown );
@@ -170,12 +205,11 @@ void Executor::Store( Instruction const & inst )
 // 4 define function. arg is location in instruction stream, named the fcn name
 void Executor::Defun( Instruction const & inst )
 {
-	// TODO: implement
 	// ensure 1st arg to instruction is a function object
 	if( inst.args.size() < 1 )
-		throw DevaRuntimeException( "Internal compiler error: Invalid defun opcode, no arguments" );
+		throw DevaICE( "Invalid defun opcode, no arguments." );
 	if( inst.args[0].Type() != sym_function )
-		throw DevaRuntimeException( "Internal compiler error: Invalid defun opcode argument" );
+		throw DevaICE( "Invalid defun opcode argument." );
 	// create a new entry in the local symbol table
 	// (offset to HERE (function start))
 	long offset = ip;
@@ -194,18 +228,17 @@ void Executor::Defun( Instruction const & inst )
 // 5 define an argument to a fcn. argument (to opcode) is arg name
 void Executor::Defarg( Instruction const & inst )
 {
-	// TODO: implement
-	// ??? when called as the start of a fcn, needs to operate differently than
-	// when called to define the fcn... ???
+	// only called as the start of a fcn *call*, not definition (defun)
 	if( inst.args.size() < 1 )
-		throw DevaRuntimeException( "Internal compiler error: Invalid defarg opcode, no arguments" );
+		throw DevaICE( "Invalid defarg opcode, no arguments." );
 	if( stack.size() < 1 )
-		throw DevaRuntimeException( "Invalid defarg opcode, no data on stack" );
-	// TODO: doh! return address is on top of the stack here, not the args
+		throw DevaRuntimeException( "Invalid defarg opcode, no data on stack." );
+	// TODO: (can anything be done about this??):
+	// doh! return address is on top of the stack here, not the args
 	// pop the top of the stack and put it in the symbol table with the name of
+	// the argument that is being defined
 	DevaObject o = stack.back();
 	stack.pop_back();
-	// the argument that is being defined
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
 	scopes.back()->insert( pair<string, DevaObject*>( val->name, val ) );
 }
@@ -247,52 +280,168 @@ void Executor::Map_store( Instruction const & inst )
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
 {
-	// TODO: implement
+	// one arg: the offset to jump to (as a number type)
+	if( inst.args.size() < 1 )
+		throw DevaICE( "Invalid jmp instruction: no arguments." );
+	DevaObject dest = inst.args[0];
+	if( dest.Type() != sym_number )
+		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
+	// jump execution to the function offset
+	ip = (long)dest.num_val;
 }
 // 14 jump on top of stack evaluating to false 
 void Executor::Jmpf( Instruction const & inst )
 {
-	// TODO: implement
+	// one arg: the offset to jump to (as a number type)
+	if( inst.args.size() < 1 )
+		throw DevaICE( "Invalid jmp instruction: no arguments." );
+	DevaObject dest = inst.args[0];
+	if( dest.Type() != sym_number )
+		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
+
+	// get the value on the top of the stack
+	DevaObject o = stack.back();
+	stack.pop_back();
+	// it must be of a variable, number, string, boolean, or null
+	if( o.Type() != sym_unknown && o.Type() != sym_number && o.Type() != sym_string
+		&& o.Type() != sym_boolean && o.Type() != sym_null )
+		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
+	// if it is a variable, lookup the variable in the symbol table
+	if( o.Type() == sym_unknown )
+	{
+		DevaObject* var = find_symbol( o );
+		if( !var )
+			throw DevaRuntimeException( "Undefined variable referenced in jmpf instruction." );
+		if( var->Type() != sym_unknown && var->Type() != sym_number && var->Type() != sym_string
+			&& var->Type() != sym_boolean && var->Type() != sym_null )
+			throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
+		o = *var;
+	}
+	// if it evaluates to 'true', return
+	switch( o.Type() )
+	{
+	case sym_null:
+		// null is always false
+		break;
+	case sym_number:
+		if( o.num_val != 0 )
+			return;
+		break;
+	case sym_boolean:
+		if( o.bool_val )
+			return;
+		break;
+	case sym_string:
+		if( strlen( o.str_val ) > 0 )
+			return;
+		break;
+	default:
+		throw DevaICE( "Invalid type in jmpf instruction found after evaluating type. Memory corruption?" );
+	}
+	// else jump to the offset in the argument
+	ip = (long)dest.num_val;
 }
 // 15 == compare top two values on stack
 void Executor::Eq( Instruction const & inst )
 {
-	// TODO: implement
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid eq instruction." );
+	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for eq instruction." );
+	DevaObject lhs = stack.back();
+	stack.pop_back();
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in equality comparision." );
+		rhs = *o;
+	}
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result == 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
+
 }
 // 16 != compare top two values on stack
 void Executor::Neq( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
 }
 // 17 < compare top two values on stack
 void Executor::Lt( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
 }
 // 18 <= compare top two values on stack
 void Executor::Lte( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
 }
 // 19 > compare top two values on stack
 void Executor::Gt( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
 }
 // 20 >= compare top two values on stack
 void Executor::Gte( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if they are the same type, compare them and push the (boolean) result
+	// onto the stack
 }
 // 21 || the top two values
 void Executor::Or( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// TODO: short-circuiting: how???
+	// if either value is true, push 'true' onto the stack
+	// else push 'false'
 }
 // 22 && the top two values
 void Executor::And( Instruction const & inst )
 {
 	// TODO: implement
+	// get the lhs and rhs values
+	// if they are variables, get their values from the symbol table
+	// if both values are true, push 'true' onto the stack
+	// else push 'false'
 }
 // 23 negate the top value ('-' operator)
 void Executor::Neg( Instruction const & inst )
@@ -378,7 +527,7 @@ void Executor::Output( Instruction const & inst )
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
 	// TEMPORARY HACK!!! REMOVE!!!
 	// (and replace with importing the built-ins)
 	if( inst.args[0].name == "print" )
@@ -442,9 +591,6 @@ void Executor::Call( Instruction const & inst )
 			throw DevaRuntimeException( "Call made to undefined function." );
 		// get the offset for the function
 		long offset = fcn->func_offset;
-		// TODO:
-		// push the current location onto the stack
-//		stack.push_back( DevaObject( "", ip ) );
 		// jump execution to the function offset
 		ip = offset;
 	}
@@ -764,25 +910,38 @@ Executor::~Executor()
 
 bool Executor::RunFile()
 {
-	// load the file into memory
-	LoadByteCode();
-	
-	// create a file-level ("global") scope
-	Enter( Instruction( op_enter ) );
-
-	// read the instructions
-	while( true )
+	try
 	{
-		// get the next instruction in the byte code
-		Instruction inst = NextInstr();
+		// load the file into memory
+		LoadByteCode();
+		
+		// create a file-level ("global") scope
+		Enter( Instruction( op_enter ) );
 
-		// DoInstr returns false on 'halt' instruction
-		if( !DoInstr( inst ) )
-			break;
+		// read the instructions
+		while( true )
+		{
+			// get the next instruction in the byte code
+			Instruction inst = NextInstr();
+
+			// DoInstr returns false on 'halt' instruction
+			if( !DoInstr( inst ) )
+				break;
+		}
+
+		// exit the file-level ("global") scope
+		Leave( Instruction( op_leave ) );
 	}
-
-	// exit the file-level ("global") scope
-	Leave( Instruction( op_leave ) );
+	catch( DevaICE & e )
+	{
+		cout << "Internal compiler error: " << e.what() << endl;
+		return false;
+	}
+	catch( DevaRuntimeException & e )
+	{
+		cout << e.what() << endl;
+		return false;
+	}
 
 	return true;
 }

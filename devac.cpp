@@ -44,7 +44,7 @@ int main( int argc, char** argv )
 		( "version,ver", "display program version" )
 		( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 		( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
-		( "output,o", po::value<string>( &output )->default_value( "a.dvc" ), "output filename" )
+		( "output,o", po::value<string>( &output ), "output filename" )
 		( "input", po::value<string>( &input ), "input filename" )
 		;
 	po::positional_options_description p;
@@ -73,6 +73,17 @@ int main( int argc, char** argv )
 		cout << "usage: devac [options] <input_file>" << endl;
 		cout << "(use option --help for more information)" << endl;
 		return 1;
+	}
+	// output filename is either specified or input with .dvc extension
+	if( !vm.count( "output" ) )
+	{
+		output = input;
+		size_t pos = output.rfind( "." );
+		if( pos != string::npos )
+		{
+			output.erase( pos );
+		}
+		output += ".dvc";
 	}
 
 	// get the filename to compile

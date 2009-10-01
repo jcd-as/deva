@@ -372,39 +372,48 @@ Scope 6, parent = 0
 	str
 
 Instructions:
-defun : num: 'foo' = 0
+defun : function: 'foo', offset = 0
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 push : unknown: 'a'
-jmpf : num: '' = 7
+jmpf : num: '' = 57
 push : unknown: 'b'
 returnv : 
-jmp : num: '' = 8
+jmp : num: '' = 107
+push : unknown: 'b'
+jmpf : num: '' = 93
+push : unknown: 'a'
+returnv : 
+jmp : num: '' = 107
+push : num: '' = 0
+returnv : 
 push : unknown: 'a'
 new_vec: : 
 store : 
 push : unknown: 'a'
+push : function: '', offset = 153
 push : num: '' = 5
 call : function_call: 'pushback'
 push : unknown: 'b'
 new_map: : 
 store : 
 push : num: '' = 0
-push : string: '' = "foo"
+push : string: '' = foo
 store : 
-push : string: '' = "foo"
+push : string: '' = foo
 push : unknown: 'foo'
 store : 
 push : unknown: 'x'
-push : string: '' = "foo"
+push : string: '' = foo
 store : 
+push : function: '', offset = 253
 push : num: '' = 0
 push : num: '' = 1
 call : function_call: 'x'
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : num: '' = 45
+jmpf : num: '' = 369
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -412,10 +421,12 @@ push : num: '' = 1
 add : 
 store : 
 push : unknown: 'io'
+push : function: '', offset = 355
+push : function: '', offset = 346
 push : unknown: 'a'
 call : function_call: 'str'
 call : function_call: 'print'
 leave : 
-jmp : num: '' = 29
+jmp : num: '' = 38
 halt : 
 compiled input.dv successfully

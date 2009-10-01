@@ -4,6 +4,8 @@
 
 // TODO:
 // * ensure a op_return is ALWAYS emitted at the exit of a function
+// * generate a 'pop' after a function call when the value is not used (i.e. not
+// 	 passed to an assignment, fcn call, map/vec lookup, loop conditional...)
 // * maps & vectors, including the dot operator and 'for' loops
 // * encode location (line number) into InstructionStream via "line_num" opcodes
 
@@ -338,8 +340,8 @@ void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	// push the current location in the instruction stream onto the 'else' stack
 	// write the current *file* offset, not instruction stream!
 	else_stack.push_back( is.size() );
-	// generate the jump placeholder
-	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
+	// generate the jump placeholder (for the if's jump *over* the else part)
+	is.push( Instruction( op_jmp, DevaObject( "", -1.0 ) ) );
 }
 
 void gen_IL_else_s( iter_t const & i, InstructionStream & is )

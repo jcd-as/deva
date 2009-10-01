@@ -20,6 +20,7 @@ using namespace std;
 struct DevaObject : public SymbolInfo
 {
 	// TODO: types for C function and UserCode (C "void*")block?
+	// TODO: type for User-Defined Types (classes) ??
 	union 
 	{
 		double num_val;

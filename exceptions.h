@@ -8,37 +8,32 @@
 #ifndef __EXCEPTIONS_H__
 #define __EXCEPTIONS_H__
 
+#include <stdexcept>
 
-// generic deva exception
-class DevaException : public exception
-{
-protected:
-	const char* const msg;
-
-public:
-	DevaException( const char* const text ) : msg( text )
-	{}
-	~DevaException() throw()
-	{}
-	// override
-	const char* what(){ return msg; }
-};
-
-struct DevaSemanticException : public DevaException
+struct DevaSemanticException : public logic_error
 {
 	NodeInfo node;
 
 public:
-	DevaSemanticException( const char* const s, NodeInfo ni ) : DevaException( s ), node( ni )
+	DevaSemanticException( const char* const s, NodeInfo ni ) : logic_error( s ), node( ni )
 	{}
 	~DevaSemanticException() throw()
 	{}
 };
 
-class DevaRuntimeException : public DevaException
+class DevaRuntimeException : public runtime_error
 {
 public:
-	DevaRuntimeException( const char* const s ) : DevaException( s )
+	DevaRuntimeException( const char* const s ) : runtime_error( s )
+	{}
+};
+
+// internal compiler error: indicates something wrong with the compiler's
+// code-gen, internal state etc
+class DevaICE : public DevaRuntimeException
+{
+public:
+	DevaICE( const char* const s ) : DevaRuntimeException( s )
 	{}
 };
 

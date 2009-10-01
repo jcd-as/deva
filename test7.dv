@@ -1,6 +1,41 @@
 # code gen test. working as of 09/29/09 with hack for 'print' built-in fcn
-def a( b )
+a = 5;
+if( a == 5 )
 {
-	return b + "bar";
+	print( "a equals 5" );
 }
-print( a( "foo" ) );
+else
+{
+	print( "a not equals 5" );
+}
+
+# works:
+#a = 4;
+#if( a == 5 )
+#{
+#	print( "a equals 5" );
+#}
+#else
+#{
+#	print( "a not equals 5" );
+#}
+# works:
+#a = 5;
+#if( a == 5 )
+#{
+#	print( "a equals 5" );
+#}
+# works:
+#a = 4;
+#if( a == 5 )
+#{
+#	print( "a equals 5" );
+#}
+# works:
+#def a( b )
+#{
+##	return b + "bar";
+#	return b + 2;
+#}
+##print( a( "foo" ) );
+#print( a( 6 ) );

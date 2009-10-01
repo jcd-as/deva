@@ -70,6 +70,10 @@ private:
 	// read a double
 	void read_double( double & d );
 
+	// helper for the comparison ops:
+	// returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
+	int compare_objects( DevaObject & lhs, DevaObject & rhs );
+
 	// individual op-code methods
 	////////////////////////////////////////////////////
 	// 0 pop top item off stack

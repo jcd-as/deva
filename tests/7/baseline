@@ -380,7 +380,7 @@ Scope 10, parent = 0
 
 Instructions:
 push : unknown: 'a'
-jmpf : num: '' = 11
+jmpf : num: '' = 71
 enter : 
 push : unknown: 'a'
 push : num: '' = 0
@@ -391,35 +391,37 @@ store :
 leave : 
 jmp : num: '' = 0
 push : unknown: 'a'
-jmpf : num: '' = 17
+jmpf : num: '' = 119
 push : unknown: 'a'
 push : num: '' = 0
 store : 
 jmp : num: '' = 11
-defun : num: 'foo' = 17
+defun : function: 'foo', offset = 119
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 defarg : unknown: 'c'
 enter : 
 leave : 
 push : unknown: 'x'
-jmpf : num: '' = 28
+jmpf : num: '' = 196
 push : unknown: 'y'
-jmpf : num: '' = 28
+jmpf : num: '' = 196
+push : function: '', offset = 196
 call : function_call: 'z'
 push : unknown: 'x'
-jmpf : num: '' = 38
+jmpf : num: '' = 259
 enter : 
 push : unknown: 'y'
-jmpf : num: '' = 34
+jmpf : num: '' = 245
+push : function: '', offset = 245
 call : function_call: 'z'
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : num: '' = 40
-jmp : num: '' = 41
+jmpf : num: '' = 288
+jmp : num: '' = 288
 push : unknown: 'a'
 push : unknown: 'b'
 push : unknown: 'a'
@@ -429,12 +431,13 @@ push : unknown: 'd'
 push : unknown: 'a'
 push : unknown: 'b'
 push : unknown: 'c'
-push : string: '' = "foo"
+push : string: '' = foo
 push : unknown: 'b'
 push : unknown: 'c'
+push : function: '', offset = 364
 call : function_call: 'a'
 push : unknown: 'b'
-push : string: '' = "foo"
+push : string: '' = foo
 push : unknown: 'a'
 push : num: '' = 1
 store : 
