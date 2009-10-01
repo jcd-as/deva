@@ -3,6 +3,7 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
+// * functions always need to create a new scope (for the args) ie enter/leave
 // * line number op-code for tracking what line errors occur on
 // * maps & vectors, including the dot operator and 'for' loops
 
@@ -102,6 +103,36 @@ int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 		string lhs_s( lhs.str_val );
 		string rhs_s( rhs.str_val );
 		return lhs_s.compare( rhs_s );
+	}
+}
+
+// evaluate an object as a boolean value
+// object must be evaluated already to a value (i.e. no variables)
+bool Executor::evaluate_object_as_boolean( DevaObject & o )
+{
+	// it must be a number, string, boolean, or null
+	if( o.Type() != sym_number && o.Type() != sym_string
+		&& o.Type() != sym_boolean && o.Type() != sym_null )
+		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
+	switch( o.Type() )
+	{
+	case sym_null:
+		// null is always false
+		return false;
+	case sym_number:
+		if( o.num_val != 0 )
+			return false;
+		else
+			return true;
+	case sym_boolean:
+		return o.bool_val;
+	case sym_string:
+		if( strlen( o.str_val ) > 0 )
+			return true;
+		else
+			return false;
+	default:
+		throw DevaRuntimeException( "Invalid type in boolean conditional." );
 	}
 }
 
@@ -233,12 +264,18 @@ void Executor::Defarg( Instruction const & inst )
 		throw DevaICE( "Invalid defarg opcode, no arguments." );
 	if( stack.size() < 1 )
 		throw DevaRuntimeException( "Invalid defarg opcode, no data on stack." );
-	// TODO: (can anything be done about this??):
-	// doh! return address is on top of the stack here, not the args
 	// pop the top of the stack and put it in the symbol table with the name of
 	// the argument that is being defined
 	DevaObject o = stack.back();
 	stack.pop_back();
+	// if it's a variable, look it up in the symbol table(s)
+	if( o.Type() == sym_unknown )
+	{
+		DevaObject *var = find_symbol( o );
+		if( !var )
+			throw DevaRuntimeException( "Undefined variable used as function argument." );
+		o = *var;
+	}
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
 	scopes.back()->insert( pair<string, DevaObject*>( val->name, val ) );
 }
@@ -303,9 +340,9 @@ void Executor::Jmpf( Instruction const & inst )
 	DevaObject o = stack.back();
 	stack.pop_back();
 	// it must be of a variable, number, string, boolean, or null
-	if( o.Type() != sym_unknown && o.Type() != sym_number && o.Type() != sym_string
-		&& o.Type() != sym_boolean && o.Type() != sym_null )
-		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
+//	if( o.Type() != sym_unknown && o.Type() != sym_number && o.Type() != sym_string
+//		&& o.Type() != sym_boolean && o.Type() != sym_null )
+//		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
 	// if it is a variable, lookup the variable in the symbol table
 	if( o.Type() == sym_unknown )
 	{
@@ -318,26 +355,28 @@ void Executor::Jmpf( Instruction const & inst )
 		o = *var;
 	}
 	// if it evaluates to 'true', return
-	switch( o.Type() )
-	{
-	case sym_null:
-		// null is always false
-		break;
-	case sym_number:
-		if( o.num_val != 0 )
-			return;
-		break;
-	case sym_boolean:
-		if( o.bool_val )
-			return;
-		break;
-	case sym_string:
-		if( strlen( o.str_val ) > 0 )
-			return;
-		break;
-	default:
-		throw DevaICE( "Invalid type in jmpf instruction found after evaluating type. Memory corruption?" );
-	}
+	if( evaluate_object_as_boolean( o ) )
+		return;
+//	switch( o.Type() )
+//	{
+//	case sym_null:
+//		// null is always false
+//		break;
+//	case sym_number:
+//		if( o.num_val != 0 )
+//			return;
+//		break;
+//	case sym_boolean:
+//		if( o.bool_val )
+//			return;
+//		break;
+//	case sym_string:
+//		if( strlen( o.str_val ) > 0 )
+//			return;
+//		break;
+//	default:
+//		throw DevaICE( "Invalid type in jmpf instruction found after evaluating type. Memory corruption?" );
+//	}
 	// else jump to the offset in the argument
 	ip = (long)dest.num_val;
 }
@@ -349,9 +388,9 @@ void Executor::Eq( Instruction const & inst )
 	// get the lhs and rhs values
 	if( stack.size() < 2 )
 		throw DevaICE( "Not enough data on stack for eq instruction." );
-	DevaObject lhs = stack.back();
-	stack.pop_back();
 	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// if they are variables, get their values from the symbol table
 	if( lhs.Type() == sym_unknown )
@@ -377,71 +416,268 @@ void Executor::Eq( Instruction const & inst )
 		stack.push_back( DevaObject( "", true ) );
 	else
 		stack.push_back( DevaObject( "", false ) );
-
 }
 // 16 != compare top two values on stack
 void Executor::Neq( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid neq instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for neq instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in neq comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in neq comparision." );
+		rhs = *o;
+	}
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result != 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 17 < compare top two values on stack
 void Executor::Lt( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid lt instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for lt instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in lt comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in lt comparision." );
+		rhs = *o;
+	}
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result < 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 18 <= compare top two values on stack
 void Executor::Lte( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid lte instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for lte instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in lte comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in lte comparision." );
+		rhs = *o;
+	}
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result <= 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 19 > compare top two values on stack
 void Executor::Gt( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid gt instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for gt instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in gt comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in gt comparision." );
+		rhs = *o;
+	}
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result > 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 20 >= compare top two values on stack
 void Executor::Gte( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid gte instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for gte instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in gte comparision." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in gte comparision." );
+		rhs = *o;
+	}
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
+	if( lhs.Type() != rhs.Type() )
+		throw DevaRuntimeException( "Comparison of incompatible types." );
+	int result = compare_objects( lhs, rhs );
+	if( result >= 0 )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 21 || the top two values
 void Executor::Or( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid 'or' instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for 'or' instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
-	// TODO: short-circuiting: how???
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in 'or' instruction." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in 'or' instruction." );
+		rhs = *o;
+	}
 	// if either value is true, push 'true' onto the stack
 	// else push 'false'
+	if( evaluate_object_as_boolean( lhs ) )
+		stack.push_back( DevaObject( "", true ) );
+	else if( evaluate_object_as_boolean( rhs ) )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 22 && the top two values
 void Executor::And( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid 'and' instruction." );
 	// get the lhs and rhs values
+	if( stack.size() < 2 )
+		throw DevaICE( "Not enough data on stack for 'and' instruction." );
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
 	// if they are variables, get their values from the symbol table
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in 'and' instruction." );
+		lhs = *o;
+	}
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as right-hand operand in 'and' instruction." );
+		rhs = *o;
+	}
 	// if both values are true, push 'true' onto the stack
 	// else push 'false'
+	if( evaluate_object_as_boolean( lhs ) && evaluate_object_as_boolean( rhs ) )
+		stack.push_back( DevaObject( "", true ) );
+	else
+		stack.push_back( DevaObject( "", false ) );
 }
 // 23 negate the top value ('-' operator)
 void Executor::Neg( Instruction const & inst )
@@ -451,7 +687,24 @@ void Executor::Neg( Instruction const & inst )
 // 24 boolean not the top value ('!' operator)
 void Executor::Not( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid eq instruction." );
+	// get the operand values
+	if( stack.size() < 1 )
+		throw DevaICE( "Not enough data on stack for not instruction." );
+	DevaObject op = stack.back();
+	stack.pop_back();
+	// if it's a variable, get its value from the symbol table
+	if( op.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( op );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+		op = *o;
+	}
+	// push the inverse of the operand
+	stack.push_back( DevaObject( "", !evaluate_object_as_boolean( op ) ) );
 }
 // 25 add top two values on stack
 void Executor::Add( Instruction const & inst )
@@ -648,12 +901,12 @@ void Executor::Leave( Instruction const & inst )
 // 37 no op
 void Executor::Nop( Instruction const & inst )
 {
-	// TODO: implement
+	// do nothing
 }
 // 38 finish program, 0 or 1 ops (return code)
 void Executor::Halt( Instruction const & inst )
 {
-	// TODO: implement
+	// do nothing, execution engine will stop on stepping to this instruction
 }
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )

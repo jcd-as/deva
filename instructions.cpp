@@ -4,6 +4,7 @@
 
 // TODO:
 // * ensure a op_return is ALWAYS emitted at the exit of a function
+// * implement short-circuiting for logical ops ('||', '&&' )
 // * generate a 'pop' after a function call when the value is not used (i.e. not
 // 	 passed to an assignment, fcn call, map/vec lookup, loop conditional...)
 // * maps & vectors, including the dot operator and 'for' loops
@@ -340,7 +341,7 @@ void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	// push the current location in the instruction stream onto the 'else' stack
 	// write the current *file* offset, not instruction stream!
 	else_stack.push_back( is.size() );
-	// generate the jump placeholder (for the if's jump *over* the else part)
+	// generate the jump placeholder
 	is.push( Instruction( op_jmp, DevaObject( "", -1.0 ) ) );
 }
 
@@ -411,6 +412,7 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
 {
+	// TODO: short-circuiting
 	// '||' or '&&'
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "||" )

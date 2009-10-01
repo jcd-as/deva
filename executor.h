@@ -73,6 +73,9 @@ private:
 	// helper for the comparison ops:
 	// returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
 	int compare_objects( DevaObject & lhs, DevaObject & rhs );
+	// evaluate an object as a boolean value
+	// object must be evaluated already to a value (i.e. no variables)
+	bool evaluate_object_as_boolean( DevaObject & o );
 
 	// individual op-code methods
 	////////////////////////////////////////////////////
