@@ -3,7 +3,6 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * functions always need to create a new scope (for the args) ie enter/leave
 // * line number op-code for tracking what line errors occur on
 // * maps & vectors, including the dot operator and 'for' loops
 
@@ -228,7 +227,7 @@ void Executor::Store( Instruction const & inst )
 	if( !ob )
 	{
 		ob = new DevaObject( lhs.name, sym_unknown );
-		scopes.back()->insert( pair<string, DevaObject*>(ob->name, ob) );
+		scopes.AddObject( ob );
 	}
 	//  set its value to the rhs
 	ob->SetValue( rhs );
@@ -246,10 +245,10 @@ void Executor::Defun( Instruction const & inst )
 	long offset = ip;
 	// also the same as: long offset = inst.args[0].func_offset + inst.args[0].Size() + 2;
 	DevaObject* fcn = new DevaObject( inst.args[0].name, offset );
-	scopes.back()->insert( pair<string, DevaObject*>( fcn->name, fcn ) );
+	scopes.AddObject( fcn );
 	// skip the function body
 	Opcode op = PeekInstr();
-	while( op != op_return && op != op_returnv )
+	while( op != op_return )
 	{
 		NextInstr();
 		op = PeekInstr();
@@ -276,13 +275,19 @@ void Executor::Defarg( Instruction const & inst )
 			throw DevaRuntimeException( "Undefined variable used as function argument." );
 		o = *var;
 	}
+	// check for the symbol in the immediate (current) scope and makre sure
+	// we're not redef'ing the same argument (shouldn't happen, the semantic
+	// checker looks for this)
+	if( scopes.back()->count( inst.args[0].name ) != 0 )
+		throw DevaICE( "Argument with this name already exists." );
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
-	scopes.back()->insert( pair<string, DevaObject*>( val->name, val ) );
+	scopes.AddObject( val );
 }
 // 6 create a new object and place on top of stack
 void Executor::New( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: implement???
+	// (this op-code is currently unused, 'store' does this work)
 }
 // 7 create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
@@ -339,10 +344,6 @@ void Executor::Jmpf( Instruction const & inst )
 	// get the value on the top of the stack
 	DevaObject o = stack.back();
 	stack.pop_back();
-	// it must be of a variable, number, string, boolean, or null
-//	if( o.Type() != sym_unknown && o.Type() != sym_number && o.Type() != sym_string
-//		&& o.Type() != sym_boolean && o.Type() != sym_null )
-//		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
 	// if it is a variable, lookup the variable in the symbol table
 	if( o.Type() == sym_unknown )
 	{
@@ -357,26 +358,6 @@ void Executor::Jmpf( Instruction const & inst )
 	// if it evaluates to 'true', return
 	if( evaluate_object_as_boolean( o ) )
 		return;
-//	switch( o.Type() )
-//	{
-//	case sym_null:
-//		// null is always false
-//		break;
-//	case sym_number:
-//		if( o.num_val != 0 )
-//			return;
-//		break;
-//	case sym_boolean:
-//		if( o.bool_val )
-//			return;
-//		break;
-//	case sym_string:
-//		if( strlen( o.str_val ) > 0 )
-//			return;
-//		break;
-//	default:
-//		throw DevaICE( "Invalid type in jmpf instruction found after evaluating type. Memory corruption?" );
-//	}
 	// else jump to the offset in the argument
 	ip = (long)dest.num_val;
 }
@@ -420,7 +401,6 @@ void Executor::Eq( Instruction const & inst )
 // 16 != compare top two values on stack
 void Executor::Neq( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid neq instruction." );
 	// get the lhs and rhs values
@@ -458,7 +438,6 @@ void Executor::Neq( Instruction const & inst )
 // 17 < compare top two values on stack
 void Executor::Lt( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid lt instruction." );
 	// get the lhs and rhs values
@@ -496,7 +475,6 @@ void Executor::Lt( Instruction const & inst )
 // 18 <= compare top two values on stack
 void Executor::Lte( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid lte instruction." );
 	// get the lhs and rhs values
@@ -534,7 +512,6 @@ void Executor::Lte( Instruction const & inst )
 // 19 > compare top two values on stack
 void Executor::Gt( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid gt instruction." );
 	// get the lhs and rhs values
@@ -572,7 +549,6 @@ void Executor::Gt( Instruction const & inst )
 // 20 >= compare top two values on stack
 void Executor::Gte( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid gte instruction." );
 	// get the lhs and rhs values
@@ -610,7 +586,6 @@ void Executor::Gte( Instruction const & inst )
 // 21 || the top two values
 void Executor::Or( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid 'or' instruction." );
 	// get the lhs and rhs values
@@ -647,7 +622,6 @@ void Executor::Or( Instruction const & inst )
 // 22 && the top two values
 void Executor::And( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid 'and' instruction." );
 	// get the lhs and rhs values
@@ -682,12 +656,31 @@ void Executor::And( Instruction const & inst )
 // 23 negate the top value ('-' operator)
 void Executor::Neg( Instruction const & inst )
 {
-	// TODO: implement
+	if( inst.args.size() != 0 )
+		throw DevaICE( "Invalid eq instruction." );
+	// get the operand values
+	if( stack.size() < 1 )
+		throw DevaICE( "Not enough data on stack for not instruction." );
+	DevaObject op = stack.back();
+	stack.pop_back();
+	// if it's a variable, get its value from the symbol table
+	if( op.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( op );
+		if( !o )
+			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+		op = *o;
+	}
+	// if it's not a number now, error
+	if( op.Type() != sym_number )
+		throw DevaRuntimeException( "Negate (-) operator used on non-numeric type." );
+	// push the negative of the operand
+	op.num_val = -(op.num_val);
+	stack.push_back( op );
 }
 // 24 boolean not the top value ('!' operator)
 void Executor::Not( Instruction const & inst )
 {
-	// TODO: validate
 	if( inst.args.size() != 0 )
 		throw DevaICE( "Invalid eq instruction." );
 	// get the operand values
@@ -709,7 +702,6 @@ void Executor::Not( Instruction const & inst )
 // 25 add top two values on stack
 void Executor::Add( Instruction const & inst )
 {
-	// TODO: implement
 	if( stack.size() < 2 )
 		throw DevaRuntimeException( "Not enough items on stack for Add operation." );
 	// add the top two items on the stack
@@ -755,86 +747,210 @@ void Executor::Add( Instruction const & inst )
 // 26 subtract top two values on stack
 void Executor::Sub( Instruction const & inst )
 {
-	// TODO: implement
+	if( stack.size() < 2 )
+		throw DevaRuntimeException( "Not enough items on stack for subtract operation." );
+	// subtract using the top two items on the stack
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
+	// if the args are variables, look them up in the symbol table
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Right-hand operand for subtract operation not found in symbol table." );
+		rhs = *o;
+	}
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Left-hand operand for subtract operation not found in symbol table." );
+		lhs = *o;
+	}
+	// do the subtraction
+	if( lhs.Type() == sym_number )
+	{
+		if( rhs.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid right-hand argument type for subtract operation." );
+		double ret = lhs.num_val - rhs.num_val;
+		stack.push_back( DevaObject( "", ret ) );
+	}
+	else
+		throw DevaRuntimeException( "Invalid argument types for subtract operation." );
 }
 // 27 multiply top two values on stack
 void Executor::Mul( Instruction const & inst )
 {
-	// TODO: implement
+	if( stack.size() < 2 )
+		throw DevaRuntimeException( "Not enough items on stack for multiply operation." );
+	// multiply using the top two items on the stack
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
+	// if the args are variables, look them up in the symbol table
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Right-hand operand for multiply operation not found in symbol table." );
+		rhs = *o;
+	}
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Left-hand operand for multiply operation not found in symbol table." );
+		lhs = *o;
+	}
+	// do the multiplication
+	if( lhs.Type() == sym_number )
+	{
+		if( rhs.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid right-hand argument type for multiply operation." );
+		double ret = lhs.num_val * rhs.num_val;
+		stack.push_back( DevaObject( "", ret ) );
+	}
+	else
+		throw DevaRuntimeException( "Invalid argument types for multiply operation." );
 }
 // 28 divide top two values on stack
 void Executor::Div( Instruction const & inst )
 {
-	// TODO: implement
+	if( stack.size() < 2 )
+		throw DevaRuntimeException( "Not enough items on stack for divide operation." );
+	// divide using the top two items on the stack
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
+	// if the args are variables, look them up in the symbol table
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Right-hand operand for divide operation not found in symbol table." );
+		rhs = *o;
+	}
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Left-hand operand for divide operation not found in symbol table." );
+		lhs = *o;
+	}
+	// do the division
+	if( lhs.Type() == sym_number )
+	{
+		if( rhs.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid right-hand argument type for divide operation." );
+		double ret = lhs.num_val / rhs.num_val;
+		stack.push_back( DevaObject( "", ret ) );
+	}
+	else
+		throw DevaRuntimeException( "Invalid argument types for divide operation." );
 }
 // 29 modulus top two values on stack
 void Executor::Mod( Instruction const & inst )
 {
-	// TODO: implement
+	if( stack.size() < 2 )
+		throw DevaRuntimeException( "Not enough items on stack for modulus operation." );
+	// modulus using the top two items on the stack
+	DevaObject rhs = stack.back();
+	stack.pop_back();
+	DevaObject lhs = stack.back();
+	stack.pop_back();
+	// if the args are variables, look them up in the symbol table
+	if( rhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( rhs );
+		if( !o )
+			throw DevaRuntimeException( "Right-hand operand for modulus operation not found in symbol table." );
+		rhs = *o;
+	}
+	if( lhs.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( lhs );
+		if( !o )
+			throw DevaRuntimeException( "Left-hand operand for modulus operation not found in symbol table." );
+		lhs = *o;
+	}
+	// do the modulus
+	if( lhs.Type() == sym_number )
+	{
+		if( rhs.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid right-hand argument type for modulus operation." );
+		// TODO: modulus requires integer arguments, error on non-integers
+		double ret = (int)lhs.num_val % (int)rhs.num_val;
+		stack.push_back( DevaObject( "", ret ) );
+	}
+	else
+		throw DevaRuntimeException( "Invalid argument types for modulus operation." );
 }
 // 30 dump top of stack to stdout
 void Executor::Output( Instruction const & inst )
 {
-	// TODO: implement
+	// get the argument off the stack
+	DevaObject obj = Pop( inst );
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+		
+	}
+	if( !o )
+		o = &obj;
+	// evaluate it
+	switch( o->Type() )
+	{
+		case sym_number:
+			cout << o->num_val;
+			break;
+		case sym_string:
+			cout << o->str_val;
+			break;
+		case sym_boolean:
+			if( o->bool_val )
+				cout << "true";
+			else
+				cout << "false";
+			break;
+		case sym_null:
+			cout << "null";
+			break;
+		case sym_map:
+			// TODO: dump some map contents?
+			cout << "map: '" << o->name << "' = ";
+			break;
+		case sym_vector:
+			// TODO: dump some vector contents?
+			cout << "vector: '" << o->name << "' = ";
+			break;
+		case sym_function:
+			cout << "function: '" << o->name << "'";
+			break;
+		case sym_function_call:
+			cout << "function_call: '" << o->name << "'";
+			break;
+		default:
+			cout << "unknown: '" << o->name << "'";
+	}
+	// print it
+	cout << endl;
 }
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
-	// TODO: validate
 	// TEMPORARY HACK!!! REMOVE!!!
 	// (and replace with importing the built-ins)
 	if( inst.args[0].name == "print" )
 	{
-		// get the argument off the stack
-		DevaObject obj = Pop( inst );
-		// if it's a variable, locate it in the symbol table
-		DevaObject* o = NULL;
-		if( obj.Type() == sym_unknown )
-		{
-			o = find_symbol( obj );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found in function call" );
-			
-		}
-		if( !o )
-			o = &obj;
-		// evaluate it
-		switch( o->Type() )
-		{
-			case sym_number:
-				cout << o->num_val;
-				break;
-			case sym_string:
-				cout << o->str_val;
-				break;
-			case sym_boolean:
-				if( o->bool_val )
-					cout << "true";
-				else
-					cout << "false";
-				break;
-			case sym_null:
-				cout << "null";
-				break;
-			case sym_map:
-				// TODO: dump some map contents?
-				cout << "map: '" << o->name << "' = ";
-				break;
-			case sym_vector:
-				// TODO: dump some vector contents?
-				cout << "vector: '" << o->name << "' = ";
-				break;
-			case sym_function:
-				cout << "function: '" << o->name << "'";
-				break;
-			case sym_function_call:
-				cout << "function_call: '" << o->name << "'";
-				break;
-			default:
-				cout << "unknown: '" << o->name << "'";
-		}
-		// print it
-		cout << endl;
+		Output( inst );
 	}
 	else
 	{
@@ -848,24 +964,9 @@ void Executor::Call( Instruction const & inst )
 		ip = offset;
 	}
 }
-// 32 pop the return address and unconditionally jump to it
+// 32 stack holds return value and then (at top) return address
 void Executor::Return( Instruction const & inst )
 {
-	// TODO: validate
-	// pop the return location off the top of the stack
-	DevaObject ob = stack.back();
-	stack.pop_back();
-	if( ob.Type() != sym_function )
-		throw DevaRuntimeException( "Invalid return destination on stack when executing return instruction" );
-	// jump to the return location
-	long offset = ob.func_offset;
-	ip = offset;
-}
-// 33 as return, but stack holds return value and then (at top) return address
-void Executor::Returnv( Instruction const & inst )
-{
-	// TODO: validate
-	// TODO: ??? deal with the return value ???
 	// the return value is now on top of the stack, instead of the return
 	// address, so we need to pop it, pop the return address and then re-push
 	// the return value
@@ -880,30 +981,93 @@ void Executor::Returnv( Instruction const & inst )
 	// jump to the return location
 	long offset = ob.func_offset;
 	ip = offset;
+	// pop this scope (same as 'leave' instruction)
+	scopes.Pop();
 }
-// 34 break out of loop, respecting scope (enter/leave)
+// 33 break out of loop, respecting scope (enter/leave)
 void Executor::Break( Instruction const & inst )
 {
-	// TODO: implement
+	if( inst.args.size() < 1 )
+		throw DevaICE( "Invalid 'break' instruction. No arguments." );
+	if( inst.args[0].Type() != sym_number )
+		throw DevaICE( "Invalid 'break' instruction. Argument is non-numeric." );
+
+	vector<int> enter_stack;
+	long original_ip = ip;
+
+	// set the ip back to the start of the loop, then scan forward looking 
+	// and count the enter/leave instructions so we know how many leaves we need to
+	// execute to get out of the loop
+	ip = (long)inst.args[0].num_val;
+	while( ip < original_ip )
+	{
+		switch( PeekInstr() )
+		{
+		case op_enter:
+			enter_stack.push_back( 1 );
+			NextInstr();
+			break;
+
+		case op_leave:
+			enter_stack.pop_back();
+			NextInstr();
+			break;
+
+		// skip everything else
+		default:
+			NextInstr();
+			break;
+		}
+	}
+	// now, back at the original position,
+	// scan forward, looking for, and executing, enter/leave instructions
+	// until we leave the current scope (1 move leave op than enter ops)
+	while( true )
+	{
+		switch( PeekInstr() )
+		{
+		case op_enter:
+			enter_stack.push_back( 1 );
+			DoInstr( NextInstr() );
+			break;
+
+		case op_leave:
+			enter_stack.pop_back();
+			DoInstr( NextInstr() );
+			// if we've left enough scopes to get out of the loop
+			if( enter_stack.size() == 0 )
+			{
+				// need to skip the jmp back to loop start
+				if( PeekInstr() != op_jmp )
+					throw DevaICE( "Invalid loop. Final 'leave' instruction not followed by 'jmp'." );
+				NextInstr();
+				return;
+			}
+			break;
+
+		// skip everything else
+		default:
+			NextInstr();
+			break;
+		}
+	}
 }
-// 35 enter new scope
+// 34 enter new scope
 void Executor::Enter( Instruction const & inst )
 {
-	// TODO: ???
-	scopes.push_back( new Scope() );
+	scopes.Push();
 }
-// 36 leave scope
+// 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
-	// TODO: ???
-	scopes.pop_back();
+	scopes.Pop();
 }
-// 37 no op
+// 36 no op
 void Executor::Nop( Instruction const & inst )
 {
 	// do nothing
 }
-// 38 finish program, 0 or 1 ops (return code)
+// 37 finish program, 0 or 1 ops (return code)
 void Executor::Halt( Instruction const & inst )
 {
 	// do nothing, execution engine will stop on stepping to this instruction
@@ -919,9 +1083,6 @@ void Executor::Illegal( Instruction const & inst )
 // execute single instruction
 bool Executor::DoInstr( Instruction inst )
 {
-	// TODO: implement
-//		for( vector<DevaObject>::iterator j = inst.args.begin(); j != inst.args.end(); ++j )
-//			cout << *j;
 	switch( inst.op )
 	{
 	case op_pop:			// 0 pop top item off stack
@@ -1023,22 +1184,19 @@ bool Executor::DoInstr( Instruction inst )
 	case op_return:		// 32 pop the return address and unconditionally jump to it
 		Return( inst );
 		break;
-	case op_returnv:		// 33 as return, but stack holds return value and then (at top) return address
-		Returnv( inst );
-		break;
-	case op_break:		// 34 break out of loop, respecting scope (enter/leave)
+	case op_break:		// 33 break out of loop, respecting scope (enter/leave)
 		Break( inst );
 		break;
-	case op_enter:		// 35 enter new scope
+	case op_enter:		// 34 enter new scope
 		Enter( inst );
 		break;
-	case op_leave:		// 36 leave scope
+	case op_leave:		// 35 leave scope
 		Leave( inst );
 		break;
-	case op_nop:			// 37 no op
+	case op_nop:			// 36 no op
 		Nop( inst );
 		break;
-	case op_halt:		// 38 finish program, 0 or 1 ops (return code)
+	case op_halt:		// 37 finish program, 0 or 1 ops (return code)
 		Halt( inst );
 		return false;
 	case op_illegal:	// illegal operation, if exists there was a compiler error/fault
@@ -1049,7 +1207,7 @@ bool Executor::DoInstr( Instruction inst )
 	return true;
 }
 
-// skip the next instruction (increment ip to the next instruction)
+// read the next instruction (increment ip to the next instruction)
 Instruction Executor::NextInstr()
 {
 	char* name = NULL;
@@ -1142,7 +1300,6 @@ Instruction Executor::NextInstr()
 		delete [] name;
 		
 		// read the type of the next arg
-		//type = 'x';
 		// default to sym_end to drop out of loop if we can't read a byte
 		type = (unsigned char)sym_end;
 		read_byte( type );

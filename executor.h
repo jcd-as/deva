@@ -47,7 +47,24 @@ private:
 			}
 		}
 	};
-	vector<Scope*> scopes;
+	struct ScopeTable : public vector<Scope*>
+	{
+		void AddObject( DevaObject* ob )
+		{
+			back()->insert( pair<string, DevaObject*>(ob->name, ob) );
+		}
+		void Push()
+		{
+			push_back( new Scope() );
+		}
+		void Pop()
+		{
+			// free the objects in this scope
+			delete back();
+			pop_back();
+		}
+	};
+	ScopeTable scopes;
 
 	// the bytecode itself (contents of the file):
 	unsigned char *code;

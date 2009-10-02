@@ -511,20 +511,19 @@ void eval_node( iter_t const & i )
     else
     {
 		// error, invalid node type
-		// TODO: pass actual filename
 		emit_error( i->value.value(), "Semantic error: Encountered unknown node type" );
 		throw DevaSemanticException( "invalid node type", i->value.value() );
     }
 }
 
 
-void generate_IL_for_node( iter_t const & i, InstructionStream & is );
+void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent );
 // generate IL stream
 bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is )
 {
 	// walk the tree, generating the IL for each node
 	iter_t i = info.trees.begin();
-	generate_IL_for_node( i, is );
+	generate_IL_for_node( i, is, i );
 
 	// last node always a halt
 	is.push( Instruction( op_halt ) );
@@ -542,11 +541,24 @@ void walk_children( iter_t const & i, InstructionStream & is )
 	// walk children
 	for( int c = 0; c < i->children.size(); c++ )
 	{
-		generate_IL_for_node( i->children.begin() + c, is );
+		generate_IL_for_node( i->children.begin() + c, is, i );
 	}
 }
 
-void generate_IL_for_node( iter_t const & i, InstructionStream & is )
+// helper to walk sub-tree looking for a return statement
+bool walk_looking_for_return( iter_t const & iter )
+{
+	if( iter->value.id() == return_statement_id )
+		return true;
+	for( int j = 0; j < iter->children.size(); ++j )
+	{
+		if( walk_looking_for_return( iter->children.begin() + j ) )
+			return true;
+	}
+	return false;
+}
+
+void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
 	// number
     if( i->value.id() == parser_id( number_id ) )
@@ -580,18 +592,34 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	else if( i->value.id() == parser_id( func_id ) )
 	{
 		// children: id, arg_list, compound_statement | statement
-//		gen_IL_func( i, is );
 
 		// create a function at this loc
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 		// write the current *file* offset, not instruction stream!
 		is.push( Instruction( op_defun, DevaObject( name, is.Offset() ) ) );
 
+		// we need to generate an enter instruction to create the
+		// proper scope for the fcn and its arguments (the 'leave' instruction 
+		// isn't needed, as the return statement at the end of the 
+		// function takes care of this)
+		if( (i->children.begin()+2)->value.id() != compound_statement_id )
+			is.push( Instruction( op_enter ) );
+
 		// second child is the arg_list, process it
-		generate_IL_for_node( i->children.begin() + 1, is );
+		generate_IL_for_node( i->children.begin() + 1, is, i );
 
 		// third child is statement|compound_statement, process it
-		generate_IL_for_node( i->children.begin() + 2, is );
+		generate_IL_for_node( i->children.begin() + 2, is, i );
+
+		// if no return statement was generated, we need to generate one
+		bool returned = false;
+		iter_t iter = i->children.begin() + 2;
+		if( iter->value.id() == return_statement_id )
+			returned = true;
+		else
+			returned = walk_looking_for_return( iter );
+		if( !returned )
+			is.push( Instruction( op_return ) );
 	}
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
@@ -599,11 +627,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 		// pre-gen stores the start value, for the jump-to-start
 		pre_gen_IL_while_s( i, is );
 		// first child has the relational op stuff, walk it
-		generate_IL_for_node( i->children.begin(), is );
+		generate_IL_for_node( i->children.begin(), is, i );
 		// gen_IL adds the placeholder for the jmpf
 		gen_IL_while_s( i, is );
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is );
+		generate_IL_for_node( i->children.begin() + 1, is, i );
 		// post-gen-IL will to the back-patching and add the jump to start
 		post_gen_IL_while_s( i, is );
 	}
@@ -613,11 +641,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 		// pre-gen stores the start value, for the jump-to-start
 //		pre_gen_IL_for_s( i, is );
 //		// first child has the relational op stuff, walk it
-//		generate_IL_for_node( i->children.begin(), is );
+//		generate_IL_for_node( i->children.begin(), is, i );
 //		// gen_IL adds the placeholder for the jmpf
 //		gen_IL_for_s( i, is );
 //		// second child has the statement|compound_statement, walk it
-//		generate_IL_for_node( i->children.begin() + 1, is );
+//		generate_IL_for_node( i->children.begin() + 1, is, i );
 //		// post-gen-IL will to the back-patching and add the jump to start
 //		post_gen_IL_for_s( i, is );
 	}
@@ -625,11 +653,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	else if( i->value.id() == parser_id( if_s_id ) )
 	{
 		// first child has the conditional, walk it
-		generate_IL_for_node( i->children.begin(), is );
+		generate_IL_for_node( i->children.begin(), is, i );
 		// generate the jump-placeholder
 		pre_gen_IL_if_s( i, is );
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is );
+		generate_IL_for_node( i->children.begin() + 1, is, i );
 
 		// if there's no 'else' clause
 		// (third child, if any, has the else clause)
@@ -649,7 +677,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 			gen_IL_if_s( i, is );
 
 			// ...then walk the children (statement|compound_statement)
-			generate_IL_for_node( i->children.begin() + 2, is );
+			generate_IL_for_node( i->children.begin() + 2, is, i );
 
 			// ...and then back-patch the 'else' jump to jump to here
 			gen_IL_else_s( i, is );
@@ -660,14 +688,14 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	{
 		// always a child of an 'if', which handles this, see above
 		// so just walk the children
-		generate_IL_for_node( i->children.begin(), is );
+		generate_IL_for_node( i->children.begin(), is, i );
 	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
 		// can have arg_list & semi-colon
 		walk_children( i, is );
-		gen_IL_identifier( i, is );
+		gen_IL_identifier( i, is, parent );
 	}
 	// in op ('in' keyword in for loops)
 	else if( i->value.id() == parser_id( in_op_id ) )
@@ -766,7 +794,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is )
 	// arg list decl
 	else if( i->value.id() == parser_id( arg_list_decl_id ) )
 	{
-//		walk_children( i, is );
 		gen_IL_arg_list_decl( i, is );
 	}
 	// key exp
@@ -937,7 +964,6 @@ bool DeCompileFile( char const* filename )
 		cout << "Invalid .dvc version number " << ver << endl;
 		return false;
 	}
-	//char pad[7] = "abcdef";
 	char pad[6] = {0};
 	file.read( pad, 5 );
 	//cout << pad << endl;
@@ -1038,7 +1064,6 @@ bool DeCompileFile( char const* filename )
 			memset( name, 0, 256 );
 			
 			// read the type of the next arg
-			//type = 'x';
 			// default to sym_end to drop out of loop if we can't read a byte
 			type = (unsigned char)sym_end;
 			file.read( (char*)&type, sizeof( type ) );

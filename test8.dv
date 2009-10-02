@@ -1,0 +1,46 @@
+print( "starting" );
+#while( true )
+#{
+#	a = 1;
+#	b = 2;
+#	print( "in loop" );
+#	break;
+#}
+while( true )
+{
+	a = 1;
+	print( "entered scope 1" );
+	{
+		b = 2;
+		c = 3;
+		print( "entered scope 2" );
+		{
+			d = 4;
+			e = 5;
+			print( "entered scope 3" );
+			{
+				f = 6;
+				g = 7;
+				print( "entered scope 4" );
+				{
+					h = 8;
+					i = 9;
+					print( "entered scope 5" );
+					{
+						j = 10;
+						print( "entered scope 6" );
+						break;
+					}
+					print( "left scope 6" );
+				}
+				print( "left scope 5" );
+			}
+			print( "left scope 4" );
+		}
+		print( "left scope 3" );
+	}
+	print( "left scope 2" );
+}
+print( "left scope 1" );
+
+print( "done" );

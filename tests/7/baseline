@@ -395,33 +395,34 @@ jmpf : num: '' = 119
 push : unknown: 'a'
 push : num: '' = 0
 store : 
-jmp : num: '' = 11
+jmp : num: '' = 71
 defun : function: 'foo', offset = 119
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 defarg : unknown: 'c'
 enter : 
 leave : 
+return : 
 push : unknown: 'x'
-jmpf : num: '' = 196
+jmpf : num: '' = 198
 push : unknown: 'y'
-jmpf : num: '' = 196
-push : function: '', offset = 196
+jmpf : num: '' = 198
+push : function: '', offset = 198
 call : function_call: 'z'
 push : unknown: 'x'
-jmpf : num: '' = 259
+jmpf : num: '' = 261
 enter : 
 push : unknown: 'y'
-jmpf : num: '' = 245
-push : function: '', offset = 245
+jmpf : num: '' = 247
+push : function: '', offset = 247
 call : function_call: 'z'
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : num: '' = 288
-jmp : num: '' = 288
+jmpf : num: '' = 290
+jmp : num: '' = 290
 push : unknown: 'a'
 push : unknown: 'b'
 push : unknown: 'a'
@@ -434,7 +435,7 @@ push : unknown: 'c'
 push : string: '' = foo
 push : unknown: 'b'
 push : unknown: 'c'
-push : function: '', offset = 364
+push : function: '', offset = 366
 call : function_call: 'a'
 push : unknown: 'b'
 push : string: '' = foo

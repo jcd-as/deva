@@ -3,10 +3,7 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * ensure a op_return is ALWAYS emitted at the exit of a function
 // * implement short-circuiting for logical ops ('||', '&&' )
-// * generate a 'pop' after a function call when the value is not used (i.e. not
-// 	 passed to an assignment, fcn call, map/vec lookup, loop conditional...)
 // * maps & vectors, including the dot operator and 'for' loops
 // * encode location (line number) into InstructionStream via "line_num" opcodes
 
@@ -164,9 +161,6 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_return:			// pop the return address and unconditionally jump to it
 		os << "return";
 		break;
-	case op_returnv:		// as return, but stack holds return value and then (at top) return address
-		os << "returnv";
-		break;
 	case op_break:			// break out of loop, respecting scope (enter/leave)
 		os << "break";
 		break;
@@ -251,15 +245,13 @@ void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	// jmp start
 	// done:
 	// push the current location in the instruction stream onto the 'loop stack'
-	loop_stack.push_back( is.size() );
+	loop_stack.push_back( is.Offset() );
 }
 
-// location of break statement
 static vector<int> while_jmpf_stack;
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
 	// save the location for back-patching
-	// write the current *file* offset, not instruction stream!
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the condition's jmpf
 	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
@@ -359,7 +351,7 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 
 // stack of fcn returns for back-patching return addresses in
 static vector<int> fcn_call_stack;
-void gen_IL_identifier( iter_t const & i, InstructionStream & is )
+void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
 	string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	// if no children, simple variable
@@ -377,8 +369,17 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is )
 		fcn_call_stack.pop_back();
 		// write the current *file* offset, not instruction stream!
 		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
+
+		// if the parent is the translation unit or a compound_statement, the return
+		// value is not being used, emit a pop instruction to discard it
+		if( parent->value.id() == translation_unit_id || parent->value.id() == compound_statement_id )
+		{
+			is.push( Instruction( op_pop ) );
+		}
 	}
 	// TODO: map/vector lookups, dot operator lookup (syntactic sugar for a map lookup)
+	// TODO: dot operator also has to do the parent check, as above, so that 'foo.bar()' 
+	// generates a pop instruction too
 }
 
 void gen_IL_in_op( iter_t const & i, InstructionStream & is )
@@ -412,7 +413,6 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
 {
-	// TODO: short-circuiting
 	// '||' or '&&'
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "||" )
@@ -505,11 +505,7 @@ void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 
 void gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 {
-	// back-patch the return address push op
-//	int ret_addr_loc = fcn_call_stack.back();
-//	fcn_call_stack.pop_back();
-//	// write the current *file* offset, not instruction stream!
-//	is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
+	// no op
 }
 
 void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
@@ -558,8 +554,9 @@ void gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
 {
-	// generate break op
-	is.push( Instruction( op_break ) );
+	// generate break op with a reference to the start of the loop
+	int loop_loc = loop_stack.back();
+	is.push( Instruction( op_break, DevaObject( "", (double)loop_loc ) ) );
 }
 
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
@@ -567,17 +564,20 @@ void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
 	// generate jump to beginning of loop
 	int loop_loc = loop_stack.back();
 	// write the current *file* offset, not instruction stream!
-	is.push( Instruction( op_jmp, DevaObject( "", (double)is.Offset() ) ) );
+	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
 }
 
 void gen_IL_return_statement( iter_t const & i, InstructionStream & is )
 {
 	// last child is always semi-colon
-	// generate return/returnv
+	// generate return
 	if( i->children.size() > 1 )
-		is.push( Instruction( op_returnv ) );
-	else if( i->children.size() == 1 )
 		is.push( Instruction( op_return ) );
+	else if( i->children.size() == 1 )
+	{
+		is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+		is.push( Instruction( op_return ) );
+	}
 	// else?
 }
 

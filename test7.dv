@@ -1,41 +1,63 @@
 # code gen test. working as of 09/29/09 with hack for 'print' built-in fcn
-a = 5;
-if( a == 5 )
+def x( b )
 {
-	print( "a equals 5" );
+	return b + 2;
 }
-else
-{
-	print( "a not equals 5" );
-}
+# return value not used, needs to be discarded
+x( 4 );
+print( x( 6 ) );
 
-# works:
-#a = 4;
-#if( a == 5 )
+a = 5;
+#if( x(a) == 7 && true )
 #{
-#	print( "a equals 5" );
+#	print( "x(a) equals 7 && true" );
 #}
 #else
 #{
-#	print( "a not equals 5" );
+#	print( "x(a) not equals 7 && true" );
 #}
-# works:
-#a = 5;
-#if( a == 5 )
+#
+#if( x(a) == 7 && false )
 #{
-#	print( "a equals 5" );
+#	print( "x(a) equals 7 && false" );
 #}
-# works:
-#a = 4;
-#if( a == 5 )
+#else
 #{
-#	print( "a equals 5" );
+#	print( "x(a) not equals 7 && false" );
 #}
-# works:
-#def a( b )
+#
+#if( x(a) == 7 || false )
 #{
-##	return b + "bar";
-#	return b + 2;
+#	print( "x(a) equals 7 || false" );
 #}
-##print( a( "foo" ) );
-#print( a( 6 ) );
+#else
+#{
+#	print( "x(a) not equals 7 || false" );
+#}
+#
+#if( x(a) == 11 || false )
+#{
+#	print( "x(a) equals 11 || false" );
+#}
+#else
+#{
+#	print( "x(a) not equals 11 || false" );
+#}
+#
+#if( !(x(a) == 7) )
+#{
+#	print( "! (x(a) equals 7) " );
+#}
+#else
+#{
+#	print( "not ! (x(a) equals 7) " );
+#}
+
+if( -x(a) == -7 )
+{
+	print( "-x(a) equals -7" );
+}
+else
+{
+	print( "-x(a) not equals -7" );
+}

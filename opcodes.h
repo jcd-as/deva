@@ -45,13 +45,12 @@ enum Opcode
 	op_mod,			// 29 modulus top two values on stack
 	op_output,		// 30 dump top of stack to stdout
 	op_call,		// 31 call a function. arguments on stack
-	op_return,		// 32 pop the return address and unconditionally jump to it
-	op_returnv,		// 33 as return, but stack holds return value and then (at top) return address
-	op_break,		// 34 break out of loop, respecting scope (enter/leave)
-	op_enter,		// 35 enter new scope
-	op_leave,		// 36 leave scope
-	op_nop,			// 37 no op
-	op_halt,		// 38 finish program, 0 or 1 ops (return code)
+	op_return,		// 32 pop the return address and unconditionally jump to it, stack holds return value
+	op_break,		// 33 break out of loop, respecting scope (enter/leave)
+	op_enter,		// 34 enter new scope
+	op_leave,		// 35 leave scope
+	op_nop,			// 36 no op
+	op_halt,		// 37 finish program, 0 or 1 ops (return code)
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

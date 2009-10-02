@@ -10,6 +10,7 @@
 #include "scope.h"
 #include "compile.h"
 #include <iostream>
+#include <algorithm>
 
 // each check_xxx() function should:
 // * set the value of the expression
@@ -61,11 +62,16 @@ void check_func( iter_t const & i )
 		throw DevaSemanticException( "Invalid identifier for function declaration", i->value.value() );
 	if( i->children[1].value.id() != arg_list_decl_id )
 		throw DevaSemanticException( "Invalid argument list for function declaration", i->value.value() );
-	// TODO: 3rd child has to be some kind of expression. identifier, assign_op
-	// etc etc
-//	if( i->children[2].value.id() != compound_statement_id 
-//		&& i->children[2].value.id() != identifier )
-//		throw DevaSemanticException( "Invalid argument list for function declaration", i->value.value() );
+	// ensure the arguments are all uniquely named
+	int num_children = i->children[1].children.size();
+	vector<string> names;
+	for( int j = 0; j < num_children; ++j )
+	{
+		NodeInfo arg = i->children[1].children[j].value.value();
+		if( find( names.begin(), names.end(), arg.sym ) != names.end() )
+			throw DevaSemanticException( "Duplicate variable in function argument list", arg );
+		names.push_back( arg.sym );
+	}
 }
 
 static vector<unsigned char> in_loop_stack;
