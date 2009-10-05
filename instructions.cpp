@@ -3,6 +3,7 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
+// * implement constants
 // * implement short-circuiting for logical ops ('||', '&&' )
 // * maps & vectors, including the dot operator and 'for' loops
 // * encode location (line number) into InstructionStream via "line_num" opcodes
@@ -186,6 +187,8 @@ ostream & operator << ( ostream & os, Opcode & op )
 	return os;
 }
 
+
+// IL gen functions:
 void gen_IL_number( iter_t const & i, InstructionStream & is )
 {
 	// push the number onto the stack
@@ -353,15 +356,13 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 static vector<int> fcn_call_stack;
 void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
-	string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
-	// if no children, simple variable
-	if(i->children.size() == 0 )
+	// simple variable and map/vector lookups handled by caller,
+	// only need to handle function calls here
+	if( i->children[0].value.id() == arg_list_exp_id )
 	{
-		is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
-	}
-	// if the first child is an arg_list_exp, it's a fcn call
-	else if( i->children[0].value.id() == arg_list_exp_id )
-	{
+		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+
+		// add the call instruction
 		is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
 
 		// back-patch the return address push op
@@ -377,9 +378,6 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			is.push( Instruction( op_pop ) );
 		}
 	}
-	// TODO: map/vector lookups, dot operator lookup (syntactic sugar for a map lookup)
-	// TODO: dot operator also has to do the parent check, as above, so that 'foo.bar()' 
-	// generates a pop instruction too
 }
 
 void gen_IL_in_op( iter_t const & i, InstructionStream & is )
@@ -408,7 +406,10 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 {
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
 	// the stack)
-	is.push( Instruction( op_store ) );
+	// unless the rhs (child #2 is a map/vector op, in which case a 'new
+	// vec/map' instruction will be generated instead
+	if( i->children[1].value.id() != vec_op_id && i->children[1].value.id() != map_op_id )
+		is.push( Instruction( op_store ) );
 }
 
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
@@ -480,7 +481,21 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 {
-	// TODO: impl
+	// TODO: dot operator also has to do the parent check, as in 
+	// identifier above, so that 'foo.bar()' generates a pop instruction too
+	//
+	// first arg = lhs
+	// second arg = rhs
+	// a.b = a["b"]
+	// key exp generates:
+	// 	- push 'a'
+	// 	- push string "b"
+	// 	- key lookup
+	// dot op should be the same
+	//  - push 'a'
+	//  - push string "b"
+	//  - key lookup
+	is.push( Instruction( op_vec_load ) );
 }
 
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is )
@@ -495,7 +510,7 @@ void gen_IL_bracket_op( iter_t const & i, InstructionStream & is )
 
 void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 {
-	// TODO: push the (offset for the) return address
+	// push the (offset for the) return address
 	// save the location for back-patching the proper return address (address
 	// *after* the call is made)
 	fcn_call_stack.push_back( is.size() );
@@ -525,6 +540,12 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 
 void gen_IL_key_exp( iter_t const & i, InstructionStream & is )
 {
+	// only called to generate vec loads, not stores (see assignment op handling
+	// in compile.cpp, generate_IL_for_node() for vec store code gen)
+	// TODO: consolidate map/vec load into a single 'key lookup' op
+	// (no way to determine if it's a string or a number until run-time)
+	// a[b] <= a is parent, b is child[1] ('[' is child[0] and ']' is child[2])
+	is.push( Instruction( op_vec_load ) );
 }
 
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is )

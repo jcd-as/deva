@@ -390,24 +390,25 @@ push : num: '' = 0
 return : 
 push : unknown: 'a'
 new_vec: : 
-store : 
 push : unknown: 'a'
-push : function: '', offset = 155
-push : num: '' = 5
-call : function_call: 'pushback'
+push : string: '' = pushback
+vec_load : 
 push : unknown: 'b'
 new_map: : 
-store : 
+push : unknown: 'b'
 push : num: '' = 0
 push : string: '' = foo
-store : 
+vec_store : 
+push : unknown: 'b'
 push : string: '' = foo
 push : unknown: 'foo'
-store : 
+vec_store : 
 push : unknown: 'x'
+push : unknown: 'b'
 push : string: '' = foo
+vec_load : 
 store : 
-push : function: '', offset = 255
+push : function: '', offset = 251
 push : num: '' = 0
 push : num: '' = 1
 call : function_call: 'x'
@@ -415,7 +416,7 @@ pop :
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : num: '' = 373
+jmpf : num: '' = 344
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -423,12 +424,9 @@ push : num: '' = 1
 add : 
 store : 
 push : unknown: 'io'
-push : function: '', offset = 359
-push : function: '', offset = 350
-push : unknown: 'a'
-call : function_call: 'str'
-call : function_call: 'print'
+push : string: '' = print
+vec_load : 
 leave : 
-jmp : num: '' = 257
+jmp : num: '' = 253
 halt : 
 compiled input.dv successfully

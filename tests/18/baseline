@@ -1,0 +1,9 @@
+map: 'a' = 
+string: '' = bar : num: '' = 255
+string: '' = foo : num: '' = -1
+
+===========
+map: 'a' = 
+string: '' = bar : num: '' = 255
+string: '' = foo : num: '' = 255
+

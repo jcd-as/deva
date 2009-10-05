@@ -10,11 +10,21 @@ import os
 home = os.getenv( "HOME" )
 init_dir = os.getcwd()
 
+failed_tests = []
+
 # run 'dotest input.dv baseline' in each sub-dir
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
     if "baseline" in files:
         print( "processing " + root + " ..." )
         os.chdir( root )
-        os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
+        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
+        if ret != 0:
+            failed_tests.append( root )
         
 os.chdir( init_dir )
+
+# re-print failures:
+if len( failed_tests ) != 0:
+    print( "\nFAILED tests:" )
+    for s in failed_tests:
+        print( s )

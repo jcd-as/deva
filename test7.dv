@@ -8,50 +8,50 @@ x( 4 );
 print( x( 6 ) );
 
 a = 5;
-#if( x(a) == 7 && true )
-#{
-#	print( "x(a) equals 7 && true" );
-#}
-#else
-#{
-#	print( "x(a) not equals 7 && true" );
-#}
-#
-#if( x(a) == 7 && false )
-#{
-#	print( "x(a) equals 7 && false" );
-#}
-#else
-#{
-#	print( "x(a) not equals 7 && false" );
-#}
-#
-#if( x(a) == 7 || false )
-#{
-#	print( "x(a) equals 7 || false" );
-#}
-#else
-#{
-#	print( "x(a) not equals 7 || false" );
-#}
-#
-#if( x(a) == 11 || false )
-#{
-#	print( "x(a) equals 11 || false" );
-#}
-#else
-#{
-#	print( "x(a) not equals 11 || false" );
-#}
-#
-#if( !(x(a) == 7) )
-#{
-#	print( "! (x(a) equals 7) " );
-#}
-#else
-#{
-#	print( "not ! (x(a) equals 7) " );
-#}
+if( x(a) == 7 && true )
+{
+	print( "x(a) equals 7 && true" );
+}
+else
+{
+	print( "x(a) not equals 7 && true" );
+}
+
+if( x(a) == 7 && false )
+{
+	print( "x(a) equals 7 && false" );
+}
+else
+{
+	print( "x(a) not equals 7 && false" );
+}
+
+if( x(a) == 7 || false )
+{
+	print( "x(a) equals 7 || false" );
+}
+else
+{
+	print( "x(a) not equals 7 || false" );
+}
+
+if( x(a) == 11 || false )
+{
+	print( "x(a) equals 11 || false" );
+}
+else
+{
+	print( "x(a) not equals 11 || false" );
+}
+
+if( !(x(a) == 7) )
+{
+	print( "! (x(a) equals 7) " );
+}
+else
+{
+	print( "not ! (x(a) equals 7) " );
+}
 
 if( -x(a) == -7 )
 {

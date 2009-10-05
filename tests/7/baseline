@@ -424,20 +424,28 @@ push : unknown: 'x'
 jmpf : num: '' = 290
 jmp : num: '' = 290
 push : unknown: 'a'
-push : unknown: 'b'
+push : string: '' = b
+vec_load : 
 push : unknown: 'a'
-push : unknown: 'b'
-push : unknown: 'c'
-push : unknown: 'd'
+push : string: '' = b
+vec_load : 
+push : string: '' = c
+vec_load : 
+push : string: '' = d
+vec_load : 
 push : unknown: 'a'
-push : unknown: 'b'
-push : unknown: 'c'
-push : string: '' = foo
-push : unknown: 'b'
-push : unknown: 'c'
-push : function: '', offset = 366
-call : function_call: 'a'
-push : unknown: 'b'
+push : string: '' = b
+vec_load : 
+push : string: '' = c
+vec_load : 
+push : string: '' = d
+vec_load : 
+push : unknown: 'a'
+push : string: '' = c
+vec_load : 
+push : unknown: 'a'
+push : string: '' = b
+vec_load : 
 push : string: '' = foo
 push : unknown: 'a'
 push : num: '' = 1

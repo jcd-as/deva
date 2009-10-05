@@ -3,10 +3,12 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
+// * 'call stack' for tracking where errors occur (rudimentary debugging support)
 // * line number op-code for tracking what line errors occur on
 // * maps & vectors, including the dot operator and 'for' loops
 
 #include "executor.h"
+#include <cstring>
 
 
 // private utility functions
@@ -211,7 +213,8 @@ void Executor::Store( Instruction const & inst )
 	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// if the rhs is a variable or function, get it from the symbol table
-	// TODO: map & vector
+	// TODO: map & vector ??? (actually, shouldn't map/vec lookups result in the
+	// 'looked up' value being on top of the stack, not the map/vec???)
 	if( rhs.Type() == sym_unknown || rhs.Type() == sym_function )
 	{
 		DevaObject* ob = find_symbol( rhs );
@@ -292,22 +295,160 @@ void Executor::New( Instruction const & inst )
 // 7 create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	// variable to store as (name) is on top of the stack
+	DevaObject o = stack.back();
+	stack.pop_back();
+	// ensure it's a variable
+	if( o.Type() != sym_unknown )
+		throw DevaRuntimeException( "Invalid left-hand type for assignment to new map object." );
+	// create a new map object and add it to the current scope
+	DevaObject *mp = new DevaObject( o.name, sym_map );
+	scopes.AddObject( mp );
 }
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO: validate
+	// variable to store as (name) is on top of the stack
+	DevaObject o = stack.back();
+	stack.pop_back();
+	// ensure it's a variable
+	if( o.Type() != sym_unknown )
+		throw DevaRuntimeException( "Invalid left-hand type for assignment to new vector object." );
+	// create a new map object and add it to the current scope
+	DevaObject *vec = new DevaObject( o.name, sym_vector );
+	scopes.AddObject( vec );
 }
 // 9 get item from vector
+// (or map, can't tell at compile time what it will be)
 void Executor::Vec_load( Instruction const & inst )
 {
 	// TODO: implement
+	// top of stack has index/key
+	DevaObject idxkey = stack.back();
+	stack.pop_back();
+	// next-to-top of stack has name of vector/map
+	DevaObject vecmap = stack.back();
+	stack.pop_back();
+
+	if( vecmap.Type() != sym_unknown )
+		throw DevaRuntimeException( "Invalid object for '[]' operator." );
+
+	// if the index/key is a variable, look it up
+	if( idxkey.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( idxkey );
+		if( !o )
+			throw DevaRuntimeException( "Invalid type for index/key." );
+		idxkey = *o;
+	}
+	// find the map/vector from the symbol table
+	DevaObject *table = find_symbol( vecmap );
+	// ensure it is the correct type
+	// vector *must* have a numeric (integer) index
+	if( table->Type() == sym_vector )
+	{
+		if( idxkey.Type() != sym_number )
+			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
+		// TODO: error on non-integral index 
+		int idx = (int)idxkey.num_val;
+		vector<DevaObject>* v = table->vec_val;
+		// TODO: get the value from the vector
+		if( idx < 0 || idx >= v->size() )
+			throw DevaRuntimeException( "Index to vector out-of-range." );
+		DevaObject o = v->at( idx );
+		// push it onto the stack
+		stack.push_back( o );
+	}
+	// maps can be indexed by number/string/user-defined-type
+	else if( table->Type() == sym_map )
+	{
+		// key (number/string/user-defined-type)?
+		// TODO: user-defined-type as key
+		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
+			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
+		// TODO: get the value from the map
+		map<DevaObject, DevaObject>* mp = table->map_val;
+		map<DevaObject, DevaObject>::iterator it;
+		it = mp->find( idxkey );
+		if( it == mp->end() )
+			throw DevaRuntimeException( "Invalid map key. No such item found." );
+		// push it onto the stack
+		pair<DevaObject, DevaObject> p = *it;
+		stack.push_back( p.second );
+	}
+	else
+		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
 }
 // 10 set item in vector. args: index, value
 void Executor::Vec_store( Instruction const & inst )
 {
 	// TODO: implement
+	// 
+	// top of stack has value
+	DevaObject val = stack.back();
+	stack.pop_back();
+	// next-to-top of stack has the index/key
+	DevaObject idxkey = stack.back();
+	stack.pop_back();
+	// next-to-next-to-top of stack has name of vector/map
+	DevaObject vecmap = stack.back();
+	stack.pop_back();
+
+	if( vecmap.Type() != sym_unknown )
+		throw DevaRuntimeException( "Invalid object for '[]' operator." );
+
+	// if the value is a variable, look it up
+	if( val.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( idxkey );
+		if( !o )
+			throw DevaRuntimeException( "Invalid type for index/key." );
+		val = *o;
+	}
+	// if the index/key is a variable, look it up
+	if( idxkey.Type() == sym_unknown )
+	{
+		DevaObject* o = find_symbol( idxkey );
+		if( !o )
+			throw DevaRuntimeException( "Invalid type for index/key." );
+		idxkey = *o;
+	}
+	// find the map/vector from the symbol table
+	DevaObject *table = find_symbol( vecmap );
+	// ensure it is the correct type
+	// vector *must* have a numeric (integer) index
+	if( table->Type() == sym_vector )
+	{
+		if( idxkey.Type() != sym_number )
+			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
+		// TODO: error on non-integral index 
+		int idx = (int)idxkey.num_val;
+		vector<DevaObject>* v = table->vec_val;
+		// set the value in the vector
+		if( idx < 0 || idx >= v->size() )
+			throw DevaRuntimeException( "Index to vector out-of-range." );
+		v->operator[]( idx ) = val;
+	}
+	// maps can be indexed by number/string/user-defined-type
+	else if( table->Type() == sym_map )
+	{
+		// key (number/string/user-defined-type)?
+		// TODO: user-defined-type as key
+		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
+			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
+		// TODO: set the value in the map
+		map<DevaObject, DevaObject>* mp = table->map_val;
+//		map<DevaObject, DevaObject>::iterator it;
+//		it = mp->find( idxkey );
+//		if( it == mp->end() )
+//			throw DevaRuntimeException( "Invalid map key. No such item found." );
+		mp->operator[]( idxkey ) = val;
+	}
+	else
+		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
+
 }
 // 11 get item from map
 void Executor::Map_load( Instruction const & inst )
@@ -924,13 +1065,30 @@ void Executor::Output( Instruction const & inst )
 			cout << "null";
 			break;
 		case sym_map:
-			// TODO: dump some map contents?
-			cout << "map: '" << o->name << "' = ";
+			{
+			// dump map contents
+			cout << "map: '" << o->name << "' = " << endl;
+			map<DevaObject, DevaObject>* mp = o->map_val;
+			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				cout << key << " : " << val << endl;
+			}
 			break;
+			}
 		case sym_vector:
-			// TODO: dump some vector contents?
-			cout << "vector: '" << o->name << "' = ";
+			{
+			// dump vector contents
+			cout << "vector: '" << o->name << "' = " << endl;
+			vector<DevaObject>* vec = o->vec_val;
+			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
+			{
+				DevaObject val = (*it);
+				cout << val << endl;
+			}
 			break;
+			}
 		case sym_function:
 			cout << "function: '" << o->name << "'";
 			break;
@@ -951,6 +1109,8 @@ void Executor::Call( Instruction const & inst )
 	if( inst.args[0].name == "print" )
 	{
 		Output( inst );
+		// all fcns return *something*
+		stack.push_back( DevaObject( "", sym_null ) );
 	}
 	else
 	{

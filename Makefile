@@ -1,13 +1,13 @@
 # makefile for test driver for deva language grammars
 
 # sources/objs for test executable
-TEST_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp
+TEST_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp
 TEST_OBJS=$(patsubst %.cpp, %.o, ${TEST_SOURCES})
 # sources/objs for devac executable
-DEVAC_SOURCES=devac.cpp symbol.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp
+DEVAC_SOURCES=devac.cpp symbol.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp dobject.cpp
 DEVAC_OBJS=$(patsubst %.cpp, %.o, ${DEVAC_SOURCES})
 # sources/objs for deva executable
-DEVA_SOURCES=deva.cpp symbol.cpp scope.cpp executor.cpp instructions.cpp parser_ids.cpp
+DEVA_SOURCES=deva.cpp symbol.cpp scope.cpp executor.cpp instructions.cpp parser_ids.cpp dobject.cpp
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})

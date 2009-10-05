@@ -9,10 +9,12 @@
 // * semantic checking functions for all valid node types that can have children
 
 #include <iomanip>
+#include <cstring>
 
 #include "compile.h"
 #include "semantics.h"
 #include "fileformat.h"
+
 
 // helpers
 //////////////////////////////////////////////////////////////////////
@@ -693,9 +695,52 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
-		// can have arg_list & semi-colon
-		walk_children( i, is );
-		gen_IL_identifier( i, is, parent );
+//		walk_children( i, is );
+//		gen_IL_identifier( i, is, parent );
+
+		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+		// if no children, simple variable
+		if(i->children.size() == 0 )
+		{
+			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+		}
+		// if the first child is an arg_list_exp, it's a fcn call
+		else if( i->children[0].value.id() == arg_list_exp_id )
+		{
+			// first walk the children
+			walk_children( i, is );
+
+			// then generate the IL for this node
+			gen_IL_identifier( i, is, parent );
+
+			// add the call instruction
+//			is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
+//
+//			// back-patch the return address push op
+//			int ret_addr_loc = fcn_call_stack.back();
+//			fcn_call_stack.pop_back();
+//			// write the current *file* offset, not instruction stream!
+//			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
+//
+//			// if the parent is the translation unit or a compound_statement, the return
+//			// value is not being used, emit a pop instruction to discard it
+//			if( parent->value.id() == translation_unit_id || parent->value.id() == compound_statement_id )
+//			{
+//				is.push( Instruction( op_pop ) );
+//			}
+		}
+		// if the id is followed by []'s it is either a vector or map look-up
+		else if( i->children[0].value.id() == key_exp_id )
+		{
+			// first add the push of the name onto the stack
+			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+
+			// then walk the children - key_exp will push it's children (the key) and
+			// the key-lookup op
+			walk_children( i, is );
+		}
+		// TODO: dot operator also has to do the parent check, as above, so that 'foo.bar()' 
+		// generates a pop instruction too
 	}
 	// in op ('in' keyword in for loops)
 	else if( i->value.id() == parser_id( in_op_id ) )
@@ -725,8 +770,28 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( assignment_op_id ) )
 	{
         // either the two sides or the two sides and a semi-colon
-		walk_children( i, is );
-		gen_IL_assignment_op( i, is );
+		// if the lhs is an identifier with a key_exp (vec/map) then generate a
+		// vector store
+		if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
+			i->children[0].children[0].value.id() == key_exp_id )
+		{
+			// push the identifier
+			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+			// push the key exp
+			walk_children( i->children[0].children.begin(), is );
+			
+			// walk the rhs
+			generate_IL_for_node( i->children.begin() + 1, is, i );
+
+			// add the vector store op
+			is.push( Instruction( op_vec_store ) );
+		}
+		else
+		{
+			walk_children( i, is );
+			gen_IL_assignment_op( i, is );
+		}
 	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
@@ -767,7 +832,21 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( dot_op_id ) )
 	{
 		// operands (lhs & rhs) and possibly semi-colon
-		walk_children( i, is );
+//		walk_children( i, is );
+		
+		// TODO: validate this (works for 'chained' dot ops e.g. 'a.b.c')
+		// lhs stays the same
+		if( i->children[0].value.id() == identifier_id )
+		{
+			string lhs = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+		}
+		else
+			generate_IL_for_node( i->children.begin(), is, i );
+		// turn the rhs into a string
+		string rhs = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
+		is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
+
 		gen_IL_dot_op( i, is );
 	}
 	// paren ops
@@ -986,6 +1065,9 @@ bool DeCompileFile( char const* filename )
 		// read the byte for the opcode
 		unsigned char op;
 		file.read( (char*)&op, 1 );
+		// avoid re-emitting the final opcode
+		if( file.eof() )
+			break;
 		Instruction inst( (Opcode)op );
 		// for each argument:
 		unsigned char type;
@@ -1068,7 +1150,6 @@ bool DeCompileFile( char const* filename )
 			type = (unsigned char)sym_end;
 			file.read( (char*)&type, sizeof( type ) );
 		}
-
 		cout << inst.op << " : ";
 		// dump args (vector of DevaObjects) too (need >> op for Objects)
 		for( vector<DevaObject>::iterator j = inst.args.begin(); j != inst.args.end(); ++j )
