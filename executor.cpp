@@ -8,6 +8,7 @@
 // * maps & vectors, including the dot operator and 'for' loops
 
 #include "executor.h"
+#include "builtins.h"
 #include <cstring>
 
 
@@ -1104,13 +1105,10 @@ void Executor::Output( Instruction const & inst )
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
-	// TEMPORARY HACK!!! REMOVE!!!
-	// (and replace with importing the built-ins)
-	if( inst.args[0].name == "print" )
+	// check for built-in function first
+	if( is_builtin( inst.args[0].name ) )
 	{
-		Output( inst );
-		// all fcns return *something*
-		stack.push_back( DevaObject( "", sym_null ) );
+		execute_builtin( this, inst );
 	}
 	else
 	{

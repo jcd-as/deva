@@ -1,11 +1,21 @@
-a = {};
-a["foo"] = -1;
-a["bar"] = 255;
+a = [];
+append( a, -1 );		# a[0] now -1
+append( a, 255 );	# a[1] now 255
 print( a );
 print( "===========" );
-a["foo"] = a["bar"];
+a[0] = a[1];
 print( a );
+i = a[0];
+s = "a[0] is " + str( i );
+print( s );
 
+#a = {};
+#a["foo"] = -1;
+#a["bar"] = 255;
+#print( a );
+#print( "===========" );
+#a["foo"] = a["bar"];
+#print( a );
 
 # this:
 #a.b.c;

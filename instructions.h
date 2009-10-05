@@ -8,12 +8,7 @@
 #ifndef __INSTRUCTIONS_H__
 #define __INSTRUCTIONS_H__
 
-//#include "opcodes.h"
-//#include "symbol.h"
-//#include "types.h"
 #include "dobject.h"
-//#include <vector>
-//#include <cstring>
 
 using namespace std;
 

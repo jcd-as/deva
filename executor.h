@@ -189,6 +189,11 @@ public:
 	~Executor();
 
 	bool RunFile();
+
+	// be-friend the built-in functions
+	friend void do_print( Executor *ex, const Instruction & inst );
+	friend void do_str( Executor *ex, const Instruction & inst );
+	friend void do_append( Executor *ex, const Instruction & inst );
 };
 
 #endif // __EXECUTOR_H__
