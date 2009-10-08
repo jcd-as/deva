@@ -1,11 +1,11 @@
-// instuctions.cpp
+// instructions.cpp
 // IL instruction functions for the deva language
 // created by jcs, september 14, 2009 
 
 // TODO:
+// * 'a.b = c' doesn't work properly
 // * implement constants
 // * implement short-circuiting for logical ops ('||', '&&' )
-// * maps & vectors, including the dot operator and 'for' loops
 // * encode location (line number) into InstructionStream via "line_num" opcodes
 
 #include "instructions.h"
@@ -81,8 +81,8 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_defarg:
 		os << "defarg";
 		break;
-	case op_new:
-		os << "new";
+	case op_dup:
+		os << "dup";
 		break;
 	case op_new_map:
 		os << "new_map:";
@@ -96,8 +96,8 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_vec_store:
 		os << "vec_store";
 		break;
-	case op_map_load:
-		os << "map_load";
+	case op_swap:
+		os << "swap";
 		break;
 	case op_map_store:
 		os << "map_store";
@@ -272,22 +272,141 @@ void post_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	while_jmpf_stack.pop_back();
 	// write the current *file* offset, not instruction stream!
 	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.Offset() ) );
-
 }
 
 void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
-	// TODO
+	// general format of 'for' statement
+	// for( item in table ){ do_stuff(); }
+	// AST:
+	// for_s
+	//		- identifier 'item' (variable)
+	// 		- in_op
+	// 			- identifier 'table' (variable naming a vector/map)
+	// 		- statement|compound_statement
+	// 			- call do_stuff
+	// IL:
+	// push 'table'
+	// call 'length'
+	// push 0 				<== 'index' start value
+	// start:
+	//
+	// dup 2
+	// dup 2				<== dups get the top two items (index & length) duplicated
+	// neq					<== and neq removes the first pair
+	// jmpf done 			<== if index equals length, jump to 'done'
+	//
+	// push 'table'
+	// dup 2				<== copies 'index' onto the top of the stack
+	// vec_load				<== puts next item on the stack, null if no more items
+	// push 'item'			<== stack+0 now the value, stack+1 the index
+	// swap					<== swap them for the store op
+	// store				<== store value into 'item'
+	//
+	// <statement/compound_statement IL>
+	//
+	// jmp start
+	// done:
+	// pop					<== pop index
+
+	// if there are 3 children, this is a vector look-up ( 'for( i in t )' )
+	// if there are 4 children, this is a map look-up	( 'for( key,val in t )' )
+	bool is_map = false;
+	int in_op_index = 1;
+	int num_children = i->children.size();
+	if( i->children.size() > 3 )
+	{
+		is_map = true;
+		in_op_index = 2;
+	}
+	// get the name of the vector/map item
+	if( i->children[0].value.id() != identifier_id )
+		throw DevaICE( "Invalid loop variable in 'for' loop." );
+	string item_name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+	string item_value_name;
+	if( is_map )
+		item_value_name = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
+	// get the name of the vector/map
+	if( i->children[in_op_index].value.id() != in_op_id || i->children[in_op_index].children.size() != 1 )
+		throw DevaICE( "Invalid 'in' statement in 'for' loop." );
+	string table_name = strip_symbol( string( i->children[in_op_index].children[0].value.begin(), i->children[in_op_index].children[0].value.end() ) );
+
+	// push the return address for the call to 'length'
+	is.push( Instruction( op_push, DevaObject( "", is.Offset() ) ) );
+	// push the vector/map
+	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
+	// call 'length' builtin
+	is.push( Instruction( op_call, DevaObject( "length", sym_function_call ) ) );
+	// push 0
+	is.push( Instruction( op_push, DevaObject( "", 0.0 ) ) );
+	// save the offset for the loop stack (of the 'start', for back-patching)
+	loop_stack.push_back( is.Offset() );
+	// dup 1
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// dup 1
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// neq
+	is.push( Instruction( op_neq ) );
+	// save the instruction location for back-patching
+	while_jmpf_stack.push_back( is.size() );
+	// generate a place-holder op for the jmpf (which ends looping)
+	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
+	// push 'table'
+	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
+	// dup 1
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	if( is_map )
+	{
+		// vec_load, with a 'true' arg to indicate that maps should treat the value
+		// as an index (not a key)
+		is.push( Instruction( op_vec_load, DevaObject( "", true ) ) );
+		// push the 'item' (key)
+		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
+		// swap the top two items for the store op
+		is.push( Instruction( op_swap ) );
+		// store
+		is.push( Instruction( op_store ) );
+		// push the 'value'
+		is.push( Instruction( op_push, DevaObject( item_value_name, sym_unknown ) ) );
+		// swap the top two items for the store op
+		is.push( Instruction( op_swap ) );
+		// store
+		is.push( Instruction( op_store ) );
+	}
+	else
+	{
+		// vec_load, with a 'true' arg to indicate that maps should treat the value
+		// as an index (not a key)
+		is.push( Instruction( op_vec_load ) );
+		// push the 'item'
+		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
+		// swap the top two items for the store op
+		is.push( Instruction( op_swap ) );
+		// store
+		is.push( Instruction( op_store ) );
+	}
 }
 
 void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
-	// TODO
-}
+	// push 1
+	is.push( Instruction( op_push, DevaObject( "", 1.0 ) ) );
+	// add
+	is.push( Instruction( op_add ) );
+	// add the jump-to-start
+	int loop_loc = loop_stack.back();
+	loop_stack.pop_back();
+	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
 
-void post_gen_IL_for_s( iter_t const & i, InstructionStream & is )
-{
-	// TODO
+	// back-patch the jmpf
+	// pop the last 'loop' location off the 'loop stack'
+	int jmpf_loc = while_jmpf_stack.back();
+	while_jmpf_stack.pop_back();
+	// write the current *file* offset, not instruction stream!
+	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.Offset() ) );
+
+	// pop to remove 'index' from the stack
+	is.push( Instruction( op_pop ) );
 }
 
 static vector<int> if_stack;
@@ -354,16 +473,24 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 
 // stack of fcn returns for back-patching return addresses in
 static vector<int> fcn_call_stack;
-void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent )
+void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack )
 {
 	// simple variable and map/vector lookups handled by caller,
 	// only need to handle function calls here
 	if( i->children[0].value.id() == arg_list_exp_id )
 	{
+		// TODO: validate
+		// this may be incorrect when reference-counting semantics/variable
+		// tracking is added...
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+		if( get_fcn_from_stack )
+			// add the call instruction, passing a null arg to indicate it needs
+			// to pull the function off the stack
+			is.push( Instruction( op_call ) );
+		else
+			// add the call instruction with the name of the fcn to call
+			is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
 
-		// add the call instruction
-		is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
 
 		// back-patch the return address push op
 		int ret_addr_loc = fcn_call_stack.back();
@@ -371,9 +498,12 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// write the current *file* offset, not instruction stream!
 		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
 
-		// if the parent is the translation unit or a compound_statement, the return
+		// if the parent is the translation unit, a loop, or a compound_statement, the return
 		// value is not being used, emit a pop instruction to discard it
-		if( parent->value.id() == translation_unit_id || parent->value.id() == compound_statement_id )
+		if( parent->value.id() == translation_unit_id 
+			|| parent->value.id() == while_s_id
+			|| parent->value.id() == for_s_id
+			|| parent->value.id() == compound_statement_id )
 		{
 			is.push( Instruction( op_pop ) );
 		}
@@ -484,17 +614,9 @@ void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 	// TODO: dot operator also has to do the parent check, as in 
 	// identifier above, so that 'foo.bar()' generates a pop instruction too
 	//
+	// a.b = a["b"]  <== dot op is syntactic sugar for map lookup
 	// first arg = lhs
 	// second arg = rhs
-	// a.b = a["b"]
-	// key exp generates:
-	// 	- push 'a'
-	// 	- push string "b"
-	// 	- key lookup
-	// dot op should be the same
-	//  - push 'a'
-	//  - push string "b"
-	//  - key lookup
 	is.push( Instruction( op_vec_load ) );
 }
 

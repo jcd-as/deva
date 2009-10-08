@@ -3,9 +3,9 @@
 // created by jcs, september 12, 2009 
 
 // TODO:
+// * 'a.b = c' doesn't work properly
 // * change asserts into (non-fatal) errors
 // * encode location (line number) into bytecode via "line_num" opcodes
-// * maps & vectors, including the dot operator and 'for' loops
 // * semantic checking functions for all valid node types that can have children
 
 #include <iomanip>
@@ -27,7 +27,7 @@ void add_symbol( iterator_t start, iterator_t end )
 	string s( start, end );
 	s = strip_symbol( s );
 
-	// TODO: ensure symbol is not more than 255 characters!
+	// TODO: ensure symbol is not more than 255 characters ??
 //	if( s.length() > 255 )
 //		throw new SyntaxError
 	
@@ -641,15 +641,19 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( for_s_id ) )
 	{
 		// pre-gen stores the start value, for the jump-to-start
-//		pre_gen_IL_for_s( i, is );
-//		// first child has the relational op stuff, walk it
-//		generate_IL_for_node( i->children.begin(), is, i );
-//		// gen_IL adds the placeholder for the jmpf
-//		gen_IL_for_s( i, is );
-//		// second child has the statement|compound_statement, walk it
-//		generate_IL_for_node( i->children.begin() + 1, is, i );
-//		// post-gen-IL will to the back-patching and add the jump to start
-//		post_gen_IL_for_s( i, is );
+		pre_gen_IL_for_s( i, is );
+		// first child (and second if this is a map walk) have variables
+		// second or third child has the 'in' operator
+		// third or fourth child has the statement|compound_statement, walk it
+		if( i->children.size() == 3 )
+			generate_IL_for_node( i->children.begin() + 2, is, i );
+		else if( i->children.size() == 4 )
+			generate_IL_for_node( i->children.begin() + 3, is, i );
+		else
+			throw DevaSemanticException( "invalid for loop", i->value.value() );
+
+		// gen_IL adds the placeholder for the jmpf
+		gen_IL_for_s( i, is );
 	}
 	// if_s (keyword 'if')
 	else if( i->value.id() == parser_id( if_s_id ) )
@@ -695,9 +699,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
-//		walk_children( i, is );
-//		gen_IL_identifier( i, is, parent );
-
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 		// if no children, simple variable
 		if(i->children.size() == 0 )
@@ -711,23 +712,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			walk_children( i, is );
 
 			// then generate the IL for this node
-			gen_IL_identifier( i, is, parent );
-
-			// add the call instruction
-//			is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
-//
-//			// back-patch the return address push op
-//			int ret_addr_loc = fcn_call_stack.back();
-//			fcn_call_stack.pop_back();
-//			// write the current *file* offset, not instruction stream!
-//			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
-//
-//			// if the parent is the translation unit or a compound_statement, the return
-//			// value is not being used, emit a pop instruction to discard it
-//			if( parent->value.id() == translation_unit_id || parent->value.id() == compound_statement_id )
-//			{
-//				is.push( Instruction( op_pop ) );
-//			}
+			gen_IL_identifier( i, is, parent, false );
 		}
 		// if the id is followed by []'s it is either a vector or map look-up
 		else if( i->children[0].value.id() == key_exp_id )
@@ -832,9 +817,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( dot_op_id ) )
 	{
 		// operands (lhs & rhs) and possibly semi-colon
-//		walk_children( i, is );
 		
-		// TODO: validate this (works for 'chained' dot ops e.g. 'a.b.c')
 		// lhs stays the same
 		if( i->children[0].value.id() == identifier_id )
 		{
@@ -843,11 +826,23 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 		else
 			generate_IL_for_node( i->children.begin(), is, i );
+
 		// turn the rhs into a string
 		string rhs = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
 		is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
 
 		gen_IL_dot_op( i, is );
+
+		// check for fcn call here too (for 'a.b()' etc)!!
+		// if the first child is an arg_list_exp, it's a fcn call
+		if( i->children[1].children.size() > 0 && i->children[1].children[0].value.id() == arg_list_exp_id )
+		{
+			// first walk the children
+			walk_children( i->children.begin() + 1, is );
+
+			// then generate the IL for this node
+			gen_IL_identifier( i->children.begin() + 1, is, parent, true );
+		}
 	}
 	// paren ops
 	else if( i->value.id() == parser_id( open_paren_op_id )

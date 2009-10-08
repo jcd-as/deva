@@ -1,21 +1,55 @@
-a = [];
-append( a, -1 );		# a[0] now -1
-append( a, 255 );	# a[1] now 255
-print( a );
-print( "===========" );
-a[0] = a[1];
-print( a );
-i = a[0];
-s = "a[0] is " + str( i );
-print( s );
+def foo()
+{
+	print( "foo" );
+}
+a = {};
+#a.b = foo;
+a["b"] = foo;
+a.b();
+
+#a = [];
+#append( a, 0 );
+#append( a, 1 );
+#append( a, 2 );
+#append( a, 3 );
+##a = {};
+##a["a"] = "a";
+##a["b"] = "b";
+##a["c"] = "c";
+##a["d"] = "d";
+#for( i in a )
+#{
+#	print( i );
+#}
+
+#a = {};
+#def foo()
+#{
+#	print( "foobar" );
+#}
+#a["b"] = foo;
+#a.b();
 
 #a = {};
 #a["foo"] = -1;
 #a["bar"] = 255;
 #print( a );
 #print( "===========" );
+#print( "a.foo is " + str( a.foo ) );
 #a["foo"] = a["bar"];
 #print( a );
+
+
+#a = [];
+#append( a, -1 );		# a[0] now -1
+#append( a, 255 );	# a[1] now 255
+#print( a );
+#print( "===========" );
+#a[0] = a[1];
+#print( a );
+#i = a[0];
+#s = "a[0] is " + str( i );
+#print( s );
 
 # this:
 #a.b.c;

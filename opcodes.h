@@ -18,13 +18,14 @@ enum Opcode
 	op_store,		// 3 store a variable from the stack to memory
 	op_defun,		// 4 define function. arg is location in instruction stream, named the fcn name
 	op_defarg,		// 5 define an argument to a fcn. argument (to opcode) is arg name
-	// TODO: need new for each object type??
-	op_new,			// 6 create a new object and place on top of stack
+	op_dup,			// 6 dup a stack item. arg is index of item to dup (onto top of stack)
 	op_new_map,		// 7 create a new map object and push onto stack
 	op_new_vec,		// 8 create a new vector object and push onto stack
+	// TODO: rename vec_load and vec_store to table_load and table_store
 	op_vec_load,	// 9 get item from vector
 	op_vec_store,	// 10 set item in vector. args: index, value
-	op_map_load,	// 11 get item from map
+	op_swap,		// 11 swap top two items on stack (no args)
+	// TODO: UNUSED
 	op_map_store,	// 12 set item in map. args: index, value
 	op_jmp,			// 13 unconditional jump to the address on top of the stack
 	op_jmpf,		// 14 jump on top of stack evaluating to false 
@@ -44,7 +45,7 @@ enum Opcode
 	op_div,			// 28 divide top two values on stack
 	op_mod,			// 29 modulus top two values on stack
 	op_output,		// 30 dump top of stack to stdout
-	op_call,		// 31 call a function. arguments on stack
+	op_call,		// 31 call a function. arguments on stack. fcn to call either in arg *or* on stack (if no args)
 	op_return,		// 32 pop the return address and unconditionally jump to it, stack holds return value
 	op_break,		// 33 break out of loop, respecting scope (enter/leave)
 	op_enter,		// 34 enter new scope

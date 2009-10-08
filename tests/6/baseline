@@ -393,6 +393,10 @@ new_vec: :
 push : unknown: 'a'
 push : string: '' = pushback
 vec_load : 
+push : function: '', offset = 158
+push : num: '' = 5
+call : 
+pop : 
 push : unknown: 'b'
 new_map: : 
 push : unknown: 'b'
@@ -408,15 +412,49 @@ push : unknown: 'b'
 push : string: '' = foo
 vec_load : 
 store : 
-push : function: '', offset = 251
+push : function: '', offset = 275
 push : num: '' = 0
 push : num: '' = 1
 call : function_call: 'x'
 pop : 
+push : function: '', offset = 277
+push : unknown: 'b'
+call : function_call: 'length'
+push : num: '' = 0
+dup : num: '' = 1
+dup : num: '' = 1
+neq : 
+jmpf : num: '' = 503
+push : unknown: 'b'
+dup : num: '' = 1
+vec_load : boolean: '' = 1
+push : unknown: 'key'
+swap : 
+store : 
+push : unknown: 'value'
+swap : 
+store : 
+push : unknown: 'io'
+push : string: '' = print
+vec_load : 
+push : function: '', offset = 475
+push : function: '', offset = 447
+push : unknown: 'key'
+call : function_call: 'str'
+push : function: '', offset = 471
+push : unknown: 'value'
+call : function_call: 'str'
+add : 
+call : 
+pop : 
+push : num: '' = 1
+add : 
+jmp : num: '' = 312
+pop : 
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : num: '' = 344
+jmpf : num: '' = 628
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -426,7 +464,13 @@ store :
 push : unknown: 'io'
 push : string: '' = print
 vec_load : 
+push : function: '', offset = 612
+push : function: '', offset = 610
+push : unknown: 'a'
+call : function_call: 'str'
+call : 
+pop : 
 leave : 
-jmp : num: '' = 253
+jmp : num: '' = 505
 halt : 
 compiled input.dv successfully

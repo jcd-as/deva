@@ -3,9 +3,9 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
+// * --debug-dump support for dumping (tracing) instr and stack while executing
 // * 'call stack' for tracking where errors occur (rudimentary debugging support)
 // * line number op-code for tracking what line errors occur on
-// * maps & vectors, including the dot operator and 'for' loops
 
 #include "executor.h"
 #include "builtins.h"
@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////
 
 // locate a symbol
-DevaObject* Executor::find_symbol( DevaObject ob )
+DevaObject* Executor::find_symbol( const DevaObject & ob )
 {
 	// check each scope on the stack
 	for( vector<Scope*>::reverse_iterator i = scopes.rbegin(); i < scopes.rend(); ++i )
@@ -88,6 +88,9 @@ int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 	switch( lhs.Type() )
 	{
 	case sym_number:
+		// TODO: use the epsilon of double from <limits> to do the compare
+		// properly, given the margin-of-error for the machine/compiler epsilon
+		// for double-precision floating point numbers
 		if( lhs.num_val == rhs.num_val )
 			return 0;
 		else if( lhs.num_val > rhs.num_val )
@@ -202,7 +205,16 @@ void Executor::Push( Instruction const & inst )
 // 2 load a variable from memory to the stack
 void Executor::Load( Instruction const & inst )
 {
-	// TODO: implement. so far, this instruction is never generated
+	if( inst.args.size() < 1 )
+		throw DevaICE( "Invalid 'load' instruction: missing operand." );
+	// load arg onto top of stack
+	DevaObject obj = inst.args[0];
+	if( obj.Type() != sym_unknown )
+		throw DevaICE( "Invalid 'load' instruction: invalid argument type; must be a variable." );
+	DevaObject* var = find_symbol( obj );
+	if( !var )
+		throw DevaRuntimeException( "Invalid argument to 'load' instruction: variable not found." );
+	stack.push_back( *var );
 }
 // 3 store a variable from the stack to memory
 void Executor::Store( Instruction const & inst )
@@ -287,16 +299,21 @@ void Executor::Defarg( Instruction const & inst )
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
 	scopes.AddObject( val );
 }
-// 6 create a new object and place on top of stack
-void Executor::New( Instruction const & inst )
+// 6 dup a stack item from 'arg' position to the top of the stack
+// (e.g. 'dup 0' duplicates the item on top of the stack)
+void Executor::Dup( Instruction const & inst )
 {
-	// TODO: implement???
-	// (this op-code is currently unused, 'store' does this work)
+	if( inst.args.size() != 1 )
+		throw DevaICE( "Invalid 'dup' instruction: no argument given." );
+	DevaObject arg = inst.args[0];
+	if( arg.Type() != sym_number )
+		throw DevaICE( "Invalid 'dup' instruction: non-numeric argument." );
+	DevaObject o = stack[stack.size() - (arg.num_val+1)];
+	stack.push_back( o );
 }
 // 7 create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
 {
-	// TODO: validate
 	// variable to store as (name) is on top of the stack
 	DevaObject o = stack.back();
 	stack.pop_back();
@@ -310,7 +327,6 @@ void Executor::New_map( Instruction const & inst )
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
-	// TODO: validate
 	// variable to store as (name) is on top of the stack
 	DevaObject o = stack.back();
 	stack.pop_back();
@@ -323,9 +339,11 @@ void Executor::New_vec( Instruction const & inst )
 }
 // 9 get item from vector
 // (or map, can't tell at compile time what it will be)
+// if there is an arg that is the boolean 'true', then we need to look up items in
+// maps as if the key was a numeric index (i.e. m[0] means the 0'th item in the
+// map, not the item with key '0')
 void Executor::Vec_load( Instruction const & inst )
 {
-	// TODO: implement
 	// top of stack has index/key
 	DevaObject idxkey = stack.back();
 	stack.pop_back();
@@ -346,6 +364,9 @@ void Executor::Vec_load( Instruction const & inst )
 	}
 	// find the map/vector from the symbol table
 	DevaObject *table = find_symbol( vecmap );
+	if( !table )
+		throw DevaRuntimeException( "Attempt to reference undefined map or vector." );
+
 	// ensure it is the correct type
 	// vector *must* have a numeric (integer) index
 	if( table->Type() == sym_vector )
@@ -355,7 +376,7 @@ void Executor::Vec_load( Instruction const & inst )
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
 		vector<DevaObject>* v = table->vec_val;
-		// TODO: get the value from the vector
+		// get the value from the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
 		DevaObject o = v->at( idx );
@@ -365,19 +386,48 @@ void Executor::Vec_load( Instruction const & inst )
 	// maps can be indexed by number/string/user-defined-type
 	else if( table->Type() == sym_map )
 	{
-		// key (number/string/user-defined-type)?
-		// TODO: user-defined-type as key
-		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
-			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
-		// TODO: get the value from the map
-		map<DevaObject, DevaObject>* mp = table->map_val;
-		map<DevaObject, DevaObject>::iterator it;
-		it = mp->find( idxkey );
-		if( it == mp->end() )
-			throw DevaRuntimeException( "Invalid map key. No such item found." );
-		// push it onto the stack
-		pair<DevaObject, DevaObject> p = *it;
-		stack.push_back( p.second );
+		// if there is an arg, and it's boolean 'true', treat the key as an
+		// index
+		if( inst.args.size() > 0 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
+		{
+			// key must be an integral number, as it is really an index
+			if( idxkey.Type() != sym_number )
+				throw DevaICE( "Index in vec_load instruction on a map MUST evaluate to a number." );
+			// TODO: error on non-integral value
+			int idx = (int)idxkey.num_val;
+			// get the value from the map
+			map<DevaObject, DevaObject>* mp = table->map_val;
+			if( idx >= mp->size() )
+				throw DevaICE( "Index out-of-range in vec_load instruction." );
+			map<DevaObject, DevaObject>::iterator it;
+			// this loop is equivalent of "it = mp->begin() + idx;" 
+			// (which is required because map iterators don't support the + op)
+			it = mp->begin();
+			for( int i = 0; i < idx; ++i ) ++it;
+
+			if( it == mp->end() )
+				throw DevaICE( "Index out-of-range in vec_load instruction, after being checked. Memory corruption?" );
+			// push it onto the stack
+			pair<DevaObject, DevaObject> p = *it;
+			stack.push_back( p.second );
+			stack.push_back( p.first );
+		}
+		else
+		{
+			// key (number/string/user-defined-type)?
+			// TODO: user-defined-type as key
+			if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
+				throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
+			// get the value from the map
+			map<DevaObject, DevaObject>* mp = table->map_val;
+			map<DevaObject, DevaObject>::iterator it;
+			it = mp->find( idxkey );
+			if( it == mp->end() )
+				throw DevaRuntimeException( "Invalid map key. No such item found." );
+			// push it onto the stack
+			pair<DevaObject, DevaObject> p = *it;
+			stack.push_back( p.second );
+		}
 	}
 	else
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
@@ -385,8 +435,6 @@ void Executor::Vec_load( Instruction const & inst )
 // 10 set item in vector. args: index, value
 void Executor::Vec_store( Instruction const & inst )
 {
-	// TODO: implement
-	// 
 	// top of stack has value
 	DevaObject val = stack.back();
 	stack.pop_back();
@@ -403,9 +451,9 @@ void Executor::Vec_store( Instruction const & inst )
 	// if the value is a variable, look it up
 	if( val.Type() == sym_unknown )
 	{
-		DevaObject* o = find_symbol( idxkey );
+		DevaObject* o = find_symbol( val );
 		if( !o )
-			throw DevaRuntimeException( "Invalid type for index/key." );
+			throw DevaRuntimeException( "Invalid type for operand to a vector store operation." );
 		val = *o;
 	}
 	// if the index/key is a variable, look it up
@@ -439,27 +487,31 @@ void Executor::Vec_store( Instruction const & inst )
 		// TODO: user-defined-type as key
 		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
-		// TODO: set the value in the map
+		// set the value in the map
 		map<DevaObject, DevaObject>* mp = table->map_val;
-//		map<DevaObject, DevaObject>::iterator it;
-//		it = mp->find( idxkey );
-//		if( it == mp->end() )
-//			throw DevaRuntimeException( "Invalid map key. No such item found." );
 		mp->operator[]( idxkey ) = val;
 	}
 	else
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
 
 }
-// 11 get item from map
-void Executor::Map_load( Instruction const & inst )
+// 11 swap top two items on stack
+void Executor::Swap( Instruction const & inst )
 {
-	// TODO: implement
+	if( stack.size() < 2 )
+		throw DevaICE( "Invalid state: 'swap' instruction called with less than two items on stack." );
+	DevaObject one = stack.back();
+	stack.pop_back();
+	DevaObject two = stack.back();
+	stack.pop_back();
+
+	stack.push_back( one );
+	stack.push_back( two );
 }
 // 12 set item in map. args: index, value
 void Executor::Map_store( Instruction const & inst )
 {
-	// TODO: implement
+	// TODO UNUSED
 }
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
@@ -1074,7 +1126,7 @@ void Executor::Output( Instruction const & inst )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
-				cout << key << " : " << val << endl;
+				cout << " - " << key << " : " << val << endl;
 			}
 			break;
 			}
@@ -1106,16 +1158,44 @@ void Executor::Output( Instruction const & inst )
 void Executor::Call( Instruction const & inst )
 {
 	// check for built-in function first
-	if( is_builtin( inst.args[0].name ) )
+	if( inst.args.size() > 0 && is_builtin( inst.args[0].name ) )
 	{
 		execute_builtin( this, inst );
 	}
 	else
 	{
-		// look up the name in the symbol table
-		DevaObject* fcn = find_symbol( inst.args[0] );
-		if( !fcn )
-			throw DevaRuntimeException( "Call made to undefined function." );
+		DevaObject* fcn;
+		// if there's an arg, it's the name of the fcn to call
+		if( inst.args.size() > 0 )
+		{
+			// look up the name in the symbol table
+			fcn = find_symbol( inst.args[0] );
+			if( !fcn )
+				throw DevaRuntimeException( "Call made to undefined function." );
+		}
+		// if there's no args, pop the top of the stack for the fcn to call
+		else if( inst.args.size() == 0 )
+		{
+			// TODO: fix this so the arg is actually on top of the stack? (in
+			// the IL gen)??
+			// return point is actually on *top* of the stack, the arg has been
+			// buried one down, so we need to grab the ret pt and push it back
+			// again...
+			DevaObject ret = stack.back();
+			stack.pop_back();
+			DevaObject o = stack.back();
+			stack.pop_back();
+			stack.push_back( ret );
+			if( o.Type() == sym_function )
+				fcn = &o;
+			else if( o.Type() == sym_unknown )
+				fcn = find_symbol( o.name );
+			else
+				throw DevaICE( "Invalid argument (on stack) for 'call' instruction." );
+		}
+		else
+			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
+
 		// get the offset for the function
 		long offset = fcn->func_offset;
 		// jump execution to the function offset
@@ -1261,8 +1341,8 @@ bool Executor::DoInstr( Instruction inst )
 	case op_defarg:		// 5 define an argument to a fcn. argument (to opcode) is arg name
 		Defarg( inst );
 		break;
-	case op_new:			// 6 create a new object and place on top of stack
-		New( inst );
+	case op_dup:			// 6 create a new object and place on top of stack
+		Dup( inst );
 		break;
 	case op_new_map:		// 7 create a new map object and push onto stack
 		New_map( inst );
@@ -1276,8 +1356,8 @@ bool Executor::DoInstr( Instruction inst )
 	case op_vec_store:	// 10 set item in vector. args: index, value
 		Vec_store( inst );
 		break;
-	case op_map_load:	// 11 get item from map
-		Map_load( inst );
+	case op_swap:		// 11 swap top two items on stack. no args
+		Swap( inst );
 		break;
 	case op_map_store:	// 12 set item in map. args: index, value
 		Map_store( inst );

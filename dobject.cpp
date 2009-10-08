@@ -229,6 +229,8 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 {
 	if( type < rhs.type )
 		return true;
+	else if( type > rhs.type )
+		return false;
 	// types are the same, compare
 	switch( type )
 	{

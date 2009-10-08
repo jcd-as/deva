@@ -14,6 +14,7 @@ bool is_builtin( string name )
 	if( name == "print"
 		|| name == "str"
 		|| name == "append"
+		|| name == "length"
 		)
 	return true;
 	else return false;
@@ -150,7 +151,46 @@ void do_append( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-// exectute built-in function
+void do_length( Executor *ex, const Instruction & inst )
+{
+	// arg (vector, map or string) is at stack+0
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// string
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+
+	int len;
+	if( o->Type() == sym_string )
+	{
+		len = string( o->str_val ).size();
+	}
+	// vector
+	else if( o->Type() == sym_vector )
+	{
+		len = o->vec_val->size();
+	}
+	else if( o->Type() == sym_map )
+	{
+		len = o->map_val->size();
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", (double)len ) );
+}
+
+// execute built-in function
 void execute_builtin( Executor *ex, const Instruction & inst )
 {
 	string name = inst.args[0].name;
@@ -160,6 +200,8 @@ void execute_builtin( Executor *ex, const Instruction & inst )
 		do_str( ex, inst );
 	else if( name == "append" )
 		do_append( ex, inst );
+	else if( name == "length" )
+		do_length( ex, inst );
 	else
 		throw DevaICE( "No such built-in function." );
 }

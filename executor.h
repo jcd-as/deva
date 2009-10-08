@@ -74,7 +74,7 @@ private:
 	// load the bytecode from the file
 	void LoadByteCode();
 	// locate a symbol in the symbol table(s)
-	DevaObject* find_symbol( DevaObject ob );
+	DevaObject* find_symbol( const DevaObject & ob );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
@@ -108,8 +108,8 @@ private:
 	void Defun( Instruction const & inst );
 	// 5 define an argument to a fcn. argument (to opcode) is arg name
 	void Defarg( Instruction const & inst );
-	// 6 create a new object and place on top of stack
-	void New( Instruction const & inst );
+	// 6 dup a stack item from 'arg' position to the top of the stack
+	void Dup( Instruction const & inst );
 	// 7 create a new map object and push onto stack
 	void New_map( Instruction const & inst );
 	// 8 create a new vector object and push onto stack
@@ -118,8 +118,8 @@ private:
 	void Vec_load( Instruction const & inst );
 	// 10 set item in vector. args: index, value
 	void Vec_store( Instruction const & inst );
-	// 11 get item from map
-	void Map_load( Instruction const & inst );
+	// 11 swap top two items on stack. no args
+	void Swap( Instruction const & inst );
 	// 12 set item in map. args: index, value
 	void Map_store( Instruction const & inst );
 	// 13 unconditional jump to the address on top of the stack
@@ -194,6 +194,7 @@ public:
 	friend void do_print( Executor *ex, const Instruction & inst );
 	friend void do_str( Executor *ex, const Instruction & inst );
 	friend void do_append( Executor *ex, const Instruction & inst );
+	friend void do_length( Executor *ex, const Instruction & inst );
 };
 
 #endif // __EXECUTOR_H__

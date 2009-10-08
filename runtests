@@ -28,3 +28,5 @@ if len( failed_tests ) != 0:
     print( "\nFAILED tests:" )
     for s in failed_tests:
         print( s )
+else:
+	print( "\nall tests SUCCEEDED" )
