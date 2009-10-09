@@ -3,7 +3,6 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * --debug-dump support for dumping (tracing) instr and stack while executing
 // * 'call stack' for tracking where errors occur (rudimentary debugging support)
 // * line number op-code for tracking what line errors occur on
 
@@ -14,6 +13,18 @@
 
 // private utility functions
 ///////////////////////////////////////////////////////////
+
+ostream & operator << ( ostream & os, Instruction & inst )
+{
+	// write the operator
+	os << inst.op << " : ";
+	// write each arg
+	for( int i = 0; i < inst.args.size(); ++i )
+	{
+		os << inst.args[i] << " | ";
+	}
+	return os;
+}
 
 // locate a symbol
 DevaObject* Executor::find_symbol( const DevaObject & ob )
@@ -351,7 +362,7 @@ void Executor::Vec_load( Instruction const & inst )
 	DevaObject vecmap = stack.back();
 	stack.pop_back();
 
-	if( vecmap.Type() != sym_unknown )
+	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
 		throw DevaRuntimeException( "Invalid object for '[]' operator." );
 
 	// if the index/key is a variable, look it up
@@ -363,9 +374,15 @@ void Executor::Vec_load( Instruction const & inst )
 		idxkey = *o;
 	}
 	// find the map/vector from the symbol table
-	DevaObject *table = find_symbol( vecmap );
-	if( !table )
-		throw DevaRuntimeException( "Attempt to reference undefined map or vector." );
+	DevaObject *table;
+	if( vecmap.Type() == sym_unknown )
+	{
+		table = find_symbol( vecmap );
+		if( !table )
+			throw DevaRuntimeException( "Attempt to reference undefined map or vector." );
+	}
+	else
+		table = &vecmap;
 
 	// ensure it is the correct type
 	// vector *must* have a numeric (integer) index
@@ -1208,6 +1225,8 @@ void Executor::Return( Instruction const & inst )
 	// the return value is now on top of the stack, instead of the return
 	// address, so we need to pop it, pop the return address and then re-push
 	// the return value
+	if( stack.size() < 2 )
+		throw DevaRuntimeException( "Invalid 'return' instruction: not enough data on the stack." );
 	DevaObject ret = stack.back();
 	stack.pop_back();
 	// pop the return location off the top of the stack
@@ -1265,13 +1284,17 @@ void Executor::Break( Instruction const & inst )
 		switch( PeekInstr() )
 		{
 		case op_enter:
+			{
 			enter_stack.push_back( 1 );
-			DoInstr( NextInstr() );
+			Instruction inst = NextInstr();
+			DoInstr( inst );
 			break;
-
+			}
 		case op_leave:
+			{
 			enter_stack.pop_back();
-			DoInstr( NextInstr() );
+			Instruction inst = NextInstr();
+			DoInstr( inst );
 			// if we've left enough scopes to get out of the loop
 			if( enter_stack.size() == 0 )
 			{
@@ -1282,7 +1305,7 @@ void Executor::Break( Instruction const & inst )
 				return;
 			}
 			break;
-
+			}
 		// skip everything else
 		default:
 			NextInstr();
@@ -1319,8 +1342,13 @@ void Executor::Illegal( Instruction const & inst )
 
 
 // execute single instruction
-bool Executor::DoInstr( Instruction inst )
+bool Executor::DoInstr( Instruction & inst )
 {
+	if( debug_mode )
+	{
+		cout << inst << endl;
+	}
+
 	switch( inst.op )
 	{
 	case op_pop:			// 0 pop top item off stack
@@ -1442,6 +1470,18 @@ bool Executor::DoInstr( Instruction inst )
 		Illegal( inst );
 		break;
 	}
+
+	if( debug_mode )
+	{
+		cout << " - stack: ";
+		for( vector<DevaObject>::reverse_iterator ri = stack.rbegin(); ri < stack.rend(); ++ri )
+		{
+			DevaObject o = *ri;
+			cout << o << " | ";
+		}
+		cout << endl;
+	}
+
 	return true;
 }
 
@@ -1547,7 +1587,7 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( string fname ) : filename( fname ), code( NULL ), ip( 0 )
+Executor::Executor( string fname, bool dbg ) : filename( fname ), debug_mode( dbg ), code( NULL ), ip( 0 )
 {}
 
 Executor::~Executor()

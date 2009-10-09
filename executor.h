@@ -28,6 +28,9 @@ private:
 	// the file to execute
 	string filename;
 
+	// in debug_mode?
+	bool debug_mode;
+
 	// the data stack
 	vector<DevaObject> stack;
 
@@ -178,14 +181,14 @@ private:
 	void Illegal( Instruction const & inst );
 	///////////////////////////////////////////////////////////
 
-	bool DoInstr( Instruction inst );
+	bool DoInstr( Instruction & inst );
 	// get the next instruction from the current position
 	Instruction NextInstr();
 
 public:
 	// public methods
 	////////////////////////////////////////////////////
-	Executor( string fname );
+	Executor( string fname, bool debug_mode = false );
 	~Executor();
 
 	bool RunFile();

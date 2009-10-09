@@ -484,7 +484,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// tracking is added...
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 		if( get_fcn_from_stack )
-			// add the call instruction, passing a null arg to indicate it needs
+			// add the call instruction, passing no args to indicate it needs
 			// to pull the function off the stack
 			is.push( Instruction( op_call ) );
 		else
@@ -500,10 +500,15 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 
 		// if the parent is the translation unit, a loop, or a compound_statement, the return
 		// value is not being used, emit a pop instruction to discard it
+		boost::spirit::parser_id id = parent->value.id();
 		if( parent->value.id() == translation_unit_id 
-			|| parent->value.id() == while_s_id
-			|| parent->value.id() == for_s_id
-			|| parent->value.id() == compound_statement_id )
+			|| id == while_s_id
+			|| id == for_s_id
+			|| id == compound_statement_id 
+			|| id == func_id 
+			// oddly, if the dot-op expression is at the global scope, there may
+			// not be a translation_unit as its parent...
+			|| id == dot_op_id )
 		{
 			is.push( Instruction( op_pop ) );
 		}
@@ -611,9 +616,6 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 {
-	// TODO: dot operator also has to do the parent check, as in 
-	// identifier above, so that 'foo.bar()' generates a pop instruction too
-	//
 	// a.b = a["b"]  <== dot op is syntactic sugar for map lookup
 	// first arg = lhs
 	// second arg = rhs

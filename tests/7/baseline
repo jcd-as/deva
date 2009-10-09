@@ -402,27 +402,28 @@ defarg : unknown: 'b'
 defarg : unknown: 'c'
 enter : 
 leave : 
+push : null
 return : 
 push : unknown: 'x'
-jmpf : num: '' = 198
+jmpf : num: '' = 206
 push : unknown: 'y'
-jmpf : num: '' = 198
-push : function: '', offset = 198
+jmpf : num: '' = 206
+push : function: '', offset = 206
 call : function_call: 'z'
 push : unknown: 'x'
-jmpf : num: '' = 261
+jmpf : num: '' = 269
 enter : 
 push : unknown: 'y'
-jmpf : num: '' = 247
-push : function: '', offset = 247
+jmpf : num: '' = 255
+push : function: '', offset = 255
 call : function_call: 'z'
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : num: '' = 290
-jmp : num: '' = 290
+jmpf : num: '' = 298
+jmp : num: '' = 298
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 

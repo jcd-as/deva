@@ -3,7 +3,8 @@
 // created by jcs, september 12, 2009 
 
 // TODO:
-// * 'a.b = c' doesn't work properly
+// * 'a.b = c;' doesn't work properly
+// * nor does 'a["b"] = {};'
 // * change asserts into (non-fatal) errors
 // * encode location (line number) into bytecode via "line_num" opcodes
 // * semantic checking functions for all valid node types that can have children
@@ -621,7 +622,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		else
 			returned = walk_looking_for_return( iter );
 		if( !returned )
+		{
+			// all fcns return *something*
+			is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 			is.push( Instruction( op_return ) );
+		}
 	}
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
@@ -724,8 +729,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// the key-lookup op
 			walk_children( i, is );
 		}
-		// TODO: dot operator also has to do the parent check, as above, so that 'foo.bar()' 
-		// generates a pop instruction too
 	}
 	// in op ('in' keyword in for loops)
 	else if( i->value.id() == parser_id( in_op_id ) )
@@ -758,7 +761,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if the lhs is an identifier with a key_exp (vec/map) then generate a
 		// vector store
 		if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
-			i->children[0].children[0].value.id() == key_exp_id )
+			 i->children[0].children[0].value.id() == key_exp_id )
 		{
 			// push the identifier
 			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
@@ -766,12 +769,32 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// push the key exp
 			walk_children( i->children[0].children.begin(), is );
 			
-			// walk the rhs
-			generate_IL_for_node( i->children.begin() + 1, is, i );
+			// if the rhs is a new_vec or new_map op, we need to gen code for it
+			// *last*
+			if( i->children[1].value.id() == vec_op_id || i->children[1].value.id() == map_op_id )
+			{
+				// add the vector store op
+				is.push( Instruction( op_vec_store ) );
 
-			// add the vector store op
-			is.push( Instruction( op_vec_store ) );
+				// *then* walk the rhs
+				generate_IL_for_node( i->children.begin() + 1, is, i );
+			}
+			else
+			{
+				// walk the rhs
+				generate_IL_for_node( i->children.begin() + 1, is, i );
+
+				// add the vector store op
+				is.push( Instruction( op_vec_store ) );
+			}
 		}
+		// a dot-op on the lhs also indicates a vector store instead of load, as
+		// long as it is not a function call.
+		// TODO: implement
+//		else if ( i->children[0].value.id() == dot_op_id )
+//		{
+//			
+//		}
 		else
 		{
 			walk_children( i, is );
@@ -825,7 +848,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
 		}
 		else
-			generate_IL_for_node( i->children.begin(), is, i );
+			// don't pass 'self' (i) as parent, keep the parent the root for the
+			// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
+			// the parent of a)
+			generate_IL_for_node( i->children.begin(), is, parent );
 
 		// turn the rhs into a string
 		string rhs = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
