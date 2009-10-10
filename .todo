@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<todo version="0.1.20">
+    <note priority="veryhigh" time="1252903036" done="1252965849">
+        semantic checking
+        <note priority="veryhigh" time="1252903146" done="1252965684">
+            func_decl: set id symbol type to function
+            <comment>
+                no can do, must be done at run-time, not in semantic checking
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903167" done="1252965709">
+            const_decl: set id symbol type to const
+            <comment>
+                no can do, must be done at run-time, not in semantic checking. did emit warning on re-def'ing a variable as const
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903280" done="1252904955">
+            for_s: loop variables need to be injected into a new scope, which is the parent of the loop (statement|compound_statement)
+            <comment>
+                done in grammar, not semantics
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903330" done="1252904971">
+            arg_list_decl: arguments need to be injected into a new scope, which is the parent of the function body (statement|compound_statement)
+            <comment>
+                done in grammar, not semantics
+            </comment>
+        </note>
+    </note>
+    <note priority="veryhigh" time="1252903578" done="1254025727">
+        intermediate language: need to define the IL code, which will transform to virtual machine code
+    </note>
+    <note priority="veryhigh" time="1252903640" done="1254025738">
+        Virtual Machine: need to define the VM and opcodes. 
+stack based, all ops pull arguments off stack
+    </note>
+    <note priority="veryhigh" time="1254025793" done="1255025028">
+        map and vector handling, including dot op and for loop
+    </note>
+    <note priority="high" time="1252904662" done="1252906732">
+        make vim syntax file for deva files
+        <comment>
+            based off awk.vim. needs some work, but functional
+        </comment>
+    </note>
+    <note priority="high" time="1252904695" done="1252979519">
+        add deva file support to my .vimrc (set cindent etc) OR filetype plugin to do this??
+    </note>
+    <note priority="high" time="1253124087" done="1254025745">
+        make dot operator chainable (e.g. a.b.c)
+    </note>
+    <note priority="veryhigh" time="1254025776">
+        complete execution engine code and deva executable
+    </note>
+    <note priority="veryhigh" time="1254868797">
+        objects/user-defined types (fields, method look-up, 'class' keyword etc)
+    </note>
+    <note priority="veryhigh" time="1255048474">
+        fix the data/object/ref-counting model
+    </note>
+    <note priority="high" time="1252905837">
+        accept hex numbers (and octal and binary??)
+    </note>
+    <note priority="high" time="1254444594">
+        vector and string slicing (ala python)
+    </note>
+</todo>
