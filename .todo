@@ -57,14 +57,21 @@ stack based, all ops pull arguments off stack
     </note>
     <note priority="veryhigh" time="1255048474">
         fix the data/object/ref-counting model
-		<comment>
-			runtime scope/symbol tbl object needs to track pointers.
+        <comment>
+            runtime scope/symbol tbl object needs to track pointers.
 need ref-count and add-ref/release-ref operations on DevaObject class.
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1255237872">
+        get bsort.dv working (bubble sort)
     </note>
     <note priority="high" time="1252905837">
         accept hex numbers (and octal and binary??)
     </note>
     <note priority="high" time="1254444594">
         vector and string slicing (ala python)
+    </note>
+    <note priority="high" time="1255237571">
+        remove Redefining symbol warning?
     </note>
 </todo>
