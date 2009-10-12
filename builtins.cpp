@@ -7,6 +7,7 @@
 
 #include "builtins.h"
 #include <iostream>
+#include <sstream>
 
 // is this name a built-in function?
 bool is_builtin( string name )

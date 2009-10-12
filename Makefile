@@ -32,10 +32,12 @@ test : ${TEST_OBJS}
 	g++ ${LDFLAGS} -o test ${TEST_OBJS}
 
 devac : ${DEVAC_OBJS}
-	g++ ${LDFLAGS} -lboost_program_options-mt -o devac ${DEVAC_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options -o devac ${DEVAC_OBJS}
+	#g++ ${LDFLAGS} -lboost_program_options-mt -o devac ${DEVAC_OBJS}
 
 deva : ${DEVA_OBJS}
-	g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options -o deva ${DEVA_OBJS}
+	#g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
 
 %.o : %.cpp
 	g++ ${CPPFLAGS} -o $@ $<
