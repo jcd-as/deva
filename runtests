@@ -7,6 +7,18 @@
 
 import os
 
+baseline = "baseline"
+
+# TODO: to this (machine int-size detection) correctly ??
+hosttype = os.getenv( "HOSTTYPE" )
+if hosttype == "x86_64":
+    baseline_sized = "baseline.64"
+else:
+    baseline_sized = "baseline"
+
+print( baseline )
+print( baseline_sized )
+
 home = os.getenv( "HOME" )
 init_dir = os.getcwd()
 
@@ -14,10 +26,15 @@ failed_tests = []
 
 # run 'dotest input.dv baseline' in each sub-dir
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
-    if "baseline" in files:
+    if baseline in files:
         print( "processing " + root + " ..." )
         os.chdir( root )
-        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
+        if baseline_sized in files:
+            bl = baseline_sized
+        else:
+            bl = baseline
+        #ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
+        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
         if ret != 0:
             failed_tests.append( root )
         
