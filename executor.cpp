@@ -1321,6 +1321,8 @@ void Executor::Enter( Instruction const & inst )
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
+	if( scopes.size() == 0 )
+		throw DevaRuntimeException( "Invalid Leave operation. No scopes to exit." );
 	scopes.Pop();
 }
 // 36 no op

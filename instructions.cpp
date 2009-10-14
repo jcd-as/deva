@@ -691,10 +691,13 @@ void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 	is.push( Instruction( op_enter ) );
 }
 
-void gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
+void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
-	// generate leave
-	is.push( Instruction( op_leave ) );
+    // don't generate a 'leave' statement for function defs, as the 'return'
+    // statement accomplishes the same thing
+    if( parent->value.id() != func_id )
+        // generate leave
+        is.push( Instruction( op_leave ) );
 }
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )

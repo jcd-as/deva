@@ -34,13 +34,15 @@ DevaObject::DevaObject( const DevaObject & o )
 		break;
 	case sym_map:
 		// TODO: verify this
-		map_val = new map<DevaObject, DevaObject>();
-		*map_val = *(o.map_val);
+		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
+//		map_val = new map<DevaObject, DevaObject>();
+//		*map_val = *(o.map_val);
 		break;
 	case sym_vector:
 		// TODO: verify this
-		vec_val = new vector<DevaObject>();
-		*vec_val = *(o.vec_val);
+		vec_val = new vector<DevaObject>( *(o.vec_val) );
+//		vec_val = new vector<DevaObject>();
+//		*vec_val = *(o.vec_val);
 		break;
 	case sym_function:
 		// TODO: any better default value for fcn types?
@@ -84,13 +86,15 @@ DevaObject::DevaObject( string nm, const DevaObject & o )
 		break;
 	case sym_map:
 		// TODO: verify this
-		map_val = new map<DevaObject, DevaObject>();
-		*map_val = *(o.map_val);
+		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
+//		map_val = new map<DevaObject, DevaObject>();
+//		*map_val = *(o.map_val);
 		break;
 	case sym_vector:
 		// TODO: verify this
-		vec_val = new vector<DevaObject>();
-		*vec_val = *(o.vec_val);
+		vec_val = new vector<DevaObject>( *(o.vec_val) );
+//		vec_val = new vector<DevaObject>();
+//		*vec_val = *(o.vec_val);
 		break;
 	case sym_function:
 		// TODO: any better default value for fcn types?

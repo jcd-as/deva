@@ -925,7 +925,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		pre_gen_IL_compound_statement( i, is );
 		walk_children( i, is );
-		gen_IL_compound_statement( i, is );
+		gen_IL_compound_statement( i, is, parent );
 	}
 	// break statement
 	else if( i->value.id() == parser_id( break_statement_id ) )
