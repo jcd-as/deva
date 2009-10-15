@@ -71,7 +71,7 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
     <note priority="high" time="1254444594">
         vector and string slicing (ala python)
     </note>
-    <note priority="high" time="1255048474">
+    <note done="1255582640" priority="high" time="1255048474">
         tests 6,7,22 fail on mac os x. the jmp/fcn/return offsets are all different, presumably because of the sizeof a long
     </note>
     <note priority="high" time="1255237571">
@@ -80,4 +80,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
     
     
     
-</todo>
+<note done="1255632626" priority="veryhigh" time="1255582612">something with debug-info messes up back-patching of fcns. compile and run test11.dv for repro.
+</note></todo>

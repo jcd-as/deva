@@ -690,9 +690,9 @@ void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 	// push the (offset for the) return address
 	// save the location for back-patching the proper return address (address
 	// *after* the call is made)
+	generate_line_num( i, is );
 	fcn_call_stack.push_back( is.size() );
 	// (prior to fcn arguments being pushed)
-	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", (long)-1 ) ) );
 }
 

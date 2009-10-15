@@ -13,6 +13,7 @@ import optparse
 import color
 
 # TODO: 
+# - prompt for (and record) comment on marking an item 'done'
 # - command line switches:
 #   - purge items older than 'n' days
 #   - show items of priority 'n' or less (not too important, grep can get us

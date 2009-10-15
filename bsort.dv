@@ -28,17 +28,17 @@ def bubble_sort( a )
 	}
 }
 
-a = [];
-append( a, 1 );
-append( a, 2 );
-append( a, 3 );
-append( a, 4 );
-append( a, 5 );
-append( a, 6 );
-append( a, 7 );
-append( a, 8 );
-append( a, 9 );
-append( a, 10 );
+l = [];
+append( l, 1 );
+append( l, 2 );
+append( l, 3 );
+append( l, 4 );
+append( l, 5 );
+append( l, 6 );
+append( l, 7 );
+append( l, 8 );
+append( l, 9 );
+append( l, 10 );
 
-bubble_sort( a );
-print( a );
+bubble_sort( l );
+print( l );
