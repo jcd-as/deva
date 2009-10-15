@@ -4,7 +4,6 @@
 
 // TODO:
 // * 'call stack' for tracking where errors occur (rudimentary debugging support)
-// * line number op-code for tracking what line errors occur on
 
 #include "executor.h"
 #include "builtins.h"
@@ -363,7 +362,7 @@ void Executor::Vec_load( Instruction const & inst )
 	stack.pop_back();
 
 	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
-		throw DevaRuntimeException( "Invalid object for '[]' operator." );
+		throw DevaRuntimeException( "Invalid object for 'vec_load' instruction." );
 
 	// if the index/key is a variable, look it up
 	if( idxkey.Type() == sym_unknown )
@@ -382,6 +381,7 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Attempt to reference undefined map or vector." );
 	}
 	else
+        // TODO: does the vecmap need to be entered into a scope somewhere??
 		table = &vecmap;
 
 	// ensure it is the correct type
@@ -452,6 +452,9 @@ void Executor::Vec_load( Instruction const & inst )
 // 10 set item in vector. args: index, value
 void Executor::Vec_store( Instruction const & inst )
 {
+    // enough data on stack
+    if( stack.size() < 3 )
+        throw DevaICE( "Invalid 'vec_store' instruction: not enough data on stack." );
 	// top of stack has value
 	DevaObject val = stack.back();
 	stack.pop_back();
@@ -462,8 +465,9 @@ void Executor::Vec_store( Instruction const & inst )
 	DevaObject vecmap = stack.back();
 	stack.pop_back();
 
-	if( vecmap.Type() != sym_unknown )
-		throw DevaRuntimeException( "Invalid object for '[]' operator." );
+//	if( vecmap.Type() != sym_unknown )
+	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
+		throw DevaRuntimeException( "Invalid object for 'vec_store' instruction." );
 
 	// if the value is a variable, look it up
 	if( val.Type() == sym_unknown )
@@ -482,7 +486,13 @@ void Executor::Vec_store( Instruction const & inst )
 		idxkey = *o;
 	}
 	// find the map/vector from the symbol table
-	DevaObject *table = find_symbol( vecmap );
+    DevaObject *table;
+    if( vecmap.Type() == sym_unknown )
+        table = find_symbol( vecmap );
+    else
+        // TODO: does the vecmap need to be entered into a scope somewhere??
+        table = &vecmap;
+
 	// ensure it is the correct type
 	// vector *must* have a numeric (integer) index
 	if( table->Type() == sym_vector )
@@ -525,10 +535,11 @@ void Executor::Swap( Instruction const & inst )
 	stack.push_back( one );
 	stack.push_back( two );
 }
-// 12 set item in map. args: index, value
-void Executor::Map_store( Instruction const & inst )
+// 12 line number
+void Executor::Line_num( Instruction const & inst )
 {
-	// TODO UNUSED
+    file = inst.args[0].str_val;
+    line = inst.args[1].func_offset;
 }
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
@@ -1389,8 +1400,8 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_swap:		// 11 swap top two items on stack. no args
 		Swap( inst );
 		break;
-	case op_map_store:	// 12 set item in map. args: index, value
-		Map_store( inst );
+	case op_line_num:	// 12 set item in map. args: index, value
+		Line_num( inst );
 		break;
 	case op_jmp:			// 13 unconditional jump to the address on top of the stack
 		Jmp( inst );
@@ -1589,7 +1600,7 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( string fname, bool dbg ) : filename( fname ), debug_mode( dbg ), code( NULL ), ip( 0 )
+Executor::Executor( string fname, bool dbg ) : filename( fname ), debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 )
 {}
 
 Executor::~Executor()
@@ -1624,11 +1635,23 @@ bool Executor::RunFile()
 	}
 	catch( DevaICE & e )
 	{
+        if( file.length() != 0 )
+        {
+            cout << file << ":";
+            if( line != 0 )
+                cout << line << ":";
+        }
 		cout << "Internal compiler error: " << e.what() << endl;
 		return false;
 	}
 	catch( DevaRuntimeException & e )
 	{
+        if( file.length() != 0 )
+        {
+            cout << file << ":";
+            if( line != 0 )
+                cout << line << ":";
+        }
 		cout << e.what() << endl;
 		return false;
 	}

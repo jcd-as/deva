@@ -3,10 +3,8 @@
 // created by jcs, september 12, 2009 
 
 // TODO:
-// * 'a.b = c;' doesn't work properly
-// * nor does 'a["b"] = {};'
+// * 'a["b"] = {};' is disallowed. enable, or disallow in syntax??
 // * change asserts into (non-fatal) errors
-// * encode location (line number) into bytecode via "line_num" opcodes
 // * semantic checking functions for all valid node types that can have children
 
 #include <iomanip>
@@ -521,17 +519,27 @@ void eval_node( iter_t const & i )
 
 
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent );
+extern bool debug_info_on;
 // generate IL stream
-bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is )
+bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info )
 {
-	// walk the tree, generating the IL for each node
-	iter_t i = info.trees.begin();
-	generate_IL_for_node( i, is, i );
+	// set global flag (shared with instructions.cpp, where it is defined)
+    debug_info_on = debug_info;
+    try
+    {
+        // walk the tree, generating the IL for each node
+        iter_t i = info.trees.begin();
+        generate_IL_for_node( i, is, i );
 
-	// last node always a halt
-	is.push( Instruction( op_halt ) );
+        // last node always a halt
+        is.push( Instruction( op_halt ) );
+    }
+    catch( DevaSemanticException & e )
+    {
+        emit_error( e.node, e.what() );
+        return false;
+    }
 
-	// TODO: ever returns false??
 	return true;
 }
 
@@ -599,6 +607,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// create a function at this loc
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 		// write the current *file* offset, not instruction stream!
+		generate_line_num( i, is );
 		is.push( Instruction( op_defun, DevaObject( name, is.Offset() ) ) );
 
 		// we need to generate an enter instruction to create the
@@ -606,7 +615,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// isn't needed, as the return statement at the end of the 
 		// function takes care of this)
 		if( (i->children.begin()+2)->value.id() != compound_statement_id )
+		{
+			generate_line_num( i->children.begin()+2, is );
 			is.push( Instruction( op_enter ) );
+		}
 
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i );
@@ -624,6 +636,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		if( !returned )
 		{
 			// all fcns return *something*
+			generate_line_num( iter, is );
 			is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 			is.push( Instruction( op_return ) );
 		}
@@ -708,6 +721,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if no children, simple variable
 		if(i->children.size() == 0 )
 		{
+			generate_line_num( i, is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 		}
 		// if the first child is an arg_list_exp, it's a fcn call
@@ -723,6 +737,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		else if( i->children[0].value.id() == key_exp_id )
 		{
 			// first add the push of the name onto the stack
+			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 
 			// then walk the children - key_exp will push it's children (the key) and
@@ -765,19 +780,23 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		{
 			// push the identifier
 			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 			// push the key exp
 			walk_children( i->children[0].children.begin(), is );
 			
 			// if the rhs is a new_vec or new_map op, we need to gen code for it
 			// *last*
+			// TODO: currently disallowed (the following generates bad code!)
 			if( i->children[1].value.id() == vec_op_id || i->children[1].value.id() == map_op_id )
 			{
-				// add the vector store op
-				is.push( Instruction( op_vec_store ) );
-
-				// *then* walk the rhs
-				generate_IL_for_node( i->children.begin() + 1, is, i );
+				NodeInfo ni = ((NodeInfo)(i->value.value()));
+				throw DevaSemanticException( "A new vector or map can only be assigned into a simple variable.", ni );
+//				// add the vector store op
+//				is.push( Instruction( op_vec_store ) );
+//
+//				// *then* walk the rhs
+//				generate_IL_for_node( i->children.begin() + 1, is, i );
 			}
 			else
 			{
@@ -785,16 +804,56 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				generate_IL_for_node( i->children.begin() + 1, is, i );
 
 				// add the vector store op
+				generate_line_num( i->children.begin()+1, is );
 				is.push( Instruction( op_vec_store ) );
 			}
 		}
 		// a dot-op on the lhs also indicates a vector store instead of load, as
 		// long as it is not a function call.
-		// TODO: implement
-//		else if ( i->children[0].value.id() == dot_op_id )
-//		{
-//			
-//		}
+		else if ( i->children[0].value.id() == dot_op_id )
+		{
+            // TODO: validate: when the dot op IS a fcn call, etc
+
+            // lhs of dot-op stays the same
+            if( i->children[0].children[0].value.id() == identifier_id )
+            {
+                string lhs = strip_symbol( string( i->children[0].children[0].value.begin(), i->children[0].children[0].value.end() ) );
+				generate_line_num( i->children[0].children.begin(), is );
+                is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+            }
+            else
+                // don't pass 'self' (i) as parent, keep the parent the root for the
+                // whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
+                // the parent of a)
+                generate_IL_for_node( i->children[0].children.begin(), is, parent );
+
+            // turn the rhs into a string
+            string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
+			generate_line_num( i->children[0].children.begin()+1, is );
+            is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
+
+            // this gens a vec_load, where we need a store
+            //gen_IL_dot_op( i, is );
+
+            // rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
+            // if the first child is an arg_list_exp, it's a fcn call
+            if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
+            {
+                // first walk the children
+                walk_children( i->children[0].children.begin() + 1, is );
+
+                // then generate the IL for this node
+                gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true );
+            }
+
+            // rhs of assignment op
+            // walk the rhs
+            generate_IL_for_node( i->children.begin() + 1, is, i );
+
+            // add the vector store op
+			generate_line_num( i->children.begin(), is );
+            is.push( Instruction( op_vec_store ) );
+		}
 		else
 		{
 			walk_children( i, is );
@@ -845,6 +904,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		if( i->children[0].value.id() == identifier_id )
 		{
 			string lhs = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
 		}
 		else
@@ -855,6 +915,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 		// turn the rhs into a string
 		string rhs = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
+		generate_line_num( i->children.begin()+1, is );
 		is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
 
 		gen_IL_dot_op( i, is );

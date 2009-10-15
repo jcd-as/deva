@@ -3,10 +3,8 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * 'a.b = c' doesn't work properly
 // * implement constants
 // * implement short-circuiting for logical ops ('||', '&&' )
-// * encode location (line number) into InstructionStream via "line_num" opcodes
 
 #include "instructions.h"
 #include "parser_ids.h"
@@ -99,8 +97,8 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_swap:
 		os << "swap";
 		break;
-	case op_map_store:
-		os << "map_store";
+	case op_line_num:
+		os << "line_num";
 		break;
 	case op_jmp:			// unconditional jump to the address on top of the stack
 		os << "jmp";
@@ -187,6 +185,29 @@ ostream & operator << ( ostream & os, Opcode & op )
 	return os;
 }
 
+// helper to generate line number ops, IF debugging info is turned on
+// (ops indicate a change in the current line num)
+bool debug_info_on;
+void generate_line_num( iter_t const & i, InstructionStream & is )
+{
+	static int line = 1;
+	static string file = "";
+
+	if( !debug_info_on )
+		return;
+
+    // get the node info
+	NodeInfo ni = ((NodeInfo)(i->value.value()));
+	// if the file or line number has changed since the last call, generate a
+	// line num op
+	if( line != ni.line || file != ni.file )
+	{
+		line = ni.line;
+		file = ni.file;
+		is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (long)ni.line ) ) );
+	}
+}
+
 
 // IL gen functions:
 void gen_IL_number( iter_t const & i, InstructionStream & is )
@@ -195,6 +216,7 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 	double n;
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	n = atof( s.c_str() );
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", n ) ) );
 }
 
@@ -202,6 +224,7 @@ void gen_IL_string( iter_t const & i, InstructionStream & is )
 {
 	// push the string onto the stack
 	string s = strip_quotes( strip_symbol( string( i->value.begin(), i->value.end() ) ) );
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", s ) ) );
 }
 
@@ -210,14 +233,21 @@ void gen_IL_boolean( iter_t const & i, InstructionStream & is )
 	// push the boolean onto the stack
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "true" )
+	{
+		generate_line_num( i, is );
 		is.push( Instruction( op_push, DevaObject( "", true ) ) );
+	}
 	else
+	{
+		generate_line_num( i, is );
 		is.push( Instruction( op_push, DevaObject( "", false ) ) );
+	}
 }
 
 void gen_IL_null( iter_t const & i, InstructionStream & is )
 {
 	// push the null onto the stack
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 }
 
@@ -257,6 +287,7 @@ void gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	// save the location for back-patching
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the condition's jmpf
+	generate_line_num( i, is );
 	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
 }
 
@@ -265,6 +296,7 @@ void post_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	// add the jump-to-start
 	int loop_loc = loop_stack.back();
 	loop_stack.pop_back();
+	generate_line_num( i, is );
 	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
 	// back-patch the jmpf
 	// pop the last 'loop' location off the 'loop stack'
@@ -332,6 +364,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	string table_name = strip_symbol( string( i->children[in_op_index].children[0].value.begin(), i->children[in_op_index].children[0].value.end() ) );
 
 	// push the return address for the call to 'length'
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", is.Offset() ) ) );
 	// push the vector/map
 	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
@@ -390,6 +423,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
 	// push 1
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", 1.0 ) ) );
 	// add
 	is.push( Instruction( op_add ) );
@@ -434,6 +468,7 @@ void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
 	if_stack.push_back( is.size() );
 	// generate a jump placeholder 
 	// for a jump *over* the child (statement|compound_statement)
+	generate_line_num( i, is );
 	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
 }
 
@@ -456,6 +491,7 @@ void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	// write the current *file* offset, not instruction stream!
 	else_stack.push_back( is.size() );
 	// generate the jump placeholder
+	generate_line_num( i, is );
 	is.push( Instruction( op_jmp, DevaObject( "", -1.0 ) ) );
 }
 
@@ -483,6 +519,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// this may be incorrect when reference-counting semantics/variable
 		// tracking is added...
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+		generate_line_num( i, is );
 		if( get_fcn_from_stack )
 			// add the call instruction, passing no args to indicate it needs
 			// to pull the function off the stack
@@ -523,12 +560,14 @@ void gen_IL_in_op( iter_t const & i, InstructionStream & is )
 void gen_IL_map_op( iter_t const & i, InstructionStream & is )
 {
 	// new map
+	generate_line_num( i, is );
 	is.push( Instruction( op_new_map ) );
 }
 
 void gen_IL_vec_op( iter_t const & i, InstructionStream & is )
 {
 	// new vector
+	generate_line_num( i, is );
 	is.push( Instruction( op_new_vec ) );
 }
 
@@ -544,7 +583,10 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 	// unless the rhs (child #2 is a map/vector op, in which case a 'new
 	// vec/map' instruction will be generated instead
 	if( i->children[1].value.id() != vec_op_id && i->children[1].value.id() != map_op_id )
+	{
+		generate_line_num( i, is );
 		is.push( Instruction( op_store ) );
+	}
 }
 
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
@@ -552,15 +594,22 @@ void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
 	// '||' or '&&'
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	if( s == "||" )
+	{
+		generate_line_num( i, is );
 		is.push( Instruction( op_or ) );
+	}
 	else if( s == "&&" )
+	{
+		generate_line_num( i, is );
 		is.push( Instruction( op_and ) );
+	}
 	// else?
 }
 
 void gen_IL_relational_op( iter_t const & i, InstructionStream & is )
 {
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
+	generate_line_num( i, is );
 	if( s == "==" )
 		is.push( Instruction( op_eq ) );
 	else if( s == "!=" )
@@ -579,6 +628,7 @@ void gen_IL_relational_op( iter_t const & i, InstructionStream & is )
 void gen_IL_mult_op( iter_t const & i, InstructionStream & is )
 {
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
+	generate_line_num( i, is );
 	// multiply
 	if( s == "*" )
 		is.push( Instruction( op_mul ) );
@@ -594,6 +644,7 @@ void gen_IL_mult_op( iter_t const & i, InstructionStream & is )
 void gen_IL_add_op( iter_t const & i, InstructionStream & is )
 {
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
+	generate_line_num( i, is );
 	// add 
 	if( s == "+" )
 		is.push( Instruction( op_add ) );
@@ -606,6 +657,7 @@ void gen_IL_add_op( iter_t const & i, InstructionStream & is )
 void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 {
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
+	generate_line_num( i, is );
 	// negate operator
 	if( s == "-" )
 		is.push( Instruction( op_neg ) );
@@ -619,6 +671,7 @@ void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 	// a.b = a["b"]  <== dot op is syntactic sugar for map lookup
 	// first arg = lhs
 	// second arg = rhs
+	generate_line_num( i, is );
 	is.push( Instruction( op_vec_load ) );
 }
 
@@ -639,6 +692,7 @@ void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 	// *after* the call is made)
 	fcn_call_stack.push_back( is.size() );
 	// (prior to fcn arguments being pushed)
+	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", (long)-1 ) ) );
 }
 
@@ -657,6 +711,7 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 		{
 			string name = strip_symbol( string( i->children[j].value.begin(), i->children[j].value.end() ) );
 			// create an argument 
+			generate_line_num( i, is );
 			is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ) ) );
 		}
 	}
@@ -669,6 +724,7 @@ void gen_IL_key_exp( iter_t const & i, InstructionStream & is )
 	// TODO: consolidate map/vec load into a single 'key lookup' op
 	// (no way to determine if it's a string or a number until run-time)
 	// a[b] <= a is parent, b is child[1] ('[' is child[0] and ']' is child[2])
+	generate_line_num( i, is );
 	is.push( Instruction( op_vec_load ) );
 }
 
@@ -688,6 +744,7 @@ void gen_IL_translation_unit( iter_t const & i, InstructionStream & is )
 void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate enter
+	generate_line_num( i, is );
 	is.push( Instruction( op_enter ) );
 }
 
@@ -696,14 +753,18 @@ void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t
     // don't generate a 'leave' statement for function defs, as the 'return'
     // statement accomplishes the same thing
     if( parent->value.id() != func_id )
+	{
+		generate_line_num( i, is );
         // generate leave
         is.push( Instruction( op_leave ) );
+	}
 }
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate break op with a reference to the start of the loop
 	int loop_loc = loop_stack.back();
+	generate_line_num( i, is );
 	is.push( Instruction( op_break, DevaObject( "", (double)loop_loc ) ) );
 }
 
@@ -711,6 +772,7 @@ void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate jump to beginning of loop
 	int loop_loc = loop_stack.back();
+	generate_line_num( i, is );
 	// write the current *file* offset, not instruction stream!
 	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
 }
@@ -719,6 +781,7 @@ void gen_IL_return_statement( iter_t const & i, InstructionStream & is )
 {
 	// last child is always semi-colon
 	// generate return
+	generate_line_num( i, is );
 	if( i->children.size() > 1 )
 		is.push( Instruction( op_return ) );
 	else if( i->children.size() == 1 )

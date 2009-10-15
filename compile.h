@@ -37,7 +37,7 @@ tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & fil
 bool CheckSemantics( tree_parse_info<iterator_t, factory_t> info );
 
 // generate IL bytecode
-bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is );
+bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info );
 
 // write the bytecode to disk
 bool GenerateByteCode( char const* filename, InstructionStream & is );

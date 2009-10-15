@@ -25,8 +25,7 @@ enum Opcode
 	op_vec_load,	// 9 get item from vector
 	op_vec_store,	// 10 set item in vector. args: index, value
 	op_swap,		// 11 swap top two items on stack (no args)
-	// TODO: UNUSED
-	op_map_store,	// 12 set item in map. args: index, value
+	op_line_num,	// 12 line number (for debugging). 1st arg is the line number
 	op_jmp,			// 13 unconditional jump to the address on top of the stack
 	op_jmpf,		// 14 jump on top of stack evaluating to false 
 	op_eq,			// 15 == compare top two values on stack

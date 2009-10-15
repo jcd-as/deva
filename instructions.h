@@ -3,7 +3,7 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * encode location (line number) into InstructionStream via "line_num" opcodes
+// * 
 
 #ifndef __INSTRUCTIONS_H__
 #define __INSTRUCTIONS_H__
@@ -67,6 +67,9 @@ public:
 	long Offset(){ return offset; }
 };
 
+
+// helper fcn to generate op_line_num instructions
+void generate_line_num( iter_t const & i, InstructionStream & is );
 
 // declare IL gen functions
 void gen_IL_number( iter_t const & i, InstructionStream & is );

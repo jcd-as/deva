@@ -36,6 +36,7 @@ int main( int argc, char** argv )
 	// declare the command line options
 	int verbosity;
 	bool debug;
+	bool debug_info;
 	string output;
 	string input;
 	po::options_description desc( "Supported options" );
@@ -46,6 +47,7 @@ int main( int argc, char** argv )
 		( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
 		( "output,o", po::value<string>( &output ), "output filename" )
 		( "input", po::value<string>( &input ), "input filename" )
+		( "debug,d", po::value<bool>( &debug_info )->default_value( false ), "generate debugging information" )
 		;
 	po::positional_options_description p;
 	p.add( "input", -1 );
@@ -139,7 +141,7 @@ int main( int argc, char** argv )
 
 	// generate IL
 	InstructionStream inst;
-	if( !GenerateIL( info, inst ) )
+	if( !GenerateIL( info, inst, debug_info ) )
 	{
 		cout << "fatal error generating IL for " << input << endl;
 		return -3;

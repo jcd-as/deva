@@ -3,9 +3,20 @@ def foo()
 	print( "foo" );
 }
 a = {};
+temp = {};
+
+a.b = temp;
+a.b.c = foo;
+a.b.c();
+
+# this:
 #a.b = foo;
-a["b"] = foo;
-a.b();
+# is the same as this:
+#a["b"] = foo;
+#a.b();
+
+# this is currently disallowed:
+#a["b"] = {};
 
 #a = [];
 #append( a, 0 );

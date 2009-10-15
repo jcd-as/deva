@@ -8,14 +8,18 @@ from xml.dom import minidom
 import sys
 import string
 import time
+import datetime
 import optparse
 import color
 
 # TODO: 
 # - command line switches:
-#   purge items older than 'n' days
-#   show items of priority 'n' or less
-#   sort items (default: by priority)
+#   - purge items older than 'n' days
+#   - show items of priority 'n' or less (not too important, grep can get us
+#   this)
+#   - sort items (default: by priority) (also not that important, sort can do
+#   this for us. e.g. 'todo.py|sort -t . -k 1' sorts by number instead of
+#   the default sort-by-priority)
 
 
 
@@ -83,8 +87,6 @@ class Item( object ):
             return "${BLUE}"
 
     def printItem( self, term, child = False, verbose = False ):
-#        print( str( self ) )
-        color = self.getColor()
         if self.done:
             if child:
                 template = "\t-"
@@ -95,12 +97,17 @@ class Item( object ):
                 template = "\t"
             else:
                 template = "  "
-        template += str( self.num ) + "." + "${BOLD}" + color + str( self ) + "${NORMAL}\n"
-        text = term.render( template )
+        # if this is a tty, use color
+        if sys.stdout.isatty():
+            color = self.getColor()
+            template += str( self.num ) + "." + "${BOLD}" + color + str( self ) + "${NORMAL}\n"
+            text = term.render( template )
+        # otherwise, no color
+        else:
+            text = template + str( self.num ) + "." + "[pri." + str( pri( self ) ) + "]" + str( self ) + "\n"
         sys.stdout.write( text )
         # dump children (with indent) & done status
         for c in self.children:
-#            print( "\t" + str( c ) )
             c.printItem( term, child=True )
 
 def pri( item ):
@@ -118,13 +125,29 @@ if __name__ == "__main__":
     op.add_option( "-A", "--All", action="store_true", dest="show_all", help="Show all items, even those that are already done." )
     op.add_option( "-d", "--done", dest="done", help="Mark item 'done'." )
     op.add_option( "-a", "--add", action="store_true", dest="add", help="Add new item." )
+    op.add_option( "-p", "--parent", dest="parent", help="Add new item with this parent." )
+    op.add_option( "-D", "--delete", dest="delete", help="Delete an item permanently." )
+    op.add_option( "-P", "--purge", dest="purge", help="Delete all items older than 'n' days." )
     (options, args) = op.parse_args()
 
     # terminal handler
     term = color.TerminalController()
 
     # open the file (from the current working directory)
-    todo_file = open( ".todo" )
+    try:
+        todo_file = open( ".todo" )
+    except:
+        # file doesn't exist? create it
+        todo_file = open( ".todo", "w" )
+        xmltxt = """<?xml version="1.0" ?> <todo version="0.1.20"> </todo>"""
+        todo_file.write( xmltxt )
+        todo_file.close()
+        try:
+            todo_file = open( ".todo" )
+        except:
+            # file *still* doesn't exist or cannot be opened? bail
+            print( "error: unable to open .todo file." )
+            exit( -1 )
 
     # parse the XML
     todo_xml = minidom.parse( todo_file )
@@ -152,18 +175,32 @@ if __name__ == "__main__":
         print( "error: .todo file version is newer than this program" )
         exit( -1 )
 
-    # TODO: depending on the switches we were passed, display the list, add to the
-    # list, mark an item done...
+    # depending on the switches we were passed, display the list, add to the
+    # list, mark an item done, ... 
 
-    # delete an item
+    # mark an item complete
     if options.done:
         # read up the nth node
         nodes = todo_xml.getElementsByTagName( "note" )
         i = 1
         for node in nodes:
-            # call 'removeChild()' on the nth node
             if i == int( options.done ):
-                print( "deleting item #" + options.done )
+                print( "marking item #" + options.done + " 'done'" )
+                node.setAttribute( "done", str( int( time.time() ) ) )
+                break
+            i += 1
+        # write out the xml
+        writeXml( todo_xml )
+
+    # delete an item permanently
+    elif options.delete:
+        # read up the nth node
+        nodes = todo_xml.getElementsByTagName( "note" )
+        i = 1
+        for node in nodes:
+            # call 'removeChild()' on the nth node
+            if i == int( options.delete ):
+                print( "deleting item #" + options.delete )
                 parent = node.parentNode
                 parent.removeChild( node )
                 break
@@ -171,6 +208,28 @@ if __name__ == "__main__":
         # write out the xml
         writeXml( todo_xml )
 
+    # purge items
+    elif options.purge:
+        days = int( options.purge )
+        delta = datetime.timedelta( days=days )
+        now = datetime.datetime.now()
+        # read the nodes
+        nodes = todo_xml.getElementsByTagName( "note" )
+        i = 1
+        for node in nodes:
+            # call 'removeChild()' on any node completed longer than 'n' days ago
+            if node.hasAttribute( "done" ):
+                nodedt = datetime.datetime.fromtimestamp( int( node.getAttribute( "done" ) ) )
+                diff = now - nodedt
+                if diff >= delta:
+                    print( "deleting item #" + str( i ) )
+                    parent = node.parentNode
+                    parent.removeChild( node )
+            i += 1
+        # write out the xml
+        writeXml( todo_xml )
+        
+    # add a new item
     elif options.add:
         # get the priority for the new item
         print( "item priority (1 - 5):" )
@@ -196,7 +255,18 @@ if __name__ == "__main__":
         element.setAttribute( "time", str( int( time.time() ) ) )
         element.setAttribute( "priority", pri_text )
         element.appendChild( txt_node )
-        top.appendChild( element )
+
+        # add the new element to the appropriate parent
+        if options.parent:
+            nodes = todo_xml.getElementsByTagName( "note" )
+            i = 1
+            for node in nodes:
+                # if this is the parent node sought, add here
+                if i == int( options.parent ):
+                    node.appendChild( element )
+                i += 1
+        else:
+            top.appendChild( element )
 
         # write out the xml
         writeXml( todo_xml )

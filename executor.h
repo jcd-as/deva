@@ -37,6 +37,11 @@ private:
 	// the current location in the file ("instruction pointer")
 	long ip;
 
+	// current file and line number. only tracked if compiled
+	// with debug info
+	string file;
+	int line;
+
 	// the stack of scopes representing the symbol table(s)
 	// for the current state
 	struct Scope : public map<string, DevaObject*>
@@ -123,8 +128,8 @@ private:
 	void Vec_store( Instruction const & inst );
 	// 11 swap top two items on stack. no args
 	void Swap( Instruction const & inst );
-	// 12 set item in map. args: index, value
-	void Map_store( Instruction const & inst );
+	// 12 line number (file name and line number in args)
+	void Line_num( Instruction const & inst );
 	// 13 unconditional jump to the address on top of the stack
 	void Jmp( Instruction const & inst );
 	// 14 jump on top of stack evaluating to false 
