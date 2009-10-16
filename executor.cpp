@@ -1257,8 +1257,8 @@ void Executor::Return( Instruction const & inst )
 	DevaObject ret = stack.back();
 	stack.pop_back();
 	////////////////////////////////////////////
-	// TODO: this has to change for pass-by-REFERENCE semantics when the
-	// variable/data model changes!!
+	// TODO: does this have to change for pass-by-REFERENCE semantics when the
+	// variable/data model changes??
 	// evaluate the return value *before* leaving this scope, and add it to the
 	// parent scope (to which we'll be returning)
 	if( ret.Type() == sym_unknown )
