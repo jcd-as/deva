@@ -3,6 +3,9 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
+// * review all copying (copy constructor, = op) or DevaObjects. this is
+// 	 expensive if they are maps/vectors! (and may need to change when the
+// 	 variable/data model changes)
 // * 'call stack' for tracking where errors occur (rudimentary debugging support)
 
 #include "executor.h"
@@ -39,6 +42,17 @@ DevaObject* Executor::find_symbol( const DevaObject & ob )
 			return p->operator[]( ob.name );
 	}
 	return NULL;
+}
+
+// locate a symbol, recursively continuing to look as long as variable names
+// (sym_unknown) are found instead of values
+DevaObject* Executor::find_symbol_recur( const DevaObject & ob )
+{
+	DevaObject* o = find_symbol( ob );
+	if( !o )
+		return o;
+	if( o->Type() == sym_unknown )
+		return find_symbol_recur( *o );
 }
 
 // peek at what the next instruction is (doesn't modify ip)
@@ -98,9 +112,10 @@ int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 	switch( lhs.Type() )
 	{
 	case sym_number:
-		// TODO: use the epsilon of double from <limits> to do the compare
-		// properly, given the margin-of-error for the machine/compiler epsilon
-		// for double-precision floating point numbers
+		// NOTE: naturally this doesn't work *properly* for floating point
+		// numbers. however, it really doesn't matter, as this method is only
+		// used for sorting items in a map, which can be completely arbitrary
+		// as long as it is consistent
 		if( lhs.num_val == rhs.num_val )
 			return 0;
 		else if( lhs.num_val > rhs.num_val )
@@ -135,6 +150,7 @@ bool Executor::evaluate_object_as_boolean( DevaObject & o )
 		// null is always false
 		return false;
 	case sym_number:
+		// TODO: use epsilon diff for comparing floating point numbers
 		if( o.num_val != 0 )
 			return false;
 		else
@@ -197,13 +213,11 @@ void Executor::LoadByteCode()
 ///////////////////////////////////////////////////////////
 
 // 0 pop top item off stack
-DevaObject Executor::Pop( Instruction const & inst )
+void Executor::Pop( Instruction const & inst )
 {
 	if( stack.size() == 0 )
 		throw DevaRuntimeException( "Pop operation executed on empty stack." );
-	DevaObject temp = stack.back();
 	stack.pop_back();
-	return temp;
 }
 // 1 push item onto top of stack
 void Executor::Push( Instruction const & inst )
@@ -243,6 +257,7 @@ void Executor::Store( Instruction const & inst )
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
 			throw DevaRuntimeException( "Reference to unknown variable." );
+		rhs = *ob;
 	}
 	// verify the lhs is a variable (sym_unknown)
 	if( lhs.Type() != sym_unknown )
@@ -1115,15 +1130,16 @@ void Executor::Mod( Instruction const & inst )
 void Executor::Output( Instruction const & inst )
 {
 	// get the argument off the stack
-	DevaObject obj = Pop( inst );
+	DevaObject obj = stack.back();
+	stack.pop_back();
 	// if it's a variable, locate it in the symbol table
 	DevaObject* o = NULL;
 	if( obj.Type() == sym_unknown )
 	{
 		o = find_symbol( obj );
+//		o = find_symbol_recur( obj );
 		if( !o )
 			throw DevaRuntimeException( "Symbol not found in function call" );
-		
 	}
 	if( !o )
 		o = &obj;
@@ -1240,6 +1256,22 @@ void Executor::Return( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid 'return' instruction: not enough data on the stack." );
 	DevaObject ret = stack.back();
 	stack.pop_back();
+	////////////////////////////////////////////
+	// TODO: this has to change for pass-by-REFERENCE semantics when the
+	// variable/data model changes!!
+	// evaluate the return value *before* leaving this scope, and add it to the
+	// parent scope (to which we'll be returning)
+	if( ret.Type() == sym_unknown )
+	{
+		DevaObject* rv = find_symbol( ret );
+		if( !rv )
+			throw DevaRuntimeException( "Invalid object for return value." );
+		if( scopes.size() < 2 )
+			throw DevaICE( "No scope to return to!" );
+		scopes[scopes.size()-2]->AddObject( rv );
+	}
+	////////////////////////////////////////////
+
 	// pop the return location off the top of the stack
 	DevaObject ob = stack.back();
 	stack.pop_back();

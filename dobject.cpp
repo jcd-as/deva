@@ -3,7 +3,7 @@
 // created by jcs, October 03, 2009 
 
 // TODO:
-// * reference counting
+// * reference counting (here or in a sub-class???)
 
 #include "dobject.h"
 #include <cstring>
@@ -33,20 +33,12 @@ DevaObject::DevaObject( const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		// TODO: verify this
 		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
-//		map_val = new map<DevaObject, DevaObject>();
-//		*map_val = *(o.map_val);
 		break;
 	case sym_vector:
-		// TODO: verify this
 		vec_val = new vector<DevaObject>( *(o.vec_val) );
-//		vec_val = new vector<DevaObject>();
-//		*vec_val = *(o.vec_val);
 		break;
 	case sym_function:
-		// TODO: any better default value for fcn types?
-		// TODO: need to create copy??
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -85,20 +77,12 @@ DevaObject::DevaObject( string nm, const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		// TODO: verify this
 		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
-//		map_val = new map<DevaObject, DevaObject>();
-//		*map_val = *(o.map_val);
 		break;
 	case sym_vector:
-		// TODO: verify this
 		vec_val = new vector<DevaObject>( *(o.vec_val) );
-//		vec_val = new vector<DevaObject>();
-//		*vec_val = *(o.vec_val);
 		break;
 	case sym_function:
-		// TODO: any better default value for fcn types?
-		// TODO: need to create copy??
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -200,13 +184,11 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 		break;
 	case sym_map:
 		// TODO: verify this
-		map_val = new map<DevaObject, DevaObject>();
-		*map_val = *(o.map_val);
+		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
 		break;
 	case sym_vector:
 		// TODO: verify this
-		vec_val = new vector<DevaObject>();
-		*vec_val = *(o.vec_val);
+		vec_val = new vector<DevaObject>( *(o.vec_val) );
 		break;
 	case sym_function:
 		// TODO: any better default value for fcn types?
@@ -359,11 +341,11 @@ bool DevaObject::SetValue( const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		map_val = new map<DevaObject, DevaObject>();
+		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
 		// TODO: copy the map
 		break;
 	case sym_vector:
-		vec_val = new vector<DevaObject>();
+		vec_val = new vector<DevaObject>( *(o.vec_val) );
 		// TODO: copy the vector
 		break;
 	case sym_function:

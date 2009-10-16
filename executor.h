@@ -46,6 +46,10 @@ private:
 	// for the current state
 	struct Scope : public map<string, DevaObject*>
 	{
+		void AddObject( DevaObject* ob )
+		{
+			insert( pair<string, DevaObject*>(ob->name, ob) );
+		}
 		~Scope()
 		{
 			// delete all the DevaObject ptrs
@@ -59,7 +63,8 @@ private:
 	{
 		void AddObject( DevaObject* ob )
 		{
-			back()->insert( pair<string, DevaObject*>(ob->name, ob) );
+//			back()->insert( pair<string, DevaObject*>(ob->name, ob) );
+			back()->AddObject( ob );
 		}
 		void Push()
 		{
@@ -83,6 +88,8 @@ private:
 	void LoadByteCode();
 	// locate a symbol in the symbol table(s)
 	DevaObject* find_symbol( const DevaObject & ob );
+	// find, recurring while the object is a variable (name)
+	DevaObject* find_symbol_recur( const DevaObject & ob );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
@@ -105,7 +112,7 @@ private:
 	// individual op-code methods
 	////////////////////////////////////////////////////
 	// 0 pop top item off stack
-	DevaObject Pop( Instruction const & inst );
+	void Pop( Instruction const & inst );
 	// 1 push item onto top of stack
 	void Push( Instruction const & inst );
 	// 2 load a variable from memory to the stack
