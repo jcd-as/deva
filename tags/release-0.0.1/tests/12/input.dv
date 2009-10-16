@@ -1,0 +1,5 @@
+def a( b )
+{
+	return b + 2;
+}
+print( a( 6 ) );

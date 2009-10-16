@@ -1,0 +1,11 @@
+while( true )
+{
+	a.b.c.d();
+}
+
+a.b.c();
+
+def x()
+{
+	a.b.c();
+}

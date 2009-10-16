@@ -1,0 +1,5 @@
+def a( b )
+{
+	return b + "bar";
+}
+print( a( "foo" ) );

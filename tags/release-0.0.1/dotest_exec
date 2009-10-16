@@ -1,0 +1,25 @@
+#!/bin/bash
+# do test using devac (deva compiler) to compile and then deva (deva executor)
+# to execute the program
+
+if [ $# -ne 2 ] ; then
+    echo "usage: dotest <input_file> <baseline_file>"
+    exit
+fi
+
+# TODO: shareable path to devac
+~/src/deva/devac $1 
+# TODO: generate filename ('input.dvc') from $1 arg
+~/src/deva/deva input.dvc > '$$$RESULTS$$$'
+
+if cmp -s '$$$RESULTS$$$' $2 ; then
+    echo "test succeeded"
+	# TODO: generate filename ('input.dvc') from $1 arg
+    rm -f '$$$RESULTS$$$' 'input.dvc'
+    exit
+else
+    echo "test failed"
+	# TODO: generate filename ('input.dvc') from $1 arg
+    rm -f '$$$RESULTS$$$' 'input.dvc'
+    exit -1
+fi

@@ -1,0 +1,72 @@
+### IGNORE ####################################################
+### IGNORE - inputs expected to fail:
+enum foo { ah, bk  };
+### SECTION ###
+enum{ ah, bk  };
+### SECTION ###
+enum
+{
+	ah,
+	bk
+};
+### SECTION ###
+!
+### SECTION ###
+jam and toast
+### SECTION ###
+45foo;
+### SECTION ###
+### IGNORE ####################################################
+### IGNORE - inputs expected to succeed:
+"8enum bar 
+{
+	ah,
+	bk
+}";
+### SECTION ###
+'89foobar';
+### SECTION ###
+foobar;
+### SECTION ###
+_foobar;
+### SECTION ###
+_foobar47;
+### SECTION ###
+!_foobar47;
+### SECTION ###
+45.34e-1;
+### SECTION ###
+-45.34e-1;
+### SECTION ###
+54+11/3*45.3%2.0e-1;
+### SECTION ###
+54+11/3*45.3%2.0e-1;
+### SECTION ###
+45+11-3+1;
+### SECTION ###
+(4);
+### SECTION ###
+jam;
+### SECTION ###
+jam ;
+### SECTION ###
+((54+11)/(3*(45.3%2.0e-1)));
+### SECTION ###
+( (54 + 11) / (3 * (45.3 % 2.0e-1)) );
+### SECTION ###
+(!a);
+### SECTION ###
+foo.bar;
+### SECTION ###
+goo(a);
+### SECTION ###
+foo( a, b,c);
+### SECTION ###
+foo['key' ];
+### SECTION ###
+barjam_goo[7 *(4-2) /a];
+### SECTION ###
+fcn( );
+### SECTION ###
+fcn2(7, a, 6 + b * 3.3, "a string"	) ;
+### SECTION ###

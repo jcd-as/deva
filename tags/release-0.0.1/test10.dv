@@ -1,0 +1,87 @@
+def foo()
+{
+	print( "foo" );
+}
+a = {};
+temp = {};
+
+a.b = temp;
+a.b.c = foo;
+a.b.c();
+
+# this:
+#a.b = foo;
+# is the same as this:
+#a["b"] = foo;
+#a.b();
+
+# this is currently disallowed:
+#a["b"] = {};
+
+#a = [];
+#append( a, 0 );
+#append( a, 1 );
+#append( a, 2 );
+#append( a, 3 );
+##a = {};
+##a["a"] = "a";
+##a["b"] = "b";
+##a["c"] = "c";
+##a["d"] = "d";
+#for( i in a )
+#{
+#	print( i );
+#}
+
+#a = {};
+#def foo()
+#{
+#	print( "foobar" );
+#}
+#a["b"] = foo;
+#a.b();
+
+#a = {};
+#a["foo"] = -1;
+#a["bar"] = 255;
+#print( a );
+#print( "===========" );
+#print( "a.foo is " + str( a.foo ) );
+#a["foo"] = a["bar"];
+#print( a );
+
+
+#a = [];
+#append( a, -1 );		# a[0] now -1
+#append( a, 255 );	# a[1] now 255
+#print( a );
+#print( "===========" );
+#a[0] = a[1];
+#print( a );
+#i = a[0];
+#s = "a[0] is " + str( i );
+#print( s );
+
+# this:
+#a.b.c;
+#a = {};
+
+# should generate the same effect as this (with slightly more complicated
+# bytecode, given the temporary 'n'):
+#n = a["b"];
+#n["c"];		# which is the same as if 'a["b"]["c"]' were legal
+
+# but NOT this (which is the same as n=b["c"];a[n];):
+#a[b["c"]];
+
+# new vector named a
+#a = [];
+# vector add
+#a.push_back( 5 );
+#b = a[0];
+# len( a ) now equal 1, and a[0] equals 5
+# vector assignment
+#a[0] = 10;
+# a[0] is now 10, len( a ) still 1
+#a[1] = 3;	# illegal! memory for a[1] doesn't exist yet
+

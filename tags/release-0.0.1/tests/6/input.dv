@@ -1,0 +1,44 @@
+#import io
+
+def foo( a, b )
+{
+	if( a )
+		return b;
+	else if( b )
+		return a;
+	else
+	{
+		return 0;
+	}
+}
+
+# a is a vector
+a = [];
+a.pushback( 5 );
+# a[0] is now 5
+
+# b is a map
+b = {};
+b[0] = "foo";
+# b at key 0 (the number, not the string) contains the string "foo"
+b["foo"] = foo;
+# b at key "foo" now contains (a reference to) the function foo
+# call it:
+#b["foo"]( 0, 1 );
+x = b["foo"];
+x( 0, 1 );
+
+for( key, value in b )
+{
+	io.print( str( key ) + str( value ) );
+}
+
+while( a < 10 )
+{
+	#a += 1;
+	a = a + 1;
+	# str() is a builtin to convert to str
+	# other builtins include num() (and int()??)
+	io.print( str( a ) );
+}
+

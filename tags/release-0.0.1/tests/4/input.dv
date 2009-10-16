@@ -1,0 +1,70 @@
+### IGNORE ##########################################################
+### IGNORE - statements expected to fail:
+const a.b = 75.3e19;
+### SECTION ###
+### IGNORE ##########################################################
+### IGNORE - statements expected to succeed:
+const x = 43;
+### SECTION ###
+const a = 75.3e19;	# eol comment
+### SECTION ###
+# this is a comment
+const z = "foo";
+### SECTION ###
+def foo(){ }
+### SECTION ###
+def bar( x, y ){}
+### SECTION ###
+def goo( x, y ){ x; }
+### SECTION ###
+def jam( a, fdkasf_x )
+{	# oddly placed comment
+	a = # and another
+42;
+	b = true;
+	return a + fdkasf_x; 	# more typically placed comment
+}
+### SECTION ###
+while( a < 1 + a && b >= 4 % 5.3 * 6 )
+{
+	do_something();
+}
+### SECTION ###
+while( a < 1 )
+{
+	a = a + 1;
+	do_something();
+}
+### SECTION ###
+for( a in b )
+{
+}
+### SECTION ###
+for( a, b in c[x] )
+{	# ill-placed comment
+	do_something();
+	a[x] = b( y );
+}	# some weird stuff
+### SECTION ###
+if( a > b )
+{
+	A();
+}
+else if( b > c )
+{
+	B();
+}
+else
+{
+	C();
+}
+### SECTION ###
+if( a ) A;
+if( b ){ B; }
+else if( c ){ C; }
+else{ D; }
+### SECTION ###
+if( a ){ A; }
+if( b ){ B; }
+else C;
+### SECTION ###

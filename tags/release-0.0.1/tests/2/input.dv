@@ -1,0 +1,48 @@
+### IGNORE ####################################################
+### IGNORE - inputs expected to fail:
+foo - + 4;
+### SECTION ###
+### IGNORE ####################################################
+### IGNORE - inputs expected to succeed:
+!fcn( x,y ) + z;
+### SECTION ###
+!fcn( x,y ) > z[fcn( a,b )];
+### SECTION ###
+x > y ;
+### SECTION ###
+y <= z;
+### SECTION ###
+z != a;
+### SECTION ###
+a < b;
+### SECTION ###
+b == c       ;
+### SECTION ###
+b == c || (4 + 2);
+### SECTION ###
+(b( c ) && !a( b ));
+### SECTION ###
+a = b;
+### SECTION ###
+(b( c ) && !a( b = c ));
+### SECTION ###
+foo = bar = goo;
+### SECTION ###
+(foo = bar = goo);
+### SECTION ###
+((foo = bar) = goo);
+### SECTION ###
+((foo + 4 = bar % 63.7e-1) = -goo);
+### SECTION ###
+((foo +  - 4 = bar % 63.7e-1) = -goo) = (b( c ) && !a( b ));
+### SECTION ###
+vec[(4+a)];
+### SECTION ###
+vec[
+	3 +		2
+/
+	x] ;
+### SECTION ###
+"foo
+bar" ;
+### SECTION ###

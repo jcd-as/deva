@@ -1,0 +1,22 @@
+### IGNORE ##########################################################
+### IGNORE - statements expected to fail:
+if( true )
+	Yay();
+else }
+### SECTION ###
+if( true )
+[]	
+### SECTION ###
+def foo[]
+{}
+### SECTION ###
+while[( x == 4 )]
+{}
+### SECTION ###
+for x in a
+{
+	do();
+}
+### SECTION ###
+### IGNORE ##########################################################
+### IGNORE - statements expected to succeed:
