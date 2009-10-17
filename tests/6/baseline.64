@@ -1,4 +1,3 @@
-input.dv:39: warning: Redefining symbol. 'a' already defined in higher scope
 In eval_expression. i->value =  i->children.size() = 10
 in scope 0, at line: -1
 translation_unit: 

@@ -1,6 +1,3 @@
-input.dv:3: warning: Redefining symbol. 'a' already defined in higher scope
-input.dv:4: warning: Redefining symbol. 'b' already defined in higher scope
-input.dv:59: warning: Redefining symbol. 'a' already defined in higher scope
 In eval_expression. i->value =  i->children.size() = 15
 in scope 0, at line: -1
 translation_unit: 
@@ -401,29 +398,28 @@ defarg : unknown: 'a'
 defarg : unknown: 'b'
 defarg : unknown: 'c'
 enter : 
-leave : 
 push : null
 return : 
 push : unknown: 'x'
-jmpf : num: '' = 218
+jmpf : num: '' = 216
 push : unknown: 'y'
-jmpf : num: '' = 218
-push : function: '', offset = 218
+jmpf : num: '' = 216
+push : function: '', offset = 216
 call : function_call: 'z'
 push : unknown: 'x'
-jmpf : num: '' = 285
+jmpf : num: '' = 283
 enter : 
 push : unknown: 'y'
-jmpf : num: '' = 271
-push : function: '', offset = 271
+jmpf : num: '' = 269
+push : function: '', offset = 269
 call : function_call: 'z'
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : num: '' = 314
-jmp : num: '' = 314
+jmpf : num: '' = 312
+jmp : num: '' = 312
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
