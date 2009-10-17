@@ -74,5 +74,14 @@ int main( int argc, char** argv )
 		return -1;
 	}
 
+	// dump ref count map if we're in debug mode
+	if( debug )
+	{
+		cout << "Memory reference count table for vectors:" << endl;
+		smart_ptr<vector<DevaObject> >::dumpRefCountMap();
+		cout << "Memory reference count table for maps:" << endl;
+		smart_ptr<map<DevaObject, DevaObject> >::dumpRefCountMap();
+	}
+
 	return 0;
 }

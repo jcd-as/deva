@@ -72,7 +72,8 @@ void do_str( Executor *ex, const Instruction & inst )
 			{
 			// dump map contents
 			s << "map: '" << o->name << "' = " << endl;
-			map<DevaObject, DevaObject>* mp = o->map_val;
+//			map<DevaObject, DevaObject>* mp = o->map_val;
+			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
 			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
 				DevaObject key = (*it).first;
@@ -85,7 +86,8 @@ void do_str( Executor *ex, const Instruction & inst )
 			{
 			// dump vector contents
 			s << "vector: '" << o->name << "' = " << endl;
-			vector<DevaObject>* vec = o->vec_val;
+//			vector<DevaObject>* vec = o->vec_val;
+			smart_ptr<vector<DevaObject> > vec( o->vec_val );
 			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
 				DevaObject val = (*it);
@@ -138,7 +140,8 @@ void do_append( Executor *ex, const Instruction & inst )
 		// concat the strings
 		string ret( o->str_val );
 		ret += val.str_val;
-		o->SetValue( DevaObject( "", ret ) );
+//		o->SetValue( DevaObject( "", ret ) );
+		o = new DevaObject( ret, "" );
 	}
 	// vector
 	else if( o->Type() == sym_vector )

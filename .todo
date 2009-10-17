@@ -55,7 +55,7 @@ stack based, all ops pull arguments off stack
     <note priority="veryhigh" time="1254868797">
         objects/user-defined types (fields, method look-up, 'class' keyword etc)
     </note>
-    <note priority="veryhigh" time="1255048474">
+    <note done="1255753655" priority="veryhigh" time="1255048474">
         fix the data/object/ref-counting model
         <comment>
             runtime scope/symbol tbl object needs to track pointers.
@@ -81,5 +81,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
     
     
 <note done="1255632626" priority="veryhigh" time="1255582612">something with debug-info messes up back-patching of fcns. compile and run test11.dv for repro.
-</note><note priority="veryhigh" time="1255670572">debugging info causes BAD CODE GEN. compile test 16 with debug info and run for repro case.
+</note><note done="1255726500" priority="veryhigh" time="1255670572">debugging info causes BAD CODE GEN. compile test 16 with debug info and run for repro case.
 </note></todo>

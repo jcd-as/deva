@@ -284,10 +284,10 @@ void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 static vector<int> while_jmpf_stack;
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
+	generate_line_num( i, is );
 	// save the location for back-patching
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the condition's jmpf
-	generate_line_num( i, is );
 	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
 }
 
@@ -363,8 +363,8 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 		throw DevaICE( "Invalid 'in' statement in 'for' loop." );
 	string table_name = strip_symbol( string( i->children[in_op_index].children[0].value.begin(), i->children[in_op_index].children[0].value.end() ) );
 
-	// push the return address for the call to 'length'
 	generate_line_num( i, is );
+	// push the return address for the call to 'length'
 	is.push( Instruction( op_push, DevaObject( "", is.Offset() ) ) );
 	// push the vector/map
 	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
@@ -464,11 +464,11 @@ void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
 	// z()
 	// end_else_label:
 
+	generate_line_num( i, is );
 	// push the current location in the instruction stream onto the 'if stack'
 	if_stack.push_back( is.size() );
 	// generate a jump placeholder 
 	// for a jump *over* the child (statement|compound_statement)
-	generate_line_num( i, is );
 	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
 }
 
@@ -487,11 +487,11 @@ void gen_IL_if_s( iter_t const & i, InstructionStream & is )
 static vector<int> else_stack;
 void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 {
+	generate_line_num( i, is );
 	// push the current location in the instruction stream onto the 'else' stack
 	// write the current *file* offset, not instruction stream!
 	else_stack.push_back( is.size() );
 	// generate the jump placeholder
-	generate_line_num( i, is );
 	is.push( Instruction( op_jmp, DevaObject( "", -1.0 ) ) );
 }
 
@@ -687,10 +687,10 @@ void gen_IL_bracket_op( iter_t const & i, InstructionStream & is )
 
 void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 {
+	generate_line_num( i, is );
 	// push the (offset for the) return address
 	// save the location for back-patching the proper return address (address
 	// *after* the call is made)
-	generate_line_num( i, is );
 	fcn_call_stack.push_back( is.size() );
 	// (prior to fcn arguments being pushed)
 	is.push( Instruction( op_push, DevaObject( "", (long)-1 ) ) );

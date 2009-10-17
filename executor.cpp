@@ -267,11 +267,19 @@ void Executor::Store( Instruction const & inst )
 	// not found? add it to the current scope
 	if( !ob )
 	{
-		ob = new DevaObject( lhs.name, sym_unknown );
+//		ob = new DevaObject( lhs.name, sym_unknown );
+		ob = new DevaObject( lhs.name, rhs );
 		scopes.AddObject( ob );
 	}
 	//  set its value to the rhs
-	ob->SetValue( rhs );
+//	ob->SetValue( rhs );
+	else
+	{
+		// delete the old value
+		delete ob;
+		// and allocate for a new one
+		ob = new DevaObject( lhs.name, rhs );
+	}
 }
 // 4 define function. arg is location in instruction stream, named the fcn name
 void Executor::Defun( Instruction const & inst )
@@ -407,7 +415,8 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-		vector<DevaObject>* v = table->vec_val;
+//		vector<DevaObject>* v = table->vec_val;
+		smart_ptr<vector<DevaObject> > v( table->vec_val );
 		// get the value from the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
@@ -428,7 +437,8 @@ void Executor::Vec_load( Instruction const & inst )
 			// TODO: error on non-integral value
 			int idx = (int)idxkey.num_val;
 			// get the value from the map
-			map<DevaObject, DevaObject>* mp = table->map_val;
+//			map<DevaObject, DevaObject>* mp = table->map_val;
+			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
 			if( idx >= mp->size() )
 				throw DevaICE( "Index out-of-range in vec_load instruction." );
 			map<DevaObject, DevaObject>::iterator it;
@@ -451,7 +461,8 @@ void Executor::Vec_load( Instruction const & inst )
 			if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 				throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 			// get the value from the map
-			map<DevaObject, DevaObject>* mp = table->map_val;
+//			map<DevaObject, DevaObject>* mp = table->map_val;
+			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
 			map<DevaObject, DevaObject>::iterator it;
 			it = mp->find( idxkey );
 			if( it == mp->end() )
@@ -516,7 +527,8 @@ void Executor::Vec_store( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-		vector<DevaObject>* v = table->vec_val;
+//		vector<DevaObject>* v = table->vec_val;
+		smart_ptr<vector<DevaObject> > v( table->vec_val );
 		// set the value in the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
@@ -530,7 +542,8 @@ void Executor::Vec_store( Instruction const & inst )
 		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 		// set the value in the map
-		map<DevaObject, DevaObject>* mp = table->map_val;
+//		map<DevaObject, DevaObject>* mp = table->map_val;
+		smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val) ;
 		mp->operator[]( idxkey ) = val;
 	}
 	else
@@ -1165,7 +1178,8 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump map contents
 			cout << "map: '" << o->name << "' = " << endl;
-			map<DevaObject, DevaObject>* mp = o->map_val;
+//			map<DevaObject, DevaObject>* mp = o->map_val;
+			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
 			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
 				DevaObject key = (*it).first;
@@ -1178,7 +1192,8 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump vector contents
 			cout << "vector: '" << o->name << "' = " << endl;
-			vector<DevaObject>* vec = o->vec_val;
+//			vector<DevaObject>* vec = o->vec_val;
+			smart_ptr<vector<DevaObject> > vec( o->vec_val );
 			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
 				DevaObject val = (*it);

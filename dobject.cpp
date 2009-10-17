@@ -3,16 +3,16 @@
 // created by jcs, October 03, 2009 
 
 // TODO:
-// * reference counting (here or in a sub-class???)
+// * 
 
 #include "dobject.h"
 #include <cstring>
 
-DevaObject::DevaObject() : SymbolInfo( sym_null ), name( "" )
+DevaObject::DevaObject() : SymbolInfo( sym_null ), name( "" ), map_val( 0 ), vec_val( 0 )
 { }
 
 // copy constructor needed to ensure each object has a separate copy of data
-DevaObject::DevaObject( const DevaObject & o )
+DevaObject::DevaObject( const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 {
 	if( &o == this )
 		return;
@@ -33,10 +33,10 @@ DevaObject::DevaObject( const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
+		map_val = o.map_val;
 		break;
 	case sym_vector:
-		vec_val = new vector<DevaObject>( *(o.vec_val) );
+		vec_val = o.vec_val;
 		break;
 	case sym_function:
 		func_offset = o.func_offset;
@@ -56,7 +56,7 @@ DevaObject::DevaObject( const DevaObject & o )
 
 }
 // copy construct, but with a different name
-DevaObject::DevaObject( string nm, const DevaObject & o )
+DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 {
 	if( &o == this )
 		return;
@@ -77,10 +77,10 @@ DevaObject::DevaObject( string nm, const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
+		map_val = o.map_val;
 		break;
 	case sym_vector:
-		vec_val = new vector<DevaObject>( *(o.vec_val) );
+		vec_val = o.vec_val;
 		break;
 	case sym_function:
 		func_offset = o.func_offset;
@@ -99,21 +99,21 @@ DevaObject::DevaObject( string nm, const DevaObject & o )
 	}
 
 }
-DevaObject::DevaObject( string nm ) : SymbolInfo( sym_end ), name( nm )
+DevaObject::DevaObject( string nm ) : SymbolInfo( sym_end ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
-DevaObject::DevaObject( string nm, double n ) : SymbolInfo( sym_number ), num_val( n ), name( nm )
+DevaObject::DevaObject( string nm, double n ) : SymbolInfo( sym_number ), num_val( n ), map_val( 0 ), vec_val( 0 )
 {}
-DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( nm )
+DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( nm ), map_val( 0 ), vec_val( 0 )
 {
 	// make a copy of the string passed to us, DON'T take ownership of it!
 	str_val = new char[s.size() + 1];
 	strcpy( str_val, s.c_str() );
 }
-DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm )
+DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
-DevaObject::DevaObject( string nm, long offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm )
+DevaObject::DevaObject( string nm, long offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
-DevaObject::DevaObject( string nm, SymbolType t )
+DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 {
 	type = t;
 	name = nm;
@@ -131,11 +131,17 @@ DevaObject::DevaObject( string nm, SymbolType t )
 		bool_val = false;
 		break;
 	case sym_map:
-		map_val = new map<DevaObject, DevaObject>();
+		{
+		map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>();
+		map_val = m;
 		break;
+		}
 	case sym_vector:
-		vec_val = new vector<DevaObject>();
+		{
+		vector<DevaObject>* v = new vector<DevaObject>();
+		vec_val = v;
 		break;
+		}
 	case sym_function:
 		func_offset = -1;
 		break;
@@ -156,10 +162,6 @@ DevaObject::~DevaObject()
 {
 	if( type == sym_string )
 		if( str_val ) delete [] str_val;
-	else if( type == sym_map )
-		if( map_val ) delete map_val;
-	else if( type == sym_vector )
-		if( vec_val ) delete vec_val;
 }
 
 DevaObject & DevaObject::operator = ( const DevaObject & o )
@@ -183,16 +185,12 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 		bool_val = o.bool_val;
 		break;
 	case sym_map:
-		// TODO: verify this
-		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
+		map_val = o.map_val;
 		break;
 	case sym_vector:
-		// TODO: verify this
-		vec_val = new vector<DevaObject>( *(o.vec_val) );
+		vec_val = o.vec_val;
 		break;
 	case sym_function:
-		// TODO: any better default value for fcn types?
-		// TODO: need to create copy??
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -271,97 +269,6 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 	}
 }
 
-// equivalent of destroying and re-creating
-// TODO: should this be done by creating new object and make this class
-// immutable?? how does this work with ref-counting??
-void DevaObject::ChangeType( SymbolType t )
-{
-	if( type == sym_string )
-		delete [] str_val;
-	else if( type == sym_map )
-		delete map_val;
-	else if( type == sym_vector )
-		delete vec_val;
-
-	type = t;
-
-	switch( t )
-	{
-	case sym_number:
-		num_val = 0.0;
-		break;
-	case sym_string:
-		// TODO: any better default value for string types?
-		str_val = NULL;
-		break;
-	case sym_boolean:
-		bool_val = false;
-		break;
-	case sym_map:
-		map_val = new map<DevaObject, DevaObject>();
-		break;
-	case sym_vector:
-		vec_val = new vector<DevaObject>();
-		break;
-	case sym_function:
-		func_offset = -1;
-		break;
-	case sym_null:
-		// nothing to do, null has/needs no value
-	case sym_unknown:
-		// nothing to do, no known value/type
-		break;
-	case sym_function_call:
-	default:
-		// TODO: throw error, can't change type
-		break;
-	}
-}
-// set the value from another object, without changing the name
-// fails (returns false) if this is a const object
-bool DevaObject::SetValue( const DevaObject & o )
-{
-	if( is_const )
-		return false;
-
-	ChangeType( o.type );
-
-	switch( type )
-	{
-	case sym_number:
-		num_val = o.num_val;
-		break;
-	case sym_string:
-		// TODO: any better default value for string types?
-		// make a copy of the string passed to us, DON'T take ownership of it!
-		str_val = new char[strlen( o.str_val ) + 1];
-		strcpy( str_val, o.str_val );
-		break;
-	case sym_boolean:
-		bool_val = o.bool_val;
-		break;
-	case sym_map:
-		map_val = new map<DevaObject, DevaObject>( *(o.map_val) );
-		// TODO: copy the map
-		break;
-	case sym_vector:
-		vec_val = new vector<DevaObject>( *(o.vec_val) );
-		// TODO: copy the vector
-		break;
-	case sym_function:
-		func_offset = o.func_offset;
-		break;
-	case sym_null:
-		// nothing to do, null has/needs no value
-	case sym_unknown:
-		// nothing to do, variable with no known value
-		break;
-	case sym_function_call:
-	default:
-		// TODO: throw error, can't change
-		break;
-	}
-}
 // size of the object on *disk*
 long DevaObject::Size() const
 {
@@ -376,10 +283,10 @@ long DevaObject::Size() const
 	case sym_boolean:
 		return sz + sizeof( long );
 	case sym_map:
-		// TODO: implement
+		// TODO: implement??? error??
 		return 0;
 	case sym_vector:
-		// TODO: implement
+		// TODO: implement??? error??
 		return 0;
 	case sym_function:
 		return sz + sizeof( long );

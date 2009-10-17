@@ -13,6 +13,7 @@
 #include "opcodes.h"
 #include "symbol.h"
 #include "types.h"
+#include "smart_ptr.h"
 #include <vector>
 
 // the basic piece of data stored on the data stack
@@ -25,10 +26,13 @@ struct DevaObject : public SymbolInfo
 		double num_val;
 		char* str_val;
 		bool bool_val;
-		map<DevaObject, DevaObject>* map_val;
-		vector<DevaObject>* vec_val;
+//		map<DevaObject, DevaObject>* map_val;
+//		vector<DevaObject>* vec_val;
 		long func_offset;	// offset into instruction stream to function start
 	};
+	// objects with destructors not allowed in unions. bleh
+	smart_ptr<map<DevaObject, DevaObject> > map_val;
+	smart_ptr<vector<DevaObject> > vec_val;
 
 	// name that the object (variable) is referred to with
 	// (empty string for constants)
@@ -56,11 +60,6 @@ struct DevaObject : public SymbolInfo
 	DevaObject& operator = ( const DevaObject & o );
 	bool operator < ( const DevaObject & rhs ) const;
 
-	// equivalent of destroying and re-creating
-	void ChangeType( SymbolType t );
-	// set the value from another object, without changing the name
-	// fails (returns false) if this is a const object
-	bool SetValue( const DevaObject & o );
 	// size of the object on *disk*
 	long Size() const;
 };

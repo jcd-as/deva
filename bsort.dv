@@ -55,10 +55,10 @@ n = bubble_sort( l );
 
 # print each item in the array
 print( "sorted:" );
-for( i in n )
+for( i in l )
 {
 	print( i );
 }
 # could also print using:
-#print( n );
+print( n );
 
