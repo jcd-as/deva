@@ -13,7 +13,7 @@ import optparse
 import color
 
 # TODO: 
-# - prompt for (and record) comment on marking an item 'done'
+# - pretty xml formatting: need to write new xml content with 'indent', 'addindent' and 'newl' parameters, while the existing xml needs to *not* have these (it is already formatted)...
 # - command line switches:
 #   - purge items older than 'n' days
 #   - show items of priority 'n' or less (not too important, grep can get us
@@ -190,6 +190,16 @@ if __name__ == "__main__":
                 node.setAttribute( "done", str( int( time.time() ) ) )
                 break
             i += 1
+        # prompt for a comment
+        print( "comment:" )
+        text = sys.stdin.readline()
+        if( len( text ) != 0 ):
+            txt_node = minidom.Text()
+            txt_node.data = text
+            element = todo_xml.createElement( "comment" )
+            element.appendChild( txt_node )
+            node.appendChild( element )
+
         # write out the xml
         writeXml( todo_xml )
 

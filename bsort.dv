@@ -53,12 +53,23 @@ for( i in l )
 # sort the array
 n = bubble_sort( l );
 
-# print each item in the array
+# n is l. note that setting a value in one changes both
+# (vectors and maps are references and are passed by-reference)
+#n[2] = 100;
+
+# print each item in the arrays
 print( "sorted:" );
+print( "passed-in vector:" );
 for( i in l )
 {
 	print( i );
 }
+print( "returned vector:" );
+for( i in n )
+{
+	print( i );
+}
+
 # could also print using:
-print( n );
+#print( n );
 

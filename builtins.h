@@ -15,7 +15,7 @@
 using namespace std;
 
 // is this name a built-in function?
-bool is_builtin( string name );
+bool is_builtin( const string & name );
 
 // exectute built-in function
 void execute_builtin( Executor *ex, const Instruction & inst );

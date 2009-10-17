@@ -8,16 +8,38 @@
 #include "builtins.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
+
+// pre-decls for builtin executors
+void do_print( Executor *ex, const Instruction & inst );
+void do_str( Executor *ex, const Instruction & inst );
+void do_append( Executor *ex, const Instruction & inst );
+void do_length( Executor *ex, const Instruction & inst );
+
+// tables defining the built-in function names...
+static const string builtin_names[] = 
+{
+	string( "print" ),
+    string( "str" ),
+    string( "append" ),
+    string( "length" ),
+};
+// ...and function pointers to the executor functions for them
+typedef void (*builtin_fcn)(Executor*, const Instruction&);
+builtin_fcn builtin_fcns[] = 
+{
+    do_print,
+    do_str,
+    do_append,
+    do_length,
+};
+const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
 // is this name a built-in function?
-bool is_builtin( string name )
+bool is_builtin( const string & name )
 {
-	if( name == "print"
-		|| name == "str"
-		|| name == "append"
-		|| name == "length"
-		)
-	return true;
+    const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+    if( i != builtin_names + num_of_builtins ) return true;
 	else return false;
 }
 
@@ -32,6 +54,26 @@ void do_print( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
+// execute built-in function
+void execute_builtin( Executor *ex, const Instruction & inst )
+{
+    // find the name of the fcn
+	string name = inst.args[0].name;
+    const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+    if( i == builtin_names + num_of_builtins )
+		throw DevaICE( "No such built-in function." );
+    // compute the index of the function in the look-up table(s)
+    long l = (long)i;
+    l -= (long)&builtin_names;
+    int idx = l / sizeof( string );
+    if( idx > num_of_builtins )
+		throw DevaICE( "Out-of-array-bounds looking for built-in function." );
+    else
+        // call the function
+        builtin_fcns[idx]( ex, inst );
+}
+
+// the built-in executor functions:
 void do_str( Executor *ex, const Instruction & inst )
 {
 	// get the argument off the stack
@@ -193,20 +235,3 @@ void do_length( Executor *ex, const Instruction & inst )
 	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", (double)len ) );
 }
-
-// execute built-in function
-void execute_builtin( Executor *ex, const Instruction & inst )
-{
-	string name = inst.args[0].name;
-	if( name == "print" )
-		do_print( ex, inst );
-	else if( name == "str" )
-		do_str( ex, inst );
-	else if( name == "append" )
-		do_append( ex, inst );
-	else if( name == "length" )
-		do_length( ex, inst );
-	else
-		throw DevaICE( "No such built-in function." );
-}
-
