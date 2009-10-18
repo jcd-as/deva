@@ -215,8 +215,42 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 	// push the number onto the stack
 	double n;
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
-	n = atof( s.c_str() );
 	generate_line_num( i, is );
+	// hex? octal? binary?
+	if( s[0] == '0' && s.length() > 1 )
+	{
+		char* end;
+		if( s[1] == 'x' )
+		{
+			long l = strtol( s.c_str()+2, &end, 16 );
+			n = l;
+			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+			return;
+		}
+		else if( s[1] == 'o' )
+		{
+			long l = strtol( s.c_str()+2, &end, 8 );
+			n = l;
+			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+			return;
+		}
+		else if( s[1] == 'b' )
+		{
+			long l = strtol( s.c_str()+2, &end, 2 );
+			n = l;
+			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+			return;
+		}
+		else
+		{
+			// or real?
+			n = atof( s.c_str() );
+			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+			return;
+		}
+	}
+	// or real?
+	n = atof( s.c_str() );
 	is.push( Instruction( op_push, DevaObject( "", n ) ) );
 }
 

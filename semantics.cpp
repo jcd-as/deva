@@ -193,6 +193,11 @@ void check_assignment_op( iter_t const & i )
 		&& i->children[1].value.id() != map_op_id )
 		throw DevaSemanticException( "Right-hand side of assignment operation not an r-value", rhs );
 
+	// check 'const' of lhs
+	SymbolTable* st = scopes[lhs.scope];
+	SymbolInfo* si = find_symbol( lhs.sym, st, scopes );
+	if( si && si->is_const )
+		throw DevaSemanticException( "Cannot assign to a const variable.", lhs );
 	// TODO: review. any usefulness to this at all? any way to make it useful??
 //	if( lhs.type == variable_type )
 //	{
@@ -540,12 +545,15 @@ void pre_check_const_decl( iter_t const & i )
 	// 2 children: 'const' and identifier
 	// ensure that this identifier hasn't already been declared non-const
 	
+	// TODO: this warning never fires, because the compile errors out in the
+	// assignment op, which is processed before this, on trying to assign to a
+	// constant
+	//
 	// remember, in pre-check the children nodes' "sym" fields haven't been set yet
 	// allow re-def as const, but emit a warning message
 	string s = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
 	SymbolTable* st = scopes[i->value.value().scope];
-	SymbolInfo* si = find_symbol( s, st, scopes );
-	if( si )
+	if( find_identifier_in_parent_scopes( s, st, scopes ) )
 		emit_warning( i->children[1].value.value(), string( string( "Symbol '" ) + s + "' already defined; redefining as 'const'" ).c_str() );
 }
 
@@ -561,13 +569,11 @@ void check_const_decl( iter_t const & i )
 		throw DevaSemanticException( "Invalid constant declaration", id );
 
 	// set symbol's 'const' flag in the symbol table
-	// DON'T DO THIS: handle all variably typing and definition happen
-	// dynamically (at run-time)
-//	SymbolTable* st = scopes[i->children[1].value.value().scope];
-//	SymbolInfo* si = find_symbol( i->children[1].value.value().sym, st, scopes );
-//	if( !si )
-//		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
-//	si->is_const = true;
+	SymbolTable* st = scopes[i->children[1].value.value().scope];
+	SymbolInfo* si = find_symbol( i->children[1].value.value().sym, st, scopes );
+	if( !si )
+		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
+	si->is_const = true;
 }
 
 void check_constant( iter_t const & i )

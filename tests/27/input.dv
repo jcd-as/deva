@@ -1,0 +1,29 @@
+# const test
+
+const a0 = 0xa;
+const a1 = 0o12;
+const a2 = 0b1010;
+
+m = [];
+append( m, a0 );
+append( m, a1 );
+append( m, a2 );
+# this is okay, m[0] is a new copy of the value '4'
+m[0] = 2;
+
+{
+	# new scope
+	# this would be an error:
+#	a = 2;
+	const b = 5.1;
+}
+
+b = 1;
+
+# this should generate an error:
+#a = 2;
+
+print( str( a0 ) );
+print( str( a1 ) );
+print( str( a2 ) );
+print( str( m[0] ) );

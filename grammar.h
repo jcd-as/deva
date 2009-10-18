@@ -522,14 +522,15 @@ public:
 				access_node_d[
 				leaf_node_d[confix_p( "\"", *c_escape_ch_p, "\"" )]
 				| leaf_node_d[confix_p( "'", *c_escape_ch_p, "'" )]
-//				leaf_node_d[confix_p( "\"", *(anychar_p - ch_p( "\"" )), "\"" )]
-//				| leaf_node_d[confix_p( "'", *(anychar_p - ch_p( "'" )), "'" )]
 				][&set_node]
 				;
 
 			number = 
 				access_node_d[
-				leaf_node_d[real_p]
+				leaf_node_d[str_p( "0x" ) >> hex_p]
+				| leaf_node_d[str_p( "0o" ) >> oct_p]
+				| leaf_node_d[str_p( "0b" ) >> bin_p]
+				| leaf_node_d[real_p]
 				][&set_node]
 				;
 
