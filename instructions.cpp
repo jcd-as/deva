@@ -223,7 +223,8 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 void gen_IL_string( iter_t const & i, InstructionStream & is )
 {
 	// push the string onto the stack
-	string s = strip_quotes( strip_symbol( string( i->value.begin(), i->value.end() ) ) );
+    // "un-escape" the string
+	string s = unescape( strip_quotes( strip_symbol( string( i->value.begin(), i->value.end() ) ) ) );
 	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", s ) ) );
 }

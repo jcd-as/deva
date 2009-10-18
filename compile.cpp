@@ -109,12 +109,9 @@ tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & fil
 	SymbolTable* globals = new SymbolTable();
 	pair<int, SymbolTable*> sym( 0, globals );
 	scope_bldr.push_back( sym );
-	////////////////////////
 	scopes[sym.first] = sym.second;
-	////////////////////////
 
 	// parse 
-	//
 	tree_parse_info<iterator_t, factory_t> info;
 	info = ast_parse<factory_t>( begin, end, deva_p, (space_p | comment_p( "#" )) );
 

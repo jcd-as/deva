@@ -8,8 +8,21 @@ m[0] = "a";
 m[1] = "b";
 m[2] = "c";
 
-# print them
+# make a copy of m
+n = copy( m );
+# and change an item
+n[0] = "z";
+
+# print m
+print( "\toriginal:" );
 for( key, val in m )
+{
+	print( "key: " + str( key ) + " value: " + str( val ) );
+}
+
+print( "copy:" );
+# print n (the copy)
+for( key, val in n )
 {
 	print( "key: " + str( key ) + " value: " + str( val ) );
 }

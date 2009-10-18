@@ -99,20 +99,32 @@ DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_va
 	}
 
 }
+// empty
 DevaObject::DevaObject( string nm ) : SymbolInfo( sym_end ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
+// number type
 DevaObject::DevaObject( string nm, double n ) : SymbolInfo( sym_number ), num_val( n ), map_val( 0 ), vec_val( 0 )
 {}
+// string type
 DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( nm ), map_val( 0 ), vec_val( 0 )
 {
 	// make a copy of the string passed to us, DON'T take ownership of it!
 	str_val = new char[s.size() + 1];
 	strcpy( str_val, s.c_str() );
 }
+// boolean type
 DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
+// 'function' type
 DevaObject::DevaObject( string nm, long offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
+// map type with the given map
+DevaObject::DevaObject( string nm, map<DevaObject, DevaObject>* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
+{}
+// vector type with the given vector
+DevaObject::DevaObject( string nm, vector<DevaObject>* v ) : SymbolInfo( sym_map ), name( nm ), map_val( 0 ), vec_val( v )
+{}
+// given type, empty/default object
 DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 {
 	type = t;

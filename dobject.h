@@ -48,8 +48,13 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, string s );
 	// boolean type
 	DevaObject( string nm, bool b );
-	// 'function' (incl return) type
+	// 'function' (incl return/jump target) type
 	DevaObject( string nm, long offs );
+    // map type with the given map
+    DevaObject( string nm, map<DevaObject, DevaObject>* m );
+    // vector type with the given vector
+    DevaObject( string nm, vector<DevaObject>* v );
+    // given type, empty object
 	DevaObject( string nm, SymbolType t );
 	// copy constructor needed to ensure each object has a separate copy of data
 	DevaObject( const DevaObject & o );

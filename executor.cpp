@@ -250,8 +250,6 @@ void Executor::Store( Instruction const & inst )
 	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// if the rhs is a variable or function, get it from the symbol table
-	// TODO: map & vector ??? (actually, shouldn't map/vec lookups result in the
-	// 'looked up' value being on top of the stack, not the map/vec???)
 	if( rhs.Type() == sym_unknown || rhs.Type() == sym_function )
 	{
 		DevaObject* ob = find_symbol( rhs );
@@ -267,12 +265,10 @@ void Executor::Store( Instruction const & inst )
 	// not found? add it to the current scope
 	if( !ob )
 	{
-//		ob = new DevaObject( lhs.name, sym_unknown );
 		ob = new DevaObject( lhs.name, rhs );
 		scopes.AddObject( ob );
 	}
 	//  set its value to the rhs
-//	ob->SetValue( rhs );
 	else
 	{
 		// delete the old value
@@ -415,7 +411,6 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-//		vector<DevaObject>* v = table->vec_val;
 		smart_ptr<vector<DevaObject> > v( table->vec_val );
 		// get the value from the vector
 		if( idx < 0 || idx >= v->size() )
@@ -437,7 +432,6 @@ void Executor::Vec_load( Instruction const & inst )
 			// TODO: error on non-integral value
 			int idx = (int)idxkey.num_val;
 			// get the value from the map
-//			map<DevaObject, DevaObject>* mp = table->map_val;
 			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
 			if( idx >= mp->size() )
 				throw DevaICE( "Index out-of-range in vec_load instruction." );
@@ -461,7 +455,6 @@ void Executor::Vec_load( Instruction const & inst )
 			if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 				throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 			// get the value from the map
-//			map<DevaObject, DevaObject>* mp = table->map_val;
 			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
 			map<DevaObject, DevaObject>::iterator it;
 			it = mp->find( idxkey );
@@ -491,7 +484,6 @@ void Executor::Vec_store( Instruction const & inst )
 	DevaObject vecmap = stack.back();
 	stack.pop_back();
 
-//	if( vecmap.Type() != sym_unknown )
 	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
 		throw DevaRuntimeException( "Invalid object for 'vec_store' instruction." );
 
@@ -527,7 +519,6 @@ void Executor::Vec_store( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-//		vector<DevaObject>* v = table->vec_val;
 		smart_ptr<vector<DevaObject> > v( table->vec_val );
 		// set the value in the vector
 		if( idx < 0 || idx >= v->size() )
@@ -542,7 +533,6 @@ void Executor::Vec_store( Instruction const & inst )
 		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 		// set the value in the map
-//		map<DevaObject, DevaObject>* mp = table->map_val;
 		smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val) ;
 		mp->operator[]( idxkey ) = val;
 	}
@@ -1150,7 +1140,6 @@ void Executor::Output( Instruction const & inst )
 	if( obj.Type() == sym_unknown )
 	{
 		o = find_symbol( obj );
-//		o = find_symbol_recur( obj );
 		if( !o )
 			throw DevaRuntimeException( "Symbol not found in function call" );
 	}
@@ -1178,7 +1167,6 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump map contents
 			cout << "map: '" << o->name << "' = " << endl;
-//			map<DevaObject, DevaObject>* mp = o->map_val;
 			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
 			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
@@ -1192,7 +1180,6 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump vector contents
 			cout << "vector: '" << o->name << "' = " << endl;
-//			vector<DevaObject>* vec = o->vec_val;
 			smart_ptr<vector<DevaObject> > vec( o->vec_val );
 			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
@@ -1271,9 +1258,6 @@ void Executor::Return( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid 'return' instruction: not enough data on the stack." );
 	DevaObject ret = stack.back();
 	stack.pop_back();
-	////////////////////////////////////////////
-	// TODO: does this have to change for pass-by-REFERENCE semantics when the
-	// variable/data model changes??
 	// evaluate the return value *before* leaving this scope, and add it to the
 	// parent scope (to which we'll be returning)
 	if( ret.Type() == sym_unknown )
@@ -1285,7 +1269,6 @@ void Executor::Return( Instruction const & inst )
 			throw DevaICE( "No scope to return to!" );
 		scopes[scopes.size()-2]->AddObject( rv );
 	}
-	////////////////////////////////////////////
 
 	// pop the return location off the top of the stack
 	DevaObject ob = stack.back();
@@ -1552,8 +1535,6 @@ Instruction Executor::NextInstr()
 	double num_val;
 	char* str_val = NULL;
 	long bool_val;
-//		map<DevaObject, DevaObject>* map_val;
-//		vector<DevaObject>* vec_val;
 	long func_offset;
 	// read the byte for the opcode
 	unsigned char op;
@@ -1595,10 +1576,10 @@ Instruction Executor::NextInstr()
 				break;
 				}
 			case sym_map:
-				// TODO: implement
+				// TODO: is this an error??
 				break;
 			case sym_vector:
-				// TODO: implement
+				// TODO: is this an error??
 				break;
 			case sym_function:
 				{
@@ -1610,7 +1591,6 @@ Instruction Executor::NextInstr()
 				}
 			case sym_function_call:
 				{
-				// TODO: ???
 				DevaObject ob( name, sym_function_call );
 				inst.args.push_back( ob );
 				break;

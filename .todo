@@ -74,20 +74,26 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 		<note done="1255582640" priority="high" time="1255048474">		
 			tests 6,7,22 fail on mac os x. the jmp/fcn/return offsets are all different, presumably because of the sizeof a long
 		</note>	
-		<note priority="high" time="1255237571">		
+		<note done="1255839736" priority="high" time="1255237571">		
 			remove Redefining symbol warning?
-		</note>	
+		<comment>done. left code commented out with a comment asking if it could be put to some use, bue any sense... maybe only for vector/map new's and const definitions?
+</comment></note>	
 		<note done="1255632626" priority="veryhigh" time="1255582612">		
 			something with debug-info messes up back-patching of fcns. compile and run test11.dv for repro.
 		</note>	
 		<note done="1255726500" priority="veryhigh" time="1255670572">		
 			debugging info causes BAD CODE GEN. compile test 16 with debug info and run for repro case.
 		</note>	
-		<note priority="high" time="1255807306">		
+		<note done="1255846484" priority="high" time="1255807306">		
 			print() builtin doesn't handle escape sequences ('\t', '\n' etc)
-		</note>	
-		<note priority="veryhigh" time="1255807935">		
+		<comment>actually the compiler wasn't 'unescaping' the strings
+</comment></note>	
+		<note done="1255839681" priority="veryhigh" time="1255807935">		
 			testing...
-		</note>	
-<note priority="veryhigh" time="1255814228">add 'copy' built-in function to create copies of vectors and maps
+		<comment>delete me
+</comment></note>	
+<note done="1255839706" priority="veryhigh" time="1255814228">add 'copy' built-in function to create copies of vectors and maps
+<comment>
+</comment></note><note priority="high" time="1255839820">make 'const' work
+</note><note priority="veryhigh" time="1255846573">modules and 'import' keyword
 </note></todo>

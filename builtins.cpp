@@ -10,11 +10,18 @@
 #include <sstream>
 #include <algorithm>
 
+// to add new builtins you must:
+// 1) add a new fcn to the builtin_names and builtin_fcns arrays below
+// 2) implement the function in this file
+// 3) add the function as a friend to Executor (executor.h) so that it can
+//    access the private members of Executor (like the stack)
+
 // pre-decls for builtin executors
 void do_print( Executor *ex, const Instruction & inst );
 void do_str( Executor *ex, const Instruction & inst );
 void do_append( Executor *ex, const Instruction & inst );
 void do_length( Executor *ex, const Instruction & inst );
+void do_copy( Executor *ex, const Instruction & inst );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -23,6 +30,7 @@ static const string builtin_names[] =
     string( "str" ),
     string( "append" ),
     string( "length" ),
+    string( "copy" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -32,6 +40,7 @@ builtin_fcn builtin_fcns[] =
     do_str,
     do_append,
     do_length,
+    do_copy,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -235,3 +244,45 @@ void do_length( Executor *ex, const Instruction & inst )
 	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", (double)len ) );
 }
+
+void do_copy( Executor *ex, const Instruction & inst )
+{
+	// vector or string to append to at top of stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+
+    DevaObject* copy;
+	if( o->Type() == sym_map )
+	{
+        // create a new map object that is a copy of the one we received,
+        map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>( *(o->map_val) );
+        copy = new DevaObject( "", m );
+	}
+    else if( o->Type() == sym_vector )
+    {
+        // create a new vector object that is a copy of the one we received,
+        vector<DevaObject>* v = new vector<DevaObject>( *(o->vec_val) );
+        copy = new DevaObject( "", v );
+    }
+	else
+	{
+        throw DevaRuntimeException( "Object for built-in function 'copy' is not a map or vector." );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( *copy );
+}
+

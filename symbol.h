@@ -69,6 +69,9 @@ string strip_symbol( const string& src, const string& c = " \t\r\n" );
 // variable, for instance)
 string strip_quotes( const string& src );
 
+// "un-escape" a string (e.g. turn '\t' into a tab character etc)
+string unescape( const string& src );
+
 // is this identifier a keyword?
 bool is_keyword( const string & s );
 
