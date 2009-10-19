@@ -1068,7 +1068,7 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 					//is.args[j].vec_val
 					break;
 				case sym_function:
-					file.write( (char*)&(inst.args[j].func_offset), sizeof( long ) );
+					file.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
 					break;
 				case sym_function_call:
 					// TODO: can this happen??
@@ -1138,9 +1138,7 @@ bool DeCompileFile( char const* filename )
 		double num_val;
 		char str_val[256] = {0};
 		long bool_val;
-//		map<DevaObject, DevaObject>* map_val;
-//		vector<DevaObject>* vec_val;
-		long func_offset;
+		size_t func_offset;
 		// read the byte for the opcode
 		unsigned char op;
 		file.read( (char*)&op, 1 );
@@ -1190,7 +1188,7 @@ bool DeCompileFile( char const* filename )
 					break;
 				case sym_function:
 					{
-					file.read( (char*)&func_offset, sizeof( long ) );
+					file.read( (char*)&func_offset, sizeof( size_t ) );
 					DevaObject ob( name, func_offset );
 					inst.args.push_back( ob );
 					break;

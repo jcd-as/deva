@@ -116,7 +116,7 @@ DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( 
 DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
 // 'function' type
-DevaObject::DevaObject( string nm, long offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
+DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
 // map type with the given map
 DevaObject::DevaObject( string nm, map<DevaObject, DevaObject>* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
@@ -301,7 +301,7 @@ long DevaObject::Size() const
 		// TODO: implement??? error??
 		return 0;
 	case sym_function:
-		return sz + sizeof( long );
+		return sz + sizeof( size_t );
 	case sym_null:
 		return sz + sizeof( long );
 	case sym_unknown:

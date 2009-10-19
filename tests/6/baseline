@@ -376,15 +376,15 @@ enter :
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 push : unknown: 'a'
-jmpf : num: '' = 59
+jmpf : function: '', offset = 51
 push : unknown: 'b'
 return : 
-jmp : num: '' = 109
+jmp : function: '', offset = 93
 push : unknown: 'b'
-jmpf : num: '' = 95
+jmpf : function: '', offset = 79
 push : unknown: 'a'
 return : 
-jmp : num: '' = 109
+jmp : function: '', offset = 93
 push : num: '' = 0
 return : 
 push : unknown: 'a'
@@ -392,7 +392,7 @@ new_vec: :
 push : unknown: 'a'
 push : string: '' = pushback
 vec_load : 
-push : function: '', offset = 158
+push : function: '', offset = 142
 push : num: '' = 5
 call : 
 pop : 
@@ -411,19 +411,19 @@ push : unknown: 'b'
 push : string: '' = foo
 vec_load : 
 store : 
-push : function: '', offset = 275
+push : function: '', offset = 259
 push : num: '' = 0
 push : num: '' = 1
 call : function_call: 'x'
 pop : 
-push : function: '', offset = 277
+push : function: '', offset = 261
 push : unknown: 'b'
 call : function_call: 'length'
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : num: '' = 503
+jmpf : function: '', offset = 479
 push : unknown: 'b'
 dup : num: '' = 1
 vec_load : boolean: '' = 1
@@ -436,11 +436,11 @@ store :
 push : unknown: 'io'
 push : string: '' = print
 vec_load : 
-push : function: '', offset = 475
-push : function: '', offset = 447
+push : function: '', offset = 455
+push : function: '', offset = 427
 push : unknown: 'key'
 call : function_call: 'str'
-push : function: '', offset = 471
+push : function: '', offset = 451
 push : unknown: 'value'
 call : function_call: 'str'
 add : 
@@ -448,12 +448,12 @@ call :
 pop : 
 push : num: '' = 1
 add : 
-jmp : num: '' = 312
+jmp : function: '', offset = 296
 pop : 
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : num: '' = 628
+jmpf : function: '', offset = 596
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -463,13 +463,13 @@ store :
 push : unknown: 'io'
 push : string: '' = print
 vec_load : 
-push : function: '', offset = 612
-push : function: '', offset = 610
+push : function: '', offset = 584
+push : function: '', offset = 582
 push : unknown: 'a'
 call : function_call: 'str'
 call : 
 pop : 
 leave : 
-jmp : num: '' = 505
+jmp : function: '', offset = 481
 halt : 
 compiled input.dv successfully

@@ -67,8 +67,8 @@ int main( int argc, char** argv )
 	// get the filename to compile
 	const char* input_filename = input.c_str();
 
-	Executor ex( input, debug );
-	if( !ex.RunFile() )
+	Executor ex( debug );
+	if( !ex.RunFile( input.c_str() ) )
 	{
 		cout << "Error executing " << input_filename << endl;
 		return -1;

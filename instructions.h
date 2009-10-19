@@ -52,7 +52,7 @@ class InstructionStream
 	vector<Instruction> instructions;
 
 	// file offset
-	long offset;
+	size_t offset;
 
 public:
 	InstructionStream() : offset( 0 )
@@ -64,7 +64,7 @@ public:
 	}
 	size_t size(){ return instructions.size(); }
 	Instruction & operator[]( size_t idx ){ return instructions[idx]; }
-	long Offset(){ return offset; }
+	size_t Offset(){ return offset; }
 };
 
 

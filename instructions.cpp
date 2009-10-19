@@ -204,7 +204,7 @@ void generate_line_num( iter_t const & i, InstructionStream & is )
 	{
 		line = ni.line;
 		file = ni.file;
-		is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (long)ni.line ) ) );
+		is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (size_t)ni.line ) ) );
 	}
 }
 
@@ -292,7 +292,7 @@ void gen_IL_func( iter_t const & i, InstructionStream & is )
 	// no-op
 }
 
-static vector<int> loop_stack;
+static vector<size_t> loop_stack;
 
 void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
@@ -316,29 +316,29 @@ void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	loop_stack.push_back( is.Offset() );
 }
 
-static vector<int> while_jmpf_stack;
+static vector<size_t> while_jmpf_stack;
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
 	generate_line_num( i, is );
 	// save the location for back-patching
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the condition's jmpf
-	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
+	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1 ) ) );
 }
 
 void post_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
 	// add the jump-to-start
-	int loop_loc = loop_stack.back();
+	size_t loop_loc = loop_stack.back();
 	loop_stack.pop_back();
 	generate_line_num( i, is );
-	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
+	is.push( Instruction( op_jmp, DevaObject( "", loop_loc ) ) );
 	// back-patch the jmpf
 	// pop the last 'loop' location off the 'loop stack'
 	int jmpf_loc = while_jmpf_stack.back();
 	while_jmpf_stack.pop_back();
 	// write the current *file* offset, not instruction stream!
-	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.Offset() ) );
+	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset() ) );
 }
 
 void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
@@ -418,7 +418,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// save the instruction location for back-patching
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the jmpf (which ends looping)
-	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
+	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1 ) ) );
 	// push 'table'
 	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
 	// dup 1
@@ -463,22 +463,22 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// add
 	is.push( Instruction( op_add ) );
 	// add the jump-to-start
-	int loop_loc = loop_stack.back();
+	size_t loop_loc = loop_stack.back();
 	loop_stack.pop_back();
-	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
+	is.push( Instruction( op_jmp, DevaObject( "", loop_loc ) ) );
 
 	// back-patch the jmpf
 	// pop the last 'loop' location off the 'loop stack'
-	int jmpf_loc = while_jmpf_stack.back();
+	size_t jmpf_loc = while_jmpf_stack.back();
 	while_jmpf_stack.pop_back();
 	// write the current *file* offset, not instruction stream!
-	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.Offset() ) );
+	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset() ) );
 
 	// pop to remove 'index' from the stack
 	is.push( Instruction( op_pop ) );
 }
 
-static vector<int> if_stack;
+static vector<size_t> if_stack;
 
 void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
 {
@@ -504,7 +504,7 @@ void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is )
 	if_stack.push_back( is.size() );
 	// generate a jump placeholder 
 	// for a jump *over* the child (statement|compound_statement)
-	is.push( Instruction( op_jmpf, DevaObject( "", -1.0 ) ) );
+	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1 ) ) );
 }
 
 void gen_IL_if_s( iter_t const & i, InstructionStream & is )
@@ -516,10 +516,10 @@ void gen_IL_if_s( iter_t const & i, InstructionStream & is )
 	if_stack.pop_back();
 	// back-patch the jumpf instruction
 	// write the current *file* offset, not instruction stream!
-	is[if_loc] = Instruction( op_jmpf, DevaObject( "", (double)is.Offset() ) );
+	is[if_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset() ) );
 }
 
-static vector<int> else_stack;
+static vector<size_t> else_stack;
 void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 {
 	generate_line_num( i, is );
@@ -527,7 +527,7 @@ void pre_gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	// write the current *file* offset, not instruction stream!
 	else_stack.push_back( is.size() );
 	// generate the jump placeholder
-	is.push( Instruction( op_jmp, DevaObject( "", -1.0 ) ) );
+	is.push( Instruction( op_jmp, DevaObject( "", (size_t)-1 ) ) );
 }
 
 void gen_IL_else_s( iter_t const & i, InstructionStream & is )
@@ -539,11 +539,11 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	else_stack.pop_back();
 	// back-patch the jumpf instruction
 	// write the current *file* offset, not instruction stream!
-	is[else_loc] = Instruction( op_jmp, DevaObject( "", (double)is.Offset() ) );
+	is[else_loc] = Instruction( op_jmp, DevaObject( "", is.Offset() ) );
 }
 
 // stack of fcn returns for back-patching return addresses in
-static vector<int> fcn_call_stack;
+static vector<size_t> fcn_call_stack;
 void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack )
 {
 	// simple variable and map/vector lookups handled by caller,
@@ -568,7 +568,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		int ret_addr_loc = fcn_call_stack.back();
 		fcn_call_stack.pop_back();
 		// write the current *file* offset, not instruction stream!
-		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (long)is.Offset() ) );
+		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset() ) );
 
 		// if the parent is the translation unit, a loop, or a compound_statement, the return
 		// value is not being used, emit a pop instruction to discard it
@@ -728,7 +728,7 @@ void pre_gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 	// *after* the call is made)
 	fcn_call_stack.push_back( is.size() );
 	// (prior to fcn arguments being pushed)
-	is.push( Instruction( op_push, DevaObject( "", (long)-1 ) ) );
+	is.push( Instruction( op_push, DevaObject( "", (size_t)-1 ) ) );
 }
 
 void gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
@@ -798,18 +798,18 @@ void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate break op with a reference to the start of the loop
-	int loop_loc = loop_stack.back();
+	size_t loop_loc = loop_stack.back();
 	generate_line_num( i, is );
-	is.push( Instruction( op_break, DevaObject( "", (double)loop_loc ) ) );
+	is.push( Instruction( op_break, DevaObject( "", loop_loc ) ) );
 }
 
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate jump to beginning of loop
-	int loop_loc = loop_stack.back();
+	size_t loop_loc = loop_stack.back();
 	generate_line_num( i, is );
 	// write the current *file* offset, not instruction stream!
-	is.push( Instruction( op_jmp, DevaObject( "", (double)loop_loc ) ) );
+	is.push( Instruction( op_jmp, DevaObject( "", (size_t)loop_loc ) ) );
 }
 
 void gen_IL_return_statement( iter_t const & i, InstructionStream & is )

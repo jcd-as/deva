@@ -719,7 +719,7 @@ push : unknown: 'swap'
 push : boolean: '' = 1
 store : 
 push : unknown: 'swap'
-jmpf : num: '' = 484
+jmpf : function: '', offset = 456
 enter : 
 push : unknown: 'swap'
 push : boolean: '' = 0
@@ -732,7 +732,7 @@ store :
 push : unknown: 'i'
 push : num: '' = 0
 gte : 
-jmpf : num: '' = 470
+jmpf : function: '', offset = 446
 enter : 
 push : unknown: 'j'
 push : num: '' = 1
@@ -740,7 +740,7 @@ store :
 push : unknown: 'j'
 push : unknown: 'i'
 lte : 
-jmpf : num: '' = 430
+jmpf : function: '', offset = 410
 enter : 
 push : unknown: 'a'
 push : unknown: 'j'
@@ -751,7 +751,7 @@ push : unknown: 'a'
 push : unknown: 'j'
 vec_load : 
 gt : 
-jmpf : num: '' = 390
+jmpf : function: '', offset = 374
 enter : 
 push : unknown: 'temp'
 push : unknown: 'a'
@@ -782,126 +782,126 @@ push : num: '' = 1
 add : 
 store : 
 leave : 
-jmp : num: '' = 196
+jmp : function: '', offset = 188
 push : unknown: 'i'
 push : unknown: 'i'
 push : num: '' = 1
 sub : 
 store : 
 leave : 
-jmp : num: '' = 144
+jmp : function: '', offset = 140
 leave : 
-jmp : num: '' = 76
+jmp : function: '', offset = 76
 push : unknown: 'a'
 return : 
 push : unknown: 'l'
 new_vec: : 
-push : function: '', offset = 533
+push : function: '', offset = 505
 push : unknown: 'l'
 push : num: '' = 2
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 570
+push : function: '', offset = 542
 push : unknown: 'l'
 push : num: '' = 1
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 607
+push : function: '', offset = 579
 push : unknown: 'l'
 push : num: '' = 4
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 644
+push : function: '', offset = 616
 push : unknown: 'l'
 push : num: '' = 3
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 681
+push : function: '', offset = 653
 push : unknown: 'l'
 push : num: '' = 6
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 718
+push : function: '', offset = 690
 push : unknown: 'l'
 push : num: '' = 5
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 755
+push : function: '', offset = 727
 push : unknown: 'l'
 push : num: '' = 8
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 792
+push : function: '', offset = 764
 push : unknown: 'l'
 push : num: '' = 7
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 829
+push : function: '', offset = 801
 push : unknown: 'l'
 push : num: '' = 10
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 866
+push : function: '', offset = 838
 push : unknown: 'l'
 push : num: '' = 9
 call : function_call: 'append'
 pop : 
-push : function: '', offset = 900
+push : function: '', offset = 872
 push : string: '' = un-sorted:
 call : function_call: 'print'
 pop : 
-push : function: '', offset = 902
+push : function: '', offset = 874
 push : unknown: 'l'
 call : function_call: 'length'
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : num: '' = 1053
+jmpf : function: '', offset = 1017
 push : unknown: 'l'
 dup : num: '' = 1
 vec_load : 
 push : unknown: 'i'
 swap : 
 store : 
-push : function: '', offset = 1025
+push : function: '', offset = 993
 push : unknown: 'i'
 call : function_call: 'print'
 pop : 
 push : num: '' = 1
 add : 
-jmp : num: '' = 937
+jmp : function: '', offset = 909
 pop : 
 push : unknown: 'n'
-push : function: '', offset = 1088
+push : function: '', offset = 1052
 push : unknown: 'l'
 call : function_call: 'bubble_sort'
 store : 
-push : function: '', offset = 1119
+push : function: '', offset = 1083
 push : string: '' = sorted:
 call : function_call: 'print'
 pop : 
-push : function: '', offset = 1121
+push : function: '', offset = 1085
 push : unknown: 'n'
 call : function_call: 'length'
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : num: '' = 1272
+jmpf : function: '', offset = 1228
 push : unknown: 'n'
 dup : num: '' = 1
 vec_load : 
 push : unknown: 'i'
 swap : 
 store : 
-push : function: '', offset = 1244
+push : function: '', offset = 1204
 push : unknown: 'i'
 call : function_call: 'print'
 pop : 
 push : num: '' = 1
 add : 
-jmp : num: '' = 1156
+jmp : function: '', offset = 1120
 pop : 
 halt : 
 compiled input.dv successfully

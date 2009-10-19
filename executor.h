@@ -25,8 +25,6 @@ class Executor
 private:
 	// private data
 	////////////////////////////////////////////////////
-	// the file to execute
-	string filename;
 
 	// in debug_mode?
 	bool debug_mode;
@@ -35,10 +33,10 @@ private:
 	vector<DevaObject> stack;
 
 	// the current location in the file ("instruction pointer")
-	long ip;
+	size_t ip;
 
-	// current file and line number. only tracked if compiled
-	// with debug info
+	// currently executing file and line number. 
+	// (only tracked if compiled with debug info)
 	string file;
 	int line;
 
@@ -63,7 +61,6 @@ private:
 	{
 		void AddObject( DevaObject* ob )
 		{
-//			back()->insert( pair<string, DevaObject*>(ob->name, ob) );
 			back()->AddObject( ob );
 		}
 		void Push()
@@ -79,13 +76,19 @@ private:
 	};
 	ScopeTable scopes;
 
-	// the bytecode itself (contents of the file):
+	// the various pieces of bytecode (file, dynamically loaded pieces etc)
+	vector<unsigned char*> code_blocks;
+
+	// the current bytecode (current code_block we're working in/with)
 	unsigned char *code;
 
 	// private helper functions:
 	////////////////////////////////////////////////////
 	// load the bytecode from the file
-	void LoadByteCode();
+	unsigned char* LoadByteCode( const char* const filename );
+	// fixup all the offsets in 'function' symbols (fcns, returns, jumps) to
+	// pointers in actual memory
+	void FixupOffsets();
 	// locate a symbol in the symbol table(s)
 	DevaObject* find_symbol( const DevaObject & ob );
 	// find, recurring while the object is a variable (name)
@@ -99,6 +102,8 @@ private:
 	void read_byte( unsigned char & l );
 	// read a long
 	void read_long( long & l );
+	// read a size_t
+	void read_size_t( size_t & l );
 	// read a double
 	void read_double( double & d );
 
@@ -200,10 +205,10 @@ private:
 public:
 	// public methods
 	////////////////////////////////////////////////////
-	Executor( string fname, bool debug_mode = false );
+	Executor( bool debug_mode = false );
 	~Executor();
 
-	bool RunFile();
+	bool RunFile( const char* const filename );
 
 	// be-friend the built-in functions
 	friend void do_print( Executor *ex, const Instruction & inst );

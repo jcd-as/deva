@@ -58,7 +58,7 @@ DevaObject* Executor::find_symbol_recur( const DevaObject & ob )
 // peek at what the next instruction is (doesn't modify ip)
 Opcode Executor::PeekInstr()
 {
-	return (Opcode)(*(code + ip));
+	return (Opcode)(*((unsigned char*)ip));
 }
 
 // read a string from *ip into s
@@ -66,11 +66,11 @@ Opcode Executor::PeekInstr()
 void Executor::read_string( char* & s )
 {
 	// determine how much space we need
-	long len = strlen( (char*)(code + ip) );
+	long len = strlen( (char*)(ip) );
 	// allocate it
 	s = new char[len+1];
 	// copy the value
-	memcpy( s, (char*)(code + ip), len );
+	memcpy( s, (char*)(ip), len );
 	// null-termination
 	s[len] = '\0';
 	// move ip forward
@@ -80,21 +80,28 @@ void Executor::read_string( char* & s )
 // read a byte
 void Executor::read_byte( unsigned char & b )
 {
-	memcpy( (void*)&b, (char*)(code + ip), sizeof( unsigned char ) );
+	memcpy( (void*)&b, (char*)(ip), sizeof( unsigned char ) );
 	ip += sizeof( unsigned char );
 }
 
 // read a long
 void Executor::read_long( long & l )
 {
-	memcpy( (void*)&l, (char*)(code + ip), sizeof( long ) );
+	memcpy( (void*)&l, (char*)(ip), sizeof( long ) );
 	ip += sizeof( long );
+}
+
+// read a size_t
+void Executor::read_size_t( size_t & l )
+{
+	memcpy( (void*)&l, (char*)(ip), sizeof( size_t ) );
+	ip += sizeof( size_t );
 }
 
 // read a double
 void Executor::read_double( double & d )
 {
-	memcpy( (void*)&d, (char*)(code + ip), sizeof( double ) );
+	memcpy( (void*)&d, (char*)(ip), sizeof( double ) );
 	ip += sizeof( double );
 }
 
@@ -168,13 +175,15 @@ bool Executor::evaluate_object_as_boolean( DevaObject & o )
 }
 
 // load the bytecode from the file
-void Executor::LoadByteCode()
+unsigned char* Executor::LoadByteCode( const char* const filename )
 {
 	// open the file for reading
 	ifstream file;
-	file.open( filename.c_str(), ios::binary );
+	file.open( filename, ios::binary );
 	if( file.fail() )
 		throw DevaRuntimeException( "Unable to open input file for read." );
+
+	unsigned char* bytecode = NULL;
 
 	// read the header
 	char deva[5] = {0};
@@ -198,13 +207,92 @@ void Executor::LoadByteCode()
 	len -= 16;
 	// (seek back to the end of the header)
 	buf->pubseekpos( 16, ios::in );
-	code = new unsigned char[len];
+	bytecode = new unsigned char[len];
 
 	// read the file into the byte code array
-	file.read( (char*)code, len );
+	file.read( (char*)bytecode, len );
 
 	// close the file
 	file.close();
+
+	return bytecode;
+}
+
+void Executor::FixupOffsets()
+{
+	char* name;
+	// read the instructions
+	while( true )
+	{
+		name = NULL;
+
+		// read the byte for the opcode
+		unsigned char op;
+		read_byte( op );
+		// stop when we get to the halt instruction at the end of the buffer
+		if( op == op_halt )
+			break;
+
+		// for each argument:
+		unsigned char type;
+		read_byte( type );
+		while( type != sym_end )
+		{
+			// read the name of the arg
+			read_string( name );
+			// read the value
+			switch( (SymbolType)type )
+			{
+				case sym_number:
+					{
+					// skip double
+					ip += sizeof( double );
+					break;
+					}
+				case sym_string:
+					{
+					// variable length, null-terminated
+					// skip string
+					long len = strlen( (char*)(ip) );
+					ip += len+1;
+					break;
+					}
+				case sym_boolean:
+					{
+					// skip long
+					ip += sizeof( long );
+					break;
+					}
+				case sym_function:
+					{
+					// read a size_t to get the offset
+					size_t func_offset;
+					memcpy( (void*)&func_offset, (char*)(ip), sizeof( size_t ) );
+					// calculate the actual address
+					size_t address = (size_t)code + func_offset;
+					// 'fix-up' the 'bytecode' with the actual address
+					size_t* p_add = (size_t*)ip;
+					*p_add = address;
+					ip += sizeof( size_t );
+					break;
+					}
+				case sym_null:
+					{
+					// skip a long
+					ip += sizeof( long );
+					break;
+					}
+				default:
+					// TODO: throw error
+					break;
+			}
+			delete [] name;
+			// read the type of the next arg
+			// default to sym_end to drop out of loop if we can't read a byte
+			type = (unsigned char)sym_end;
+			read_byte( type );
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -287,7 +375,7 @@ void Executor::Defun( Instruction const & inst )
 		throw DevaICE( "Invalid defun opcode argument." );
 	// create a new entry in the local symbol table
 	// (offset to HERE (function start))
-	long offset = ip;
+	size_t offset = ip;
 	// also the same as: long offset = inst.args[0].func_offset + inst.args[0].Size() + 2;
 	DevaObject* fcn = new DevaObject( inst.args[0].name, offset );
 	scopes.AddObject( fcn );
@@ -562,23 +650,23 @@ void Executor::Line_num( Instruction const & inst )
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
 {
-	// one arg: the offset to jump to (as a number type)
+	// one arg: the offset to jump to (as a 'function'/offset/address type)
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_number )
+	if( dest.Type() != sym_function )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 	// jump execution to the function offset
-	ip = (long)dest.num_val;
+	ip = dest.func_offset;
 }
 // 14 jump on top of stack evaluating to false 
 void Executor::Jmpf( Instruction const & inst )
 {
-	// one arg: the offset to jump to (as a number type)
+	// one arg: the offset to jump to (as a 'function'/offset/address type)
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_number )
+	if( dest.Type() != sym_function )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 
 	// get the value on the top of the stack
@@ -599,7 +687,7 @@ void Executor::Jmpf( Instruction const & inst )
 	if( evaluate_object_as_boolean( o ) )
 		return;
 	// else jump to the offset in the argument
-	ip = (long)dest.num_val;
+	ip = dest.func_offset;
 }
 // 15 == compare top two values on stack
 void Executor::Eq( Instruction const & inst )
@@ -1243,7 +1331,7 @@ void Executor::Call( Instruction const & inst )
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
 
 		// get the offset for the function
-		long offset = fcn->func_offset;
+		size_t offset = fcn->func_offset;
 		// jump execution to the function offset
 		ip = offset;
 	}
@@ -1277,7 +1365,7 @@ void Executor::Return( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid return destination on stack when executing return instruction" );
 	stack.push_back( ret );
 	// jump to the return location
-	long offset = ob.func_offset;
+	size_t offset = ob.func_offset;
 	ip = offset;
 	// pop this scope (same as 'leave' instruction)
 	scopes.Pop();
@@ -1287,16 +1375,16 @@ void Executor::Break( Instruction const & inst )
 {
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid 'break' instruction. No arguments." );
-	if( inst.args[0].Type() != sym_number )
+	if( inst.args[0].Type() != sym_function )
 		throw DevaICE( "Invalid 'break' instruction. Argument is non-numeric." );
 
 	vector<int> enter_stack;
-	long original_ip = ip;
+	size_t original_ip = ip;
 
 	// set the ip back to the start of the loop, then scan forward looking 
 	// and count the enter/leave instructions so we know how many leaves we need to
 	// execute to get out of the loop
-	ip = (long)inst.args[0].num_val;
+	ip = inst.args[0].func_offset;
 	while( ip < original_ip )
 	{
 		switch( PeekInstr() )
@@ -1535,7 +1623,7 @@ Instruction Executor::NextInstr()
 	double num_val;
 	char* str_val = NULL;
 	long bool_val;
-	long func_offset;
+	size_t func_offset;
 	// read the byte for the opcode
 	unsigned char op;
 	read_byte( op );
@@ -1583,9 +1671,9 @@ Instruction Executor::NextInstr()
 				break;
 			case sym_function:
 				{
-				// 32 bit long
-				read_long( func_offset );
-				DevaObject ob( name, (long)func_offset );
+				// size_t
+				read_size_t( func_offset );
+				DevaObject ob( name, (size_t)func_offset );
 				inst.args.push_back( ob );
 				break;
 				}
@@ -1627,22 +1715,33 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( string fname, bool dbg ) : filename( fname ), debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 )
+Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 )
 {}
 
 Executor::~Executor()
 {
-	if( code )
-		delete [] code;
+	for( vector<unsigned char*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
+	{
+		delete [] *i;
+		*i = NULL;
+	}
 }
 
-bool Executor::RunFile()
+bool Executor::RunFile( const char* const filename )
 {
 	try
 	{
 		// load the file into memory
-		LoadByteCode();
+		code = LoadByteCode( filename );
+		code_blocks.push_back( code );
+
+		// fix-up the offsets into actual machine addresses
+		ip = (size_t)code;
+		FixupOffsets();
+		ip = (size_t)code;
 		
+		// TODO: this has to move out of RunFile otherwise the scope will be
+		// file, not global (into the constructor??)
 		// create a file-level ("global") scope
 		Enter( Instruction( op_enter ) );
 
@@ -1657,6 +1756,8 @@ bool Executor::RunFile()
 				break;
 		}
 
+		// TODO: this has to move out of RunFile otherwise the scope will be
+		// file, not global (into the destructor??)
 		// exit the file-level ("global") scope
 		Leave( Instruction( op_leave ) );
 	}

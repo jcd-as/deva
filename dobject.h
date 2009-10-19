@@ -28,7 +28,7 @@ struct DevaObject : public SymbolInfo
 		bool bool_val;
 //		map<DevaObject, DevaObject>* map_val;
 //		vector<DevaObject>* vec_val;
-		long func_offset;	// offset into instruction stream to function start
+		size_t func_offset;	// offset into instruction stream to function start
 	};
 	// objects with destructors not allowed in unions. bleh
 	smart_ptr<map<DevaObject, DevaObject> > map_val;
@@ -49,7 +49,7 @@ struct DevaObject : public SymbolInfo
 	// boolean type
 	DevaObject( string nm, bool b );
 	// 'function' (incl return/jump target) type
-	DevaObject( string nm, long offs );
+	DevaObject( string nm, size_t offs );
     // map type with the given map
     DevaObject( string nm, map<DevaObject, DevaObject>* m );
     // vector type with the given vector

@@ -90,7 +90,6 @@ void check_while_s( iter_t const & i )
 	NodeInfo condition = i->children[0].value.value();
 	if( i->children[0].value.id() == assignment_op_id )
 		throw DevaSemanticException( "Illegal assignment inside 'while' conditional", condition );
-//	NodeInfo statement = i->children[1].value.value();
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
 		&& condition.type != null_type )
@@ -127,7 +126,6 @@ void check_if_s( iter_t const & i )
 	NodeInfo condition = i->children[0].value.value();
 	if( i->children[0].value.id() == assignment_op_id )
 		throw DevaSemanticException( "Illegal assignment inside 'if' conditional", condition );
-//	NodeInfo statement = i->children[1].value.value();
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
 		&& condition.type != null_type )

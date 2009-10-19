@@ -1,0 +1,9 @@
+# vector test
+v = [];
+v2 = [];
+append( v2, "foo" );
+append( v, v2 );
+
+print( v );
+print( v2 );
+print( v[0] );
