@@ -265,14 +265,18 @@ void Executor::FixupOffsets()
 					}
 				case sym_function:
 					{
-					// read a size_t to get the offset
-					size_t func_offset;
-					memcpy( (void*)&func_offset, (char*)(ip), sizeof( size_t ) );
-					// calculate the actual address
-					size_t address = (size_t)code + func_offset;
-					// 'fix-up' the 'bytecode' with the actual address
-					size_t* p_add = (size_t*)ip;
-					*p_add = address;
+					// don't fix-up line numbers
+					if( op != op_line_num )
+					{
+						// read a size_t to get the offset
+						size_t func_offset;
+						memcpy( (void*)&func_offset, (char*)(ip), sizeof( size_t ) );
+						// calculate the actual address
+						size_t address = (size_t)code + func_offset;
+						// 'fix-up' the 'bytecode' with the actual address
+						size_t* p_add = (size_t*)ip;
+						*p_add = address;
+					}
 					ip += sizeof( size_t );
 					break;
 					}
@@ -1751,6 +1755,16 @@ Executor::~Executor()
 	}
 }
 
+void Executor::StartGlobalScope()
+{
+	Enter( Instruction( op_enter ) );
+}
+
+void Executor::EndGlobalScope()
+{
+	Leave( Instruction( op_leave ) );
+}
+
 bool Executor::RunFile( const char* const filename )
 {
 	try
@@ -1764,11 +1778,6 @@ bool Executor::RunFile( const char* const filename )
 		FixupOffsets();
 		ip = (size_t)code;
 		
-		// TODO: this has to move out of RunFile otherwise the scope will be
-		// file, not global (into the constructor??)
-		// create a file-level ("global") scope
-		Enter( Instruction( op_enter ) );
-
 		// read the instructions
 		while( true )
 		{
@@ -1779,11 +1788,6 @@ bool Executor::RunFile( const char* const filename )
 			if( !DoInstr( inst ) )
 				break;
 		}
-
-		// TODO: this has to move out of RunFile otherwise the scope will be
-		// file, not global (into the destructor??)
-		// exit the file-level ("global") scope
-		Leave( Instruction( op_leave ) );
 	}
 	catch( DevaICE & e )
 	{

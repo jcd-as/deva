@@ -208,6 +208,8 @@ public:
 	Executor( bool debug_mode = false );
 	~Executor();
 
+	void StartGlobalScope();
+	void EndGlobalScope();
 	bool RunFile( const char* const filename );
 
 	// be-friend the built-in functions

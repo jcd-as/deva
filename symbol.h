@@ -32,12 +32,10 @@ protected:
 public:
     // is this a constant?
 	bool is_const;
-	// is this a function argument?
-	bool is_argument;
 
-    SymbolInfo() : type( sym_unknown ), is_const( false ), is_argument( false )
+    SymbolInfo() : type( sym_unknown ), is_const( false )
     { }
-    SymbolInfo( SymbolType t ) : type( t ), is_const( false ), is_argument( false )
+    SymbolInfo( SymbolType t ) : type( t ), is_const( false )
     { }
 
 	SymbolType Type() const { return type; }

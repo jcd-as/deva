@@ -1,4 +1,4 @@
 def foo()
 {
-	print( "foo imported!" );	
+	print( "foo.dv imported and foo() called!" );	
 }

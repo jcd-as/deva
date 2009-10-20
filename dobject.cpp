@@ -19,7 +19,6 @@ DevaObject::DevaObject( const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 	name = o.name;
 	type = o.type;
 	is_const = o.is_const;
-	is_argument = o.is_argument;
 	switch( type )
 	{
 	case sym_number:
@@ -63,7 +62,6 @@ DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_va
 	name = nm;
 	type = o.type;
 	is_const = o.is_const;
-	is_argument = o.is_argument;
 	switch( type )
 	{
 	case sym_number:
@@ -130,7 +128,6 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 	type = t;
 	name = nm;
 	is_const = false;
-	is_argument = false;
 	switch( t )
 	{
 	case sym_number:
@@ -183,7 +180,6 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 	name = o.name;
 	type = o.type;
 	is_const = o.is_const;
-	is_argument = o.is_argument;
 	switch( type )
 	{
 	case sym_number:

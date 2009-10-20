@@ -175,8 +175,6 @@ int main( int argc, char** argv )
 				cout << "\t" << j->first;
 				if( j->second->is_const )
 					cout << " : constant";
-				if( j->second->is_argument )
-					cout << " : argument";
 				if( j->second->Type() == sym_function )
 					cout << " : function";
 				cout << endl;

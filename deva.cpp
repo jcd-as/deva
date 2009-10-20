@@ -68,11 +68,14 @@ int main( int argc, char** argv )
 	const char* input_filename = input.c_str();
 
 	Executor ex( debug );
+	ex.StartGlobalScope();
 	if( !ex.RunFile( input.c_str() ) )
 	{
+		ex.EndGlobalScope();
 		cout << "Error executing " << input_filename << endl;
 		return -1;
 	}
+	ex.EndGlobalScope();
 
 	// dump ref count map if we're in debug mode
 	if( debug )

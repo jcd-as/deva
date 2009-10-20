@@ -548,6 +548,7 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 void gen_IL_import( iter_t const & i, InstructionStream & is )
 {
 	string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+	generate_line_num( i, is );
 	is.push( Instruction( op_import, DevaObject( "", name ) ) );
 }
 
