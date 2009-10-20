@@ -10,7 +10,6 @@
 
 #include "executor.h"
 #include "builtins.h"
-#include <cstring>
 
 
 // private utility functions
@@ -29,10 +28,12 @@ ostream & operator << ( ostream & os, Instruction & inst )
 }
 
 // locate a symbol
-DevaObject* Executor::find_symbol( const DevaObject & ob )
+DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL*/ )
 {
+	if( !scopes )
+		scopes = current_scopes;
 	// check each scope on the stack
-	for( vector<Scope*>::reverse_iterator i = scopes.rbegin(); i < scopes.rend(); ++i )
+	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i < scopes->rend(); ++i )
 	{
 		// get the scope object
 		Scope* p = *i;
@@ -46,14 +47,14 @@ DevaObject* Executor::find_symbol( const DevaObject & ob )
 
 // locate a symbol, recursively continuing to look as long as variable names
 // (sym_unknown) are found instead of values
-DevaObject* Executor::find_symbol_recur( const DevaObject & ob )
-{
-	DevaObject* o = find_symbol( ob );
-	if( !o )
-		return o;
-	if( o->Type() == sym_unknown )
-		return find_symbol_recur( *o );
-}
+//DevaObject* Executor::find_symbol_recur( const DevaObject & ob )
+//{
+//	DevaObject* o = find_symbol( ob );
+//	if( !o )
+//		return o;
+//	if( o->Type() == sym_unknown )
+//		return find_symbol_recur( *o );
+//}
 
 // peek at what the next instruction is (doesn't modify ip)
 Opcode Executor::PeekInstr()
@@ -358,7 +359,7 @@ void Executor::Store( Instruction const & inst )
 	if( !ob )
 	{
 		ob = new DevaObject( lhs.name, rhs );
-		scopes.AddObject( ob );
+		current_scopes->AddObject( ob );
 	}
 	//  set its value to the rhs
 	else
@@ -382,7 +383,7 @@ void Executor::Defun( Instruction const & inst )
 	size_t offset = ip;
 	// also the same as: long offset = inst.args[0].func_offset + inst.args[0].Size() + 2;
 	DevaObject* fcn = new DevaObject( inst.args[0].name, offset );
-	scopes.AddObject( fcn );
+	current_scopes->AddObject( fcn );
 	// skip the function body
 	Opcode op = PeekInstr();
 	while( op != op_return )
@@ -415,10 +416,10 @@ void Executor::Defarg( Instruction const & inst )
 	// check for the symbol in the immediate (current) scope and makre sure
 	// we're not redef'ing the same argument (shouldn't happen, the semantic
 	// checker looks for this)
-	if( scopes.back()->count( inst.args[0].name ) != 0 )
+	if( current_scopes->back()->count( inst.args[0].name ) != 0 )
 		throw DevaICE( "Argument with this name already exists." );
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
-	scopes.AddObject( val );
+	current_scopes->AddObject( val );
 }
 // 6 dup a stack item from 'arg' position to the top of the stack
 // (e.g. 'dup 0' duplicates the item on top of the stack)
@@ -443,7 +444,7 @@ void Executor::New_map( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid left-hand type for assignment to new map object." );
 	// create a new map object and add it to the current scope
 	DevaObject *mp = new DevaObject( o.name, sym_map );
-	scopes.AddObject( mp );
+	current_scopes->AddObject( mp );
 }
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
@@ -456,7 +457,7 @@ void Executor::New_vec( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid left-hand type for assignment to new vector object." );
 	// create a new map object and add it to the current scope
 	DevaObject *vec = new DevaObject( o.name, sym_vector );
-	scopes.AddObject( vec );
+	current_scopes->AddObject( vec );
 }
 // 9 get item from vector
 // (or map, can't tell at compile time what it will be)
@@ -483,13 +484,38 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Invalid type for index/key." );
 		idxkey = *o;
 	}
-	// find the map/vector from the symbol table
+	// find the map/vector from the current symbol table (namespace)
 	DevaObject *table;
 	if( vecmap.Type() == sym_unknown )
 	{
 		table = find_symbol( vecmap );
+		// if it wasn't found in the current scope table, see if it is a
+		// namespace
 		if( !table )
-			throw DevaRuntimeException( "Attempt to reference undefined map or vector." );
+		{
+			ScopeTable* ns = NULL;
+			map<string, ScopeTable>::iterator it;
+			it = namespaces.find( vecmap.name );
+			// if we found the namespace
+			if( it != namespaces.end() )
+			{
+				ns = &(it->second);
+				// look up the key in it (key should be a string)
+				if( idxkey.Type() != sym_string )
+					throw DevaICE( "Trying to look-up a non-string key in a namespace." );
+				DevaObject key( idxkey.str_val, sym_unknown );
+				DevaObject* obj = find_symbol( key, ns );
+				if( !obj )
+					throw DevaRuntimeException( "Attempt to reference undefined object in namespace." );
+				// push it onto the stack as our return value
+				DevaObject o( *obj );
+				stack.push_back( o );
+				// done
+				return;
+			}
+		}
+		if( !table )
+			throw DevaRuntimeException( "Attempt to reference undefined map, vector or namespace." );
 	}
 	else
         // TODO: does the vecmap need to be entered into a scope somewhere??
@@ -1357,9 +1383,9 @@ void Executor::Return( Instruction const & inst )
 		DevaObject* rv = find_symbol( ret );
 		if( !rv )
 			throw DevaRuntimeException( "Invalid object for return value." );
-		if( scopes.size() < 2 )
+		if( current_scopes->size() < 2 )
 			throw DevaICE( "No scope to return to!" );
-		scopes[scopes.size()-2]->AddObject( rv );
+		(*current_scopes)[current_scopes->size()-2]->AddObject( rv );
 	}
 
 	// pop the return location off the top of the stack
@@ -1372,7 +1398,7 @@ void Executor::Return( Instruction const & inst )
 	size_t offset = ob.func_offset;
 	ip = offset;
 	// pop this scope (same as 'leave' instruction)
-	scopes.Pop();
+	current_scopes->Pop();
 }
 // 33 break out of loop, respecting scope (enter/leave)
 void Executor::Break( Instruction const & inst )
@@ -1449,14 +1475,14 @@ void Executor::Break( Instruction const & inst )
 // 34 enter new scope
 void Executor::Enter( Instruction const & inst )
 {
-	scopes.Push();
+	current_scopes->Push();
 }
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
-	if( scopes.size() == 0 )
+	if( current_scopes->size() == 0 )
 		throw DevaRuntimeException( "Invalid Leave operation. No scopes to exit." );
-	scopes.Pop();
+	current_scopes->Pop();
 }
 // 36 no op
 void Executor::Nop( Instruction const & inst )
@@ -1484,10 +1510,21 @@ void Executor::Import( Instruction const & inst )
 	// 	- sub-directory in 'DEVAPATH' env variable
 	
 	// for now, just run the file by short name with ".dvc" extension
-	mod += ".dvc";
+	string file( mod + ".dvc" );
+	// save the ip
 	size_t orig_ip = ip;
-	RunFile( mod.c_str() );
+	// save the current scope table
+	ScopeTable* orig_scopes = current_scopes;
+	// create a new namespace and set it at the current scope
+	namespaces[mod] = ScopeTable();
+	current_scopes = &namespaces[mod];
+	// create a 'file/module' level scope for the namespace
+	current_scopes->Push();
+	RunFile( file.c_str() );
+	// restore the ip
 	ip = orig_ip;
+	// restore the current scope table
+	current_scopes = orig_scopes;
 }
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
@@ -1743,7 +1780,7 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 )
+Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 ), current_scopes( NULL )
 {}
 
 Executor::~Executor()
@@ -1757,6 +1794,7 @@ Executor::~Executor()
 
 void Executor::StartGlobalScope()
 {
+	current_scopes = &global_scopes;
 	Enter( Instruction( op_enter ) );
 }
 

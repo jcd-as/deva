@@ -16,6 +16,7 @@
 #include "instructions.h"
 #include <fstream>
 #include <vector>
+#include <cstring>
 
 using namespace std;
 
@@ -73,8 +74,23 @@ private:
 			delete back();
 			pop_back();
 		}
+		~ScopeTable()
+		{
+			// it is normal for 'namespace' scope tables (i.e. all but the
+			// global scope table) to have ONE scope, the module scope, left at
+			// destruction
+			if( size() > 1 )
+				throw DevaRuntimeException( "ScopeTable not empty." );
+			else if( size() == 1 )
+			{
+				delete back();
+				pop_back();
+			}
+		}
 	};
-	ScopeTable scopes;
+	ScopeTable global_scopes;
+	map<string, ScopeTable> namespaces;
+	ScopeTable *current_scopes;
 
 	// the various pieces of bytecode (file, dynamically loaded pieces etc)
 	vector<unsigned char*> code_blocks;
@@ -89,8 +105,8 @@ private:
 	// fixup all the offsets in 'function' symbols (fcns, returns, jumps) to
 	// pointers in actual memory
 	void FixupOffsets();
-	// locate a symbol in the symbol table(s)
-	DevaObject* find_symbol( const DevaObject & ob );
+	// locate a symbol in the symbol table(namespace)
+	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 	// find, recurring while the object is a variable (name)
 	DevaObject* find_symbol_recur( const DevaObject & ob );
 	// peek at what the next instruction is (doesn't modify ip)

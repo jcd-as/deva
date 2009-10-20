@@ -98,7 +98,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1255903825" priority="high" time="1255839820">make 'const' work
 <comment>compiler rejects changes to consts (compile-time, not run-time). no instructions specific to const-ness, compile-time only information
 </comment></note><note priority="veryhigh" time="1255846573">modules and 'import' keyword
-</note><note priority="high" time="1255897503">printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
+<note priority="veryhigh" time="1256082030">namespace support, where each module is a namespace
+</note></note><note priority="high" time="1255897503">printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
 </note><note priority="veryhigh" time="1255897957">eval() builtin to compile code blocks at run-time
 </note><note priority="veryhigh" time="1255897996">modify 'deva' executable to compile and run if passed a .dv file instead of .dvc
+</note><note priority="high" time="1256007195">import() builtin that replicates 'import' statement, but accepts paths/filenames instead of module names
 </note></todo>

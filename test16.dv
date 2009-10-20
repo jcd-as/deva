@@ -5,5 +5,5 @@ def bar()
 	print( "test16.dv returned to and code executing here" );
 }
 
-foo();
+foo.foofcn();
 bar();
