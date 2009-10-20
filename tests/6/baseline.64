@@ -376,15 +376,15 @@ enter :
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 push : unknown: 'a'
-jmpf : num: '' = 63
+jmpf : function: '', offset = 63
 push : unknown: 'b'
 return : 
-jmp : num: '' = 113
+jmp : function: '', offset = 113
 push : unknown: 'b'
-jmpf : num: '' = 99
+jmpf : function: '', offset = 99
 push : unknown: 'a'
 return : 
-jmp : num: '' = 113
+jmp : function: '', offset = 113
 push : num: '' = 0
 return : 
 push : unknown: 'a'
@@ -423,7 +423,7 @@ push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : num: '' = 535
+jmpf : function: '', offset = 535
 push : unknown: 'b'
 dup : num: '' = 1
 vec_load : boolean: '' = 1
@@ -448,12 +448,12 @@ call :
 pop : 
 push : num: '' = 1
 add : 
-jmp : num: '' = 328
+jmp : function: '', offset = 328
 pop : 
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : num: '' = 668
+jmpf : function: '', offset = 668
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -470,6 +470,6 @@ call : function_call: 'str'
 call : 
 pop : 
 leave : 
-jmp : num: '' = 537
+jmp : function: '', offset = 537
 halt : 
 compiled input.dv successfully

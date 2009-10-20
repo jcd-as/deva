@@ -51,6 +51,7 @@ enum Opcode
 	op_leave,		// 35 leave scope
 	op_nop,			// 36 no op
 	op_halt,		// 37 finish program, 0 or 1 ops (return code)
+	op_import,		// 38 import a module. 1 arg: module name
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

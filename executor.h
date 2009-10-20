@@ -182,18 +182,18 @@ private:
 	void Call( Instruction const & inst );
 	// 32 pop the return address and unconditionally jump to it
 	void Return( Instruction const & inst );
-	// 33 as return, but stack holds return value and then (at top) return address
-	void Returnv( Instruction const & inst );
-	// 34 break out of loop, respecting scope (enter/leave)
+	// 33 break out of loop, respecting scope (enter/leave)
 	void Break( Instruction const & inst );
-	// 35 enter new scope
+	// 34 enter new scope
 	void Enter( Instruction const & inst );
-	// 36 leave scope
+	// 35 leave scope
 	void Leave( Instruction const & inst );
-	// 37 no op
+	// 36 no op
 	void Nop( Instruction const & inst );
-	// 38 finish program, 0 or 1 ops (return code)
+	// 37 finish program, 0 or 1 ops (return code)
 	void Halt( Instruction const & inst );
+	// 38 import a module, 1 arg: module name
+	void Import( Instruction const & inst );
 	// illegal operation, if exists there was a compiler error/fault
 	void Illegal( Instruction const & inst );
 	///////////////////////////////////////////////////////////

@@ -137,6 +137,14 @@ void check_else_s( iter_t const & i )
 	// 1 child: statement|compound_statement
 }
 
+void check_import_s( iter_t const & i )
+{
+	// 2 children: id and semi-colon
+	NodeInfo module = i->children[0].value.value();
+	if( module.type != variable_type )
+		throw DevaSemanticException( "'import' statement missing module identifier", module );
+}
+
 void check_identifier( iter_t const & i )
 {
 	string s = i->value.value().sym;

@@ -12,6 +12,7 @@ extern parser_id top_level_statement_id;
 extern parser_id statement_id;
 extern parser_id if_statement_id;
 extern parser_id else_statement_id;
+extern parser_id import_statement_id;
 extern parser_id while_statement_id;
 extern parser_id for_statement_id;
 extern parser_id jump_statement_id;

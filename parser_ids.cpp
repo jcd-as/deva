@@ -11,6 +11,7 @@ parser_id top_level_statement_id;
 parser_id statement_id;
 parser_id if_statement_id;
 parser_id else_statement_id;
+parser_id import_statement_id;
 parser_id while_statement_id;
 parser_id for_statement_id;
 parser_id jump_statement_id;

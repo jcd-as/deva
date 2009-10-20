@@ -233,6 +233,11 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_else_s( i );
 	}
+	else if( i->value.id() == parser_id( import_statement_id ) )
+	{
+		walk_children( i );
+		check_import_s( i );
+	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
@@ -710,6 +715,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// always a child of an 'if', which handles this, see above
 		// so just walk the children
 		generate_IL_for_node( i->children.begin(), is, i );
+	}
+	// import_statement_s
+	else if( i->value.id() == parser_id( import_statement_id ) )
+	{
+		gen_IL_import( i, is );
 	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )

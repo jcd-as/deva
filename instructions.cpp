@@ -175,6 +175,9 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_halt:
 		os << "halt";
 		break;
+	case op_import:
+		os << "import";
+		break;
 	case op_illegal:
 		os << "ILLEGAL OPCODE. COMPILER ERROR";
 		break;
@@ -540,6 +543,12 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 	// back-patch the jumpf instruction
 	// write the current *file* offset, not instruction stream!
 	is[else_loc] = Instruction( op_jmp, DevaObject( "", is.Offset() ) );
+}
+
+void gen_IL_import( iter_t const & i, InstructionStream & is )
+{
+	string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+	is.push( Instruction( op_import, DevaObject( "", name ) ) );
 }
 
 // stack of fcn returns for back-patching return addresses in

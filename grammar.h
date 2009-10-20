@@ -178,6 +178,7 @@ public:
 				| while_statement
 				| for_statement
 				| if_statement
+				| import_statement
 				| root_node_d[jump_statement] >> semicolon_op >> !end_p
 				| exp_statement
 				][&set_node]
@@ -249,6 +250,13 @@ public:
 				access_node_d[
 				root_node_d[else_s] 
 				>> (statement | access_node_d[compound_statement][&set_node] | if_statement | error_invalid_else)
+				][&set_node]
+				;
+
+			import_statement = 
+				access_node_d[
+				root_node_d[str_p( "import" )]
+				>> identifier >> semicolon_op >> !end_p
 				][&set_node]
 				;
 
@@ -602,6 +610,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( for_statement );
 			BOOST_SPIRIT_DEBUG_RULE( if_statement );
 			BOOST_SPIRIT_DEBUG_RULE( else_statement );
+			BOOST_SPIRIT_DEBUG_RULE( import_statement );
 			BOOST_SPIRIT_DEBUG_RULE( compound_statement );
 			BOOST_SPIRIT_DEBUG_RULE( jump_statement );
 			BOOST_SPIRIT_DEBUG_RULE( break_statement );
@@ -667,6 +676,7 @@ public:
 			for_statement_id = for_statement.id();
 			if_statement_id = if_statement.id();
 			else_statement_id = else_statement.id();
+			import_statement_id = import_statement.id();
 			compound_statement_id = compound_statement.id();
 			jump_statement_id = jump_statement.id();
 			break_statement_id = break_statement.id();
@@ -734,6 +744,7 @@ public:
 			for_statement,
 			if_statement,
 			else_statement,
+			import_statement,
 			func_decl,
 			jump_statement,
 			break_statement,

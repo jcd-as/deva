@@ -1464,6 +1464,27 @@ void Executor::Halt( Instruction const & inst )
 {
 	// do nothing, execution engine will stop on stepping to this instruction
 }
+// 38 import module, 1 arg: module name
+void Executor::Import( Instruction const & inst )
+{
+	// TODO: implement
+	// first argument has the name of the module to import
+	if( inst.args.size() < 1 )
+		throw DevaICE( "No module name given in import statement." );
+	string mod = inst.args[0].str_val;
+	// TODO:
+	// search for the module:
+	// 	- file name in directory of current file
+	// 	- sub-directory in directory of current file
+	// 	- file on 'DEVAPATH' env variable
+	// 	- sub-directory in 'DEVAPATH' env variable
+	
+	// for now, just run the file by short name with ".dvc" extension
+	mod += ".dvc";
+	size_t orig_ip = ip;
+	RunFile( mod.c_str() );
+	ip = orig_ip;
+}
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
 {
@@ -1596,6 +1617,9 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_halt:		// 37 finish program, 0 or 1 ops (return code)
 		Halt( inst );
 		return false;
+	case op_import:
+		Import( inst );
+		break;
 	case op_illegal:	// illegal operation, if exists there was a compiler error/fault
 	default:
 		Illegal( inst );

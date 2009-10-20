@@ -125,7 +125,7 @@ Scope 3, parent = 2
 
 Instructions:
 push : boolean: '' = 1
-jmpf : num: '' = 81
+jmpf : function: '', offset = 81
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
@@ -136,7 +136,7 @@ vec_load :
 push : function: '', offset = 67
 call : 
 pop : 
-jmp : num: '' = 0
+jmp : function: '', offset = 0
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
