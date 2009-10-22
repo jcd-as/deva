@@ -107,8 +107,6 @@ private:
 	void FixupOffsets();
 	// locate a symbol in the symbol table(namespace)
 	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
-	// find, recurring while the object is a variable (name)
-	DevaObject* find_symbol_recur( const DevaObject & ob );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
@@ -227,6 +225,7 @@ public:
 	void StartGlobalScope();
 	void EndGlobalScope();
 	bool RunFile( const char* const filename );
+	bool RunText( const char* const text );
 
 	// be-friend the built-in functions
 	friend void do_print( Executor *ex, const Instruction & inst );
@@ -234,6 +233,7 @@ public:
 	friend void do_append( Executor *ex, const Instruction & inst );
 	friend void do_length( Executor *ex, const Instruction & inst );
 	friend void do_copy( Executor *ex, const Instruction & inst );
+	friend void do_eval( Executor *ex, const Instruction & inst );
 };
 
 #endif // __EXECUTOR_H__

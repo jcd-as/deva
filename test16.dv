@@ -1,8 +1,10 @@
-import foo;
+# test import
+import foo:bar;
 
 def bar()
 {
 	print( "test16.dv returned to and code executing here" );
+	import foo;
 }
 
 foo.foofcn();

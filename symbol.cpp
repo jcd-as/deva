@@ -57,7 +57,7 @@ void replace( string& src, const char* const in, const char* const out )
     while( pos != string::npos )
     {
         // found 'in' at 'i'. replace with 'out'
-        src = src.replace( pos, pos+len, out );
+        src = src.replace( pos, len, out );
         pos = src.find( in );
     }
 }

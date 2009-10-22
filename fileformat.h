@@ -16,12 +16,9 @@ struct FileHeader
 {
 	static const char deva[5];
 	static const char ver[6];
-	static const long pad;
+	static const char pad[5];
+	static unsigned long size(){ return sizeof( deva ) + sizeof( ver ) + sizeof( pad ); }
 };
-
-const char FileHeader::deva[5] = "deva";
-const char FileHeader::ver[6] = "1.0.0";
-const long FileHeader::pad = 0;
 
 // and the instruction/argument stream is an array of:
 //

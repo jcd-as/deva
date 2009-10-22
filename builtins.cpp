@@ -22,6 +22,7 @@ void do_str( Executor *ex, const Instruction & inst );
 void do_append( Executor *ex, const Instruction & inst );
 void do_length( Executor *ex, const Instruction & inst );
 void do_copy( Executor *ex, const Instruction & inst );
+void do_eval( Executor *ex, const Instruction & inst );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -31,6 +32,7 @@ static const string builtin_names[] =
     string( "append" ),
     string( "length" ),
     string( "copy" ),
+    string( "eval" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -41,6 +43,7 @@ builtin_fcn builtin_fcns[] =
     do_append,
     do_length,
     do_copy,
+	do_eval,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -284,5 +287,35 @@ void do_copy( Executor *ex, const Instruction & inst )
 
 	// return the copy
 	ex->stack.push_back( *copy );
+}
+
+void do_eval( Executor *ex, const Instruction & inst )
+{
+	// string to eval must be at top of stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+
+	// had better be a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "eval() builtin function called with a non-string argument." );
+
+	//ex->Output( inst );
+	ex->RunText( o->str_val );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 

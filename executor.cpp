@@ -10,6 +10,8 @@
 
 #include "executor.h"
 #include "builtins.h"
+#include "compile.h"
+#include "fileformat.h"
 
 
 // private utility functions
@@ -44,17 +46,6 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	}
 	return NULL;
 }
-
-// locate a symbol, recursively continuing to look as long as variable names
-// (sym_unknown) are found instead of values
-//DevaObject* Executor::find_symbol_recur( const DevaObject & ob )
-//{
-//	DevaObject* o = find_symbol( ob );
-//	if( !o )
-//		return o;
-//	if( o->Type() == sym_unknown )
-//		return find_symbol_recur( *o );
-//}
 
 // peek at what the next instruction is (doesn't modify ip)
 Opcode Executor::PeekInstr()
@@ -1497,20 +1488,28 @@ void Executor::Halt( Instruction const & inst )
 // 38 import module, 1 arg: module name
 void Executor::Import( Instruction const & inst )
 {
-	// TODO: implement
 	// first argument has the name of the module to import
 	if( inst.args.size() < 1 )
 		throw DevaICE( "No module name given in import statement." );
 	string mod = inst.args[0].str_val;
 	// TODO:
-	// search for the module:
+	// search for the module: ???
 	// 	- file name in directory of current file
 	// 	- sub-directory in directory of current file
 	// 	- file on 'DEVAPATH' env variable
 	// 	- sub-directory in 'DEVAPATH' env variable
 	
-	// for now, just run the file by short name with ".dvc" extension
-	string file( mod + ".dvc" );
+	// prevent importing the same module more than once
+	map<string, ScopeTable>::iterator it;
+	it = namespaces.find( mod );
+	// if we found the namespace
+	if( it != namespaces.end() )
+		return;
+
+	// for now, just run the file by short name with ".dvc" extension (i.e. in
+	// the current working directory)
+	string dvfile( mod + ".dv" );
+	string dvcfile( mod + ".dvc" );
 	// save the ip
 	size_t orig_ip = ip;
 	// save the current scope table
@@ -1520,7 +1519,10 @@ void Executor::Import( Instruction const & inst )
 	current_scopes = &namespaces[mod];
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
-	RunFile( file.c_str() );
+	// compile the file, if needed
+	CompileFile( dvfile.c_str() );
+	// and then run the file
+	RunFile( dvcfile.c_str() );
 	// restore the ip
 	ip = orig_ip;
 	// restore the current scope table
@@ -1853,3 +1855,57 @@ bool Executor::RunFile( const char* const filename )
 	return true;
 }
 
+bool Executor::RunText( const char* const text )
+{
+	unsigned char* orig_code = code;
+	size_t orig_ip = ip;
+	try
+	{
+		// load the file into memory
+//		code = LoadByteCode( filename );
+		code = CompileText( text );
+		code_blocks.push_back( code );
+
+		// fix-up the offsets into actual machine addresses
+		ip = (size_t)code + FileHeader::size();
+		FixupOffsets();
+		ip = (size_t)code + FileHeader::size();
+		
+		// read the instructions
+		while( true )
+		{
+			// get the next instruction in the byte code
+			Instruction inst = NextInstr();
+
+			// DoInstr returns false on 'halt' instruction
+			if( !DoInstr( inst ) )
+				break;
+		}
+	}
+	catch( DevaICE & e )
+	{
+        if( file.length() != 0 )
+        {
+            cout << file << ":";
+            if( line != 0 )
+                cout << line << ":";
+        }
+		cout << "Internal compiler error: " << e.what() << endl;
+		return false;
+	}
+	catch( DevaRuntimeException & e )
+	{
+        if( file.length() != 0 )
+        {
+            cout << file << ":";
+            if( line != 0 )
+                cout << line << ":";
+        }
+		cout << e.what() << endl;
+		return false;
+	}
+
+	code = orig_code;
+	ip = orig_ip;
+	return true;
+}

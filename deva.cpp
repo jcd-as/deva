@@ -18,8 +18,9 @@
 using namespace std;
 namespace po = boost::program_options;
 
-// the global scope table
-//Scopes scopes;
+// the global scope table (used when compilation is needed, as in imports
+// and dynamic code generation)
+Scopes scopes;
 
 int main( int argc, char** argv )
 {

@@ -9,6 +9,9 @@
 
 #include <iomanip>
 #include <cstring>
+#include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "compile.h"
 #include "semantics.h"
@@ -87,22 +90,14 @@ void emit_warning( DevaSemanticException & e )
 
 // parse a deva file
 // returns the AST tree
-tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file )
+tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input )
 {
-	// get the length of the file
-	file.seekg( 0, ios::end );
-	int length = file.tellg();
-	file.seekg( 0, ios::beg );
-	// allocate memory to read the file into
-	char* buf = new char[length];
-	// read the file
-	file.read( buf, length );
-
 	// create our grammar parser
 	DevaGrammar deva_p;
 
 	// create the position iterator for the parser
-	iterator_t begin( buf, buf+length, filename );
+//	iterator_t begin( input, input + strlen( input ), "<TEXT>" );
+	iterator_t begin( input, input + strlen( input ), filename );
 	iterator_t end;
 
 	// create our initial (global) scope
@@ -115,10 +110,31 @@ tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & fil
 	tree_parse_info<iterator_t, factory_t> info;
 	info = ast_parse<factory_t>( begin, end, deva_p, (space_p | comment_p( "#" )) );
 
+	return info;
+}
+
+// parse a deva file
+// returns the AST tree
+tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file )
+{
+	// get the length of the file
+	file.seekg( 0, ios::end );
+	int length = file.tellg();
+	file.seekg( 0, ios::beg );
+	// allocate memory to read the file into
+	char* buf = new char[length+1];
+	// zero it out
+	memset( buf, 0, length+1 );
+	// read the file
+	file.read( buf, length );
+
+	// parse the input text
+	tree_parse_info<iterator_t, factory_t> ret = ParseText( filename, buf );
+
 	// free the buffer with the code in it
 	delete[] buf;
 
-	return info;
+	return ret;
 }
 
 // check the semantics of a parsed AST
@@ -1104,6 +1120,102 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 	return true;
 }
 
+// generate and return bytecode
+unsigned char* GenerateByteCode( InstructionStream & is )
+{
+	// TODO: implement
+	//
+	// open the file for writing
+//	ofstream file;
+//	file.open( filename, ios::binary );
+//	if( file.fail() )
+//		return false;
+
+	ostringstream oss;
+
+	// write the header
+	FileHeader hdr;
+	oss << hdr.deva;
+	oss << '\0';
+	oss << hdr.ver;
+	oss << '\0';
+	oss << '\0';
+	oss << '\0';
+	oss << '\0';
+	oss << '\0';
+	oss << '\0';
+
+	// write the instructions
+	for( int i = 0; i < is.size(); ++i )
+	{
+		Instruction inst = is[i];
+		// write the byte for the opcode
+		oss << (unsigned char)inst.op;
+		// for each argument:
+		for( int j = 0; j < inst.args.size(); ++j )
+		{
+			// write the byte for the type
+			oss << (unsigned char)inst.args[j].Type();
+			// write the name
+			oss.write( inst.args[j].name.c_str(), inst.args[j].name.length() );
+			oss << '\0';
+			// write the value
+			switch( inst.args[j].Type() )
+			{
+				case sym_number:
+					oss.write( (char*)&(inst.args[j].num_val), sizeof( double ) );
+					break;
+				case sym_string:
+					// variable length, null-terminated
+					oss.write( inst.args[j].str_val, strlen( inst.args[j].str_val ) );
+					oss << '\0';
+					break;
+				case sym_boolean:
+					{
+					// 32 bits
+					long val = (long)inst.args[j].bool_val;
+					oss.write( (char*)&val, sizeof( long ) );
+					break;
+					}
+				case sym_map:
+					// TODO: implement
+					//is.args[j].map_val
+					break;
+				case sym_vector:
+					// TODO: implement
+					//is.args[j].vec_val
+					break;
+				case sym_function:
+					oss.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
+					break;
+				case sym_function_call:
+					// TODO: can this happen??
+					break;
+				case sym_null:
+					{
+					// 32 bits
+					long val = 0;
+					oss.write( (char*)&val, sizeof( long ) );
+					break;
+					}
+				case sym_unknown:
+					// nothing to do, no known value/type
+					break;
+				default:
+					// TODO: throw error
+					break;
+			}
+		}
+		// write the instruction terminating byte
+		oss << (unsigned char)255;
+	}
+	string s = oss.str();
+	size_t len = s.length();
+	unsigned char* buf = new unsigned char[len];
+	s.copy( (char*)buf, len );
+	return buf;
+}
+
 // de-compile a .dvc file and dump the IL to stdout
 bool DeCompileFile( char const* filename )
 {
@@ -1245,4 +1357,96 @@ bool DeCompileFile( char const* filename )
 	}
 	delete [] name;
 	return true;
+}
+
+
+// parse, check semantics, generate IL and generate bytecode for a .dv file:
+bool CompileFile( const char* filename, bool debug_info /*= true*/ )
+{
+	// check to see if the .dvc (output) file exists, and is newer than the .dv (input ) file
+	string output( filename );
+	size_t pos = output.rfind( "." );
+	if( pos != string::npos )
+	{
+		output.erase( pos );
+	}
+	output += ".dvc";
+
+	struct stat in_statbuf;
+	struct stat out_statbuf;
+
+	// if we can't open the .dvc file, continue on
+	if( stat( output.c_str(), &out_statbuf ) != -1 )
+	{
+		if( stat( filename, &in_statbuf ) != -1 ) 
+		{
+			// if the output is newer than the input, nothing to do
+			if( out_statbuf.st_mtime > in_statbuf.st_mtime )
+				return true;
+		}
+	}
+
+	tree_parse_info<iterator_t, factory_t> info;
+
+	// open input file
+	ifstream file;
+	file.open( filename );
+	if( !file.is_open() )
+	{
+		ostringstream oss;
+		oss << "error opening " << filename << endl;
+		throw DevaRuntimeException( oss.str().c_str() );
+	}
+	// parse the file
+	info = ParseFile( filename, file );
+	// close the file
+	file.close();
+
+	// failed to fully parse the input?
+	if( !info.full )
+		return false;
+
+	// check the semantics of the AST
+	if( !CheckSemantics( info ) )
+		return false;
+
+	// generate IL
+	InstructionStream inst;
+	if( !GenerateIL( info, inst, debug_info ) )
+		return false;
+
+	// TODO: optimize IL (???)
+
+	// generate final IL bytecode
+	if( !GenerateByteCode( output.c_str(), inst ) )
+		return false;
+}
+
+// parse, check semantics, generate IL and generate bytecode for an input string
+// containing deva code, returns the byte code (which must be freed by the
+// caller) or NULL on failure
+unsigned char* CompileText( char const* const input, bool debug_info /*= true*/ )
+{
+	tree_parse_info<iterator_t, factory_t> info;
+
+	// parse the file
+	info = ParseText( string( "<TEXT>" ), input );
+
+	// failed to fully parse the input?
+	if( !info.full )
+		return NULL;
+
+	// check the semantics of the AST
+	if( !CheckSemantics( info ) )
+		return NULL;
+
+	// generate IL
+	InstructionStream inst;
+	if( !GenerateIL( info, inst, debug_info ) )
+		return NULL;
+
+	// TODO: optimize IL (???)
+
+	// generate final IL bytecode
+	return GenerateByteCode( inst );
 }
