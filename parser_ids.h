@@ -70,4 +70,5 @@ extern parser_id for_s_id;
 extern parser_id if_s_id;
 extern parser_id else_s_id;
 extern parser_id identifier_id;
+extern parser_id module_name_id;
 

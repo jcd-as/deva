@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
+<?xml version="1.0" ?>
+<todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -107,4 +108,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </note><note priority="high" time="1256007195">import() builtin that replicates 'import' statement, but accepts paths/filenames instead of module names
 </note><note done="1256173450" priority="high" time="1256160412">bug: escaped quotest (\&quot;) don't work properly inside of strings
 <comment>replace() helper fcn called from unescape() was incorrectly using string::replace() (was passing the second arg as the offset into the string instead of the length of the replaced text)
-</comment></note></todo>
+</comment></note><note priority="veryhigh" time="1256184973">code gen for a.b() (function calls on dot-op rhs) so vector/map builtins can be implemented (and the basis for user-defined types)
+</note></todo>

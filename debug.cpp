@@ -36,6 +36,7 @@ void dumpNode( const char* name, iter_t const& i, int & indents )
 	// dump scope and line information
 	indent( indents );
 	cout << "in scope " << i->value.value().scope << ", at line: " << i->value.value().line << endl;
+//	cout << "in file " << i->value.value().file << endl;
 	// dump node name
 	indent( indents );
 	string s( i->value.begin(), i->value.end() );
@@ -130,6 +131,14 @@ void eval_expression( iter_t const& i )
 //        assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "else_s", i, indents );
 	}
+	// import
+	else if( i->value.id() == parser_id( import_statement_id ) )
+	{
+		// can have module_name & semi-colon
+        assert( i->children.size() < 3 );
+
+		dumpNode( "import", i, indents );
+	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
@@ -137,6 +146,14 @@ void eval_expression( iter_t const& i )
         assert( i->children.size() < 3 );
 
 		dumpNode( "identifier", i, indents );
+	}
+	// module_name
+	else if( i->value.id() == parser_id( module_name_id ) )
+	{
+		// can have semi-colon
+        assert( i->children.size() < 2 );
+
+		dumpNode( "module_name", i, indents );
 	}
 	// comment
 	// TODO: should comments be in the AST?? (they complicate things quite a

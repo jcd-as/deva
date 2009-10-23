@@ -10,8 +10,10 @@
 
 #include "executor.h"
 #include "builtins.h"
+#include "vector_builtins.h"
 #include "compile.h"
 #include "fileformat.h"
+#include "util.h"
 
 
 // private utility functions
@@ -1485,6 +1487,45 @@ void Executor::Halt( Instruction const & inst )
 {
 	// do nothing, execution engine will stop on stepping to this instruction
 }
+// helper function for Import
+string Executor::find_module( string mod )
+{
+	// split the path given into it's / separated parts
+	vector<string> path = split_path( mod );
+
+	// first, look in the directory of the currently executing file
+	string current_file = get_file_part( file );
+	// get the cwd
+	string curdir = get_cwd();
+	// append the current file to the current directory (in case the current
+	// file path contains directories, e.g. the compiler was called on the
+	// file 'src/foo.dv')
+	curdir += "/";
+	curdir += current_file;
+	curdir = get_dir_part( curdir );
+	// 'curdir' now contains the directory of the currently executing file
+	// append the mod name to get the mod path
+	string modpath( curdir );
+	for( vector<string>::iterator it = path.begin(); it != path.end(); ++it )
+	{
+		modpath += '/';
+		modpath += *it;
+	}
+	// check for .dv/.dvc files on disk
+	struct stat statbuf;
+	// if we can't open the module file, error out
+	string dv = modpath + ".dv";
+	if( stat( dv.c_str(), &statbuf ) == -1 )
+	{
+		string dvc = modpath + ".dvc";
+		if( stat( dvc.c_str(), &statbuf ) == -1 )
+			throw DevaRuntimeException( "Unable to locate module for import." );
+	}
+	// otherwise it's valid, return it
+	return modpath;
+	// TODO:
+	// - look in the paths on the 'DEVA_PATH' env var
+}
 // 38 import module, 1 arg: module name
 void Executor::Import( Instruction const & inst )
 {
@@ -1492,12 +1533,7 @@ void Executor::Import( Instruction const & inst )
 	if( inst.args.size() < 1 )
 		throw DevaICE( "No module name given in import statement." );
 	string mod = inst.args[0].str_val;
-	// TODO:
-	// search for the module: ???
-	// 	- file name in directory of current file
-	// 	- sub-directory in directory of current file
-	// 	- file on 'DEVAPATH' env variable
-	// 	- sub-directory in 'DEVAPATH' env variable
+	string path = find_module( mod );
 	
 	// prevent importing the same module more than once
 	map<string, ScopeTable>::iterator it;
@@ -1508,13 +1544,17 @@ void Executor::Import( Instruction const & inst )
 
 	// for now, just run the file by short name with ".dvc" extension (i.e. in
 	// the current working directory)
-	string dvfile( mod + ".dv" );
-	string dvcfile( mod + ".dvc" );
+	string dvfile( path + ".dv" );
+	string dvcfile( path + ".dvc" );
 	// save the ip
 	size_t orig_ip = ip;
 	// save the current scope table
 	ScopeTable* orig_scopes = current_scopes;
 	// create a new namespace and set it at the current scope
+	// TODO: currently this only adds the "short" name of the module as a
+	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
+	// foo-bar? foo/bar?
+	mod = get_file_part( mod );
 	namespaces[mod] = ScopeTable();
 	current_scopes = &namespaces[mod];
 	// create a 'file/module' level scope for the namespace
@@ -1805,12 +1845,13 @@ void Executor::EndGlobalScope()
 	Leave( Instruction( op_leave ) );
 }
 
-bool Executor::RunFile( const char* const filename )
+bool Executor::RunFile( const char* const filepath )
 {
+	executing_filepath = filepath;
 	try
 	{
 		// load the file into memory
-		code = LoadByteCode( filename );
+		code = LoadByteCode( filepath );
 		code_blocks.push_back( code );
 
 		// fix-up the offsets into actual machine addresses
@@ -1862,7 +1903,6 @@ bool Executor::RunText( const char* const text )
 	try
 	{
 		// load the file into memory
-//		code = LoadByteCode( filename );
 		code = CompileText( text );
 		code_blocks.push_back( code );
 

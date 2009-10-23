@@ -262,6 +262,14 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_identifier( i );
 	}
+	// module_name
+	else if( i->value.id() == parser_id( module_name_id ) )
+	{
+		// can have arg_list & semi-colon
+        assert( i->children.size() < 3 );
+		walk_children( i );
+		check_module_name( i );
+	}
 	// in op ('in' keyword in for loops)
 	else if( i->value.id() == parser_id( in_op_id ) )
 	{
@@ -545,6 +553,18 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
     debug_info_on = debug_info;
     try
     {
+		// if we're NOT in debug mode, we at least need one "line num" op to say
+		// what file we're in (in order for 'import' and module-finding to work
+		// properly)
+		if( !debug_info_on )
+		{
+			// get the node info
+			// (the 'translation_unit' node doesn't have the file/line num info)
+			iter_t it = info.trees.begin()->children.begin();
+			NodeInfo ni = ((NodeInfo)(it->value.value()));
+			is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (size_t)0) ) );
+		}
+
         // walk the tree, generating the IL for each node
         iter_t i = info.trees.begin();
         generate_IL_for_node( i, is, i );
@@ -854,9 +874,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
             string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
 			generate_line_num( i->children[0].children.begin()+1, is );
             is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
-
-            // this gens a vec_load, where we need a store
-            //gen_IL_dot_op( i, is );
 
             // rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
             // if the first child is an arg_list_exp, it's a fcn call
@@ -1384,6 +1401,9 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 			if( out_statbuf.st_mtime > in_statbuf.st_mtime )
 				return true;
 		}
+		// .dvc file exists, but no .dv file
+		else
+			return true;
 	}
 
 	tree_parse_info<iterator_t, factory_t> info;

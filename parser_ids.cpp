@@ -69,4 +69,5 @@ parser_id for_s_id;
 parser_id if_s_id;
 parser_id else_s_id;
 parser_id identifier_id;
+parser_id module_name_id;
 

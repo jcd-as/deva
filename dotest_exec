@@ -15,11 +15,13 @@ fi
 if cmp -s '$$$RESULTS$$$' $2 ; then
     echo "test succeeded"
 	# TODO: generate filename ('input.dvc') from $1 arg
-    rm -f '$$$RESULTS$$$' 'input.dvc'
+    rm -f '$$$RESULTS$$$'
+	rm -f *.dvc
     exit
 else
     echo "test failed"
 	# TODO: generate filename ('input.dvc') from $1 arg
-    rm -f '$$$RESULTS$$$' 'input.dvc'
+    rm -f '$$$RESULTS$$$'
+	rm -f *.dvc
     exit -1
 fi

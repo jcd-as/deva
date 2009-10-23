@@ -36,6 +36,9 @@ private:
 	// the current location in the file ("instruction pointer")
 	size_t ip;
 
+	// the top-level executing file (the path given to RunFile())
+	string executing_filepath;
+
 	// currently executing file and line number. 
 	// (only tracked if compiled with debug info)
 	string file;
@@ -127,6 +130,9 @@ private:
 	// evaluate an object as a boolean value
 	// object must be evaluated already to a value (i.e. no variables)
 	bool evaluate_object_as_boolean( DevaObject & o );
+
+	// locate a module
+	string find_module( string mod );
 
 	// individual op-code methods
 	////////////////////////////////////////////////////
@@ -234,6 +240,11 @@ public:
 	friend void do_length( Executor *ex, const Instruction & inst );
 	friend void do_copy( Executor *ex, const Instruction & inst );
 	friend void do_eval( Executor *ex, const Instruction & inst );
+
+	// be-friend the vector built-ins
+    friend void do_vector_append( DevaObject* vec, Executor *ex, const Instruction & inst );
+    friend void do_vector_length( DevaObject* vec, Executor *ex, const Instruction & inst );
+    friend void do_vector_copy( DevaObject* vec, Executor *ex, const Instruction & inst );
 };
 
 #endif // __EXECUTOR_H__

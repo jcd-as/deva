@@ -5,8 +5,6 @@
 // TODO:
 // * missing semi-colon ends up with generic "Invalid statement" error :(
 // * prevent multiple errors on same line (e.g. 'invalid if' and 'invalid statement')
-// * misc:
-//		- import statement
 // * more & better error reporting (try to avoid multiple reports on the same
 // 	 line/problem)
 
@@ -256,7 +254,7 @@ public:
 			import_statement = 
 				access_node_d[
 				root_node_d[str_p( "import" )]
-				>> identifier >> semicolon_op >> !end_p
+				>> module_name >> semicolon_op >> !end_p
 				][&set_node]
 				;
 
@@ -596,6 +594,11 @@ public:
 				][&set_node]
 				;
 
+			module_name = access_node_d[
+				leaf_node_d[identifier >> *(ch_p( "/" ) >> identifier)]
+				][&set_node]
+				;
+
 			// end grammar specifications
 			//////////////////////////////////////////////////////////////////////
 
@@ -665,6 +668,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( if_s );
 			BOOST_SPIRIT_DEBUG_RULE( else_s );
 			BOOST_SPIRIT_DEBUG_RULE( identifier );
+			BOOST_SPIRIT_DEBUG_RULE( module_name );
 
 			// define ids for the rules
 			// statements
@@ -731,6 +735,7 @@ public:
 			if_s_id = if_s.id();
 			else_s_id = else_s.id();
 			identifier_id = identifier.id();
+			module_name_id = module_name.id();
 		}
 
 		// declare the rules
@@ -797,7 +802,8 @@ public:
 			for_s,
 			if_s,
 			else_s,
-			identifier;
+			identifier,
+			module_name;
 
 		rule<ScannerT> const& start() const { return translation_unit; }
 	};

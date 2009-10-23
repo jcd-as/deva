@@ -157,6 +157,18 @@ void check_identifier( iter_t const & i )
 	i->value.value( ni );
 }
 
+void check_module_name( iter_t const & i )
+{
+	string s = i->value.value().sym;
+	// disallow keywords
+	if( is_keyword( s ) )
+		throw DevaSemanticException( "Keyword used where variable name expected", i->value.value() );
+
+	NodeInfo ni = ((NodeInfo)(i->value.value()));
+	ni.type = variable_type;
+	i->value.value( ni );
+}
+
 void check_in_op( iter_t const & i )
 {
 	// 1 child: id

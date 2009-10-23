@@ -175,7 +175,6 @@ void do_append( Executor *ex, const Instruction & inst )
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// string
 	DevaObject* o = NULL;
 	if( obj.Type() == sym_unknown )
 	{
@@ -186,6 +185,7 @@ void do_append( Executor *ex, const Instruction & inst )
 	if( !o )
 		o = &obj;
 
+	// string
 	if( o->Type() == sym_string )
 	{
 		// value has to be a string too
@@ -194,7 +194,6 @@ void do_append( Executor *ex, const Instruction & inst )
 		// concat the strings
 		string ret( o->str_val );
 		ret += val.str_val;
-//		o->SetValue( DevaObject( "", ret ) );
 		o = new DevaObject( ret, "" );
 	}
 	// vector
@@ -215,7 +214,6 @@ void do_length( Executor *ex, const Instruction & inst )
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// string
 	DevaObject* o = NULL;
 	if( obj.Type() == sym_unknown )
 	{
@@ -227,6 +225,7 @@ void do_length( Executor *ex, const Instruction & inst )
 		o = &obj;
 
 	int len;
+	// string
 	if( o->Type() == sym_string )
 	{
 		len = string( o->str_val ).size();

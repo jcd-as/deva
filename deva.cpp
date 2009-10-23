@@ -10,10 +10,10 @@
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <iostream>
-//#include <fstream>
 #include <utility>
 
 #include "executor.h"
+#include "util.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -65,12 +65,29 @@ int main( int argc, char** argv )
 		return 1;
 	}
 
+	// get the filename part and the directory part
+	string in_dir = get_dir_part( input );
+	string fname = get_file_part( input );
+
+	// change cwd to the directory
+	// if the input wasn't a full path:
+	if( in_dir[0] != '/' )
+	{
+		string cwd = get_cwd();
+		string dir = cwd + '/' + in_dir;
+		chdir( dir.c_str() );
+	}
+	else
+	{
+		chdir( in_dir.c_str() );
+	}
+
 	// get the filename to compile
-	const char* input_filename = input.c_str();
+	const char* input_filename = fname.c_str();
 
 	Executor ex( debug );
 	ex.StartGlobalScope();
-	if( !ex.RunFile( input.c_str() ) )
+	if( !ex.RunFile( fname.c_str() ) )
 	{
 		ex.EndGlobalScope();
 		cout << "Error executing " << input_filename << endl;

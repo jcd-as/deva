@@ -24,6 +24,7 @@ void check_if_s( iter_t const & i );
 void check_else_s( iter_t const & i );
 void check_import_s( iter_t const & i );
 void check_identifier( iter_t const & i );
+void check_module_name( iter_t const & i );
 void check_in_op( iter_t const & i );
 void check_map_op( iter_t const & i );
 void check_vec_op( iter_t const & i );
