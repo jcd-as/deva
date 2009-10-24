@@ -607,6 +607,27 @@ bool walk_looking_for_return( iter_t const & iter )
 	return false;
 }
 
+// helper to walk a dot_op branch of the AST to see if it is ultimately a method
+// call (has an arg_list_exp) and generate the ops for the args if it is
+void walk_children_for_method_call( iter_t i, InstructionStream & is )
+{
+	// if this is an identifier with a child that is an arg list
+	if( i->value.id() == identifier_id && i->children.size() > 0 && i->children[0].value.id() == arg_list_exp_id )
+	{
+		// generate the ret-val placeholder (op_push 'sym_function')
+		pre_gen_IL_arg_list_exp( i, is );
+
+		// generate the code for the arg list
+		walk_children( i->children.begin(), is );
+
+		return;
+	}
+	for( int j = 0; j < i->children.size(); ++j )
+	{
+		walk_children_for_method_call( i->children.begin() + j, is );
+	}
+}
+
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
 	// number
@@ -940,6 +961,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// operands (lhs & rhs) and possibly semi-colon
 		
+		// if this is ultimately a fcn (method) call, we need to push the
+		// arguments to the call onto the stack FIRST. so, we need to walk the
+		// AST all the way down until we find the arg_list_exp, generate code
+		// for it, and then start over and walk down generating the code for the
+		// dot_ops (vector_loads)...
+		walk_children_for_method_call( i, is );
+
 		// lhs stays the same
 		if( i->children[0].value.id() == identifier_id )
 		{
@@ -964,10 +992,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if the first child is an arg_list_exp, it's a fcn call
 		if( i->children[1].children.size() > 0 && i->children[1].children[0].value.id() == arg_list_exp_id )
 		{
-			// first walk the children
-			walk_children( i->children.begin() + 1, is );
-
-			// then generate the IL for this node
+			// we already walked the children and generated the placeholder for
+			// the jump...
+			// so just generate the IL for this node, which will back-patch the
+			// jump placeholder
 			gen_IL_identifier( i->children.begin() + 1, is, parent, true );
 		}
 	}

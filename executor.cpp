@@ -511,13 +511,24 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Attempt to reference undefined map, vector or namespace." );
 	}
 	else
-        // TODO: does the vecmap need to be entered into a scope somewhere??
 		table = &vecmap;
 
 	// ensure it is the correct type
-	// vector *must* have a numeric (integer) index
+	// TODO: UDTs
+
+	// vector *must* have a numeric (integer) index for actual vector look-ups,
+	// or string index for method calls
 	if( table->Type() == sym_vector )
 	{
+		// if it was a vector or UDT, this is definitely a method call
+//		if( idxkey.Type() == sym_string )
+//		{
+//			// TODO:
+//			// method call.
+//			// map look-up (for call of fcn in map):
+//			//stack.push_back( p.second );	// value (fcn)
+//			//stack.push_back( p.first ); 	// key	 (fcn name)
+//		}
 		if( idxkey.Type() != sym_number )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
@@ -531,6 +542,8 @@ void Executor::Vec_load( Instruction const & inst )
 		stack.push_back( o );
 	}
 	// maps can be indexed by number/string/user-defined-type
+	// TODO: and if it's a map? it could be a normal look-up or method call. do
+	// we need to differentiate??
 	else if( table->Type() == sym_map )
 	{
 		// if there is an arg, and it's boolean 'true', treat the key as an
@@ -1330,19 +1343,13 @@ void Executor::Call( Instruction const & inst )
 			if( !fcn )
 				throw DevaRuntimeException( "Call made to undefined function." );
 		}
-		// if there's no args, pop the top of the stack for the fcn to call
+		// if there's no args, it's a method invokation,
+		// pop the top of the stack for the fcn to call
 		else if( inst.args.size() == 0 )
 		{
-			// TODO: fix this so the arg is actually on top of the stack? (in
-			// the IL gen)??
-			// return point is actually on *top* of the stack, the arg has been
-			// buried one down, so we need to grab the ret pt and push it back
-			// again...
-			DevaObject ret = stack.back();
-			stack.pop_back();
+			// get the function to call off the stack
 			DevaObject o = stack.back();
 			stack.pop_back();
-			stack.push_back( ret );
 			if( o.Type() == sym_function )
 				fcn = &o;
 			else if( o.Type() == sym_unknown )

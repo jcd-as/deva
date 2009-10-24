@@ -1,6 +1,18 @@
-import foo/bar;
+#import foo/bar;
+
+def foo( s, t )
+{
+	print( s + t );
+}
+
 # create a vector
-a = [];
+#a = [];
+a = {};
 # call the built-in append method
 #a.append( "foo" );
-append( a, "foo" );
+#append( a, "foo" );
+
+a["foo"] = foo;
+
+a.foo( "this is", " a string" );
+#foo( "this is ", "a string" );

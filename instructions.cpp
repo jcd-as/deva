@@ -750,7 +750,8 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 {
 	// for each arg that is an identifier,
 	int num_children = i->children.size();
-	for( int j = 0; j < num_children; ++j )
+	// have to push in *reverse* order!
+	for( int j = num_children-1; j >= 0; --j )
 	{
 		if( i->children[j].value.id() == identifier_id )
 		{

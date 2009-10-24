@@ -98,10 +98,11 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1255903825" priority="high" time="1255839820">make 'const' work
 <comment>compiler rejects changes to consts (compile-time, not run-time). no instructions specific to const-ness, compile-time only information
-</comment></note><note priority="veryhigh" time="1255846573">modules and 'import' keyword
+</comment></note><note done="1256363440" priority="veryhigh" time="1255846573">modules and 'import' keyword
 <note done="1256173525" priority="veryhigh" time="1256082030">namespace support, where each module is a namespace
 <comment>namespaces (modules) are in-place, but currently modules are only files found in the cwd (no directory or path searching support)
-</comment></note></note><note priority="high" time="1255897503">printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
+</comment></note><comment>no search path yet, only loaded from local directory
+</comment></note><note priority="high" time="1255897503">printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
 </note><note done="1256161479" priority="veryhigh" time="1255897957">eval() builtin to compile code blocks at run-time
 <comment>eval() implemented. it imports the eval'd code into the current namespace/module
 </comment></note><note done="1256344247" priority="veryhigh" time="1255897996">modify 'deva' executable to compile and run if passed a .dv file instead of .dvc
@@ -109,5 +110,11 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note priority="high" time="1256007195">import() builtin that replicates 'import' statement, but accepts paths/filenames instead of module names
 </note><note done="1256173450" priority="high" time="1256160412">bug: escaped quotest (\&quot;) don't work properly inside of strings
 <comment>replace() helper fcn called from unescape() was incorrectly using string::replace() (was passing the second arg as the offset into the string instead of the length of the replaced text)
-</comment></note><note priority="veryhigh" time="1256184973">code gen for a.b() (function calls on dot-op rhs) so vector/map builtins can be implemented (and the basis for user-defined types)
+</comment></note><note done="1256363667" priority="veryhigh" time="1256184973">code gen for a.b() (function calls on dot-op rhs) so vector/map builtins can be implemented (and the basis for user-defined types)
+<note done="1256362642" priority="veryhigh" time="1256361141">the way arguments are passed needs modification to indicate HOW MANY args are being passed on the stack (another arg to the &quot;call&quot; instruction which is a 'function'/offset indicating how many args to pop off the stack)
+<comment>actually, don't need that, there is one defarg op for each argument
+</comment></note><comment>done. see test18.dv for a sample
+</comment></note><note done="1256363388" priority="veryhigh" time="1256362973">function/method arguments are passed in the REVERSE order (backwards)!!
+<comment>easy fix, reverse loop over children in gen_IL_arg_list_decl() (instructions.cpp)
+</comment></note><note priority="veryhigh" time="1256363869">add support for vector and map built-ins (e.g. vec.append(n))
 </note></todo>
