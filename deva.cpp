@@ -12,6 +12,7 @@
 #include <iostream>
 #include <utility>
 
+#include "compile.h"
 #include "executor.h"
 #include "util.h"
 
@@ -60,7 +61,7 @@ int main( int argc, char** argv )
 	// must be an input file specified
 	if( !vm.count( "input" ) )
 	{
-		cout << "usage: devac [options] <input_file>" << endl;
+		cout << "usage: deva [options] <input_file>" << endl;
 		cout << "(use option --help for more information)" << endl;
 		return 1;
 	}
@@ -68,6 +69,7 @@ int main( int argc, char** argv )
 	// get the filename part and the directory part
 	string in_dir = get_dir_part( input );
 	string fname = get_file_part( input );
+	string ext = get_extension( fname );
 
 	// change cwd to the directory
 	// if the input wasn't a full path:
@@ -82,9 +84,16 @@ int main( int argc, char** argv )
 		chdir( in_dir.c_str() );
 	}
 
-	// get the filename to compile
+	// get the filename to compile/run
 	const char* input_filename = fname.c_str();
 
+	if( ext == "dv" )
+	{
+		CompileFile( input_filename );
+		fname += "c";
+	}
+
+	// run the .dvc file
 	Executor ex( debug );
 	ex.StartGlobalScope();
 	if( !ex.RunFile( fname.c_str() ) )

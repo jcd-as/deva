@@ -376,8 +376,9 @@ Scope 10, parent = 0
 	z
 
 Instructions:
+line_num : string: '' = input.dvfunction: '', offset = 0
 push : unknown: 'a'
-jmpf : function: '', offset = 63
+jmpf : function: '', offset = 82
 enter : 
 push : unknown: 'a'
 push : num: '' = 0
@@ -386,14 +387,14 @@ push : unknown: 'b'
 push : num: '' = 1
 store : 
 leave : 
-jmp : function: '', offset = 0
+jmp : function: '', offset = 19
 push : unknown: 'a'
-jmpf : function: '', offset = 103
+jmpf : function: '', offset = 122
 push : unknown: 'a'
 push : num: '' = 0
 store : 
-jmp : function: '', offset = 63
-defun : function: 'foo', offset = 103
+jmp : function: '', offset = 82
+defun : function: 'foo', offset = 122
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 defarg : unknown: 'c'
@@ -401,25 +402,25 @@ enter :
 push : null
 return : 
 push : unknown: 'x'
-jmpf : function: '', offset = 180
+jmpf : function: '', offset = 199
 push : unknown: 'y'
-jmpf : function: '', offset = 180
-push : function: '', offset = 180
+jmpf : function: '', offset = 199
+push : function: '', offset = 199
 call : function_call: 'z'
 push : unknown: 'x'
-jmpf : function: '', offset = 235
+jmpf : function: '', offset = 254
 enter : 
 push : unknown: 'y'
-jmpf : function: '', offset = 221
-push : function: '', offset = 221
+jmpf : function: '', offset = 240
+push : function: '', offset = 240
 call : function_call: 'z'
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : function: '', offset = 256
-jmp : function: '', offset = 256
+jmpf : function: '', offset = 275
+jmp : function: '', offset = 275
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 

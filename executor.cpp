@@ -1903,7 +1903,7 @@ bool Executor::RunText( const char* const text )
 	try
 	{
 		// load the file into memory
-		code = CompileText( text );
+		code = CompileText( text, strlen( text ) );
 		code_blocks.push_back( code );
 
 		// fix-up the offsets into actual machine addresses

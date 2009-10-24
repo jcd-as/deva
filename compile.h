@@ -31,7 +31,7 @@ void emit_warning( DevaSemanticException & e );
 // parse a file
 // syntax errors output to stdout
 tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file );
-tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input );
+tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input, long input_len );
 
 // check the semantics of a parsed AST
 // semantic errors output to stdout
@@ -54,6 +54,6 @@ bool CompileFile( char const* filename, bool debug_info = true );
 // parse, check semantics, generate IL and generate bytecode for an input string
 // containing deva code, returns the byte code (which must be freed by the
 // caller) or NULL on failure
-unsigned char* CompileText( char const* const input, bool debug_info = true );
+unsigned char* CompileText( char const* const input, long input_len, bool debug_info = true );
 
 #endif // __COMPILE_H__

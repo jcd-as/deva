@@ -1,0 +1,6 @@
+import foo/bar;
+# create a vector
+a = [];
+# call the built-in append method
+#a.append( "foo" );
+append( a, "foo" );

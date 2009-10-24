@@ -371,20 +371,21 @@ Scope 6, parent = 0
 	str
 
 Instructions:
-defun : function: 'foo', offset = 0
+line_num : string: '' = input.dvfunction: '', offset = 0
+defun : function: 'foo', offset = 19
 enter : 
 defarg : unknown: 'a'
 defarg : unknown: 'b'
 push : unknown: 'a'
-jmpf : function: '', offset = 51
+jmpf : function: '', offset = 70
 push : unknown: 'b'
 return : 
-jmp : function: '', offset = 93
+jmp : function: '', offset = 112
 push : unknown: 'b'
-jmpf : function: '', offset = 79
+jmpf : function: '', offset = 98
 push : unknown: 'a'
 return : 
-jmp : function: '', offset = 93
+jmp : function: '', offset = 112
 push : num: '' = 0
 return : 
 push : unknown: 'a'
@@ -392,7 +393,7 @@ new_vec: :
 push : unknown: 'a'
 push : string: '' = pushback
 vec_load : 
-push : function: '', offset = 142
+push : function: '', offset = 161
 push : num: '' = 5
 call : 
 pop : 
@@ -411,19 +412,19 @@ push : unknown: 'b'
 push : string: '' = foo
 vec_load : 
 store : 
-push : function: '', offset = 259
+push : function: '', offset = 278
 push : num: '' = 0
 push : num: '' = 1
 call : function_call: 'x'
 pop : 
-push : function: '', offset = 261
+push : function: '', offset = 280
 push : unknown: 'b'
 call : function_call: 'length'
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : function: '', offset = 479
+jmpf : function: '', offset = 498
 push : unknown: 'b'
 dup : num: '' = 1
 vec_load : boolean: '' = 1
@@ -436,11 +437,11 @@ store :
 push : unknown: 'io'
 push : string: '' = print
 vec_load : 
-push : function: '', offset = 455
-push : function: '', offset = 427
+push : function: '', offset = 474
+push : function: '', offset = 446
 push : unknown: 'key'
 call : function_call: 'str'
-push : function: '', offset = 451
+push : function: '', offset = 470
 push : unknown: 'value'
 call : function_call: 'str'
 add : 
@@ -448,12 +449,12 @@ call :
 pop : 
 push : num: '' = 1
 add : 
-jmp : function: '', offset = 296
+jmp : function: '', offset = 315
 pop : 
 push : unknown: 'a'
 push : num: '' = 10
 lt : 
-jmpf : function: '', offset = 596
+jmpf : function: '', offset = 615
 enter : 
 push : unknown: 'a'
 push : unknown: 'a'
@@ -463,13 +464,13 @@ store :
 push : unknown: 'io'
 push : string: '' = print
 vec_load : 
-push : function: '', offset = 584
-push : function: '', offset = 582
+push : function: '', offset = 603
+push : function: '', offset = 601
 push : unknown: 'a'
 call : function_call: 'str'
 call : 
 pop : 
 leave : 
-jmp : function: '', offset = 481
+jmp : function: '', offset = 500
 halt : 
 compiled input.dv successfully

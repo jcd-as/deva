@@ -90,14 +90,14 @@ void emit_warning( DevaSemanticException & e )
 
 // parse a deva file
 // returns the AST tree
-tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input )
+tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input, long input_len )
 {
 	// create our grammar parser
 	DevaGrammar deva_p;
 
 	// create the position iterator for the parser
-//	iterator_t begin( input, input + strlen( input ), "<TEXT>" );
-	iterator_t begin( input, input + strlen( input ), filename );
+//	iterator_t begin( input, input + strlen( input ), filename );
+	iterator_t begin( input, input + input_len, filename );
 	iterator_t end;
 
 	// create our initial (global) scope
@@ -129,7 +129,7 @@ tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & fil
 	file.read( buf, length );
 
 	// parse the input text
-	tree_parse_info<iterator_t, factory_t> ret = ParseText( filename, buf );
+	tree_parse_info<iterator_t, factory_t> ret = ParseText( filename, buf, length );
 
 	// free the buffer with the code in it
 	delete[] buf;
@@ -1445,12 +1445,12 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 // parse, check semantics, generate IL and generate bytecode for an input string
 // containing deva code, returns the byte code (which must be freed by the
 // caller) or NULL on failure
-unsigned char* CompileText( char const* const input, bool debug_info /*= true*/ )
+unsigned char* CompileText( char const* const input, long input_len, bool debug_info /*= true*/ )
 {
 	tree_parse_info<iterator_t, factory_t> info;
 
 	// parse the file
-	info = ParseText( string( "<TEXT>" ), input );
+	info = ParseText( string( "<TEXT>" ), input, input_len );
 
 	// failed to fully parse the input?
 	if( !info.full )
