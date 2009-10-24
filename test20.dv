@@ -1,0 +1,22 @@
+# test vector built-in method calls
+
+# create a vector
+a = [];
+# call the built-in append method
+a.append( "foo" );
+print( a );
+# call the built-in length method
+len = a.length();
+print( len );
+# call the built-in append method again
+a.append( "bar" );
+print( a );
+# call the built-in length method again
+len = a.length();
+print( len );
+# create a copy
+b = a.copy();
+# verify it is a copy, not the original
+b.append( "jam" );
+print( a );
+print( b );

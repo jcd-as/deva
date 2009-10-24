@@ -120,7 +120,7 @@ DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_function ), f
 DevaObject::DevaObject( string nm, map<DevaObject, DevaObject>* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
 {}
 // vector type with the given vector
-DevaObject::DevaObject( string nm, vector<DevaObject>* v ) : SymbolInfo( sym_map ), name( nm ), map_val( 0 ), vec_val( v )
+DevaObject::DevaObject( string nm, vector<DevaObject>* v ) : SymbolInfo( sym_vector ), name( nm ), map_val( 0 ), vec_val( v )
 {}
 // given type, empty/default object
 DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )

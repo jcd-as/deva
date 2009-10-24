@@ -3,7 +3,9 @@
 // created by jcs, october 21, 2009 
 
 // TODO:
-// * 
+// * builtins for: concat(vec), min, max, find, count(n) (return number of n's
+//   found), insert, pop, remove(pos), reverse, sort 
+//
 
 #include "vector_builtins.h"
 #include <iostream>
@@ -17,19 +19,19 @@
 //    access the private members of Executor (like the stack)
 
 // pre-decls for builtin executors
-void do_vector_append( DevaObject *vec, Executor *ex, const Instruction & inst );
-void do_vector_length( DevaObject *vec, Executor *ex, const Instruction & inst );
-void do_vector_copy( DevaObject *vec, Executor *ex, const Instruction & inst );
+void do_vector_append( Executor *ex );
+void do_vector_length( Executor *ex );
+void do_vector_copy( Executor *ex );
 
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
 {
-    string( "append" ),
-    string( "length" ),
-    string( "copy" ),
+    string( "vector_append" ),
+    string( "vector_length" ),
+    string( "vector_copy" ),
 };
 // ...and function pointers to the executor functions for them
-typedef void (*vector_builtin_fcn)(DevaObject*, Executor*, const Instruction&);
+typedef void (*vector_builtin_fcn)(Executor*);
 vector_builtin_fcn vector_builtin_fcns[] = 
 {
     do_vector_append,
@@ -47,10 +49,8 @@ bool is_vector_builtin( const string & name )
 }
 
 // execute built-in function
-void execute_vector_builtin( DevaObject* vec, Executor *ex, const Instruction & inst )
+void execute_vector_builtin( Executor *ex, const string & name )
 {
-    // find the name of the fcn
-	string name = inst.args[0].name;
     const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
     if( i == vector_builtin_names + num_of_vector_builtins )
 		throw DevaICE( "No such built-in function." );
@@ -62,21 +62,25 @@ void execute_vector_builtin( DevaObject* vec, Executor *ex, const Instruction & 
 		throw DevaICE( "Out-of-array-bounds looking for built-in function." );
     else
         // call the function
-        vector_builtin_fcns[idx]( vec, ex, inst );
+        vector_builtin_fcns[idx]( ex );
 }
 
 // the built-in executor functions:
-void do_vector_append( DevaObject* vec, Executor *ex, const Instruction & inst )
+void do_vector_append( Executor *ex )
 {
-	// value is on top of stack
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// value is next on stack
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 	
 	// vector
-	if( vec->Type() != sym_vector )
+	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method append." );
 
-	vec->vec_val->push_back( val );
+	vec.vec_val->push_back( val );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -85,13 +89,17 @@ void do_vector_append( DevaObject* vec, Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_vector_length( DevaObject* vec, Executor *ex, const Instruction & inst )
+void do_vector_length( Executor *ex )
 {
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
 	int len;
-	if( vec->Type() != sym_vector )
+	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method length." );
 
-	len = vec->vec_val->size();
+	len = vec.vec_val->size();
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -100,20 +108,24 @@ void do_vector_length( DevaObject* vec, Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", (double)len ) );
 }
 
-void do_vector_copy( DevaObject* vec, Executor *ex, const Instruction & inst )
+void do_vector_copy( Executor *ex )
 {
-    DevaObject* copy;
-    if( vec->Type() != sym_vector )
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method copy." );
 
+    DevaObject copy;
 	// create a new vector object that is a copy of the one we received,
-	vector<DevaObject>* v = new vector<DevaObject>( *(vec->vec_val) );
-	copy = new DevaObject( "", v );
+	vector<DevaObject>* v = new vector<DevaObject>( *(vec.vec_val) );
+	copy = DevaObject( "", v );
 
 	// pop the return address
 	ex->stack.pop_back();
 
 	// return the copy
-	ex->stack.push_back( *copy );
+	ex->stack.push_back( copy );
 }
 

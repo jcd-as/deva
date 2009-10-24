@@ -5,14 +5,16 @@ def foo( s, t )
 	print( s + t );
 }
 
+# test vector built-in method calls
 # create a vector
-#a = [];
-a = {};
+a = [];
 # call the built-in append method
-#a.append( "foo" );
+a.append( "foo" );
+print( a );
 #append( a, "foo" );
 
-a["foo"] = foo;
-
-a.foo( "this is", " a string" );
+# test 'method' calls on a map
+#a = {};
+#a["foo"] = foo;
+#a.foo( "this is", " a string" );
 #foo( "this is ", "a string" );

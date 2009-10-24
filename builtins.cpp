@@ -263,18 +263,18 @@ void do_copy( Executor *ex, const Instruction & inst )
 	if( !o )
 		o = &obj;
 
-    DevaObject* copy;
+    DevaObject copy;
 	if( o->Type() == sym_map )
 	{
         // create a new map object that is a copy of the one we received,
         map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>( *(o->map_val) );
-        copy = new DevaObject( "", m );
+        copy = DevaObject( "", m );
 	}
     else if( o->Type() == sym_vector )
     {
         // create a new vector object that is a copy of the one we received,
         vector<DevaObject>* v = new vector<DevaObject>( *(o->vec_val) );
-        copy = new DevaObject( "", v );
+        copy = DevaObject( "", v );
     }
 	else
 	{
@@ -285,7 +285,7 @@ void do_copy( Executor *ex, const Instruction & inst )
 	ex->stack.pop_back();
 
 	// return the copy
-	ex->stack.push_back( *copy );
+	ex->stack.push_back( copy );
 }
 
 void do_eval( Executor *ex, const Instruction & inst )

@@ -18,6 +18,6 @@ using namespace std;
 bool is_vector_builtin( const string & name );
 
 // exectute built-in function
-void execute_vector_builtin( DevaObject* vec, Executor *ex, const Instruction & inst );
+void execute_vector_builtin( Executor *ex, const string & name );
 
 #endif // __VECTOR_BUILTINS_H__

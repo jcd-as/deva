@@ -1,0 +1,18 @@
+vector: 'a' = 
+string: '' = foo
+
+1
+vector: 'a' = 
+string: '' = foo
+string: '' = bar
+
+2
+vector: 'a' = 
+string: '' = foo
+string: '' = bar
+
+vector: 'b' = 
+string: '' = foo
+string: '' = bar
+string: '' = jam
+

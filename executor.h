@@ -242,9 +242,9 @@ public:
 	friend void do_eval( Executor *ex, const Instruction & inst );
 
 	// be-friend the vector built-ins
-    friend void do_vector_append( DevaObject* vec, Executor *ex, const Instruction & inst );
-    friend void do_vector_length( DevaObject* vec, Executor *ex, const Instruction & inst );
-    friend void do_vector_copy( DevaObject* vec, Executor *ex, const Instruction & inst );
+    friend void do_vector_append( Executor *ex );
+    friend void do_vector_length( Executor *ex );
+    friend void do_vector_copy( Executor *ex );
 };
 
 #endif // __EXECUTOR_H__

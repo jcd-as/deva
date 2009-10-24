@@ -520,15 +520,26 @@ void Executor::Vec_load( Instruction const & inst )
 	// or string index for method calls
 	if( table->Type() == sym_vector )
 	{
-		// if it was a vector or UDT, this is definitely a method call
-//		if( idxkey.Type() == sym_string )
-//		{
-//			// TODO:
-//			// method call.
-//			// map look-up (for call of fcn in map):
-//			//stack.push_back( p.second );	// value (fcn)
-//			//stack.push_back( p.first ); 	// key	 (fcn name)
-//		}
+		// if it was a vector or UDT, this is a method call on a vector builtin (or an error)
+		if( idxkey.Type() == sym_string )
+		{
+			// built-in method call
+			// top of stack contains key (fcn name as string)
+			// next-to-top contains value (fcn as sym_function)
+			string key( "vector_");
+		   	key += idxkey.str_val; 
+			// key == string "append"
+			// table == vector "a"
+			// look up 'key' in the vector built-ins
+			if( !is_vector_builtin( key ) )
+				throw DevaRuntimeException( "Not a valid method on type 'vector'." );
+			// push the vector as an argument
+			stack.push_back( *table );
+			// push a fcn with 'key' as its name (it's a builtin, so the offset
+			// given is irrelevant)
+			stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+			return;
+		}
 		if( idxkey.Type() != sym_number )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
@@ -632,7 +643,6 @@ void Executor::Vec_store( Instruction const & inst )
     if( vecmap.Type() == sym_unknown )
         table = find_symbol( vecmap );
     else
-        // TODO: does the vecmap need to be entered into a scope somewhere??
         table = &vecmap;
 
 	// ensure it is the correct type
@@ -1356,6 +1366,14 @@ void Executor::Call( Instruction const & inst )
 				fcn = find_symbol( o.name );
 			else
 				throw DevaICE( "Invalid argument (on stack) for 'call' instruction." );
+
+			// if this is a vector builtin method, execute it
+			if( is_vector_builtin( fcn->name ) )
+			{
+				execute_vector_builtin( this, fcn->name );
+				return;
+			}
+			// TODO: map builtins, methods on UDTs
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
