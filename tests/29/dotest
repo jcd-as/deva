@@ -1,1 +1,9 @@
-../../dotest_exec
+#!/bin/sh
+# compile foo.dv
+../../devac -d foo.dv
+# move foo.dvc into bar directory, for import during test
+mv foo.dvc bar/foo.dvc
+# run the test
+../../dotest_exec $1 $2
+# delete bar/foo.dvc
+rm bar/foo.dvc
