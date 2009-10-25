@@ -87,8 +87,10 @@ class Item( object ):
         elif self.priority == "verylow":
             return "${BLUE}"
 
-    def printItem( self, term, child = False, verbose = False ):
+    def printItem( self, term, child = False, verbose = False, show_if_done = False ):
         if self.done:
+            if not show_if_done:
+                return
             if child:
                 template = "\t-"
             else:
@@ -295,8 +297,9 @@ if __name__ == "__main__":
         # no switches, just display the info
         notes.sort( key=pri )
         for note in notes:
-            if not options.show_all:
-                if not note.done:
-                    note.printItem( term )
-            else:
-                note.printItem( term )
+#            if not options.show_all:
+#                if not note.done:
+#                    note.printItem( term )
+#            else:
+#                note.printItem( term )
+            note.printItem( term, show_if_done = options.show_all )
