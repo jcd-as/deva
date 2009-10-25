@@ -16,3 +16,65 @@ string: '' = foo
 string: '' = bar
 string: '' = jam
 
+vector: 'a' = 
+string: '' = foo
+string: '' = bar
+string: '' = foo
+string: '' = bar
+string: '' = jam
+
+vector: 'b' = 
+string: '' = foo
+string: '' = bar
+string: '' = jam
+
+min value in 'a' is:
+bar
+max value in 'a' is:
+jam
+the last item is: jam
+vector: 'a' = 
+string: '' = foo
+string: '' = bar
+string: '' = foo
+string: '' = bar
+
+vector: 'a' = 
+string: 'last' = jam
+string: '' = foo
+string: '' = bar
+string: '' = foo
+string: '' = bar
+
+vector: 'a' = 
+string: 'last' = jam
+string: '' = foo
+string: '' = goo
+string: '' = bar
+string: '' = foo
+string: '' = bar
+
+vector: 'a' = 
+string: 'last' = jam
+string: '' = goo
+string: '' = bar
+string: '' = foo
+string: '' = bar
+
+1
+2
+"bar" found 2 times
+vector: 'a' = 
+string: '' = bar
+string: '' = bar
+string: '' = foo
+string: '' = goo
+string: 'last' = jam
+
+vector: 'a' = 
+string: 'last' = jam
+string: '' = goo
+string: '' = foo
+string: '' = bar
+string: '' = bar
+

@@ -64,6 +64,7 @@ struct DevaObject : public SymbolInfo
 
 	DevaObject& operator = ( const DevaObject & o );
 	bool operator < ( const DevaObject & rhs ) const;
+	bool operator == ( const DevaObject & rhs ) const;
 
 	// size of the object on *disk*
 	long Size() const;

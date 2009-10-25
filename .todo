@@ -117,4 +117,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1256363388" priority="veryhigh" time="1256362973">function/method arguments are passed in the REVERSE order (backwards)!!
 <comment>easy fix, reverse loop over children in gen_IL_arg_list_decl() (instructions.cpp)
 </comment></note><note priority="veryhigh" time="1256363869">add support for vector and map built-ins (e.g. vec.append(n))
+</note><note priority="veryhigh" time="1256442335">default arguments to functions/methods. defarg instruction can have an arg to define the default value.
 </note></todo>

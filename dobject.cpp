@@ -277,6 +277,48 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 	}
 }
 
+bool DevaObject::operator == ( const DevaObject & rhs ) const
+{
+	// can't be the same if the types are different
+	if( type != rhs.type )
+		return false;
+	// types are the same, compare
+	switch( type )
+	{
+	case sym_number:
+		// TODO: need to use epsilon or some other more robust method to compare
+		// floating point numbers
+		if( num_val == rhs.num_val )
+			return true;
+		else
+			return false;
+	case sym_string:
+		return strcmp( str_val, rhs.str_val ) == 0;
+	case sym_boolean:
+		return bool_val == rhs.bool_val;
+	case sym_map:
+		// TODO: deep compare instead of "is" pointer compare??
+		return (void*)map_val == (void*)rhs.map_val;
+	case sym_vector:
+		// TODO: deep compare instead of "is" pointer compare??
+		return (void*)vec_val == (void*)rhs.vec_val;
+	case sym_function:
+		return func_offset == rhs.func_offset;
+	case sym_function_call:
+		// TODO: ???
+		return false;
+	case sym_null:
+		// null always equal to null
+		return true;
+	case sym_unknown:
+		// TODO: deep compare?? name compare?? what does this mean??
+		return name == rhs.name;
+	default:
+		// TODO: throw error
+		throw DevaICE( "Unknown type in DevaObject equality comparison." );
+	}
+}
+
 // size of the object on *disk*
 long DevaObject::Size() const
 {

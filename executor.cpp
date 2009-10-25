@@ -3,9 +3,6 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * review all copying (copy constructor, = op) or DevaObjects. this is
-// 	 expensive if they are maps/vectors! (and may need to change when the
-// 	 variable/data model changes)
 // * 'call stack' for tracking where errors occur (rudimentary debugging support)
 
 #include "executor.h"

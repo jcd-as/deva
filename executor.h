@@ -245,6 +245,17 @@ public:
     friend void do_vector_append( Executor *ex );
     friend void do_vector_length( Executor *ex );
     friend void do_vector_copy( Executor *ex );
+    friend void do_vector_concat( Executor *ex );
+    friend void do_vector_min( Executor *ex );
+    friend void do_vector_max( Executor *ex );
+    friend void do_vector_pop( Executor *ex );
+    friend void do_vector_insert( Executor *ex );
+    friend void do_vector_remove( Executor *ex );
+    friend void do_vector_find( Executor *ex );
+    friend void do_vector_rfind( Executor *ex );
+    friend void do_vector_count( Executor *ex );
+    friend void do_vector_reverse( Executor *ex );
+    friend void do_vector_sort( Executor *ex );
 };
 
 #endif // __EXECUTOR_H__
