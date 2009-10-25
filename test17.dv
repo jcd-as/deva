@@ -1,0 +1,3 @@
+# test eval
+eval( "def foo(){ print( \"foobar\" ); }" );
+foo();
