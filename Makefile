@@ -7,7 +7,22 @@ TEST_OBJS=$(patsubst %.cpp, %.o, ${TEST_SOURCES})
 DEVAC_SOURCES=devac.cpp symbol.cpp fileformat.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp dobject.cpp
 DEVAC_OBJS=$(patsubst %.cpp, %.o, ${DEVAC_SOURCES})
 # sources/objs for deva executable
-DEVA_SOURCES=deva.cpp symbol.cpp fileformat.cpp error_report_parsers.cpp scope.cpp executor.cpp instructions.cpp parser_ids.cpp dobject.cpp builtins.cpp vector_builtins.cpp compile.cpp semantics.cpp util.cpp
+DEVA_SOURCES =  \
+	builtins.cpp \
+	compile.cpp \
+	deva.cpp \
+	dobject.cpp \
+	error_report_parsers.cpp \
+	executor.cpp \
+	fileformat.cpp \
+	instructions.cpp \
+	parser_ids.cpp \
+	scope.cpp \
+	semantics.cpp \
+	symbol.cpp \
+	util.cpp \
+	vector_builtins.cpp \
+	map_builtins.cpp
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})

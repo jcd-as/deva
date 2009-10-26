@@ -1,0 +1,27 @@
+# test map built-in methods
+m = {};
+m[0] = "a";
+# length
+len = m.length();
+print( len );
+# copy
+n = m.copy();
+print( n.length() );
+n[1] = "b";
+print( n.length() );
+print( m );
+print( n );
+# remove
+n[2] = "c";
+print( n );
+n.remove( 1 );
+print( n );
+# find
+i = n.find( 1 );
+print( i );
+i = n.find( 2 );
+print( i );
+# keys
+print( n.keys() );
+# values
+print( n.values() );

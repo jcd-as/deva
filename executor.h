@@ -110,6 +110,8 @@ private:
 	void FixupOffsets();
 	// locate a symbol in the symbol table(namespace)
 	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
+	// remove a symbol from the symbol table(namespace)
+	void remove_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
@@ -240,6 +242,7 @@ public:
 	friend void do_length( Executor *ex, const Instruction & inst );
 	friend void do_copy( Executor *ex, const Instruction & inst );
 	friend void do_eval( Executor *ex, const Instruction & inst );
+	friend void do_delete( Executor *ex, const Instruction & inst );
 
 	// be-friend the vector built-ins
     friend void do_vector_append( Executor *ex );
@@ -256,6 +259,14 @@ public:
     friend void do_vector_count( Executor *ex );
     friend void do_vector_reverse( Executor *ex );
     friend void do_vector_sort( Executor *ex );
+
+	// be-friend the map built-ins
+    friend void do_map_length( Executor *ex );
+    friend void do_map_copy( Executor *ex );
+    friend void do_map_remove( Executor *ex );
+    friend void do_map_find( Executor *ex );
+    friend void do_map_keys( Executor *ex );
+    friend void do_map_values( Executor *ex );
 };
 
 #endif // __EXECUTOR_H__

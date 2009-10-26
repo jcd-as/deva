@@ -330,25 +330,44 @@ void do_vector_remove( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// position to remove at is next on stack
-	DevaObject pos = ex->stack.back();
+	// end position to remove at is next on stack
+	DevaObject end = ex->stack.back();
 	ex->stack.pop_back();
+
+	// start position to insert at is next on stack
+	DevaObject start = ex->stack.back();
+	ex->stack.pop_back();
+
+	// start position
+	if( start.Type() != sym_number )
+		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'remove'." );
+
+	// end position
+	if( end.Type() != sym_number )
+		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'remove'." );
 
 	// vector
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'remove'." );
 
-	// position
-	if( pos.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for position argument in vector built-in method 'remove'." );
+	// TODO: start and end need to be integral values. error if they aren't
+	int i_start = (int)start.num_val;
+	int i_end = (int)end.num_val;
+	if( i_end == -1 )
+		i_end = vec.vec_val->size();
 
-	// TODO: position has to be integer. throw error on non-integral number?
-	int i = (int)pos.num_val;
-	if( i >= vec.vec_val->size() )
-		throw DevaRuntimeException( "Position argument equal to or greater than vector size in vector built-in method 'remove'." );
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'remove'." );
 
 	// remove the value
-	vec.vec_val->erase( vec.vec_val->begin() + i );
+	if( i_start == i_end )
+		vec.vec_val->erase( vec.vec_val->begin() + i_start );
+	else
+		vec.vec_val->erase( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -404,6 +423,13 @@ void do_vector_find( Executor *ex )
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'remove'." );
+
 	// find the element that matches
 	// find/find_xxx from <algorithm> won't help us, we need an index, not an
 	// iterator
@@ -418,6 +444,7 @@ void do_vector_find( Executor *ex )
 			break;
 		}
 	}
+	// TODO: return -1, or null??
 	if( !found )
 		ret = DevaObject( "", -1.0 );
 
@@ -474,6 +501,13 @@ void do_vector_rfind( Executor *ex )
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'rfind'." );
+	if( i_end > sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'rfind'." );
+
 	// find the element that matches
 	// find/find_xxx from <algorithm> won't help us, we need an index, not an
 	// iterator
@@ -488,6 +522,7 @@ void do_vector_rfind( Executor *ex )
 			break;
 		}
 	}
+	// TODO: return -1, or null??
 	if( !found )
 		ret = DevaObject( "", -1.0 );
 
@@ -542,6 +577,13 @@ void do_vector_count( Executor *ex )
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'count'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'count'." );
+
 	// count the value
 	int num = count( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, val );
 
@@ -584,6 +626,13 @@ void do_vector_reverse( Executor *ex )
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'reverse'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'reverse'." );
+
 	reverse( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
 
 	// pop the return address
@@ -624,6 +673,13 @@ void do_vector_sort( Executor *ex )
 	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
+
+	size_t sz = vec.vec_val->size();
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'sort'." );
 
 	sort( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
 

@@ -23,6 +23,7 @@ void do_append( Executor *ex, const Instruction & inst );
 void do_length( Executor *ex, const Instruction & inst );
 void do_copy( Executor *ex, const Instruction & inst );
 void do_eval( Executor *ex, const Instruction & inst );
+void do_delete( Executor *ex, const Instruction & inst );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -33,6 +34,7 @@ static const string builtin_names[] =
     string( "length" ),
     string( "copy" ),
     string( "eval" ),
+    string( "delete" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -44,6 +46,7 @@ builtin_fcn builtin_fcns[] =
     do_length,
     do_copy,
 	do_eval,
+	do_delete,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -53,17 +56,6 @@ bool is_builtin( const string & name )
     const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
     if( i != builtin_names + num_of_builtins ) return true;
 	else return false;
-}
-
-void do_print( Executor *ex, const Instruction & inst )
-{
-	ex->Output( inst );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
 // execute built-in function
@@ -86,6 +78,17 @@ void execute_builtin( Executor *ex, const Instruction & inst )
 }
 
 // the built-in executor functions:
+void do_print( Executor *ex, const Instruction & inst )
+{
+	ex->Output( inst );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
 void do_str( Executor *ex, const Instruction & inst )
 {
 	// get the argument off the stack
@@ -126,7 +129,6 @@ void do_str( Executor *ex, const Instruction & inst )
 			{
 			// dump map contents
 			s << "map: '" << o->name << "' = " << endl;
-//			map<DevaObject, DevaObject>* mp = o->map_val;
 			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
 			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
@@ -140,7 +142,6 @@ void do_str( Executor *ex, const Instruction & inst )
 			{
 			// dump vector contents
 			s << "vector: '" << o->name << "' = " << endl;
-//			vector<DevaObject>* vec = o->vec_val;
 			smart_ptr<vector<DevaObject> > vec( o->vec_val );
 			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
@@ -243,7 +244,7 @@ void do_length( Executor *ex, const Instruction & inst )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// all fcns return *something*
+	// return the length
 	ex->stack.push_back( DevaObject( "", (double)len ) );
 }
 
@@ -315,6 +316,31 @@ void do_eval( Executor *ex, const Instruction & inst )
 	ex->stack.pop_back();
 
 	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_delete( Executor *ex, const Instruction & inst )
+{
+	// vector or string to append to at top of stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+
+	ex->remove_symbol( *o );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 

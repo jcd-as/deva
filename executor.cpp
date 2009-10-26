@@ -8,6 +8,7 @@
 #include "executor.h"
 #include "builtins.h"
 #include "vector_builtins.h"
+#include "map_builtins.h"
 #include "compile.h"
 #include "fileformat.h"
 #include "util.h"
@@ -44,6 +45,29 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 			return p->operator[]( ob.name );
 	}
 	return NULL;
+}
+
+// remove a symbol, by name
+void Executor::remove_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL*/ )
+{
+	if( !scopes )
+		scopes = current_scopes;
+	// check each scope on the stack
+	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i < scopes->rend(); ++i )
+	{
+		// get the scope object
+		Scope* p = *i;
+
+		// check for the symbol
+		if( p->count( ob.name ) != 0 )
+		{
+			// delete the symbol
+			delete p->operator[]( ob.name );
+
+			// remove the symbol from the scope
+			p->erase( ob.name );
+		}
+	}
 }
 
 // peek at what the next instruction is (doesn't modify ip)
@@ -517,7 +541,8 @@ void Executor::Vec_load( Instruction const & inst )
 	// or string index for method calls
 	if( table->Type() == sym_vector )
 	{
-		// if it was a vector or UDT, this is a method call on a vector builtin (or an error)
+		// if this is a string index and it was a vector or UDT, 
+		// this is a method call on a vector builtin (or an error)
 		if( idxkey.Type() == sym_string )
 		{
 			// built-in method call
@@ -525,8 +550,8 @@ void Executor::Vec_load( Instruction const & inst )
 			// next-to-top contains value (fcn as sym_function)
 			string key( "vector_");
 		   	key += idxkey.str_val; 
-			// key == string "append"
-			// table == vector "a"
+			// key == string
+			// table == vector
 			// look up 'key' in the vector built-ins
 			if( !is_vector_builtin( key ) )
 				throw DevaRuntimeException( "Not a valid method on type 'vector'." );
@@ -550,8 +575,6 @@ void Executor::Vec_load( Instruction const & inst )
 		stack.push_back( o );
 	}
 	// maps can be indexed by number/string/user-defined-type
-	// TODO: and if it's a map? it could be a normal look-up or method call. do
-	// we need to differentiate??
 	else if( table->Type() == sym_map )
 	{
 		// if there is an arg, and it's boolean 'true', treat the key as an
@@ -590,8 +613,26 @@ void Executor::Vec_load( Instruction const & inst )
 			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
 			map<DevaObject, DevaObject>::iterator it;
 			it = mp->find( idxkey );
+			// if not found, try the map built-in methods...
 			if( it == mp->end() )
-				throw DevaRuntimeException( "Invalid map key. No such item found." );
+			{
+				// built-in method call??
+				// top of stack contains key (fcn name as string)
+				// next-to-top contains value (fcn as sym_function)
+				string key( "map_");
+				key += idxkey.str_val; 
+				// key == string
+				// table == map
+				// look up 'key' in the map built-ins
+				if( !is_map_builtin( key ) )
+					throw DevaRuntimeException( "Invalid map key or method. No such item found." );
+				// push the map as an argument
+				stack.push_back( *table );
+				// push a fcn with 'key' as its name (it's a builtin, so the offset
+				// given is irrelevant)
+				stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+				return;
+			}
 			// push it onto the stack
 			pair<DevaObject, DevaObject> p = *it;
 			stack.push_back( p.second );
@@ -1370,7 +1411,13 @@ void Executor::Call( Instruction const & inst )
 				execute_vector_builtin( this, fcn->name );
 				return;
 			}
-			// TODO: map builtins, methods on UDTs
+			// if this is a map builtin method, execute it
+			if( is_map_builtin( fcn->name ) )
+			{
+				execute_map_builtin( this, fcn->name );
+				return;
+			}
+			// TODO: methods on UDTs
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
@@ -1635,10 +1682,10 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_new_vec:		// 8 create a new vector object and push onto stack
 		New_vec( inst );
 		break;
-	case op_vec_load:	// 9 get item from vector
+	case op_vec_load:	// 9 get item from vector/map
 		Vec_load( inst );
 		break;
-	case op_vec_store:	// 10 set item in vector. args: index, value
+	case op_vec_store:	// 10 set item in vector/map. args: index, value
 		Vec_store( inst );
 		break;
 	case op_swap:		// 11 swap top two items on stack. no args

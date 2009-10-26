@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
+<?xml version="1.0" ?>
+<todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -115,9 +116,12 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><comment>done. see test18.dv for a sample
 </comment></note><note done="1256363388" priority="veryhigh" time="1256362973">function/method arguments are passed in the REVERSE order (backwards)!!
 <comment>easy fix, reverse loop over children in gen_IL_arg_list_decl() (instructions.cpp)
-</comment></note><note priority="veryhigh" time="1256363869">add support for vector and map built-ins (e.g. vec.append(n))
+</comment></note><note done="1256530077" priority="veryhigh" time="1256363869">add support for vector and map built-ins (e.g. vec.append(n))
 <note done="1256446846" priority="veryhigh" time="1256446828">vector built-ins
 <comment>completed
-</comment></note><note priority="veryhigh" time="1256446839">map built-ins
-</note></note><note priority="veryhigh" time="1256442335">default arguments to functions/methods. defarg instruction can have an arg to define the default value.
+</comment></note><note done="1256530056" priority="veryhigh" time="1256446839">map built-ins
+<comment>map builtins added
+</comment></note><comment>
+</comment></note><note priority="veryhigh" time="1256442335">default arguments to functions/methods. defarg instruction can have an arg to define the default value.
+</note><note priority="high" time="1256516559">on unexpected exit (exception caught) from 'deva', the scope table will complain and throw an exception saying that it isn't empty, which is true, but unhelpful since we already know there was an unexpected failure
 </note></todo>

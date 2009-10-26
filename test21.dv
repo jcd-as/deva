@@ -1,0 +1,28 @@
+# test the delete builtin function
+a = {};
+a["foo"] = "bar";
+b = [];
+b.append( "jam" );
+
+{
+	aa = a;
+	bb = b;
+	{
+		aaa = aa;
+		bbb = bb;
+		{
+			print( bbb );
+			delete( bbb );
+			# this is an error, 'bbb' is gone
+#			x = bbb;
+			# but this is okay, 'bb' still exists
+			print( bb );
+		}
+	}
+}
+
+n = 5;
+print( n );
+delete( n );
+# this is an error, 'n' has been deleted
+print( n );
