@@ -14,6 +14,10 @@
 #include "util.h"
 
 
+// static data
+///////////////////////////////////////////////////////////
+int Executor::args_on_stack = -1;
+
 // private utility functions
 ///////////////////////////////////////////////////////////
 
@@ -280,8 +284,8 @@ void Executor::FixupOffsets()
 					}
 				case sym_function:
 					{
-					// don't fix-up line numbers
-					if( op != op_line_num )
+					// don't fix-up line numbers or calls (number of args)
+					if( op != op_line_num && op != op_call )
 					{
 						// read a size_t to get the offset
 						size_t func_offset;
@@ -410,15 +414,37 @@ void Executor::Defun( Instruction const & inst )
 // 5 define an argument to a fcn. argument (to opcode) is arg name
 void Executor::Defarg( Instruction const & inst )
 {
+	// if args_on_stack is -1 then we somehow ended up here without going
+	// through a 'call' instruction first!
+	if( args_on_stack == -1 )
+		throw DevaICE( "defarg instruction processed without previous call instruction. Program is corrupt." );
 	// only called as the start of a fcn *call*, not definition (defun)
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid defarg opcode, no arguments." );
 	if( stack.size() < 1 )
 		throw DevaRuntimeException( "Invalid defarg opcode, no data on stack." );
-	// pop the top of the stack and put it in the symbol table with the name of
-	// the argument that is being defined
-	DevaObject o = stack.back();
-	stack.pop_back();
+
+	// if there are no args left, use the default
+	DevaObject o;
+	if( args_on_stack == 0 )
+	{
+		// if there is no default argument
+		if( inst.args.size() < 2 )
+			throw DevaRuntimeException( "Not enough arguments passed to function." );
+		o = inst.args[1];
+	}
+	// otherwise get it from the stack
+	else
+	{
+		// pop the top of the stack and put it in the symbol table with the name of
+		// the argument that is being defined
+		o = stack.back();
+		stack.pop_back();
+
+		// one less arg on the stack
+		--args_on_stack;
+	}
+
 	// if it's a variable, look it up in the symbol table(s)
 	if( o.Type() == sym_unknown )
 	{
@@ -427,7 +453,7 @@ void Executor::Defarg( Instruction const & inst )
 			throw DevaRuntimeException( "Undefined variable used as function argument." );
 		o = *var;
 	}
-	// check for the symbol in the immediate (current) scope and makre sure
+	// check for the symbol in the immediate (current) scope and make sure
 	// we're not redef'ing the same argument (shouldn't happen, the semantic
 	// checker looks for this)
 	if( current_scopes->back()->count( inst.args[0].name ) != 0 )
@@ -1376,25 +1402,43 @@ void Executor::Output( Instruction const & inst )
 void Executor::Call( Instruction const & inst )
 {
 	// check for built-in function first
-	if( inst.args.size() > 0 && is_builtin( inst.args[0].name ) )
+	if( inst.args.size() == 2 && is_builtin( inst.args[0].name ) )
 	{
+		// set the static that tracks the number of args processed
+		args_on_stack = inst.args[1].func_offset;
 		execute_builtin( this, inst );
+		// reset the static that tracks the number of args (builtins don't run
+		// the 'return' instruction)
+		args_on_stack = -1;
 	}
 	else
 	{
 		DevaObject* fcn;
-		// if there's an arg, it's the name of the fcn to call
-		if( inst.args.size() > 0 )
+		// if there's more than one arg, the first is the name of the fcn to call 
+		// and the second is the number of args passed to it (on the stack)
+		if( inst.args.size() == 2 )
 		{
 			// look up the name in the symbol table
 			fcn = find_symbol( inst.args[0] );
 			if( !fcn )
 				throw DevaRuntimeException( "Call made to undefined function." );
+
+			// check the number of args to the fcn
+			if( inst.args[1].Type() != sym_function )
+				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
+
+			// set the static that tracks the number of args processed
+			args_on_stack = inst.args[1].func_offset;
 		}
-		// if there's no args, it's a method invokation,
+		// if there's one arg (the num of args to the fcn), 
+		// then it's a method invokation,
 		// pop the top of the stack for the fcn to call
-		else if( inst.args.size() == 0 )
+		else if( inst.args.size() == 1 )
 		{
+			// check the number of args to the fcn
+			if( inst.args[0].Type() != sym_function )
+				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
+
 			// get the function to call off the stack
 			DevaObject o = stack.back();
 			stack.pop_back();
@@ -1408,16 +1452,34 @@ void Executor::Call( Instruction const & inst )
 			// if this is a vector builtin method, execute it
 			if( is_vector_builtin( fcn->name ) )
 			{
+				// set the static that tracks the number of args processed
+				args_on_stack = inst.args[0].func_offset;
+
 				execute_vector_builtin( this, fcn->name );
+
+				// reset the static that tracks the number of args (builtins don't run
+				// the 'return' instruction)
+				args_on_stack = -1;
 				return;
 			}
 			// if this is a map builtin method, execute it
 			if( is_map_builtin( fcn->name ) )
 			{
+				// set the static that tracks the number of args processed
+				args_on_stack = inst.args[0].func_offset;
+
 				execute_map_builtin( this, fcn->name );
+
+				// reset the static that tracks the number of args (builtins don't run
+				// the 'return' instruction)
+				args_on_stack = -1;
 				return;
 			}
 			// TODO: methods on UDTs
+			//
+
+			// set the static that tracks the number of args processed
+			args_on_stack = inst.args[0].func_offset;
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
@@ -1447,7 +1509,9 @@ void Executor::Return( Instruction const & inst )
 			throw DevaRuntimeException( "Invalid object for return value." );
 		if( current_scopes->size() < 2 )
 			throw DevaICE( "No scope to return to!" );
-		(*current_scopes)[current_scopes->size()-2]->AddObject( rv );
+		// add this to the *parent* scope with a new ref on it
+		DevaObject *r = new DevaObject( *rv );
+		(*current_scopes)[current_scopes->size()-2]->AddObject( r );
 	}
 
 	// pop the return location off the top of the stack
@@ -1461,6 +1525,8 @@ void Executor::Return( Instruction const & inst )
 	ip = offset;
 	// pop this scope (same as 'leave' instruction)
 	current_scopes->Pop();
+	// reset the static that tracks the number of args processed
+	args_on_stack = -1;
 }
 // 33 break out of loop, respecting scope (enter/leave)
 void Executor::Break( Instruction const & inst )

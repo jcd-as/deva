@@ -395,32 +395,32 @@ push : num: '' = 0
 store : 
 jmp : function: '', offset = 82
 defun : function: 'foo', offset = 122
+enter : 
 defarg : unknown: 'c'
 defarg : unknown: 'b'
 defarg : unknown: 'a'
-enter : 
 push : null
 return : 
 push : unknown: 'x'
-jmpf : function: '', offset = 199
+jmpf : function: '', offset = 205
 push : unknown: 'y'
-jmpf : function: '', offset = 199
-push : function: '', offset = 199
-call : function_call: 'z'
+jmpf : function: '', offset = 205
+push : function: '', offset = 205
+call : function_call: 'z'function: '', offset = 0
 push : unknown: 'x'
-jmpf : function: '', offset = 254
+jmpf : function: '', offset = 266
 enter : 
 push : unknown: 'y'
-jmpf : function: '', offset = 240
-push : function: '', offset = 240
-call : function_call: 'z'
+jmpf : function: '', offset = 252
+push : function: '', offset = 252
+call : function_call: 'z'function: '', offset = 0
 push : unknown: 'a'
 push : unknown: 'b'
 store : 
 leave : 
 push : unknown: 'x'
-jmpf : function: '', offset = 275
-jmp : function: '', offset = 275
+jmpf : function: '', offset = 287
+jmp : function: '', offset = 287
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 

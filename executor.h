@@ -26,6 +26,9 @@ class Executor
 private:
 	// private data
 	////////////////////////////////////////////////////
+	
+	// static data
+	static int args_on_stack;
 
 	// in debug_mode?
 	bool debug_mode;

@@ -673,11 +673,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// proper scope for the fcn and its arguments (the 'leave' instruction 
 		// isn't needed, as the return statement at the end of the 
 		// function takes care of this)
-		if( (i->children.begin()+2)->value.id() != compound_statement_id )
-		{
+//		if( (i->children.begin()+2)->value.id() != compound_statement_id )
+//		{
 			generate_line_num( i->children.begin()+2, is );
 			is.push( Instruction( op_enter ) );
-		}
+//		}
 
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i );
@@ -1052,7 +1052,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// compound statement
 	else if( i->value.id() == parser_id( compound_statement_id ) )
 	{
-		pre_gen_IL_compound_statement( i, is );
+		pre_gen_IL_compound_statement( i, is, parent );
 		walk_children( i, is );
 		gen_IL_compound_statement( i, is, parent );
 	}

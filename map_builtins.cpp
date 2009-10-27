@@ -77,6 +77,9 @@ void execute_map_builtin( Executor *ex, const string & name )
 // the built-in executor functions:
 void do_map_length( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'length' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject map = ex->stack.back();
 	ex->stack.pop_back();
@@ -96,7 +99,10 @@ void do_map_length( Executor *ex )
 
 void do_map_copy( Executor *ex )
 {
-	// get the vector object off the top of the stack
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'copy' built-in method." );
+
+	// get the map object off the top of the stack
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -104,7 +110,7 @@ void do_map_copy( Executor *ex )
 		throw DevaICE( "Map expected in map built-in method 'copy'." );
 
     DevaObject copy;
-	// create a new vector object that is a copy of the one we received,
+	// create a new map object that is a copy of the one we received,
 	map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>( *(mp.map_val) );
 	copy = DevaObject( "", m );
 
@@ -117,7 +123,10 @@ void do_map_copy( Executor *ex )
 
 void do_map_remove( Executor *ex )
 {
-	// get the vector object off the top of the stack
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'remove' built-in method." );
+
+	// get the map object off the top of the stack
 	DevaObject map = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -152,7 +161,10 @@ void do_map_remove( Executor *ex )
 
 void do_map_find( Executor *ex )
 {
-	// get the vector object off the top of the stack
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'find' built-in method." );
+
+	// get the map object off the top of the stack
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -190,7 +202,10 @@ void do_map_find( Executor *ex )
 
 void do_map_keys( Executor *ex )
 {
-	// get the vector object off the top of the stack
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'keys' built-in method." );
+
+	// get the map object off the top of the stack
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -216,7 +231,10 @@ void do_map_keys( Executor *ex )
 
 void do_map_values( Executor *ex )
 {
-	// get the vector object off the top of the stack
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'values' built-in method." );
+
+	// get the map object off the top of the stack
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 

@@ -709,18 +709,18 @@ Scope 10, parent = 9
 Instructions:
 line_num : string: '' = input.dvfunction: '', offset = 0
 defun : function: 'bubble_sort', offset = 19
-defarg : unknown: 'a'
 enter : 
+defarg : unknown: 'a'
 push : unknown: 'len'
-push : function: '', offset = 75
+push : function: '', offset = 81
 push : unknown: 'a'
-call : function_call: 'length'
+call : function_call: 'length'function: '', offset = 1
 store : 
 push : unknown: 'swap'
 push : boolean: '' = 1
 store : 
 push : unknown: 'swap'
-jmpf : function: '', offset = 475
+jmpf : function: '', offset = 481
 enter : 
 push : unknown: 'swap'
 push : boolean: '' = 0
@@ -733,7 +733,7 @@ store :
 push : unknown: 'i'
 push : num: '' = 0
 gte : 
-jmpf : function: '', offset = 465
+jmpf : function: '', offset = 471
 enter : 
 push : unknown: 'j'
 push : num: '' = 1
@@ -741,7 +741,7 @@ store :
 push : unknown: 'j'
 push : unknown: 'i'
 lte : 
-jmpf : function: '', offset = 429
+jmpf : function: '', offset = 435
 enter : 
 push : unknown: 'a'
 push : unknown: 'j'
@@ -752,7 +752,7 @@ push : unknown: 'a'
 push : unknown: 'j'
 vec_load : 
 gt : 
-jmpf : function: '', offset = 393
+jmpf : function: '', offset = 399
 enter : 
 push : unknown: 'temp'
 push : unknown: 'a'
@@ -783,126 +783,128 @@ push : num: '' = 1
 add : 
 store : 
 leave : 
-jmp : function: '', offset = 207
+jmp : function: '', offset = 213
 push : unknown: 'i'
 push : unknown: 'i'
 push : num: '' = 1
 sub : 
 store : 
 leave : 
-jmp : function: '', offset = 159
+jmp : function: '', offset = 165
 leave : 
-jmp : function: '', offset = 95
+jmp : function: '', offset = 101
 push : unknown: 'a'
 return : 
 push : unknown: 'l'
 new_vec: : 
-push : function: '', offset = 524
+push : function: '', offset = 536
 push : unknown: 'l'
 push : num: '' = 2
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 561
+push : function: '', offset = 579
 push : unknown: 'l'
 push : num: '' = 1
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 598
+push : function: '', offset = 622
 push : unknown: 'l'
 push : num: '' = 4
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 635
+push : function: '', offset = 665
 push : unknown: 'l'
 push : num: '' = 3
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 672
+push : function: '', offset = 708
 push : unknown: 'l'
 push : num: '' = 6
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 709
+push : function: '', offset = 751
 push : unknown: 'l'
 push : num: '' = 5
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 746
+push : function: '', offset = 794
 push : unknown: 'l'
 push : num: '' = 8
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 783
+push : function: '', offset = 837
 push : unknown: 'l'
 push : num: '' = 7
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 820
+push : function: '', offset = 880
 push : unknown: 'l'
 push : num: '' = 10
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 857
+push : function: '', offset = 923
 push : unknown: 'l'
 push : num: '' = 9
-call : function_call: 'append'
+call : function_call: 'append'function: '', offset = 2
 pop : 
-push : function: '', offset = 891
+push : function: '', offset = 963
 push : string: '' = un-sorted:
-call : function_call: 'print'
+call : function_call: 'print'function: '', offset = 1
 pop : 
-push : function: '', offset = 893
+push : function: '', offset = 965
 push : unknown: 'l'
-call : function_call: 'length'
+call : function_call: 'length'function: '', offset = 1
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : function: '', offset = 1036
+jmpf : function: '', offset = 1120
 push : unknown: 'l'
 dup : num: '' = 1
 vec_load : 
 push : unknown: 'i'
 swap : 
 store : 
-push : function: '', offset = 1012
+push : function: '', offset = 1096
 push : unknown: 'i'
-call : function_call: 'print'
+call : function_call: 'print'function: '', offset = 1
 pop : 
 push : num: '' = 1
 add : 
-jmp : function: '', offset = 928
+jmp : function: '', offset = 1006
+pop : 
 pop : 
 push : unknown: 'n'
-push : function: '', offset = 1071
+push : function: '', offset = 1163
 push : unknown: 'l'
-call : function_call: 'bubble_sort'
+call : function_call: 'bubble_sort'function: '', offset = 1
 store : 
-push : function: '', offset = 1102
+push : function: '', offset = 1200
 push : string: '' = sorted:
-call : function_call: 'print'
+call : function_call: 'print'function: '', offset = 1
 pop : 
-push : function: '', offset = 1104
+push : function: '', offset = 1202
 push : unknown: 'n'
-call : function_call: 'length'
+call : function_call: 'length'function: '', offset = 1
 push : num: '' = 0
 dup : num: '' = 1
 dup : num: '' = 1
 neq : 
-jmpf : function: '', offset = 1247
+jmpf : function: '', offset = 1357
 push : unknown: 'n'
 dup : num: '' = 1
 vec_load : 
 push : unknown: 'i'
 swap : 
 store : 
-push : function: '', offset = 1223
+push : function: '', offset = 1333
 push : unknown: 'i'
-call : function_call: 'print'
+call : function_call: 'print'function: '', offset = 1
 pop : 
 push : num: '' = 1
 add : 
-jmp : function: '', offset = 1139
+jmp : function: '', offset = 1243
+pop : 
 pop : 
 halt : 
 compiled input.dv successfully

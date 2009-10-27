@@ -52,6 +52,7 @@ for( i in l )
 
 # sort the array
 n = bubble_sort( l );
+#n = l;
 
 # print each item in the array
 print( "sorted:" );

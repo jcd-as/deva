@@ -407,7 +407,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// push the vector/map
 	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
 	// call 'length' builtin
-	is.push( Instruction( op_call, DevaObject( "length", sym_function_call ) ) );
+	is.push( Instruction( op_call, DevaObject( "length", sym_function_call ), DevaObject( "", (size_t)1 ) ) );
 	// push 0
 	is.push( Instruction( op_push, DevaObject( "", 0.0 ) ) );
 	// save the offset for the loop stack (of the 'start', for back-patching)
@@ -478,6 +478,7 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset() ) );
 
 	// pop to remove 'index' from the stack
+	is.push( Instruction( op_pop ) );
 	is.push( Instruction( op_pop ) );
 }
 
@@ -560,18 +561,16 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 	// only need to handle function calls here
 	if( i->children[0].value.id() == arg_list_exp_id )
 	{
-		// TODO: validate
-		// this may be incorrect when reference-counting semantics/variable
-		// tracking is added...
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+		int num_args = i->children[0].children.size() - 2;
 		generate_line_num( i, is );
 		if( get_fcn_from_stack )
 			// add the call instruction, passing no args to indicate it needs
 			// to pull the function off the stack
-			is.push( Instruction( op_call ) );
+			is.push( Instruction( op_call, DevaObject( "", (size_t)num_args ) ) );
 		else
 			// add the call instruction with the name of the fcn to call
-			is.push( Instruction( op_call, DevaObject( name, sym_function_call ) ) );
+			is.push( Instruction( op_call, DevaObject( name, sym_function_call ), DevaObject( "", (size_t)num_args ) ) );
 
 
 		// back-patch the return address push op
@@ -787,11 +786,17 @@ void gen_IL_translation_unit( iter_t const & i, InstructionStream & is )
 	// no op
 }
 
-void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is )
+void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
-	// generate enter
-	generate_line_num( i, is );
-	is.push( Instruction( op_enter ) );
+    // don't generate an 'enter' statement for function defs, as the 'def'
+	// handling code does this for you (so that the defarg's are included
+	// *inside* the new scope, not outside)
+    if( parent->value.id() != func_id )
+	{
+		// generate enter
+		generate_line_num( i, is );
+		is.push( Instruction( op_enter ) );
+	}
 }
 
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent )

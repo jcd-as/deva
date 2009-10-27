@@ -80,6 +80,9 @@ void execute_builtin( Executor *ex, const Instruction & inst )
 // the built-in executor functions:
 void do_print( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'print'." );
+
 	ex->Output( inst );
 
 	// pop the return address
@@ -91,6 +94,9 @@ void do_print( Executor *ex, const Instruction & inst )
 
 void do_str( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'str'." );
+
 	// get the argument off the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
@@ -169,6 +175,9 @@ void do_str( Executor *ex, const Instruction & inst )
 
 void do_append( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'append'." );
+
 	// value is on top of stack
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
@@ -211,6 +220,9 @@ void do_append( Executor *ex, const Instruction & inst )
 
 void do_length( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'length'." );
+
 	// arg (vector, map or string) is at stack+0
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
@@ -250,6 +262,9 @@ void do_length( Executor *ex, const Instruction & inst )
 
 void do_copy( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'copy'." );
+
 	// vector or string to append to at top of stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
@@ -291,6 +306,9 @@ void do_copy( Executor *ex, const Instruction & inst )
 
 void do_eval( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'eval'." );
+
 	// string to eval must be at top of stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
@@ -321,6 +339,9 @@ void do_eval( Executor *ex, const Instruction & inst )
 
 void do_delete( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'delete'." );
+
 	// vector or string to append to at top of stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();

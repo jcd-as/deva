@@ -119,7 +119,7 @@ void gen_IL_const_decl( iter_t const & i, InstructionStream & is );
 void gen_IL_constant( iter_t const & i, InstructionStream & is );
 void gen_IL_translation_unit( iter_t const & i, InstructionStream & is );
 
-void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is );
+void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent );
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent );
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is );

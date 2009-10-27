@@ -100,6 +100,9 @@ void execute_vector_builtin( Executor *ex, const string & name )
 // the built-in executor functions:
 void do_vector_append( Executor *ex )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'append' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -123,6 +126,9 @@ void do_vector_append( Executor *ex )
 
 void do_vector_length( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'length' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -142,6 +148,9 @@ void do_vector_length( Executor *ex )
 
 void do_vector_copy( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'copy' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -163,6 +172,9 @@ void do_vector_copy( Executor *ex )
 
 void do_vector_concat( Executor *ex )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'concat' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -216,6 +228,9 @@ SymbolType MinComparator::type = sym_unknown;
 
 void do_vector_min( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'min' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -238,6 +253,9 @@ void do_vector_min( Executor *ex )
 
 void do_vector_max( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'max' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -260,6 +278,9 @@ void do_vector_max( Executor *ex )
 
 void do_vector_pop( Executor *ex )
 {
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'pop' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -278,6 +299,9 @@ void do_vector_pop( Executor *ex )
 
 void do_vector_insert( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'insert' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -326,6 +350,9 @@ void do_vector_insert( Executor *ex )
 
 void do_vector_remove( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'remove' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -378,6 +405,9 @@ void do_vector_remove( Executor *ex )
 
 void do_vector_find( Executor *ex )
 {
+	if( Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'find' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -456,6 +486,9 @@ void do_vector_find( Executor *ex )
 
 void do_vector_rfind( Executor *ex )
 {
+	if( Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'rfind' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -534,6 +567,9 @@ void do_vector_rfind( Executor *ex )
 
 void do_vector_count( Executor *ex )
 {
+	if( Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'count' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -596,6 +632,9 @@ void do_vector_count( Executor *ex )
 
 void do_vector_reverse( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'reverse' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
@@ -644,6 +683,9 @@ void do_vector_reverse( Executor *ex )
 
 void do_vector_sort( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'sort' built-in method." );
+
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();

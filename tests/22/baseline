@@ -126,8 +126,8 @@ Scope 3, parent = 2
 Instructions:
 line_num : string: '' = input.dvfunction: '', offset = 0
 push : boolean: '' = 1
-jmpf : function: '', offset = 84
-push : function: '', offset = 74
+jmpf : function: '', offset = 90
+push : function: '', offset = 80
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
@@ -135,26 +135,26 @@ push : string: '' = c
 vec_load : 
 push : string: '' = d
 vec_load : 
-call : 
+call : function: '', offset = 0
 pop : 
 jmp : function: '', offset = 19
-push : function: '', offset = 115
+push : function: '', offset = 127
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
 push : string: '' = c
 vec_load : 
-call : 
+call : function: '', offset = 0
 pop : 
-defun : function: 'x', offset = 117
+defun : function: 'x', offset = 129
 enter : 
-push : function: '', offset = 159
+push : function: '', offset = 177
 push : unknown: 'a'
 push : string: '' = b
 vec_load : 
 push : string: '' = c
 vec_load : 
-call : 
+call : function: '', offset = 0
 pop : 
 push : null
 return : 
