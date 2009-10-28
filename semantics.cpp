@@ -68,7 +68,7 @@ void check_func( iter_t const & i )
 	for( int j = 0; j < num_children; ++j )
 	{
 		NodeInfo arg = i->children[1].children[j].value.value();
-		if( find( names.begin(), names.end(), arg.sym ) != names.end() )
+		if( arg.type == variable_type && find( names.begin(), names.end(), arg.sym ) != names.end() )
 			throw DevaSemanticException( "Duplicate variable in function argument list", arg );
 		names.push_back( arg.sym );
 	}
