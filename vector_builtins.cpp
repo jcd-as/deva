@@ -306,14 +306,14 @@ void do_vector_insert( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
 	// position to insert at is next on stack
 	DevaObject pos = ex->stack.back();
 	ex->stack.pop_back();
 
+	// value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
 	// vector
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'insert'." );
@@ -357,12 +357,12 @@ void do_vector_remove( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// end position to remove at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// start position to insert at is next on stack
 	DevaObject start = ex->stack.back();
+	ex->stack.pop_back();
+
+	// end position to remove at is next on stack
+	DevaObject end = ex->stack.back();
 	ex->stack.pop_back();
 
 	// start position
@@ -412,18 +412,18 @@ void do_vector_find( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// start position to insert at is next on stack
 	DevaObject start = ex->stack.back();
 	ex->stack.pop_back();
 
+	// end position to insert at is next on stack
+	DevaObject end = ex->stack.back();
+	ex->stack.pop_back();
+
+	// value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
 	// end position
 	if( end.Type() != sym_number )
 		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'find'." );
@@ -493,18 +493,18 @@ void do_vector_rfind( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// start position to insert at is next on stack
 	DevaObject start = ex->stack.back();
 	ex->stack.pop_back();
 
+	// end position to insert at is next on stack
+	DevaObject end = ex->stack.back();
+	ex->stack.pop_back();
+
+	// value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
 	// end position
 	if( end.Type() != sym_number )
 		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'rfind'." );
@@ -574,16 +574,16 @@ void do_vector_count( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// object to look for is next
-	DevaObject val = ex->stack.back();
+	// start position to insert at is next on stack
+	DevaObject start = ex->stack.back();
 	ex->stack.pop_back();
 
 	// end position to insert at is next on stack
 	DevaObject end = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
+	// object to look for is next
+	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 
 	// end position
@@ -639,12 +639,12 @@ void do_vector_reverse( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// start position to insert at is next on stack
 	DevaObject start = ex->stack.back();
+	ex->stack.pop_back();
+
+	// end position to insert at is next on stack
+	DevaObject end = ex->stack.back();
 	ex->stack.pop_back();
 
 	// vector
@@ -690,12 +690,12 @@ void do_vector_sort( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// start position to insert at is next on stack
 	DevaObject start = ex->stack.back();
+	ex->stack.pop_back();
+
+	// end position to insert at is next on stack
+	DevaObject end = ex->stack.back();
 	ex->stack.pop_back();
 
 	// vector

@@ -414,15 +414,25 @@ void Executor::Defun( Instruction const & inst )
 // 5 define an argument to a fcn. argument (to opcode) is arg name
 void Executor::Defarg( Instruction const & inst )
 {
+	// only called as the start of a fcn *call*, not definition (defun)
+
 	// if args_on_stack is -1 then we somehow ended up here without going
 	// through a 'call' instruction first!
 	if( args_on_stack == -1 )
-		throw DevaICE( "defarg instruction processed without previous call instruction. Program is corrupt." );
-	// only called as the start of a fcn *call*, not definition (defun)
+		throw DevaICE( "'defarg' instruction processed without previous 'call' instruction. Program state is corrupt." );
+	// if there are no arguments, this is the "end-of-arguments" marker,
+	// check to see if all the args have been removed from the stack
 	if( inst.args.size() < 1 )
-		throw DevaICE( "Invalid defarg opcode, no arguments." );
+	{
+		if( args_on_stack != 0 )
+			throw DevaRuntimeException( "Too many arguments passed to function." );
+		// if we processed the correct number of arguments already, do nothing
+		else
+			return;
+	}
+	// TODO: stack *can* be empty if this is a default arg
 	if( stack.size() < 1 )
-		throw DevaRuntimeException( "Invalid defarg opcode, no data on stack." );
+		throw DevaRuntimeException( "Invalid 'defarg' opcode, no data on stack." );
 
 	// if there are no args left, use the default
 	DevaObject o;
@@ -1493,6 +1503,13 @@ void Executor::Call( Instruction const & inst )
 // 32 stack holds return value and then (at top) return address
 void Executor::Return( Instruction const & inst )
 {
+	// if the args_on_stack variable wasn't decremented to 0, then too many args
+	// were passed, explode
+	// HOWEVER, this is really TOO LATE, and another error has probably already
+	// occurred
+	if( args_on_stack > 0 )
+		throw DevaRuntimeException( "Too many arguments passed to function." );
+
 	// the return value is now on top of the stack, instead of the return
 	// address, so we need to pop it, pop the return address and then re-push
 	// the return value

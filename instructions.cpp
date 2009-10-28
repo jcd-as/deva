@@ -213,12 +213,12 @@ void generate_line_num( iter_t const & i, InstructionStream & is )
 
 
 // IL gen functions:
-void gen_IL_number( iter_t const & i, InstructionStream & is )
+////////////////////////////////////////////////////////
+
+// helper to parse numbers
+double parse_number( string s )
 {
-	// push the number onto the stack
 	double n;
-	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
-	generate_line_num( i, is );
 	// hex? octal? binary?
 	if( s[0] == '0' && s.length() > 1 )
 	{
@@ -227,33 +227,74 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 		{
 			long l = strtol( s.c_str()+2, &end, 16 );
 			n = l;
-			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-			return;
+			return n;
 		}
 		else if( s[1] == 'o' )
 		{
 			long l = strtol( s.c_str()+2, &end, 8 );
 			n = l;
-			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-			return;
+			return n;
 		}
 		else if( s[1] == 'b' )
 		{
 			long l = strtol( s.c_str()+2, &end, 2 );
 			n = l;
-			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-			return;
+			return n;
 		}
 		else
 		{
 			// or real?
 			n = atof( s.c_str() );
-			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-			return;
+			return n;
 		}
 	}
 	// or real?
 	n = atof( s.c_str() );
+	return n;
+}
+
+void gen_IL_number( iter_t const & i, InstructionStream & is )
+{
+	// push the number onto the stack
+	double n;
+	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
+	generate_line_num( i, is );
+	// hex? octal? binary?
+//	if( s[0] == '0' && s.length() > 1 )
+//	{
+//		char* end;
+//		if( s[1] == 'x' )
+//		{
+//			long l = strtol( s.c_str()+2, &end, 16 );
+//			n = l;
+//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+//			return;
+//		}
+//		else if( s[1] == 'o' )
+//		{
+//			long l = strtol( s.c_str()+2, &end, 8 );
+//			n = l;
+//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+//			return;
+//		}
+//		else if( s[1] == 'b' )
+//		{
+//			long l = strtol( s.c_str()+2, &end, 2 );
+//			n = l;
+//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+//			return;
+//		}
+//		else
+//		{
+//			// or real?
+//			n = atof( s.c_str() );
+//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
+//			return;
+//		}
+//	}
+//	// or real?
+//	n = atof( s.c_str() );
+	n = parse_number( s );
 	is.push( Instruction( op_push, DevaObject( "", n ) ) );
 }
 
@@ -747,10 +788,9 @@ void gen_IL_arg_list_exp( iter_t const & i, InstructionStream & is )
 
 void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 {
-	// for each arg that is an identifier,
+	// for each arg that is an identifier or an arg (i.e. not a paren)
 	int num_children = i->children.size();
-	// have to push in *reverse* order!
-	for( int j = num_children-1; j >= 0; --j )
+	for( int j = 0; j < num_children; ++j )
 	{
 		if( i->children[j].value.id() == identifier_id )
 		{
@@ -759,7 +799,39 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 			generate_line_num( i, is );
 			is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ) ) );
 		}
+		else if( i->children[j].value.id() == arg_id )
+		{
+			// first child is an identifier
+			string name = strip_symbol( string( i->children[j].children[0].value.begin(), i->children[j].children[0].value.end() ) );
+			// second child is the default value, a boolean, number, string or identifier
+			// create an argument 
+			generate_line_num( i, is );
+			string s = strip_symbol( string( i->children[j].children[1].value.begin(), i->children[j].children[1].value.end() ) );
+			if( i->children[j].children[1].value.id() == boolean_id )
+			{
+				if( s == "true" )
+					is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ), DevaObject( "",  true ) ) );
+				else
+					is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ), DevaObject( "",  false ) ) );
+			}
+			else if( i->children[j].children[1].value.id() == number_id )
+			{
+				double n = parse_number( s );
+				is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ), DevaObject( "",  n  ) ) );
+			}
+			else if( i->children[j].children[1].value.id() == string_id )
+			{
+				string str = unescape( strip_quotes( s ) );
+				is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ), DevaObject( "",  str  ) ) );
+			}
+			else if( i->children[j].children[1].value.id() == identifier_id )
+			{
+				is.push( Instruction( op_defarg, DevaObject( name, sym_unknown ), DevaObject( s,  sym_unknown  ) ) );
+			}
+		}
 	}
+	// push one last "empty" defarg to mark the end-of-arguments
+	is.push( Instruction( op_defarg ) );
 }
 
 void gen_IL_key_exp( iter_t const & i, InstructionStream & is )

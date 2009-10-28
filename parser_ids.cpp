@@ -37,6 +37,7 @@ parser_id postfix_exp_id;
 parser_id postfix_only_exp_id;
 parser_id arg_list_exp_id;
 parser_id arg_list_decl_id;
+parser_id arg_id;
 parser_id key_exp_id;
 parser_id in_exp_id;
 parser_id primary_exp_id;

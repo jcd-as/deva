@@ -178,11 +178,11 @@ void do_append( Executor *ex, const Instruction & inst )
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'append'." );
 
-	// value is on top of stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	// vector or string to append to is next-to-top
+	// vector or string to append to
 	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// value to append
+	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 	
 	DevaObject* o = NULL;

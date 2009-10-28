@@ -265,8 +265,9 @@ void eval_node( iter_t const & i )
 	// module_name
 	else if( i->value.id() == parser_id( module_name_id ) )
 	{
-		// can have arg_list & semi-colon
-        assert( i->children.size() < 3 );
+		// can have semi-colon
+//        assert( i->children.size() < 3 );
+        assert( i->children.size() < 2 );
 		walk_children( i );
 		check_module_name( i );
 	}
@@ -380,6 +381,10 @@ void eval_node( iter_t const & i )
 	{
 		walk_children( i );
 		check_arg_list_decl( i );
+	}
+	else if( i->value.id() == parser_id( arg_id ) )
+	{
+		check_arg( i );
 	}
 	// key exp
 	else if( i->value.id() == parser_id( key_exp_id ) )
@@ -588,7 +593,17 @@ void walk_children( iter_t const & i, InstructionStream & is )
 //	cout << strip_symbol( s ) << endl;
 
 	// walk children
-	for( int c = 0; c < i->children.size(); c++ )
+	for( int c = 0; c < i->children.size(); ++c )
+	{
+		generate_IL_for_node( i->children.begin() + c, is, i );
+	}
+}
+
+void reverse_walk_children( iter_t const & i, InstructionStream & is )
+{
+	// walk children in reverse order 
+	// (for handling arguments to functions)
+	for( int c = i->children.size() - 1; c >= 0; --c )
 	{
 		generate_IL_for_node( i->children.begin() + c, is, i );
 	}
@@ -618,7 +633,8 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 		pre_gen_IL_arg_list_exp( i, is );
 
 		// generate the code for the arg list
-		walk_children( i->children.begin(), is );
+		reverse_walk_children( i->children.begin(), is );
+		gen_IL_arg_list_exp( i->children.begin(), is );
 
 		return;
 	}
@@ -673,11 +689,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// proper scope for the fcn and its arguments (the 'leave' instruction 
 		// isn't needed, as the return statement at the end of the 
 		// function takes care of this)
-//		if( (i->children.begin()+2)->value.id() != compound_statement_id )
-//		{
-			generate_line_num( i->children.begin()+2, is );
-			is.push( Instruction( op_enter ) );
-//		}
+		generate_line_num( i->children.begin()+2, is );
+		is.push( Instruction( op_enter ) );
 
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i );
@@ -1017,7 +1030,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( arg_list_exp_id ) )
 	{
 		pre_gen_IL_arg_list_exp( i, is );
-		walk_children( i, is );
+		reverse_walk_children( i, is );
 		gen_IL_arg_list_exp( i, is );
 	}
 	// arg list decl
@@ -1025,6 +1038,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		gen_IL_arg_list_decl( i, is );
 	}
+//	else if( i->value.id() == parser_id( arg_id ) )
+//	{
+//		// do nothing, handled by arg_list_decl
+//	}
 	// key exp
 	else if( i->value.id() == parser_id( key_exp_id ) )
 	{
@@ -1397,7 +1414,7 @@ bool DeCompileFile( char const* filename )
 		cout << inst.op << " : ";
 		// dump args (vector of DevaObjects) too (need >> op for Objects)
 		for( vector<DevaObject>::iterator j = inst.args.begin(); j != inst.args.end(); ++j )
-			cout << *j;
+			cout << *j << " ; ";
 		cout << endl;
 	}
 	delete [] name;

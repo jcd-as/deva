@@ -188,7 +188,7 @@ int main( int argc, char** argv )
 			cout << inst[i].op << " : ";
 			// dump args (vector of DevaObjects) too (need >> op for Objects)
 			for( vector<DevaObject>::iterator j = inst[i].args.begin(); j != inst[i].args.end(); ++j )
-				cout << *j;
+				cout << *j << " ; ";
 			cout << endl;
 		}
 	}

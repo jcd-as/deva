@@ -309,6 +309,11 @@ void eval_expression( iter_t const& i )
 	{
 		dumpNode( "arg_list_decl", i, indents );
 	}
+	// arg 
+	else if( i->value.id() == parser_id( arg_id ) )
+	{
+		dumpNode( "arg", i, indents );
+	}
 	// key exp
 	else if( i->value.id() == parser_id( key_exp_id ) )
 	{

@@ -530,6 +530,33 @@ void check_arg_list_exp( iter_t const & i )
 
 void check_arg_list_decl( iter_t const & i )
 {
+	// TODO: default args can only be allowed at the *end* of the arg list
+}
+
+void check_arg( iter_t const & i )
+{
+	// arg consists of an identifier and its default value, a boolean, null,
+	// number, string or identifier
+	if( i->children.size() == 2 )
+	{
+		// TODO: for some reason the id of the second child is not right, though
+		// the value is
+		if( i->children[0].value.id() != identifier_id 
+//			|| i->children[1].value.id() != boolean_id 
+//			|| i->children[1].value.id() != number_id 
+//			|| i->children[1].value.id() != string_id 
+//			|| i->children[1].value.id() != identifier_id 
+			)
+		{
+			NodeInfo ni = i->children[0].value.value();
+			throw DevaSemanticException( "Invalid argument.", ni );
+		}
+	}
+	else
+	{
+		NodeInfo ni = i->value.value();
+		throw DevaSemanticException( "Invalid default argument.", ni );
+	}
 }
 
 void check_key_exp( iter_t const & i )

@@ -376,90 +376,91 @@ Scope 10, parent = 0
 	z
 
 Instructions:
-line_num : string: '' = input.dvfunction: '', offset = 0
-push : unknown: 'a'
-jmpf : function: '', offset = 82
+line_num : string: '' = input.dv ; function: '', offset = 0 ; 
+push : unknown: 'a' ; 
+jmpf : function: '', offset = 82 ; 
 enter : 
-push : unknown: 'a'
-push : num: '' = 0
+push : unknown: 'a' ; 
+push : num: '' = 0 ; 
 store : 
-push : unknown: 'b'
-push : num: '' = 1
+push : unknown: 'b' ; 
+push : num: '' = 1 ; 
 store : 
 leave : 
-jmp : function: '', offset = 19
-push : unknown: 'a'
-jmpf : function: '', offset = 122
-push : unknown: 'a'
-push : num: '' = 0
+jmp : function: '', offset = 19 ; 
+push : unknown: 'a' ; 
+jmpf : function: '', offset = 122 ; 
+push : unknown: 'a' ; 
+push : num: '' = 0 ; 
 store : 
-jmp : function: '', offset = 82
-defun : function: 'foo', offset = 122
+jmp : function: '', offset = 82 ; 
+defun : function: 'foo', offset = 122 ; 
 enter : 
-defarg : unknown: 'c'
-defarg : unknown: 'b'
-defarg : unknown: 'a'
-push : null
+defarg : unknown: 'a' ; 
+defarg : unknown: 'b' ; 
+defarg : unknown: 'c' ; 
+defarg : 
+push : null ; 
 return : 
-push : unknown: 'x'
-jmpf : function: '', offset = 205
-push : unknown: 'y'
-jmpf : function: '', offset = 205
-push : function: '', offset = 205
-call : function_call: 'z'function: '', offset = 0
-push : unknown: 'x'
-jmpf : function: '', offset = 266
+push : unknown: 'x' ; 
+jmpf : function: '', offset = 207 ; 
+push : unknown: 'y' ; 
+jmpf : function: '', offset = 207 ; 
+push : function: '', offset = 207 ; 
+call : function_call: 'z' ; function: '', offset = 0 ; 
+push : unknown: 'x' ; 
+jmpf : function: '', offset = 268 ; 
 enter : 
-push : unknown: 'y'
-jmpf : function: '', offset = 252
-push : function: '', offset = 252
-call : function_call: 'z'function: '', offset = 0
-push : unknown: 'a'
-push : unknown: 'b'
+push : unknown: 'y' ; 
+jmpf : function: '', offset = 254 ; 
+push : function: '', offset = 254 ; 
+call : function_call: 'z' ; function: '', offset = 0 ; 
+push : unknown: 'a' ; 
+push : unknown: 'b' ; 
 store : 
 leave : 
-push : unknown: 'x'
-jmpf : function: '', offset = 287
-jmp : function: '', offset = 287
-push : unknown: 'a'
-push : string: '' = b
+push : unknown: 'x' ; 
+jmpf : function: '', offset = 289 ; 
+jmp : function: '', offset = 289 ; 
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : unknown: 'a'
-push : string: '' = b
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = c
+push : string: '' = c ; 
 vec_load : 
-push : string: '' = d
+push : string: '' = d ; 
 vec_load : 
-push : unknown: 'a'
-push : string: '' = b
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = c
+push : string: '' = c ; 
 vec_load : 
-push : string: '' = d
+push : string: '' = d ; 
 vec_load : 
-push : unknown: 'a'
-push : string: '' = c
+push : unknown: 'a' ; 
+push : string: '' = c ; 
 vec_load : 
-push : function: '', offset = 4294967295
-push : unknown: 'a'
-push : string: '' = b
+push : function: '', offset = 4294967295 ; 
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = foo
-push : unknown: 'a'
-push : num: '' = 1
+push : string: '' = foo ; 
+push : unknown: 'a' ; 
+push : num: '' = 1 ; 
 store : 
-push : num: '' = 5
-push : num: '' = 5
+push : num: '' = 5 ; 
+push : num: '' = 5 ; 
 add : 
-push : num: '' = 2
+push : num: '' = 2 ; 
 div : 
-push : num: '' = 2
-push : num: '' = 2
+push : num: '' = 2 ; 
+push : num: '' = 2 ; 
 mul : 
-push : num: '' = 3
+push : num: '' = 3 ; 
 mod : 
-push : num: '' = 1
+push : num: '' = 1 ; 
 add : 
 halt : 
 compiled input.dv successfully

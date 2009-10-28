@@ -1,0 +1,9 @@
+# test default args
+def foo( a, b = "bar", c = "jam" )
+{
+	print( a + b + c);
+}
+
+foo( "not", " no", " way" );
+foo( "this is", " tasty " );
+foo( "foo" );

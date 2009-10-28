@@ -380,7 +380,21 @@ public:
 			// something to differentiate from an identifier/number/etc when
 			// there is only one arg.)
 			arg_list_decl = 
-				confix_p( open_paren_op, !list_p( identifier, no_node_d[comma_op] ), close_paren_op )
+//				confix_p( open_paren_op, !list_p( identifier, no_node_d[comma_op] ), close_paren_op )
+				confix_p( open_paren_op, !list_p( arg, no_node_d[comma_op] ), close_paren_op )
+				;
+
+			arg =
+				access_node_d[
+//				root_node_d[identifier] 
+				identifier
+				>> !(no_node_d[ch_p( '=' )]
+					>> (boolean
+					| null
+					| identifier
+					| number
+					| string))
+				][&set_node]
 				;
 
 			// map key (inside "[]"s) - only 'math' expresssions allowed inside, 
@@ -636,6 +650,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( postfix_only_exp );
 			BOOST_SPIRIT_DEBUG_RULE( arg_list_exp );
 			BOOST_SPIRIT_DEBUG_RULE( arg_list_decl );
+			BOOST_SPIRIT_DEBUG_RULE( arg );
 			BOOST_SPIRIT_DEBUG_RULE( key_exp );
 			BOOST_SPIRIT_DEBUG_RULE( in_exp );
 			BOOST_SPIRIT_DEBUG_RULE( primary_exp );
@@ -703,6 +718,7 @@ public:
 			postfix_only_exp_id = postfix_only_exp.id(), 
 			arg_list_exp_id = arg_list_exp.id(), 
 			arg_list_decl_id = arg_list_decl.id(), 
+			arg_id = arg.id(), 
 			key_exp_id = key_exp.id(), 
 			in_exp_id = in_exp.id(), 
 			primary_exp_id = primary_exp.id(), 
@@ -772,6 +788,7 @@ public:
 			postfix_only_exp, 
 			arg_list_exp, 
 			arg_list_decl, 
+			arg,
 			key_exp, 
 			in_exp, 
 			primary_exp, 

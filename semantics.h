@@ -40,6 +40,7 @@ void check_paren_op( iter_t const & i );
 void check_bracket_op( iter_t const & i );
 void check_arg_list_exp( iter_t const & i );
 void check_arg_list_decl( iter_t const & i );
+void check_arg( iter_t const & i );
 void check_key_exp( iter_t const & i );
 void pre_check_const_decl( iter_t const & i );
 void check_const_decl( iter_t const & i );

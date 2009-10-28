@@ -80,7 +80,7 @@ void do_map_length( Executor *ex )
 	if( Executor::args_on_stack != 0 )
 		throw DevaRuntimeException( "Incorrect number of arguments to map 'length' built-in method." );
 
-	// get the vector object off the top of the stack
+	// get the map object off the top of the stack
 	DevaObject map = ex->stack.back();
 	ex->stack.pop_back();
 
