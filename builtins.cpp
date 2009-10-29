@@ -77,40 +77,9 @@ void execute_builtin( Executor *ex, const Instruction & inst )
         builtin_fcns[idx]( ex, inst );
 }
 
-// the built-in executor functions:
-void do_print( Executor *ex, const Instruction & inst )
+// convert an object to a string value
+string obj_to_str( const DevaObject* const o )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'print'." );
-
-	ex->Output( inst );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
-}
-
-void do_str( Executor *ex, const Instruction & inst )
-{
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'str'." );
-
-	// get the argument off the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
-	}
-	if( !o )
-		o = &obj;
-
 	ostringstream s;
 
 	// evaluate it
@@ -140,7 +109,7 @@ void do_str( Executor *ex, const Instruction & inst )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
-				s << key << " : " << val << endl;
+				s << " - " << key << " : " << val << endl;
 			}
 			break;
 			}
@@ -165,12 +134,85 @@ void do_str( Executor *ex, const Instruction & inst )
 		default:
 			s << "unknown: '" << o->name << "'";
 	}
+	return s.str();
+}
+
+// the built-in executor functions:
+void do_print( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack < 1 || Executor::args_on_stack > 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'print'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// if there are two arguments, concat them (the second is the "line end")
+	// if there is only one, append a "\n"
+	string eol_str;
+	if( Executor::args_on_stack == 2 )
+	{
+		// second argument, if any, *must* be a string
+		DevaObject eol = ex->stack.back();
+		ex->stack.pop_back();
+		if( eol.Type() != sym_string )
+			throw DevaRuntimeException( "'eol' argument in built-in function 'print' must be a string." );
+		eol_str = eol.str_val;
+	}
+
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+	// convert to a string
+	string s = obj_to_str( o );
+	if( Executor::args_on_stack == 2 )
+		s += eol_str;
+	// print it
+	cout << s;
+	// default eol is a newline
+	if( Executor::args_on_stack == 1 )
+		cout << endl;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_str( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'str'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in function call" );
+	}
+	if( !o )
+		o = &obj;
+
+	string s = obj_to_str( o );
 
 	// pop the return address
 	ex->stack.pop_back();
 
 	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", s.str() ) );
+	ex->stack.push_back( DevaObject( "", s ) );
 }
 
 void do_append( Executor *ex, const Instruction & inst )

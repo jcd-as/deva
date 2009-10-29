@@ -130,10 +130,10 @@ void Executor::read_double( double & d )
 // returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
 int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 {
-	// numbers, booleans, and strings can be compared
-	if( lhs.Type() != sym_number && lhs.Type() != sym_boolean && lhs.Type() != sym_string )
+	// nulls, numbers, booleans, and strings can be compared
+	if( lhs.Type() != sym_number && lhs.Type() != sym_boolean && lhs.Type() != sym_string && lhs.Type() != sym_null )
 		throw DevaRuntimeException( "Invalid left-hand argument to comparison operation." );
-	if( rhs.Type() != sym_number && rhs.Type() != sym_boolean && rhs.Type() != sym_string )
+	if( rhs.Type() != sym_number && rhs.Type() != sym_boolean && rhs.Type() != sym_string && rhs.Type() != sym_null )
 		throw DevaRuntimeException( "Invalid right-hand argument to comparison operation." );
 	if( lhs.Type() != rhs.Type() )
 		throw DevaRuntimeException( "Left-hand side and right-hand side of comparison operation are incompatible." );
@@ -158,9 +158,16 @@ int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 		else
 			return -1;
 	case sym_string:
+		{
 		string lhs_s( lhs.str_val );
 		string rhs_s( rhs.str_val );
 		return lhs_s.compare( rhs_s );
+		}
+	case sym_null:
+		if( rhs.Type() == sym_null )
+			return 0;
+		else
+			return 1;
 	}
 }
 
@@ -1405,7 +1412,7 @@ void Executor::Output( Instruction const & inst )
 			cout << "unknown: '" << o->name << "'";
 	}
 	// print it
-	cout << endl;
+//	cout << endl;
 }
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )

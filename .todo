@@ -129,5 +129,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>added empty, trailing 'defarg' instruction with no args to act as &quot;end-of-arguments&quot; marker
 </comment></note><note done="1256623844" priority="veryhigh" time="1256621246">detect wrong number of arguments in the builtin functions (global, map and vector)
 <comment>
-</comment></note><note priority="veryhigh" time="1256764666">add support for default args to all the builtins
-</note></todo>
+</comment></note><note done="1256790201" priority="veryhigh" time="1256764666">add support for default args to all the builtins
+<comment>vector builtins mostly
+</comment></note></todo>

@@ -185,7 +185,7 @@ void do_vector_concat( Executor *ex )
 	
 	// vector
 	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'append'." );
+		throw DevaICE( "Vector expected in vector built-in method 'concat'." );
 
 	DevaObject* in;
 	if( val.Type() == sym_unknown )
@@ -350,7 +350,7 @@ void do_vector_insert( Executor *ex )
 
 void do_vector_remove( Executor *ex )
 {
-	if( Executor::args_on_stack != 2 )
+	if( Executor::args_on_stack != 2 && Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'remove' built-in method." );
 
 	// get the vector object off the top of the stack
@@ -361,25 +361,35 @@ void do_vector_remove( Executor *ex )
 	DevaObject start = ex->stack.back();
 	ex->stack.pop_back();
 
-	// end position to remove at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
+	// default value for end is '-1'
+	int i_end = -1;
+	bool default_arg = true;
+	if( Executor::args_on_stack == 2 )
+	{
+		default_arg = false;
+		// end position to remove at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'remove'." );
+		// TODO: end needs to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// start position
 	if( start.Type() != sym_number )
 		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'remove'." );
 
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'remove'." );
-
 	// vector
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'remove'." );
 
-	// TODO: start and end need to be integral values. error if they aren't
+	// TODO: start needs to be integral values. error if they aren't
 	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
+	if( default_arg )
+		i_end = i_start;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
@@ -405,32 +415,41 @@ void do_vector_remove( Executor *ex )
 
 void do_vector_find( Executor *ex )
 {
-	if( Executor::args_on_stack != 3 )
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'find' built-in method." );
 
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
-	ex->stack.pop_back();
-
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
-	// value is next on stack
+	// value is first on stack
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'find'." );
-
-	// start position
-	if( start.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'find'." );
+	int i_start = 0;
+	int i_end = -1;
+	if( Executor::args_on_stack > 1 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'find'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_start = (int)start.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// end position to insert at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'find'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// vector
 	if( vec.Type() != sym_vector )
@@ -447,9 +466,6 @@ void do_vector_find( Executor *ex )
 	else
 		o = &val;
 
-	// TODO: start and end need to be integral values. error if they aren't
-	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
@@ -474,9 +490,9 @@ void do_vector_find( Executor *ex )
 			break;
 		}
 	}
-	// TODO: return -1, or null??
+
 	if( !found )
-		ret = DevaObject( "", -1.0 );
+		ret = DevaObject( "", sym_null );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -486,32 +502,41 @@ void do_vector_find( Executor *ex )
 
 void do_vector_rfind( Executor *ex )
 {
-	if( Executor::args_on_stack != 3 )
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'rfind' built-in method." );
 
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
-	ex->stack.pop_back();
-
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
 	// value is next on stack
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'rfind'." );
-
-	// start position
-	if( start.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'rfind'." );
+	int i_start = 0;
+	int i_end = -1;
+	if( Executor::args_on_stack > 1 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'rfind'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_start = (int)start.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// end position to insert at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'rfind'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// vector
 	if( vec.Type() != sym_vector )
@@ -528,9 +553,6 @@ void do_vector_rfind( Executor *ex )
 	else
 		o = &val;
 
-	// TODO: start and end need to be integral values. error if they aren't
-	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
@@ -555,9 +577,8 @@ void do_vector_rfind( Executor *ex )
 			break;
 		}
 	}
-	// TODO: return -1, or null??
 	if( !found )
-		ret = DevaObject( "", -1.0 );
+		ret = DevaObject( "", sym_null );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -567,32 +588,41 @@ void do_vector_rfind( Executor *ex )
 
 void do_vector_count( Executor *ex )
 {
-	if( Executor::args_on_stack != 3 )
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'count' built-in method." );
 
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
-	ex->stack.pop_back();
-
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
-
-	// object to look for is next
+	// value is next on stack
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
-
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'rfind'." );
-
-	// start position
-	if( start.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'rfind'." );
+	
+	int i_start = 0;
+	int i_end = -1;
+	if( Executor::args_on_stack > 1 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'count'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_start = (int)start.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// end position to insert at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'count'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// vector
 	if( vec.Type() != sym_vector )
@@ -607,9 +637,6 @@ void do_vector_count( Executor *ex )
 			throw DevaRuntimeException( "Unknown symbol passed to vector built-in method 'count'." );
 	}
 
-	// TODO: start and end need to be integral values. error if they aren't
-	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
@@ -632,36 +659,42 @@ void do_vector_count( Executor *ex )
 
 void do_vector_reverse( Executor *ex )
 {
-	if( Executor::args_on_stack != 2 )
+	if( Executor::args_on_stack > 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'reverse' built-in method." );
 
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
-	ex->stack.pop_back();
-
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
+	int i_start = 0;
+	int i_end = -1;
+	if( Executor::args_on_stack > 1 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'reverse'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_start = (int)start.num_val;
+	}
+	if( Executor::args_on_stack > 0 )
+	{
+		// end position to insert at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'reverse'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// vector
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'reverse'." );
 
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'reverse'." );
-
-	// start position
-	if( start.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'reverse'." );
-
-	// TODO: start and end need to be integral values. error if they aren't
-	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 
@@ -683,36 +716,42 @@ void do_vector_reverse( Executor *ex )
 
 void do_vector_sort( Executor *ex )
 {
-	if( Executor::args_on_stack != 2 )
+	if( Executor::args_on_stack > 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to vector 'sort' built-in method." );
 
 	// get the vector object off the top of the stack
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-	// start position to insert at is next on stack
-	DevaObject start = ex->stack.back();
-	ex->stack.pop_back();
-
-	// end position to insert at is next on stack
-	DevaObject end = ex->stack.back();
-	ex->stack.pop_back();
+	int i_start = 0;
+	int i_end = -1;
+	if( Executor::args_on_stack > 1 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'reverse'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_start = (int)start.num_val;
+	}
+	if( Executor::args_on_stack > 0 )
+	{
+		// end position to insert at is next on stack
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		// end position
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'reverse'." );
+		// TODO: start and end need to be integral values. error if they aren't
+		i_end = (int)end.num_val;
+	}
 
 	// vector
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'sort'." );
 
-	// end position
-	if( end.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'sort'." );
-
-	// start position
-	if( start.Type() != sym_number )
-		throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'sort'." );
-
-	// TODO: start and end need to be integral values. error if they aren't
-	int i_start = (int)start.num_val;
-	int i_end = (int)end.num_val;
 	if( i_end == -1 )
 		i_end = vec.vec_val->size();
 

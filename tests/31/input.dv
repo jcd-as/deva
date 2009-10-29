@@ -43,13 +43,13 @@ print( a );
 a.remove( 1, 1 );
 print( a );
 # find 'goo'
-idx = a.find( 0, -1, "goo" );
+idx = a.find( "goo", 0, -1 );
 print( idx );
 # reverse find 'bar', but not at the last place
-idx = a.rfind( 0, a.length() -1, "bar" );
+idx = a.rfind( "bar", 0, a.length() -1 );
 print( idx );
 # count how many times "bar" is found in 'a'
-n = a.count( 0, -1, "bar" );
+n = a.count( "bar", 0, -1 );
 print( "\"bar\" found " + str( n ) + " times" );
 # sort the items
 a.sort( 0, -1 );
