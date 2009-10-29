@@ -133,5 +133,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>vector builtins mostly
 </comment></note><note done="1256843445" priority="veryhigh" time="1256793809">ScopeBuilder global (&quot;scope_bldr&quot;) is the source of 'leaks' reported by valgrind. it should be made a pointer and allocated and freed in main() (for devac and deva)
 <comment>didn't need to make it a ptr, just release all the scope ptrs it holds after compilation is done (didn't bother in devac.cpp, as the process exits when compilation is done).
-</comment></note><note priority="high" time="1256843036">replace 'vector' and 'map' in the DevaObject code with typedefs so the types could be switched to more efficient types (deque &amp; hash_map, for instance) more easily
-</note></todo>
+</comment></note><note done="1256847908" priority="high" time="1256843036">replace 'vector' and 'map' in the DevaObject code with typedefs so the types could be switched to more efficient types (deque &amp; hash_map, for instance) more easily
+<comment>
+</comment></note></todo>

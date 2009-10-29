@@ -104,8 +104,8 @@ string obj_to_str( const DevaObject* const o )
 			{
 			// dump map contents
 			s << "map: '" << o->name << "' = " << endl;
-			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
-			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
+			smart_ptr<DOMap> mp( o->map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
@@ -117,8 +117,8 @@ string obj_to_str( const DevaObject* const o )
 			{
 			// dump vector contents
 			s << "vector: '" << o->name << "' = " << endl;
-			smart_ptr<vector<DevaObject> > vec( o->vec_val );
-			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
+			smart_ptr<DOVector> vec( o->vec_val );
+			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
 				DevaObject val = (*it);
 				s << val << endl;
@@ -325,13 +325,13 @@ void do_copy( Executor *ex, const Instruction & inst )
 	if( o->Type() == sym_map )
 	{
         // create a new map object that is a copy of the one we received,
-        map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>( *(o->map_val) );
+        DOMap* m = new DOMap( *(o->map_val) );
         copy = DevaObject( "", m );
 	}
     else if( o->Type() == sym_vector )
     {
         // create a new vector object that is a copy of the one we received,
-        vector<DevaObject>* v = new vector<DevaObject>( *(o->vec_val) );
+        DOVector* v = new DOVector( *(o->vec_val) );
         copy = DevaObject( "", v );
     }
 	else

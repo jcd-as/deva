@@ -160,7 +160,7 @@ void do_vector_copy( Executor *ex )
 
     DevaObject copy;
 	// create a new vector object that is a copy of the one we received,
-	vector<DevaObject>* v = new vector<DevaObject>( *(vec.vec_val) );
+	DOVector* v = new DOVector( *(vec.vec_val) );
 	copy = DevaObject( "", v );
 
 	// pop the return address
@@ -202,7 +202,7 @@ void do_vector_concat( Executor *ex )
 	if( vec.vec_val->capacity() < vec.vec_val->size() + in->vec_val->size() )
 		vec.vec_val->reserve( vec.vec_val->size() + in->vec_val->size() );
 	// append each element
-	for( vector<DevaObject>::iterator i = in->vec_val->begin(); i != in->vec_val->end(); ++i )
+	for( DOVector::iterator i = in->vec_val->begin(); i != in->vec_val->end(); ++i )
 	{
 		vec.vec_val->push_back( *i );
 	}
@@ -243,7 +243,7 @@ void do_vector_min( Executor *ex )
 
 	// find the min element
 	MinComparator::type = vec.vec_val->operator[]( 0 ).Type();
-	vector<DevaObject>::iterator it = min_element( vec.vec_val->begin(), vec.vec_val->end(), MinComparator() );
+	DOVector::iterator it = min_element( vec.vec_val->begin(), vec.vec_val->end(), MinComparator() );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -268,7 +268,7 @@ void do_vector_max( Executor *ex )
 
 	// find the min element
 	MinComparator::type = vec.vec_val->operator[]( 0 ).Type();
-	vector<DevaObject>::iterator it = max_element( vec.vec_val->begin(), vec.vec_val->end(), MinComparator() );
+	DOVector::iterator it = max_element( vec.vec_val->begin(), vec.vec_val->end(), MinComparator() );
 
 	// pop the return address
 	ex->stack.pop_back();

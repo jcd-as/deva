@@ -16,6 +16,11 @@
 #include "smart_ptr.h"
 #include <vector>
 
+// typedefs for the vector and map types that deva supports
+class DevaObject;
+typedef vector<DevaObject> DOVector;
+typedef map<DevaObject, DevaObject> DOMap;
+
 // the basic piece of data stored on the data stack
 struct DevaObject : public SymbolInfo
 {
@@ -31,8 +36,8 @@ struct DevaObject : public SymbolInfo
 		size_t func_offset;	// offset into instruction stream to function start
 	};
 	// objects with destructors not allowed in unions. bleh
-	smart_ptr<map<DevaObject, DevaObject> > map_val;
-	smart_ptr<vector<DevaObject> > vec_val;
+	smart_ptr<DOMap> map_val;
+	smart_ptr<DOVector> vec_val;
 
 	// name that the object (variable) is referred to with
 	// (empty string for constants)
@@ -51,9 +56,9 @@ struct DevaObject : public SymbolInfo
 	// 'function' (incl return/jump target) type
 	DevaObject( string nm, size_t offs );
     // map type with the given map
-    DevaObject( string nm, map<DevaObject, DevaObject>* m );
+    DevaObject( string nm, DOMap* m );
     // vector type with the given vector
-    DevaObject( string nm, vector<DevaObject>* v );
+    DevaObject( string nm, DOVector* v );
     // given type, empty object
 	DevaObject( string nm, SymbolType t );
 	// copy constructor needed to ensure each object has a separate copy of data

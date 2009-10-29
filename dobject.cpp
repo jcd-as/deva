@@ -117,10 +117,10 @@ DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_va
 DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
 // map type with the given map
-DevaObject::DevaObject( string nm, map<DevaObject, DevaObject>* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
+DevaObject::DevaObject( string nm, DOMap* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
 {}
 // vector type with the given vector
-DevaObject::DevaObject( string nm, vector<DevaObject>* v ) : SymbolInfo( sym_vector ), name( nm ), map_val( 0 ), vec_val( v )
+DevaObject::DevaObject( string nm, DOVector* v ) : SymbolInfo( sym_vector ), name( nm ), map_val( 0 ), vec_val( v )
 {}
 // given type, empty/default object
 DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
@@ -141,13 +141,13 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 		break;
 	case sym_map:
 		{
-		map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>();
+		DOMap* m = new DOMap();
 		map_val = m;
 		break;
 		}
 	case sym_vector:
 		{
-		vector<DevaObject>* v = new vector<DevaObject>();
+		DOVector* v = new DOVector();
 		vec_val = v;
 		break;
 		}

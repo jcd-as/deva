@@ -608,7 +608,7 @@ void Executor::Vec_load( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-		smart_ptr<vector<DevaObject> > v( table->vec_val );
+		smart_ptr<DOVector> v( table->vec_val );
 		// get the value from the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
@@ -629,10 +629,10 @@ void Executor::Vec_load( Instruction const & inst )
 			// TODO: error on non-integral value
 			int idx = (int)idxkey.num_val;
 			// get the value from the map
-			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
+			smart_ptr<DOMap> mp( table->map_val );
 			if( idx >= mp->size() )
 				throw DevaICE( "Index out-of-range in vec_load instruction." );
-			map<DevaObject, DevaObject>::iterator it;
+			DOMap::iterator it;
 			// this loop is equivalent of "it = mp->begin() + idx;" 
 			// (which is required because map iterators don't support the + op)
 			it = mp->begin();
@@ -652,8 +652,8 @@ void Executor::Vec_load( Instruction const & inst )
 			if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 				throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 			// get the value from the map
-			smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val );
-			map<DevaObject, DevaObject>::iterator it;
+			smart_ptr<DOMap> mp( table->map_val );
+			DOMap::iterator it;
 			it = mp->find( idxkey );
 			// if not found, try the map built-in methods...
 			if( it == mp->end() )
@@ -733,7 +733,7 @@ void Executor::Vec_store( Instruction const & inst )
 			throw DevaRuntimeException( "Argument to '[]' operator on a vector MUST evaluate to an integral number." );
 		// TODO: error on non-integral index 
 		int idx = (int)idxkey.num_val;
-		smart_ptr<vector<DevaObject> > v( table->vec_val );
+		smart_ptr<DOVector> v( table->vec_val );
 		// set the value in the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
@@ -747,7 +747,7 @@ void Executor::Vec_store( Instruction const & inst )
 		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 		// set the value in the map
-		smart_ptr<map<DevaObject, DevaObject> > mp( table->map_val) ;
+		smart_ptr<DOMap> mp( table->map_val) ;
 		mp->operator[]( idxkey ) = val;
 	}
 	else
@@ -1381,8 +1381,8 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump map contents
 			cout << "map: '" << o->name << "' = " << endl;
-			smart_ptr<map<DevaObject, DevaObject> > mp( o->map_val );
-			for( map<DevaObject, DevaObject>::iterator it = mp->begin(); it != mp->end(); ++it )
+			smart_ptr<DOMap> mp( o->map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); ++it )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
@@ -1394,8 +1394,8 @@ void Executor::Output( Instruction const & inst )
 			{
 			// dump vector contents
 			cout << "vector: '" << o->name << "' = " << endl;
-			smart_ptr<vector<DevaObject> > vec( o->vec_val );
-			for( vector<DevaObject>::iterator it = vec->begin(); it != vec->end(); ++it )
+			smart_ptr<DOVector> vec( o->vec_val );
+			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
 				DevaObject val = (*it);
 				cout << val << endl;

@@ -111,7 +111,7 @@ void do_map_copy( Executor *ex )
 
     DevaObject copy;
 	// create a new map object that is a copy of the one we received,
-	map<DevaObject, DevaObject>* m = new map<DevaObject, DevaObject>( *(mp.map_val) );
+	DOMap* m = new DOMap( *(mp.map_val) );
 	copy = DevaObject( "", m );
 
 	// pop the return address
@@ -188,7 +188,7 @@ void do_map_find( Executor *ex )
 		o = &key;
 
 	DevaObject ret;
-	map<DevaObject, DevaObject>::iterator it = mp.map_val->find( *o );
+	DOMap::iterator it = mp.map_val->find( *o );
 	if( it == mp.map_val->end() )
 		ret = DevaObject( "", sym_null );
 	else
@@ -213,10 +213,10 @@ void do_map_keys( Executor *ex )
 		throw DevaICE( "Map expected in map built-in method 'keys'." );
 
 	size_t sz = mp.map_val->size();
-	vector<DevaObject>* v = new vector<DevaObject>();
+	DOVector* v = new DOVector();
 	v->reserve( sz );
 	// for each pair<> element in the map
-	for( map<DevaObject, DevaObject>::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
+	for( DOMap::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
 	{
 		// add the key for this element
 		v->push_back( DevaObject( "", i->first ) );
@@ -242,10 +242,10 @@ void do_map_values( Executor *ex )
 		throw DevaICE( "Map expected in map built-in method 'keys'." );
 
 	size_t sz = mp.map_val->size();
-	vector<DevaObject>* v = new vector<DevaObject>();
+	DOVector* v = new DOVector();
 	v->reserve( sz );
 	// for each pair<> element in the map
-	for( map<DevaObject, DevaObject>::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
+	for( DOMap::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
 	{
 		// add the value of this element
 		v->push_back( i->second );

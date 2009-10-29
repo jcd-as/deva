@@ -116,9 +116,9 @@ int main( int argc, char** argv )
 		if( debug )
 		{
 			cout << "Memory reference count table for vectors:" << endl;
-			smart_ptr<vector<DevaObject> >::dumpRefCountMap();
+			smart_ptr<DOVector>::dumpRefCountMap();
 			cout << "Memory reference count table for maps:" << endl;
-			smart_ptr<map<DevaObject, DevaObject> >::dumpRefCountMap();
+			smart_ptr<DOMap>::dumpRefCountMap();
 		}
 	}
 	catch( DevaICE & e )
