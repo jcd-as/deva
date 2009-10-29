@@ -41,7 +41,7 @@ void add_symbol( iterator_t start, iterator_t end )
 		return;
 
 	// the current scope is the top of the scope_bldr stack
-	scope_bldr.back().second->operator[](s) = new SymbolInfo( sym_unknown );
+	scope_bldr.back().second->insert( make_pair( s, new SymbolInfo( sym_unknown ) ) );
 }
 
 // emit an error message
@@ -96,7 +96,7 @@ tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* c
 	DevaGrammar deva_p;
 
 	// create the position iterator for the parser
-	iterator_t begin( input, input + input_len, filename );
+	iterator_t begin( input, input + input_len, filename.c_str() );
 	iterator_t end;
 
 	// create our initial (global) scope
