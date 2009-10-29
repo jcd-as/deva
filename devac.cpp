@@ -99,7 +99,7 @@ int main( int argc, char** argv )
 	if( input == "stdin" )
 	{
 		// read from stdin instead of a file
-		info = ParseFile( input_filename, cin );
+		info = ParseFile( input, cin );
 	}
 	// if the input is a .dvc (compiled) file, de-compile instead
 	else if( input.substr( input.size()-4, 4 ) == ".dvc" )
@@ -122,7 +122,7 @@ int main( int argc, char** argv )
 			exit( -1 );
 		}
 		// parse the file
-		info = ParseFile( input_filename, file );
+		info = ParseFile( input, file );
 		// close the file
 		file.close();
 	}

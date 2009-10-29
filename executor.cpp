@@ -46,7 +46,8 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 
 		// check for the symbol
 		if( p->count( ob.name ) != 0 )
-			return p->operator[]( ob.name );
+//			return p->operator[]( ob.name );
+			return p->find( ob.name )->second;
 	}
 	return NULL;
 }
@@ -66,7 +67,8 @@ void Executor::remove_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL
 		if( p->count( ob.name ) != 0 )
 		{
 			// delete the symbol
-			delete p->operator[]( ob.name );
+//			delete p->operator[]( ob.name );
+			delete p->find( ob.name )->second;
 
 			// remove the symbol from the scope
 			p->erase( ob.name );
@@ -382,10 +384,7 @@ void Executor::Store( Instruction const & inst )
 	//  set its value to the rhs
 	else
 	{
-		// delete the old value
-		delete ob;
-		// and allocate for a new one
-		ob = new DevaObject( lhs.name, rhs );
+		*ob = DevaObject( lhs.name, rhs );
 	}
 }
 // 4 define function. arg is location in instruction stream, named the fcn name

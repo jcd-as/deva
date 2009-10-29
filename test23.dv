@@ -1,0 +1,19 @@
+# check for leaking maps/vectors
+def foo( a )
+{
+	b = a;
+	{
+		c = b;
+		{
+			a.append( 0 );
+			b.append( 1 );
+			c.append( 2 );
+			print( c );
+		}
+		print( b );
+	}
+	print( a );
+}
+
+x = [];
+foo( x );

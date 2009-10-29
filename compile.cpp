@@ -96,7 +96,6 @@ tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* c
 	DevaGrammar deva_p;
 
 	// create the position iterator for the parser
-//	iterator_t begin( input, input + strlen( input ), filename );
 	iterator_t begin( input, input + input_len, filename );
 	iterator_t end;
 
@@ -1463,7 +1462,7 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 		throw DevaRuntimeException( oss.str().c_str() );
 	}
 	// parse the file
-	info = ParseFile( filename, file );
+	info = ParseFile( string( filename ), file );
 	// close the file
 	file.close();
 
