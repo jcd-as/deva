@@ -124,39 +124,40 @@ Scope 2, parent = 0
 Scope 3, parent = 2
 
 Instructions:
-line_num : string: '' = input.dvfunction: '', offset = 0
-push : boolean: '' = 1
-jmpf : function: '', offset = 104
-push : function: '', offset = 90
-push : unknown: 'a'
-push : string: '' = b
+line_num : string: '' = input.dv ; function: '', offset = 0 ; 
+push : boolean: '' = 1 ; 
+jmpf : function: '', offset = 114 ; 
+push : function: '', offset = 100 ; 
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = c
+push : string: '' = c ; 
 vec_load : 
-push : string: '' = d
+push : string: '' = d ; 
 vec_load : 
-call : 
+call : function: '', offset = 0 ; 
 pop : 
-jmp : function: '', offset = 23
-push : function: '', offset = 139
-push : unknown: 'a'
-push : string: '' = b
+jmp : function: '', offset = 23 ; 
+push : function: '', offset = 159 ; 
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = c
+push : string: '' = c ; 
 vec_load : 
-call : 
+call : function: '', offset = 0 ; 
 pop : 
-defun : function: 'x', offset = 141
+defun : function: 'x', offset = 161 ; 
 enter : 
-push : function: '', offset = 191
-push : unknown: 'a'
-push : string: '' = b
+defarg : 
+push : function: '', offset = 223 ; 
+push : unknown: 'a' ; 
+push : string: '' = b ; 
 vec_load : 
-push : string: '' = c
+push : string: '' = c ; 
 vec_load : 
-call : 
+call : function: '', offset = 0 ; 
 pop : 
-push : null
+push : null ; 
 return : 
 halt : 
 compiled input.dv successfully

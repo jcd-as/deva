@@ -9,6 +9,7 @@
 #include "builtins.h"
 #include "vector_builtins.h"
 #include "map_builtins.h"
+#include "string_builtins.h"
 #include "compile.h"
 #include "fileformat.h"
 #include "util.h"
@@ -678,6 +679,42 @@ void Executor::Vec_load( Instruction const & inst )
 			pair<DevaObject, DevaObject> p = *it;
 			stack.push_back( p.second );
 		}
+	}
+	else if( table->Type() == sym_string )
+	{
+		// if this is a string index then this is a method call on a string builtin (or an error)
+		if( idxkey.Type() == sym_string )
+		{
+			// built-in method call
+			// top of stack contains key (fcn name as string)
+			// next-to-top contains value (fcn as sym_function)
+			string key( "string_");
+		   	key += idxkey.str_val; 
+			// key == string
+			// table == string
+			// look up 'key' in the string built-ins
+			if( !is_string_builtin( key ) )
+				throw DevaRuntimeException( "Not a valid method on type 'string'." );
+			// push the string as an argument
+			stack.push_back( *table );
+			// push a fcn with 'key' as its name (it's a builtin, so the offset
+			// given is irrelevant)
+			stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+			return;
+		}
+		// index to a string must be an integral number
+		if( idxkey.Type() != sym_number )
+			throw DevaRuntimeException( "Argument to '[]' operator on a string MUST evaluate to an integral number." );
+		// TODO: error on non-integral index 
+		int idx = (int)idxkey.num_val;
+
+		// get the value from the string
+		string s( table->str_val );
+		if( idx < 0 || idx >= s.length() )
+			throw DevaRuntimeException( "Index to string out-of-range." );
+		DevaObject o( "", string( 1, s.at( idx ) ) );
+		// push it onto the stack
+		stack.push_back( o );
 	}
 	else
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
@@ -1484,6 +1521,19 @@ void Executor::Call( Instruction const & inst )
 				args_on_stack = inst.args[0].func_offset;
 
 				execute_map_builtin( this, fcn->name );
+
+				// reset the static that tracks the number of args (builtins don't run
+				// the 'return' instruction)
+				args_on_stack = -1;
+				return;
+			}
+			// if this is a vector builtin method, execute it
+			if( is_string_builtin( fcn->name ) )
+			{
+				// set the static that tracks the number of args processed
+				args_on_stack = inst.args[0].func_offset;
+
+				execute_string_builtin( this, fcn->name );
 
 				// reset the static that tracks the number of args (builtins don't run
 				// the 'return' instruction)

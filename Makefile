@@ -22,7 +22,8 @@ DEVA_SOURCES =  \
 	symbol.cpp \
 	util.cpp \
 	vector_builtins.cpp \
-	map_builtins.cpp
+	map_builtins.cpp \
+	string_builtins.cpp
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})

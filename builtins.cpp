@@ -240,13 +240,24 @@ void do_append( Executor *ex, const Instruction & inst )
 	// string
 	if( o->Type() == sym_string )
 	{
+		// TODO: value could be a variable, we need to look it up too!
 		// value has to be a string too
-		if( val.Type() != sym_string )
+		DevaObject* v;
+		if( val.Type() == sym_unknown )
+		{
+			v = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the value argument in built-in function 'append'." );
+		}
+		else
+			v = &val;
+
+		if( v->Type() != sym_string )
 			throw DevaRuntimeException( "Cannot append a non-string to a string in append() built-in." );
 		// concat the strings
 		string ret( o->str_val );
-		ret += val.str_val;
-		o = new DevaObject( ret, "" );
+		ret += v->str_val;
+		*o = DevaObject( o->name, ret );
 	}
 	// vector
 	else if( o->Type() == sym_vector )

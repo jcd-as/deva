@@ -1,5 +1,4 @@
-<?xml version="1.0" ?>
-<todo version="0.1.20">	
+<?xml version="1.0" ?><todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -137,5 +136,7 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1256879594" priority="veryhigh" time="1256855245">vector builtins: map, filter and reduce (ala python equivalents)
 <comment>
-</comment></note><note priority="veryhigh" time="1256855256">string builtins
+</comment></note><note done="1256939782" priority="veryhigh" time="1256855256">string builtins
+<comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)
+</comment></note><note priority="veryhigh" time="1256584124">interface to C functions and C objects (void*). Needed to implement &quot;open&quot; built-in and file IO methods
 </note></todo>

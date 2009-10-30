@@ -1,0 +1,52 @@
+# string ops
+s = "foo";
+s2 = "bar";
+s3 = "Foo";
+#s.append( "bar" );
+s.append( s2 );
+#append( s, s2 );
+print( s );
+len = s.length();
+print( len );
+copy = s.copy();
+print( copy );
+s.remove( 0, 3 );
+print( s );
+#s.insert( 0, "foo" );
+s.insert( 0, s3 );
+print( s );
+# null ('obaz' won't be found)
+idx = s.find( "obaz", 0, 3 );
+print( idx );
+print( s[idx] );
+idx = s.find( "obaz", 0 );
+print( idx );
+idx = s.rfind( "obaz", -1, 3 );
+print( idx );
+idx = s.rfind( "obaz", 4, 3 );
+# error: second arg out of bounds (larger than length of 1st arg)
+#idx = s.rfind( "obaz", 4, 5 );
+print( idx );
+# null ('obaz' won't be found)
+idx = s.rfind( "obaz", 4 );
+print( idx );
+
+s.reverse();
+print( s );
+s.reverse( 0, -1 );
+print( s );
+s.reverse( 2, 4 );
+print( s );
+
+s.sort( 2, 5 );
+print( s );
+s.sort();
+print( s );
+
+#for( c in s )
+#{
+##	c = s[0];
+#	print( c );
+#}
+#s.append( "bar" );
+#print( s );

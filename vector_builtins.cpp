@@ -481,9 +481,9 @@ void do_vector_find( Executor *ex )
 	size_t sz = vec.vec_val->size();
 
 	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'find'." );
 	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'remove'." );
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'find'." );
 
 	// find the element that matches
 	// find/find_xxx from <algorithm> won't help us, we need an index, not an

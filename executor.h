@@ -274,6 +274,20 @@ public:
     friend void do_map_find( Executor *ex );
     friend void do_map_keys( Executor *ex );
     friend void do_map_values( Executor *ex );
+
+	// be-friend the string builtins
+	friend void do_string_append( Executor *ex );
+	friend void do_string_length( Executor *ex );
+	friend void do_string_copy( Executor *ex );
+	friend void do_string_pop( Executor *ex );
+	friend void do_string_insert( Executor *ex );
+	friend void do_string_remove( Executor *ex );
+	friend void do_string_find( Executor *ex );
+	friend void do_string_rfind( Executor *ex );
+	friend void do_string_count( Executor *ex );
+	friend void do_string_reverse( Executor *ex );
+	friend void do_string_sort( Executor *ex );
+
 };
 
 #endif // __EXECUTOR_H__
