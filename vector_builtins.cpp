@@ -32,6 +32,9 @@ void do_vector_rfind( Executor *ex );
 void do_vector_count( Executor *ex );
 void do_vector_reverse( Executor *ex );
 void do_vector_sort( Executor *ex );
+void do_vector_map( Executor *ex );
+void do_vector_filter( Executor *ex );
+void do_vector_reduce( Executor *ex );
 
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
@@ -50,6 +53,9 @@ static const string vector_builtin_names[] =
     string( "vector_count" ),
     string( "vector_reverse" ),
     string( "vector_sort" ),
+    string( "vector_map" ),
+    string( "vector_filter" ),
+    string( "vector_reduce" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*vector_builtin_fcn)(Executor*);
@@ -69,6 +75,9 @@ vector_builtin_fcn vector_builtin_fcns[] =
     do_vector_count,
     do_vector_reverse,
     do_vector_sort,
+    do_vector_map,
+    do_vector_filter,
+    do_vector_reduce,
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
@@ -770,3 +779,199 @@ void do_vector_sort( Executor *ex )
 	// return the length
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
+
+void do_vector_map( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'map' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// function value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'map'." );
+
+	// function value
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'map'." );
+	}
+	else
+		o = &val;
+
+	// check fcn value
+	if( o->Type() != sym_function )
+		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'map'." );
+
+	// return vector
+	DOVector* ret = new DOVector();
+	ret->reserve( vec.vec_val->size() );
+
+	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
+	// (they need a "this" arg to be passed...)
+
+	// walk each item in the vector
+	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	{
+		// push the item
+		ex->stack.push_back( *i );
+		// call the function given (*must* be a single arg fcn to be used with map
+		// builtin)
+		ex->ExecuteDevaFunction( o->name, 1 );
+		// get the result (return value) and push it onto our return collection
+		DevaObject retval = ex->stack.back();
+		ex->stack.pop_back();
+		ret->push_back( retval );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting vector
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_vector_filter( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'filter' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// function value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'filter'." );
+
+	// function value
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'filter'." );
+	}
+	else
+		o = &val;
+
+	// check fcn value
+	if( o->Type() != sym_function )
+		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'filter'." );
+
+	// return vector
+	DOVector* ret = new DOVector();
+	// TODO: should the return vector be allocated as the FULL size of the input
+	// vector? we know we're calling it to possibly filter out some items...
+	// maybe it should start at *half* the size? or maybe just the default with
+	// no extra space reserved??
+	ret->reserve( vec.vec_val->size() );
+
+	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
+	// (they need a "this" arg to be passed...)
+
+	// walk each item in the vector
+	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	{
+		// push the item
+		ex->stack.push_back( *i );
+		// call the function given (*must* be a single arg fcn to be used with filter
+		// builtin)
+		ex->ExecuteDevaFunction( o->name, 1 );
+		// get the result (return value) and push it onto our return collection
+		DevaObject retval = ex->stack.back();
+		ex->stack.pop_back();
+		// only add this item to the returned vector if the function returned a
+		// 'true' value
+		if( ex->evaluate_object_as_boolean( retval ) )
+			ret->push_back( *i );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting vector
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_vector_reduce( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'reduce' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// function value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'reduce'." );
+	if( vec.vec_val->size() < 2 )
+		throw DevaRuntimeException( "Vector built-in method 'reduce' requires a vector with at least two elements." );
+
+	// function value
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'reduce'." );
+	}
+	else
+		o = &val;
+
+	// check fcn value
+	if( o->Type() != sym_function )
+		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
+
+	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
+	// (they need a "this" arg to be passed...)
+
+	// first iteration uses the first two items in the vector
+	ex->stack.push_back( vec.vec_val->at( 1 ) );
+	ex->stack.push_back( vec.vec_val->at( 0 ) );
+	ex->ExecuteDevaFunction( o->name, 2 );
+	DevaObject retval = ex->stack.back();
+	ex->stack.pop_back();
+	// walk the rest of the items in the vector
+	if( vec.vec_val->size() > 2 )
+	{
+		for( DOVector::iterator i = vec.vec_val->begin()+2; i != vec.vec_val->end(); ++i )
+		{
+			// push the item
+			ex->stack.push_back( *i );
+			// use the retval from the previous iteration as the first arg to the fcn
+			ex->stack.push_back( retval );
+			// call the function given (*must* be a double arg fcn to be used with
+			// reduce builtin)
+			ex->ExecuteDevaFunction( o->name, 2 );
+			// get the result (return value) and push it onto our return collection
+			retval = ex->stack.back();
+			ex->stack.pop_back();
+		}
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting value
+	ex->stack.push_back( DevaObject( "", retval ) );
+}
+

@@ -80,3 +80,15 @@ string: '' = bar
 
 vector: 'a' = 
 
+vector: 'b' = 
+string: '' = 0
+string: '' = 1
+string: '' = 2
+string: '' = 3
+
+vector: 'b' = 
+num: '' = 1
+num: '' = 2
+num: '' = 3
+
+6

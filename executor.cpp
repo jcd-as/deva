@@ -67,7 +67,6 @@ void Executor::remove_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL
 		if( p->count( ob.name ) != 0 )
 		{
 			// delete the symbol
-//			delete p->operator[]( ob.name );
 			delete p->find( ob.name )->second;
 
 			// remove the symbol from the scope
@@ -1990,6 +1989,60 @@ Executor::~Executor()
 		delete [] *i;
 		*i = NULL;
 	}
+}
+
+void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
+{
+	DevaObject* fcn;
+	// look up the name in the symbol table
+	fcn = find_symbol( DevaObject( fcn_name.c_str(), sym_unknown ) );
+	if( !fcn )
+		throw DevaRuntimeException( "Call made to undefined function." );
+
+	// set the static that tracks the number of args processed
+	args_on_stack = num_args;
+
+	// pop the args off the stack so we can insert the return value
+	vector<DevaObject> args;
+	for( int i = 0; i < num_args; ++i )
+	{
+		DevaObject tmp = stack.back();
+		stack.pop_back();
+		args.push_back( tmp );
+	}
+	// push the return value (ip) onto the stack
+	stack.push_back( DevaObject( "", (size_t)ip ) );
+
+	// restore the args
+	for( int i = num_args - 1; i >= 0; --i )
+	{
+		DevaObject tmp = args.back();
+		args.pop_back();
+		stack.push_back( tmp );
+	}
+
+	// get the offset for the function
+	size_t offset = fcn->func_offset;
+	// jump execution to the function offset
+	ip = offset;
+
+	// TODO: execute code until 'return' instruction
+	// read the instructions
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			break;
+
+		// if this was a 'return', stop
+		if( inst.op == op_return )
+			break;
+	}
+
+	// TODO: anything? any validation we can do? stack checking?
 }
 
 void Executor::StartGlobalScope()

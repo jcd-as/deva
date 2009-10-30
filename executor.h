@@ -233,6 +233,7 @@ public:
 	Executor( bool debug_mode = false );
 	~Executor();
 
+	void ExecuteDevaFunction( string fcn_name, int num_args );
 	void StartGlobalScope();
 	void EndGlobalScope();
 	bool RunFile( const char* const filename );
@@ -262,6 +263,9 @@ public:
     friend void do_vector_count( Executor *ex );
     friend void do_vector_reverse( Executor *ex );
     friend void do_vector_sort( Executor *ex );
+    friend void do_vector_map( Executor *ex );
+    friend void do_vector_filter( Executor *ex );
+    friend void do_vector_reduce( Executor *ex );
 
 	// be-friend the map built-ins
     friend void do_map_length( Executor *ex );

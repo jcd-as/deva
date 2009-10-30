@@ -60,3 +60,31 @@ print( a );
 # remove all the elements
 a.remove( 0, -1 );
 print( a );
+
+# test map, filter and reduce
+def strify( n )
+{
+	return str( n );
+}
+
+def add( n, m )
+{
+	return n + m;
+}
+
+def not_zero( n )
+{
+	return n != 0;
+}
+
+a = [];
+a.append( 0 );
+a.append( 1 );
+a.append( 2 );
+a.append( 3 );
+b = a.map( strify );
+print( b );
+b = a.filter( not_zero );
+print( b );
+sum = b.reduce( add );
+print( sum );
