@@ -141,5 +141,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1256939782" priority="veryhigh" time="1256855256">string builtins
 <comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)
 </comment></note><note priority="veryhigh" time="1256584124">interface to C functions and C objects (void*). Needed to implement &quot;open&quot; built-in and file IO methods
-</note><note priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
-</note></todo>
+</note><note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
+<comment>
+</comment></note></todo>

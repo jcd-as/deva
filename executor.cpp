@@ -492,27 +492,51 @@ void Executor::Dup( Instruction const & inst )
 void Executor::New_map( Instruction const & inst )
 {
 	// variable to store as (name) is on top of the stack
-	DevaObject o = stack.back();
+	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// ensure it's a variable
-	if( o.Type() != sym_unknown )
+	if( lhs.Type() != sym_unknown )
 		throw DevaRuntimeException( "Invalid left-hand type for assignment to new map object." );
-	// create a new map object and add it to the current scope
-	DevaObject *mp = new DevaObject( o.name, sym_map );
-	current_scopes->AddObject( mp );
+	// create a new map object
+	DevaObject *mp = new DevaObject( lhs.name, sym_map );
+
+	// get the lhs from the symbol table
+	DevaObject* ob = find_symbol( lhs );
+	// not found? add it to the current scope
+	if( !ob )
+	{
+		current_scopes->AddObject( mp );
+	}
+	//  set its value to the rhs
+	else
+	{
+		*ob = DevaObject( lhs.name, *mp );
+	}
 }
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
 	// variable to store as (name) is on top of the stack
-	DevaObject o = stack.back();
+	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// ensure it's a variable
-	if( o.Type() != sym_unknown )
+	if( lhs.Type() != sym_unknown )
 		throw DevaRuntimeException( "Invalid left-hand type for assignment to new vector object." );
-	// create a new map object and add it to the current scope
-	DevaObject *vec = new DevaObject( o.name, sym_vector );
-	current_scopes->AddObject( vec );
+	// create a new vector object 
+	DevaObject *vec = new DevaObject( lhs.name, sym_vector );
+
+	// get the lhs from the symbol table
+	DevaObject* ob = find_symbol( lhs );
+	// not found? add it to the current scope
+	if( !ob )
+	{
+		current_scopes->AddObject( vec );
+	}
+	//  set its value to the rhs
+	else
+	{
+		*ob = DevaObject( lhs.name, *vec );
+	}
 }
 // 9 get item from vector
 // (or map, can't tell at compile time what it will be)
