@@ -177,6 +177,12 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 {
 	if( &o == this )
 		return *this;
+
+	if( type == sym_string )
+	{
+		// free the old string, if any
+		if( str_val ) delete [] str_val;
+	}
 	name = o.name;
 	type = o.type;
 	is_const = o.is_const;

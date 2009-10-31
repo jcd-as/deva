@@ -27,6 +27,7 @@ void do_string_find( Executor *ex );
 void do_string_rfind( Executor *ex );
 void do_string_reverse( Executor *ex );
 void do_string_sort( Executor *ex );
+void do_string_slice( Executor *ex );
 
 // tables defining the built-in function names...
 static const string string_builtin_names[] = 
@@ -40,6 +41,7 @@ static const string string_builtin_names[] =
     string( "string_rfind" ),
     string( "string_reverse" ),
     string( "string_sort" ),
+    string( "string_slice" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*string_builtin_fcn)(Executor*);
@@ -54,6 +56,7 @@ string_builtin_fcn string_builtin_fcns[] =
     do_string_rfind,
     do_string_reverse,
     do_string_sort,
+    do_string_slice,
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
@@ -96,10 +99,6 @@ void do_string_append( Executor *ex )
 	DevaObject val = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// string
-//	if( str.Type() != sym_string )
-//		throw DevaICE( "String expected in string built-in method 'append'." );
-
 	DevaObject* o = NULL;
 	if( val.Type() == sym_unknown )
 	{
@@ -293,6 +292,8 @@ void do_string_remove( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'remove'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'remove'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in string built-in method 'remove': start is greater than end." );
 
 	// get a pointer to the symbol
 	DevaObject* s = NULL;
@@ -379,7 +380,7 @@ void do_string_find( Executor *ex )
 	if( i_start >= sz || i_start < 0 )
 		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'find'." );
 	if( i_len > sz_val || i_len < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'find'." );
+		throw DevaRuntimeException( "Invalid 'length' argument in string built-in method 'find'." );
 
 	// find the element that matches
 	DevaObject ret;
@@ -527,6 +528,8 @@ void do_string_reverse( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'reverse'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'reverse'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in string built-in method 'reverse': start is greater than end." );
 
 	// get a pointer to the symbol
 	DevaObject* s = NULL;
@@ -593,6 +596,8 @@ void do_string_sort( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'sort'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'sort'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in string built-in method 'sort': start is greater than end." );
 
 	// get a pointer to the symbol
 	DevaObject* s = NULL;
@@ -610,4 +615,95 @@ void do_string_sort( Executor *ex )
 
 	// return the length
 	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_string_slice( Executor *ex )
+{
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'slice' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	size_t i_start = 0;
+	size_t i_end = -1;
+	size_t i_step = 1;
+	if( Executor::args_on_stack > 0 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in string built-in method 'slice'." );
+		// TODO: start needs to be integral values. error if they aren't
+		i_start = (size_t)start.num_val;
+	}
+	if( Executor::args_on_stack > 1 )
+	{
+		// end of substring to slice
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'length' argument in string built-in method 'slice'." );
+		// TODO: length need to be integral values. error if they aren't
+		i_end = (size_t)end.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// 'step' value to slice with
+		DevaObject step = ex->stack.back();
+		ex->stack.pop_back();
+		if( step.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'length' argument in string built-in method 'slice'." );
+		// TODO: length need to be integral values. error if they aren't
+		i_step = (size_t)step.num_val;
+	}
+
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'slice'." );
+
+	size_t sz = strlen( str.str_val );
+
+	// default length is the entire search string
+	if( i_end == -1 )
+		i_end = sz;
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'slice'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'slice'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in string built-in method 'slice': start is greater than end." );
+
+	// slice the string
+	DevaObject ret;
+	string s( str.str_val );
+	// 'step' is '1' (the default)
+	if( i_step == 1 )
+	{
+		string r = s.substr( i_start, i_end - i_start );
+		ret = DevaObject( "", r );
+	}
+	// otherwise the string class doesn't help us, have to do it manually
+	else
+	{
+		// first get the substring from start to end positions
+		string r = s.substr( i_start, i_end - i_start );
+		// TODO: call 'reserve' on the string to reduce allocations?
+		// then walk it grabbing every 'nth' character
+		string slice;
+		for( int i = 0; i < r.length(); i += i_step )
+		{
+			slice += r[i];
+		}
+		ret = DevaObject( "", slice );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	ex->stack.push_back( ret );
 }

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <iterator>
 
 // to add new builtins you must:
 // 1) add a new fcn to the vector_builtin_names and vector_builtin_fcns arrays below
@@ -35,6 +36,7 @@ void do_vector_sort( Executor *ex );
 void do_vector_map( Executor *ex );
 void do_vector_filter( Executor *ex );
 void do_vector_reduce( Executor *ex );
+void do_vector_slice( Executor *ex );
 
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
@@ -56,6 +58,7 @@ static const string vector_builtin_names[] =
     string( "vector_map" ),
     string( "vector_filter" ),
     string( "vector_reduce" ),
+    string( "vector_slice" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*vector_builtin_fcn)(Executor*);
@@ -78,6 +81,7 @@ vector_builtin_fcn vector_builtin_fcns[] =
     do_vector_map,
     do_vector_filter,
     do_vector_reduce,
+    do_vector_slice,
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
@@ -408,6 +412,8 @@ void do_vector_remove( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'remove'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'remove': start is greater than end." );
 
 	// remove the value
 	if( i_start == i_end )
@@ -484,6 +490,8 @@ void do_vector_find( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'find'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'find'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'find': start is greater than end." );
 
 	// find the element that matches
 	// find/find_xxx from <algorithm> won't help us, we need an index, not an
@@ -571,6 +579,8 @@ void do_vector_rfind( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'rfind'." );
 	if( i_end > sz || i_start < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'rfind'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'rfind': start is greater than end." );
 
 	// find the element that matches
 	// find/find_xxx from <algorithm> won't help us, we need an index, not an
@@ -655,6 +665,8 @@ void do_vector_count( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'count'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'count'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'count': start is greater than end." );
 
 	// count the value
 	int num = count( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, val );
@@ -713,6 +725,8 @@ void do_vector_reverse( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'reverse'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'reverse'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'reverse': start is greater than end." );
 
 	reverse( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
 
@@ -770,6 +784,8 @@ void do_vector_sort( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
 	if( i_end > sz || i_end < 0 )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'sort'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'sort': start is greater than end." );
 
 	sort( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
 
@@ -975,3 +991,102 @@ void do_vector_reduce( Executor *ex )
 	ex->stack.push_back( DevaObject( "", retval ) );
 }
 
+// helper for slicing in steps
+static size_t s_step = 1;
+static size_t s_i = 0;
+bool if_step( DevaObject )
+{
+	if( s_i++ % s_step == 0 )
+		return false;
+	else
+		return true;
+}
+
+void do_vector_slice( Executor *ex )
+{
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'slice' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	size_t i_start = 0;
+	size_t i_end = -1;
+	size_t i_step = 1;
+	if( Executor::args_on_stack > 0 )
+	{
+		// start position to insert at is next on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'slice'." );
+		// TODO: start needs to be integral values. error if they aren't
+		i_start = (size_t)start.num_val;
+	}
+	if( Executor::args_on_stack > 1 )
+	{
+		// end of sub-vector to slice
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
+		// TODO: length need to be integral values. error if they aren't
+		i_end = (size_t)end.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// 'step' value to slice with
+		DevaObject step = ex->stack.back();
+		ex->stack.pop_back();
+		if( step.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
+		// TODO: length need to be integral values. error if they aren't
+		i_step = (size_t)step.num_val;
+	}
+
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'slice'." );
+
+	size_t sz = vec.vec_val->size();
+
+	// default length is the entire vector
+	if( i_end == -1 )
+		i_end = sz;
+
+	if( i_start >= sz || i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
+	if( i_end > sz || i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
+	if( i_step < 0 )
+		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than zero." );
+
+	// slice the vector
+	DevaObject ret;
+	// 'step' is '1' (the default)
+	if( i_step == 1 )
+	{
+		// create a new vector object that is a copy of the 'sub-vector' we're
+		// looking for
+		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
+		ret = DevaObject( "", v );
+	}
+	// otherwise the vector class doesn't help us, have to do it manually
+	else
+	{
+		DOVector* v = new DOVector();
+		s_i = 0;
+		s_step = i_step;
+		remove_copy_if( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, back_inserter( *v ), if_step );
+		ret = DevaObject( "", v );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	ex->stack.push_back( ret );
+}

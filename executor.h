@@ -266,6 +266,7 @@ public:
     friend void do_vector_map( Executor *ex );
     friend void do_vector_filter( Executor *ex );
     friend void do_vector_reduce( Executor *ex );
+    friend void do_vector_slice( Executor *ex );
 
 	// be-friend the map built-ins
     friend void do_map_length( Executor *ex );
@@ -287,7 +288,7 @@ public:
 	friend void do_string_count( Executor *ex );
 	friend void do_string_reverse( Executor *ex );
 	friend void do_string_sort( Executor *ex );
-
+	friend void do_string_slice( Executor *ex );
 };
 
 #endif // __EXECUTOR_H__

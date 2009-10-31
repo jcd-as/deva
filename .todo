@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
+<?xml version="1.0" ?>
+<todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -69,9 +70,10 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 			accept hex numbers (and octal and binary??)
 		<comment>0o as prefix for octal, instead of just '0', and 0b as prefix for binary
 </comment></note>	
-		<note priority="high" time="1254444594">		
+		<note done="1256951910" priority="high" time="1254444594">		
 			vector and string slicing (ala python)
-		</note>	
+		<comment>
+</comment></note>	
 		<note done="1255582640" priority="high" time="1255048474">		
 			tests 6,7,22 fail on mac os x. the jmp/fcn/return offsets are all different, presumably because of the sizeof a long
 		</note>	
@@ -139,4 +141,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1256939782" priority="veryhigh" time="1256855256">string builtins
 <comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)
 </comment></note><note priority="veryhigh" time="1256584124">interface to C functions and C objects (void*). Needed to implement &quot;open&quot; built-in and file IO methods
+</note><note priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
 </note></todo>
