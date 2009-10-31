@@ -28,15 +28,17 @@ failed_tests = []
 dotest = "./dotest"
 
 # check for valgrind cmd line option
+valgrind = False
 if len( sys.argv ) > 1:
     if sys.argv[1] == "v" or sys.argv[1] == "valgrind":
-		dotest = "./dotest_valgrind"
-		baseline_sized += ".valgrind"
-		
+        valgrind = True
+        dotest = "./dotest_valgrind"
 
 # run 'dotest input.dv baseline' in each sub-dir
+tests = 0
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
     if baseline in files:
+        tests += 1
         print( "processing " + root + " ..." )
         os.chdir( root )
         if baseline_sized in files:
@@ -44,7 +46,10 @@ for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
         else:
             bl = baseline
 #        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
-        ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", bl )
+        if valgrind:
+            ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv" )
+        else:
+            ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", bl )
         if ret != 0:
             failed_tests.append( root )
         
@@ -52,7 +57,7 @@ os.chdir( init_dir )
 
 # re-print failures:
 if len( failed_tests ) != 0:
-    print( "\nFAILED tests:" )
+    print( "\n" + str( len( failed_tests ) ) + " FAILED tests:" )
     for s in failed_tests:
         print( s )
 else:
