@@ -27,7 +27,7 @@ ScopeBuilder scope_bldr;
 void add_symbol( iterator_t start, iterator_t end )
 {
 	string s( start, end );
-	symTab[s] = new SymbolInfo( sym_unknown );
+	symTab[s] = SymbolInfo( sym_unknown );
 }
 
 // output whether something succeeded or failed

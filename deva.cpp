@@ -94,8 +94,8 @@ int main( int argc, char** argv )
 			CompileFile( input_filename );
 			fname += "c";
 		}
-		// compilation is done, we don't need the ScopeBuilder any more
-		for( ScopeBuilder::iterator i = scope_bldr.begin(); i != scope_bldr.end(); ++i )
+		// compilation is done, we don't need the scope table any more
+		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
 		{
 			delete i->second;
 		}

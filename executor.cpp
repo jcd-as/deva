@@ -47,7 +47,6 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 
 		// check for the symbol
 		if( p->count( ob.name ) != 0 )
-//			return p->operator[]( ob.name );
 			return p->find( ob.name )->second;
 	}
 	return NULL;

@@ -6,6 +6,7 @@
 # file called "input.dv" and comparing the results to the 'baseline' file
 
 import os
+import sys
 
 baseline = "baseline"
 
@@ -16,13 +17,22 @@ if hosttype == "x86_64":
 else:
     baseline_sized = "baseline"
 
-print( baseline )
-print( baseline_sized )
+#print( baseline )
+#print( baseline_sized )
 
 home = os.getenv( "HOME" )
 init_dir = os.getcwd()
 
 failed_tests = []
+
+dotest = "./dotest"
+
+# check for valgrind cmd line option
+if len( sys.argv ) > 1:
+    if sys.argv[1] == "v" or sys.argv[1] == "valgrind":
+		dotest = "./dotest_valgrind"
+		baseline_sized += ".valgrind"
+		
 
 # run 'dotest input.dv baseline' in each sub-dir
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
@@ -33,8 +43,8 @@ for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
             bl = baseline_sized
         else:
             bl = baseline
-        #ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", "baseline" )
-        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
+#        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
+        ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", bl )
         if ret != 0:
             failed_tests.append( root )
         

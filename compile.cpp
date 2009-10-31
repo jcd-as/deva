@@ -29,10 +29,6 @@ void add_symbol( iterator_t start, iterator_t end )
 	string s( start, end );
 	s = strip_symbol( s );
 
-	// TODO: ensure symbol is not more than 255 characters ??
-//	if( s.length() > 255 )
-//		throw new SyntaxError
-	
 	// don't add keywords
 	if( is_keyword( s ) )
 		return;
@@ -41,7 +37,7 @@ void add_symbol( iterator_t start, iterator_t end )
 		return;
 
 	// the current scope is the top of the scope_bldr stack
-	scope_bldr.back().second->insert( make_pair( s, new SymbolInfo( sym_unknown ) ) );
+	scope_bldr.back().second->insert( make_pair( s, SymbolInfo( sym_unknown ) ) );
 }
 
 // emit an error message

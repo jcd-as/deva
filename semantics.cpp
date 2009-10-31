@@ -213,8 +213,8 @@ void check_assignment_op( iter_t const & i )
 
 	// check 'const' of lhs
 	SymbolTable* st = scopes[lhs.scope];
-	SymbolInfo* si = find_symbol( lhs.sym, st, scopes );
-	if( si && si->is_const )
+	SymbolInfo si = find_symbol( lhs.sym, st, scopes );
+	if( si.Type() != sym_end && si.is_const )
 		throw DevaSemanticException( "Cannot assign to a const variable.", lhs );
 	// TODO: review. any usefulness to this at all? any way to make it useful??
 //	if( lhs.type == variable_type )
@@ -615,10 +615,8 @@ void check_const_decl( iter_t const & i )
 
 	// set symbol's 'const' flag in the symbol table
 	SymbolTable* st = scopes[i->children[1].value.value().scope];
-	SymbolInfo* si = find_symbol( i->children[1].value.value().sym, st, scopes );
-	if( !si )
+	if( !set_symbol_constness( i->children[1].value.value().sym, st, scopes, true ) )
 		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
-	si->is_const = true;
 }
 
 void check_constant( iter_t const & i )

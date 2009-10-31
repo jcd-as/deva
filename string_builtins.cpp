@@ -3,12 +3,11 @@
 // created by jcs, october 30, 2009 
 
 // TODO:
-// * 
+// * builtins for: strip, split, replace, lower, upper, is_alnum, is_alpha,
+// is_digit, is_lower, is_upper, is_space,
 //
 
 #include "string_builtins.h"
-//#include <iostream>
-//#include <sstream>
 #include <algorithm>
 
 // to add new builtins you must:

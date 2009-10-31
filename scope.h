@@ -19,13 +19,15 @@ using namespace std;
 typedef map<int, SymbolTable*> Scopes;
 
 // type for the scope-building stack (used to build the global scope table)
-//typedef vector<pair<int, SymbolTable> > ScopeBuilder;
 typedef vector<pair<int, SymbolTable*> > ScopeBuilder;
 
 // utility function to locate a symbol in parent scopes
 extern bool find_identifier_in_parent_scopes( string id, SymbolTable* sym, Scopes s );
 
 // locate a symbol
-extern SymbolInfo* find_symbol( string id, SymbolTable* sym, Scopes s );
+extern SymbolInfo find_symbol( string id, SymbolTable* sym, Scopes s );
+
+// find a symbol and set its 'const-ness'
+extern bool set_symbol_constness( string id, SymbolTable* symtab, Scopes s, bool constness );
 
 #endif // __SCOPE_H__

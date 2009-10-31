@@ -173,9 +173,9 @@ int main( int argc, char** argv )
 			for( SymbolTable::iterator j = i->second->begin(); j != i->second->end(); ++j )
 			{
 				cout << "\t" << j->first;
-				if( j->second->is_const )
+				if( j->second.is_const )
 					cout << " : constant";
-				if( j->second->Type() == sym_function )
+				if( j->second.Type() == sym_function )
 					cout << " : function";
 				cout << endl;
 			}

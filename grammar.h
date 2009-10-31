@@ -94,13 +94,6 @@ static inline void enter_scope( iterator_t begin, iterator_t end )
 	// next scope id
 	++scope_id;
 
-	// if this is the first local (non-global) scope,
-	// enter the global scope into the global table
-//	if( scope_id == 1 )
-//	{
-//		pair<int, SymbolTable*> sym = scope_bldr.back();
-//		scopes[sym.first] = sym.second;
-//	}
 	// dump debug info
 //	cout << "entering new scope: " << scope_id << endl;
 

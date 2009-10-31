@@ -41,21 +41,13 @@ public:
 	SymbolType Type() const { return type; }
 };
 
-struct SymbolTable : public map<string, SymbolInfo*>
+struct SymbolTable : public map<string, SymbolInfo>
 {
 	// also need the id of our parent
 	int parent_id;
 
 	SymbolTable() : parent_id( -1 )
 	{ }
-	~SymbolTable()
-	{
-		// delete all the SymbolInfo ptrs
-		for( map<string, SymbolInfo*>::iterator i = begin(); i != end(); ++i )
-		{
-			delete i->second;
-		}
-	}
 };
 	
 
