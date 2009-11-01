@@ -25,6 +25,7 @@ void do_map_remove( Executor *ex );
 void do_map_find( Executor *ex );
 void do_map_keys( Executor *ex );
 void do_map_values( Executor *ex );
+void do_map_merge( Executor *ex );
 
 // tables defining the built-in function names...
 static const string map_builtin_names[] = 
@@ -35,6 +36,7 @@ static const string map_builtin_names[] =
     string( "map_find" ),
     string( "map_keys" ),
     string( "map_values" ),
+    string( "map_merge" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*map_builtin_fcn)(Executor*);
@@ -46,6 +48,7 @@ map_builtin_fcn map_builtin_fcns[] =
     do_map_find,
 	do_map_keys,
 	do_map_values,
+	do_map_merge,
 };
 const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builtin_names[0] );
 
@@ -256,5 +259,47 @@ void do_map_values( Executor *ex )
 
 	// return the vector of values
 	ex->stack.push_back( DevaObject( "", v ) );
+}
+
+void do_map_merge( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to map 'merge' built-in method." );
+
+	// get the map object off the top of the stack
+	DevaObject mp = ex->stack.back();
+	ex->stack.pop_back();
+
+	// val is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// map
+	if( mp.Type() != sym_map )
+		throw DevaICE( "Map expected in map built-in method 'merge'." );
+
+	// val (map to merge in)
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'source' argument in map built-in method 'merge'." );
+	}
+	else
+		o = &val;
+
+//    DevaObject copy;
+//	// create a new map object that is a copy of the one we received,
+//	DOMap* m = new DOMap( *(mp.map_val) );
+//	copy = DevaObject( "", m );
+
+	mp.map_val->insert( o->map_val->begin(), o->map_val->end() );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 

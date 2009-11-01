@@ -275,6 +275,7 @@ public:
     friend void do_map_find( Executor *ex );
     friend void do_map_keys( Executor *ex );
     friend void do_map_values( Executor *ex );
+    friend void do_map_merge( Executor *ex );
 
 	// be-friend the string builtins
 	friend void do_string_append( Executor *ex );

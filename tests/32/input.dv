@@ -25,3 +25,9 @@ print( i );
 print( n.keys() );
 # values
 print( n.values() );
+# merge n and x together
+x = {};
+x.a = "item a";
+x.b = "item b";
+n.merge( x );
+print( n );

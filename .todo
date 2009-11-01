@@ -143,4 +143,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note priority="veryhigh" time="1256584124">interface to C functions and C objects (void*). Needed to implement &quot;open&quot; built-in and file IO methods
 </note><note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
 <comment>
-</comment></note></todo>
+</comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
+</note></todo>
