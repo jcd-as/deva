@@ -205,10 +205,14 @@ void check_assignment_op( iter_t const & i )
 	NodeInfo rhs = i->children[1].value.value();
 	if( lhs.type != variable_type && i->children[0].value.id() != const_decl_id )
 		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value", lhs );
-	else if( rhs.type != number_type && rhs.type != string_type 
-		&& rhs.type != boolean_type && rhs.type != null_type
-		&& rhs.type != variable_type && i->children[1].value.id() != vec_op_id
-		&& i->children[1].value.id() != map_op_id )
+	else if( rhs.type != number_type 
+		&& rhs.type != string_type 
+		&& rhs.type != boolean_type 
+		&& rhs.type != null_type
+		&& rhs.type != variable_type 
+		&& i->children[1].value.id() != vec_op_id
+		&& i->children[1].value.id() != map_op_id 
+		&& i->children[1].value.id() != new_decl_id )
 		throw DevaSemanticException( "Right-hand side of assignment operation not an r-value", rhs );
 
 	// check 'const' of lhs
@@ -617,6 +621,20 @@ void check_const_decl( iter_t const & i )
 	SymbolTable* st = scopes[i->children[1].value.value().scope];
 	if( !set_symbol_constness( i->children[1].value.value().sym, st, scopes, true ) )
 		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
+}
+
+void check_new_decl( iter_t const & i )
+{
+	// is always the rhs of assignment op
+	// 2 children: an identifier and an arg_list_exp
+	NodeInfo id = i->children[0].value.value();
+	NodeInfo args = i->children[1].value.value();
+	if( i->children.size() != 2 )
+		throw DevaSemanticException( "Invalid 'new' statement.", id );
+	if( id.type != variable_type )
+		throw DevaSemanticException( "Invalid 'new' statement", id );
+	if( i->children[1].value.id() != arg_list_exp_id )
+		throw DevaSemanticException( "Invalid 'new' statement", id );
 }
 
 void check_constant( iter_t const & i )

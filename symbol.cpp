@@ -87,7 +87,8 @@ bool is_keyword( const string & s )
 		|| s == "while"
 		|| s == "for"
 		|| s == "in"
-		|| s == "import" )
+		|| s == "import"
+		|| s == "class" )
 		return true;
 	else
 		return false;

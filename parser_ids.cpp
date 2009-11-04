@@ -19,6 +19,7 @@ parser_id break_statement_id;
 parser_id continue_statement_id;
 parser_id return_statement_id;
 parser_id func_decl_id;
+parser_id class_decl_id;
 parser_id compound_statement_id;
 parser_id exp_statement_id;
 parser_id open_brace_op_id;
@@ -27,6 +28,7 @@ parser_id semicolon_op_id;
 // expressions
 parser_id exp_id;
 parser_id const_decl_id;
+parser_id new_decl_id;
 parser_id assignment_exp_id;
 parser_id logical_exp_id;
 parser_id relational_exp_id;

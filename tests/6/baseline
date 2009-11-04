@@ -395,7 +395,7 @@ push : function: '', offset = 169 ;
 push : num: '' = 5 ; 
 push : unknown: 'a' ; 
 push : string: '' = pushback ; 
-vec_load : 
+tbl_load : 
 call : function: '', offset = 1 ; 
 pop : 
 push : unknown: 'b' ; 
@@ -403,15 +403,15 @@ new_map: :
 push : unknown: 'b' ; 
 push : num: '' = 0 ; 
 push : string: '' = foo ; 
-vec_store : 
+tbl_store : 
 push : unknown: 'b' ; 
 push : string: '' = foo ; 
 push : unknown: 'foo' ; 
-vec_store : 
+tbl_store : 
 push : unknown: 'x' ; 
 push : unknown: 'b' ; 
 push : string: '' = foo ; 
-vec_load : 
+tbl_load : 
 store : 
 push : function: '', offset = 292 ; 
 push : num: '' = 1 ; 
@@ -428,7 +428,7 @@ neq :
 jmpf : function: '', offset = 536 ; 
 push : unknown: 'b' ; 
 dup : num: '' = 1 ; 
-vec_load : boolean: '' = 1 ; 
+tbl_load : boolean: '' = 1 ; 
 push : unknown: 'key' ; 
 swap : 
 store : 
@@ -445,7 +445,7 @@ call : function_call: 'str' ; function: '', offset = 1 ;
 add : 
 push : unknown: 'io' ; 
 push : string: '' = print ; 
-vec_load : 
+tbl_load : 
 call : function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
@@ -469,7 +469,7 @@ push : unknown: 'a' ;
 call : function_call: 'str' ; function: '', offset = 1 ; 
 push : unknown: 'io' ; 
 push : string: '' = print ; 
-vec_load : 
+tbl_load : 
 call : function: '', offset = 1 ; 
 pop : 
 leave : 

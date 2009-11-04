@@ -394,6 +394,12 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_const_decl( i );
 	}
+	// new decl ('new' operator)
+	else if( i->value.id() == parser_id( new_decl_id ) )
+	{
+		walk_children( i );
+		check_new_decl( i );
+	}
 	// constant (keyword 'const')
 	else if( i->value.id() == parser_id( constant_id ) )
 	{
@@ -429,6 +435,11 @@ void eval_node( iter_t const & i )
 	{
 		walk_children( i );
 		check_return_statement( i );
+	}
+	// class decl
+	else if( i->value.id() == parser_id( class_decl_id ) )
+	{
+		walk_children( i );
 	}
 	//////////////////////////////////////////////////////////////////
 	// nodes of these types shouldn't be created:
@@ -624,7 +635,7 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	// if this is an identifier with a child that is an arg list
 	if( i->value.id() == identifier_id && i->children.size() > 0 && i->children[0].value.id() == arg_list_exp_id )
 	{
-		// generate the ret-val placeholder (op_push 'sym_function')
+		// generate the ret-val placeholder (op_push 'sym_offset')
 		pre_gen_IL_arg_list_exp( i, is );
 
 		// generate the code for the arg list
@@ -641,6 +652,20 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
+	///////////////////////////////////////
+	// statics used for building classes
+	///////////////////////////////////////
+	// statics used for building classes
+	// flag to indicate if we're inside a class def or not
+	// (so we know whether to generate methods or classes. i.e. is there a
+	// 'this' param or not?)
+	static bool in_class_def = false;
+	// static to hold the name of the class we're adding methods to
+	static string class_name;
+	// static to track the list of methods that were added
+	static vector<string> method_names;
+	///////////////////////////////////////
+
 	// number
     if( i->value.id() == parser_id( number_id ) )
     {
@@ -678,6 +703,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 		// write the current *file* offset, not instruction stream!
 		generate_line_num( i, is );
+		// if this is a method we need to append "@<classname>" to the function
+		// name and add the method name to the list of names added to this class
+		if( in_class_def )
+		{
+			name += "@" + class_name;
+			method_names.push_back( name );
+		}
 		is.push( Instruction( op_defun, DevaObject( name, is.Offset() ) ) );
 
 		// we need to generate an enter instruction to create the
@@ -686,6 +718,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// function takes care of this)
 		generate_line_num( i->children.begin()+2, is );
 		is.push( Instruction( op_enter ) );
+
+		// if this is a method we need to add the 'self' arg
+		// (eq. of the 'this' pointer in c++) 
+		if( in_class_def )
+		{
+			is.push( Instruction( op_defarg, DevaObject( string( "self" ), sym_unknown ) ) );
+		}
 
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i );
@@ -708,6 +747,69 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_return ) );
 		}
 	}
+	else if( i->value.id() == parser_id( class_decl_id ) )
+	{
+		// TODO: validate
+		
+		// first child is the identifier (class name)
+		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+
+		// line number. write the current *file* offset, not instruction stream!
+		generate_line_num( i, is );
+
+		// create a new class object and store it in the given name
+		is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
+		is.push( Instruction( op_new_class ) );
+		is.push( Instruction( op_store ) );
+
+		// subsequent children are the methods
+		in_class_def = true;
+		class_name = name;
+		for( int c = 1; c < i->children.size(); ++c )
+		{
+			generate_IL_for_node( i->children.begin() + c, is, i );
+		}
+		// add all the method names created to the class object
+		for( vector<string>::iterator i = method_names.begin(); i != method_names.end(); ++i )
+		{
+			// generate a tbl_store instruction to add the method to the class
+			// "table" (class)
+			is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
+			// key (method name)
+			is.push( Instruction( op_push, DevaObject( "", *i ) ) );
+			// object (fcn)
+			is.push( Instruction( op_push, DevaObject( *i, sym_unknown ) ) );
+			is.push( Instruction( op_tbl_store ) );
+		}
+		// reset the static variables
+		class_name = "";
+		method_names.clear();
+		in_class_def = false;
+	}
+	else if( i->value.id() == parser_id( new_decl_id ) )
+	{
+		// first child is the identifier for the class name to create an
+		// instance of
+		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+
+		// line number. write the current *file* offset, not instruction stream!
+		generate_line_num( i, is );
+
+		// push the args to 'new', if any
+		if( i->children[1].children.size() > 2 ) // size at least two, for the parens
+			reverse_walk_children( i->children.begin() + 1, is );
+		
+		// create the new instance
+		is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
+		// TODO: this IS NOT TRUE, the number of children could be large if
+		// expressions are used in the arg list!
+		// number of args is size of children - 2 (for the open and close parens),
+		// +1 for 'self'
+		is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[1].children.size()-1) ) ) );	// puts the new instance on the stack
+		// new instance is on the stack to act as the 'self' arg to 'new'
+		// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
+	}
+
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
 	{
@@ -865,7 +967,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				NodeInfo ni = ((NodeInfo)(i->value.value()));
 				throw DevaSemanticException( "A new vector or map can only be assigned into a simple variable.", ni );
 //				// add the vector store op
-//				is.push( Instruction( op_vec_store ) );
+//				is.push( Instruction( op_tbl_store ) );
 //
 //				// *then* walk the rhs
 //				generate_IL_for_node( i->children.begin() + 1, is, i );
@@ -877,7 +979,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 				// add the vector store op
 				generate_line_num( i->children.begin()+1, is );
-				is.push( Instruction( op_vec_store ) );
+				is.push( Instruction( op_tbl_store ) );
 			}
 		}
 		// a dot-op on the lhs also indicates a vector store instead of load, as
@@ -912,7 +1014,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
                 walk_children( i->children[0].children.begin() + 1, is );
 
                 // then generate the IL for this node
-                gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true );
+				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true );
             }
 
             // rhs of assignment op
@@ -921,7 +1023,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
             // add the vector store op
 			generate_line_num( i->children.begin(), is );
-            is.push( Instruction( op_vec_store ) );
+            is.push( Instruction( op_tbl_store ) );
 		}
 		else
 		{
@@ -1150,7 +1252,7 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 					// TODO: implement
 					//is.args[j].vec_val
 					break;
-				case sym_function:
+				case sym_offset:
 					file.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
 					break;
 				case sym_function_call:
@@ -1180,14 +1282,6 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 // generate and return bytecode
 unsigned char* GenerateByteCode( InstructionStream & is )
 {
-	// TODO: implement
-	//
-	// open the file for writing
-//	ofstream file;
-//	file.open( filename, ios::binary );
-//	if( file.fail() )
-//		return false;
-
 	ostringstream oss;
 
 	// write the header
@@ -1242,7 +1336,7 @@ unsigned char* GenerateByteCode( InstructionStream & is )
 					// TODO: implement
 					//is.args[j].vec_val
 					break;
-				case sym_function:
+				case sym_offset:
 					oss.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
 					break;
 				case sym_function_call:
@@ -1365,7 +1459,7 @@ bool DeCompileFile( char const* filename )
 				case sym_vector:
 					// TODO: implement
 					break;
-				case sym_function:
+				case sym_offset:
 					{
 					file.read( (char*)&func_offset, sizeof( size_t ) );
 					DevaObject ob( name, func_offset );

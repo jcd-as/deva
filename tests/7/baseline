@@ -424,28 +424,28 @@ jmpf : function: '', offset = 289 ;
 jmp : function: '', offset = 289 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
-vec_load : 
+tbl_load : 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
-vec_load : 
+tbl_load : 
 push : string: '' = c ; 
-vec_load : 
+tbl_load : 
 push : string: '' = d ; 
-vec_load : 
+tbl_load : 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
-vec_load : 
+tbl_load : 
 push : string: '' = c ; 
-vec_load : 
+tbl_load : 
 push : string: '' = d ; 
-vec_load : 
+tbl_load : 
 push : unknown: 'a' ; 
 push : string: '' = c ; 
-vec_load : 
+tbl_load : 
 push : function: '', offset = 4294967295 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
-vec_load : 
+tbl_load : 
 push : string: '' = foo ; 
 push : unknown: 'a' ; 
 push : num: '' = 1 ; 

@@ -20,6 +20,7 @@ extern parser_id break_statement_id;
 extern parser_id continue_statement_id;
 extern parser_id return_statement_id;
 extern parser_id func_decl_id;
+extern parser_id class_decl_id;
 extern parser_id compound_statement_id;
 extern parser_id exp_statement_id;
 extern parser_id open_brace_op_id;
@@ -28,6 +29,7 @@ extern parser_id semicolon_op_id;
 // expressions
 extern parser_id exp_id;
 extern parser_id const_decl_id;
+extern parser_id new_decl_id;
 extern parser_id assignment_exp_id;
 extern parser_id logical_exp_id;
 extern parser_id relational_exp_id;

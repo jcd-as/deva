@@ -324,6 +324,11 @@ void eval_expression( iter_t const& i )
 	{
 		dumpNode( "const_decl", i, indents );
 	}
+	// new op
+	else if( i->value.id() == parser_id( new_decl_id ) )
+	{
+		dumpNode( "new_decl", i, indents );
+	}
 	// exp
 //	else if( i->value.id() == parser_id( exp_id ) )
 //	{
@@ -345,6 +350,11 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( func_decl_id ) )
 	{
 		dumpNode( "func_decl", i, indents );
+	}
+	// class decl
+	else if( i->value.id() == parser_id( class_decl_id ) )
+	{
+		dumpNode( "class_decl", i, indents );
 	}
 //	// while statement
 //	else if( i->value.id() == parser_id( while_statement_id ) )

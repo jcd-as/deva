@@ -27,3 +27,9 @@ vector: '' =
 string: '' = a
 string: '' = c
 
+map: 'n' = 
+ - num: '' = 0 : string: '' = a
+ - num: '' = 2 : string: '' = c
+ - string: '' = a : string: '' = item a
+ - string: '' = b : string: '' = item b
+

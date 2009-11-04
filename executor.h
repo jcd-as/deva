@@ -159,10 +159,10 @@ private:
 	void New_map( Instruction const & inst );
 	// 8 create a new vector object and push onto stack
 	void New_vec( Instruction const & inst );
-	// 9 get item from vector
-	void Vec_load( Instruction const & inst );
-	// 10 set item in vector. args: index, value
-	void Vec_store( Instruction const & inst );
+	// 9 get item from vector or map
+	void Tbl_load( Instruction const & inst );
+	// 10 set item in vector or map. args: index, value
+	void Tbl_store( Instruction const & inst );
 	// 11 swap top two items on stack. no args
 	void Swap( Instruction const & inst );
 	// 12 line number (file name and line number in args)
@@ -219,6 +219,10 @@ private:
 	void Halt( Instruction const & inst );
 	// 38 import a module, 1 arg: module name
 	void Import( Instruction const & inst );
+	// 39 new class
+	void New_class( Instruction const & inst );
+	// 40 new instance
+	void New_instance( Instruction const & inst );
 	// illegal operation, if exists there was a compiler error/fault
 	void Illegal( Instruction const & inst );
 	///////////////////////////////////////////////////////////

@@ -125,14 +125,44 @@ string obj_to_str( const DevaObject* const o )
 			}
 			break;
 			}
-		case sym_function:
+		case sym_offset:
 			s << "function: '" << o->name << "'";
 			break;
 		case sym_function_call:
 			s << "function_call: '" << o->name << "'";
 			break;
-		default:
+		case sym_unknown:
 			s << "unknown: '" << o->name << "'";
+			break;
+		case sym_class:
+			{
+			// dump map contents
+			s << "class: '" << o->name << "' = " << endl;
+			smart_ptr<DOMap> mp( o->map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); ++it )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				s << " - " << key << " : " << val << endl;
+			}
+			break;
+			}
+		case sym_instance:
+			{
+			// dump map contents
+			s << "instance: '" << o->name << "' = " << endl;
+			smart_ptr<DOMap> mp( o->map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); ++it )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				s << " - " << key << " : " << val << endl;
+			}
+			break;
+			}
+		default:
+			s << "ERROR: unknown type";
+			break;
 	}
 	return s.str();
 }

@@ -158,6 +158,7 @@ public:
 			top_level_statement = 
 				access_node_d[
 				func_decl
+				| class_decl
 				| statement
 				| error_invalid_statement
 				][&set_node]
@@ -172,6 +173,16 @@ public:
 				| import_statement
 				| root_node_d[jump_statement] >> semicolon_op >> !end_p
 				| exp_statement
+				][&set_node]
+				;
+
+			class_decl =
+				access_node_d[
+				root_node_d[str_p( "class" )]
+				>> identifier 
+				>> no_node_d[ch_p( "{" )]
+				>> *func_decl
+				>> no_node_d[ch_p( "}" )]
 				][&set_node]
 				;
 
@@ -302,6 +313,7 @@ public:
 			assignment_exp =
 				access_node_d[
 				const_decl >> root_node_d[assignment_op] >> (number | string)
+				| identifier >> root_node_d[assignment_op] >> new_decl
 				| logical_exp >> *(root_node_d[assignment_op] >> logical_exp)
 				][&set_node]
 				;
@@ -309,6 +321,14 @@ public:
 			const_decl = 
 				access_node_d[
 				constant >> identifier
+				][&set_node]
+				;
+
+			new_decl =
+				access_node_d[
+				root_node_d[str_p( "new" )]
+				>> identifier
+				>> arg_list_exp
 				][&set_node]
 				;
 
@@ -373,13 +393,11 @@ public:
 			// something to differentiate from an identifier/number/etc when
 			// there is only one arg.)
 			arg_list_decl = 
-//				confix_p( open_paren_op, !list_p( identifier, no_node_d[comma_op] ), close_paren_op )
 				confix_p( open_paren_op, !list_p( arg, no_node_d[comma_op] ), close_paren_op )
 				;
 
 			arg =
 				access_node_d[
-//				root_node_d[identifier] 
 				identifier
 				>> !(no_node_d[ch_p( '=' )]
 					>> (boolean
@@ -616,6 +634,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( top_level_statement );
 			BOOST_SPIRIT_DEBUG_RULE( statement );
 			BOOST_SPIRIT_DEBUG_RULE( func_decl );
+			BOOST_SPIRIT_DEBUG_RULE( class_decl );
 			BOOST_SPIRIT_DEBUG_RULE( while_statement );
 			BOOST_SPIRIT_DEBUG_RULE( for_statement );
 			BOOST_SPIRIT_DEBUG_RULE( if_statement );
@@ -633,6 +652,7 @@ public:
 			// expressions
 			BOOST_SPIRIT_DEBUG_RULE( exp );
 			BOOST_SPIRIT_DEBUG_RULE( const_decl );
+			BOOST_SPIRIT_DEBUG_RULE( new_decl );
 			BOOST_SPIRIT_DEBUG_RULE( assignment_exp );
 			BOOST_SPIRIT_DEBUG_RULE( logical_exp );
 			BOOST_SPIRIT_DEBUG_RULE( relational_exp );
@@ -684,6 +704,7 @@ public:
 			top_level_statement_id = top_level_statement.id();
 			statement_id = statement.id();
 			func_decl_id = func_decl.id(); 
+			class_decl_id = class_decl.id(); 
 			while_statement_id = while_statement.id();
 			for_statement_id = for_statement.id();
 			if_statement_id = if_statement.id();
@@ -701,6 +722,7 @@ public:
 			// expressions
 			exp_id = exp.id();
 			const_decl_id = const_decl.id();
+			new_decl_id = new_decl.id();
 			assignment_exp_id = assignment_exp.id();
 			logical_exp_id = logical_exp.id();
 			relational_exp_id = relational_exp.id();
@@ -760,6 +782,7 @@ public:
 			else_statement,
 			import_statement,
 			func_decl,
+			class_decl,
 			jump_statement,
 			break_statement,
 			continue_statement,
@@ -771,6 +794,7 @@ public:
 			// expressions
 			exp,
 			const_decl,
+			new_decl,
 			assignment_exp,
 			logical_exp,
 			relational_exp,

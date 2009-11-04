@@ -44,14 +44,23 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			// TODO: dump some vector contents?
 			os << "vector: '" << obj.name << "' = ";
 			break;
-		case sym_function:
+		case sym_offset:
 			os << "function: '" << obj.name << "', offset = " << obj.func_offset;
 			break;
 		case sym_function_call:
 			os << "function_call: '" << obj.name << "'";
 			break;
-		default:
+		case sym_unknown:
 			os << "unknown: '" << obj.name << "'";
+			break;
+		case sym_class:
+			os << "class: '" << obj.name << "'";
+			break;
+		case sym_instance:
+			os << "instance: '" << obj.name << "'";
+			break;
+		default:
+			os << "ERROR: unknown type";
 	}
 	return os;
 }
@@ -88,11 +97,11 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_new_vec:
 		os << "new_vec:";
 		break;
-	case op_vec_load:
-		os << "vec_load";
+	case op_tbl_load:
+		os << "tbl_load";
 		break;
-	case op_vec_store:
-		os << "vec_store";
+	case op_tbl_store:
+		os << "tbl_store";
 		break;
 	case op_swap:
 		os << "swap";
@@ -178,6 +187,12 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_import:
 		os << "import";
 		break;
+	case op_new_class:
+		os << "new_class";
+		break;
+	case op_new_instance:
+		os << "new_instance";
+		break;
 	case op_illegal:
 		os << "ILLEGAL OPCODE. COMPILER ERROR";
 		break;
@@ -259,41 +274,6 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 	double n;
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	generate_line_num( i, is );
-	// hex? octal? binary?
-//	if( s[0] == '0' && s.length() > 1 )
-//	{
-//		char* end;
-//		if( s[1] == 'x' )
-//		{
-//			long l = strtol( s.c_str()+2, &end, 16 );
-//			n = l;
-//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-//			return;
-//		}
-//		else if( s[1] == 'o' )
-//		{
-//			long l = strtol( s.c_str()+2, &end, 8 );
-//			n = l;
-//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-//			return;
-//		}
-//		else if( s[1] == 'b' )
-//		{
-//			long l = strtol( s.c_str()+2, &end, 2 );
-//			n = l;
-//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-//			return;
-//		}
-//		else
-//		{
-//			// or real?
-//			n = atof( s.c_str() );
-//			is.push( Instruction( op_push, DevaObject( "", n ) ) );
-//			return;
-//		}
-//	}
-//	// or real?
-//	n = atof( s.c_str() );
 	n = parse_number( s );
 	is.push( Instruction( op_push, DevaObject( "", n ) ) );
 }
@@ -471,7 +451,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	{
 		// vec_load, with a 'true' arg to indicate that maps should treat the value
 		// as an index (not a key)
-		is.push( Instruction( op_vec_load, DevaObject( "", true ) ) );
+		is.push( Instruction( op_tbl_load, DevaObject( "", true ) ) );
 		// push the 'item' (key)
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
@@ -489,7 +469,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	{
 		// vec_load, with a 'true' arg to indicate that maps should treat the value
 		// as an index (not a key)
-		is.push( Instruction( op_vec_load ) );
+		is.push( Instruction( op_tbl_load ) );
 		// push the 'item'
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
@@ -757,7 +737,7 @@ void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
 	// first arg = lhs
 	// second arg = rhs
 	generate_line_num( i, is );
-	is.push( Instruction( op_vec_load ) );
+	is.push( Instruction( op_tbl_load ) );
 }
 
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is )
@@ -836,13 +816,11 @@ void gen_IL_arg_list_decl( iter_t const & i, InstructionStream & is )
 
 void gen_IL_key_exp( iter_t const & i, InstructionStream & is )
 {
-	// only called to generate vec loads, not stores (see assignment op handling
-	// in compile.cpp, generate_IL_for_node() for vec store code gen)
-	// TODO: consolidate map/vec load into a single 'key lookup' op
-	// (no way to determine if it's a string or a number until run-time)
+	// only called to generate table loads, not stores (see assignment op handling
+	// in compile.cpp, generate_IL_for_node() for tbl store code gen)
 	// a[b] <= a is parent, b is child[1] ('[' is child[0] and ']' is child[2])
 	generate_line_num( i, is );
-	is.push( Instruction( op_vec_load ) );
+	is.push( Instruction( op_tbl_load ) );
 }
 
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is )

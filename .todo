@@ -144,4 +144,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </note><note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
 <comment>
 </comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
+</note><note priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
 </note></todo>

@@ -31,13 +31,15 @@ DevaObject::DevaObject( const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 	case sym_boolean:
 		bool_val = o.bool_val;
 		break;
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		map_val = o.map_val;
 		break;
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_function:
+	case sym_offset:
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -74,13 +76,15 @@ DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_va
 	case sym_boolean:
 		bool_val = o.bool_val;
 		break;
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		map_val = o.map_val;
 		break;
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_function:
+	case sym_offset:
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -114,7 +118,7 @@ DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( 
 DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
 // 'function' type
-DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_function ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
+DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_offset ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
 // map type with the given map
 DevaObject::DevaObject( string nm, DOMap* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
@@ -140,6 +144,8 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 		bool_val = false;
 		break;
 	case sym_map:
+	case sym_class:
+	case sym_instance:
 		{
 		DOMap* m = new DOMap();
 		map_val = m;
@@ -151,7 +157,7 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 		vec_val = v;
 		break;
 		}
-	case sym_function:
+	case sym_offset:
 		func_offset = -1;
 		break;
 	case sym_function_call:
@@ -172,6 +178,23 @@ DevaObject::~DevaObject()
 	if( type == sym_string )
 		if( str_val ) delete [] str_val;
 }
+
+// factory method: class type from the given map
+/*static*/ DevaObject DevaObject::ClassFromMap( string nm, DOMap* m )
+{
+	DevaObject obj( nm, m );
+	obj.type = sym_class;
+	return obj;
+}
+
+// factory method: instance type from the given map
+/*static*/ DevaObject DevaObject::InstanceFromMap( string nm, DOMap* m )
+{
+	DevaObject obj( nm, m );
+	obj.type = sym_instance;
+	return obj;
+}
+
 
 DevaObject & DevaObject::operator = ( const DevaObject & o )
 {
@@ -198,13 +221,15 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 	case sym_boolean:
 		bool_val = o.bool_val;
 		break;
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		map_val = o.map_val;
 		break;
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_function:
+	case sym_offset:
 		func_offset = o.func_offset;
 		break;
 	case sym_function_call:
@@ -247,6 +272,8 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 			return true;
 		else
 			return false;
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		if( name.compare( rhs.name ) < 0 )
 			return true;
@@ -257,7 +284,7 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 			return true;
 		else
 			return false;
-	case sym_function:
+	case sym_offset:
 		if( func_offset < rhs.func_offset )
 			return true;
 		else
@@ -302,13 +329,15 @@ bool DevaObject::operator == ( const DevaObject & rhs ) const
 		return strcmp( str_val, rhs.str_val ) == 0;
 	case sym_boolean:
 		return bool_val == rhs.bool_val;
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		// TODO: deep compare instead of "is" pointer compare??
 		return (void*)map_val == (void*)rhs.map_val;
 	case sym_vector:
 		// TODO: deep compare instead of "is" pointer compare??
 		return (void*)vec_val == (void*)rhs.vec_val;
-	case sym_function:
+	case sym_offset:
 		return func_offset == rhs.func_offset;
 	case sym_function_call:
 		// TODO: ???
@@ -338,13 +367,15 @@ long DevaObject::Size() const
 		return sz + strlen( str_val ) + 1;
 	case sym_boolean:
 		return sz + sizeof( long );
+	case sym_class:
+	case sym_instance:
 	case sym_map:
 		// TODO: implement??? error??
 		return 0;
 	case sym_vector:
 		// TODO: implement??? error??
 		return 0;
-	case sym_function:
+	case sym_offset:
 		return sz + sizeof( size_t );
 	case sym_null:
 		return sz + sizeof( long );

@@ -1,0 +1,24 @@
+# test classes and instances
+
+class Bar
+{
+	def new( inc )
+	{
+		self.increment = inc;
+	}
+	def foo( x )
+	{
+		return x + self.increment;
+	}
+}
+
+# create an instance of class 'Bar'
+x = new Bar( 1 );
+y = x.foo( 3 ) ;
+print( x.increment );
+print( y );
+
+z = new Bar( 2 );
+print( z.increment );
+print( z.foo( 3 ) );
+

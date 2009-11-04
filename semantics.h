@@ -44,6 +44,7 @@ void check_arg( iter_t const & i );
 void check_key_exp( iter_t const & i );
 void pre_check_const_decl( iter_t const & i );
 void check_const_decl( iter_t const & i );
+void check_new_decl( iter_t const & i );
 void check_constant( iter_t const & i );
 void check_translation_unit( iter_t const & i );
 void check_compound_statement( iter_t const & i );

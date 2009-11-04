@@ -11,7 +11,6 @@
 // virtual machine & IL opcodes:
 enum Opcode
 {
-	// TODO: need pop/push for each object type?
 	op_pop,			// 0 pop top item off stack
 	op_push,		// 1 push item onto top of stack
 	op_load,		// 2 load a variable from memory to the stack
@@ -21,9 +20,8 @@ enum Opcode
 	op_dup,			// 6 dup a stack item. arg is index of item to dup (onto top of stack)
 	op_new_map,		// 7 create a new map object and push onto stack
 	op_new_vec,		// 8 create a new vector object and push onto stack
-	// TODO: rename vec_load and vec_store to table_load and table_store
-	op_vec_load,	// 9 get item from vector
-	op_vec_store,	// 10 set item in vector. args: index, value
+	op_tbl_load,	// 9 get item from vector or map
+	op_tbl_store,	// 10 set item in vector or map. args: index, value
 	op_swap,		// 11 swap top two items on stack (no args)
 	op_line_num,	// 12 line number (for debugging). 1st arg is the line number
 	op_jmp,			// 13 unconditional jump to the address on top of the stack
@@ -52,6 +50,8 @@ enum Opcode
 	op_nop,			// 36 no op
 	op_halt,		// 37 finish program, 0 or 1 ops (return code)
 	op_import,		// 38 import a module. 1 arg: module name
+	op_new_class,	// 39 create a new class object and push onto the stack
+	op_new_instance,// 40 create a new instance of a class and push onto the stack
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

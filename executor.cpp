@@ -290,10 +290,15 @@ void Executor::FixupOffsets()
 					ip += sizeof( long );
 					break;
 					}
-				case sym_function:
+				case sym_offset:
 					{
+					// TODO: select on which ops DO need to be fixed up, not
+					// which don't (jmp, jmpf
 					// don't fix-up line numbers or calls (number of args)
-					if( op != op_line_num && op != op_call )
+					// or new_instances (number of args)
+					// THIS IS MISSING SOMETHING (try running all tests)
+//					if( op == op_defun || op == op_jmp || op == op_jmpf )
+					if( op != op_line_num && op != op_call && op != op_new_instance )
 					{
 						// read a size_t to get the offset
 						size_t func_offset;
@@ -369,7 +374,7 @@ void Executor::Store( Instruction const & inst )
 	DevaObject lhs = stack.back();
 	stack.pop_back();
 	// if the rhs is a variable or function, get it from the symbol table
-	if( rhs.Type() == sym_unknown || rhs.Type() == sym_function )
+	if( rhs.Type() == sym_unknown || rhs.Type() == sym_offset )
 	{
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
@@ -399,7 +404,7 @@ void Executor::Defun( Instruction const & inst )
 	// ensure 1st arg to instruction is a function object
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid defun opcode, no arguments." );
-	if( inst.args[0].Type() != sym_function )
+	if( inst.args[0].Type() != sym_offset )
 		throw DevaICE( "Invalid defun opcode argument." );
 	// create a new entry in the local symbol table
 	// (offset to HERE (function start))
@@ -538,12 +543,12 @@ void Executor::New_vec( Instruction const & inst )
 		*ob = DevaObject( lhs.name, *vec );
 	}
 }
-// 9 get item from vector
-// (or map, can't tell at compile time what it will be)
+// 9 get item from vector or map
+// (can't tell at compile time what it will be)
 // if there is an arg that is the boolean 'true', then we need to look up items in
 // maps as if the key was a numeric index (i.e. m[0] means the 0'th item in the
 // map, not the item with key '0')
-void Executor::Vec_load( Instruction const & inst )
+void Executor::Tbl_load( Instruction const & inst )
 {
 	// top of stack has index/key
 	DevaObject idxkey = stack.back();
@@ -553,7 +558,7 @@ void Executor::Vec_load( Instruction const & inst )
 	stack.pop_back();
 
 	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
-		throw DevaRuntimeException( "Invalid object for 'vec_load' instruction." );
+		throw DevaRuntimeException( "Invalid object for 'tbl_load' instruction." );
 
 	// if the index/key is a variable, look it up
 	if( idxkey.Type() == sym_unknown )
@@ -600,11 +605,76 @@ void Executor::Vec_load( Instruction const & inst )
 		table = &vecmap;
 
 	// ensure it is the correct type
-	// TODO: UDTs
+	// UDTs
+	// class (static) methods...
+	if( table->Type() == sym_class )
+	{
+		if( idxkey.Type() != sym_string )
+			throw DevaICE( "Invalid class method." );
+		// method names have "@<classname>" appended to their symbol names
+		string method( idxkey.str_val );
+		method += "@";
+		method += table->name;
+		// get the value from the map
+		smart_ptr<DOMap> mp( table->map_val );
+		DOMap::iterator it;
+		it = mp->find( DevaObject( "", method ) );
+		bool is_method = true;
+		// if not found, try looking for it as a field (no "@<classname>")
+		if( it == mp->end() )
+		{
+			is_method = false;
+			it = mp->find( idxkey );
+			if( it == mp->end() )
+				throw DevaRuntimeException( "Invalid method or field. No such item found." );
+		}
+		// for methods, push 'self' (the class itself for class methods)
+		if( is_method )
+			stack.push_back( *table );
+		// push it onto the stack
+		pair<DevaObject, DevaObject> p = *it;
+		stack.push_back( p.second );
+	}
+	// instance (object) methods...  
+	else if( table->Type() == sym_instance )
+	{
+		if( idxkey.Type() != sym_string )
+			throw DevaICE( "Invalid class method." );
+
+		DOMap::iterator it;
+		smart_ptr<DOMap> mp( table->map_val );
+		// look up the variable '__class__' in the instance, it holds the class
+		// type name
+		it = mp->find( DevaObject( "", string( "__class__" ) ) );
+		if( it == mp->end() )
+			throw DevaRuntimeException( "Instance does not contain a '__class__' variable." );
+		string classname( it->second.str_val );
+		// method names have "@<classname>" appended to their symbol names
+		string method( idxkey.str_val );
+		method += "@";
+		method += classname;
+		// get the fcn value from the map
+		it = mp->find( DevaObject( "", method ) );
+		bool is_method = true;
+		// if not found, try looking for it as a field (no "@<classname>")
+		if( it == mp->end() )
+		{
+			is_method = false;
+			it = mp->find( idxkey );
+			if( it == mp->end() )
+				throw DevaRuntimeException( "Invalid method or field. No such item found." );
+		}
+		// for methods, push 'self'
+		if( is_method )
+			stack.push_back( *table );
+		// push the method/field
+		pair<DevaObject, DevaObject> p = *it;
+		stack.push_back( p.second );
+	}
 
 	// vector *must* have a numeric (integer) index for actual vector look-ups,
 	// or string index for method calls
-	if( table->Type() == sym_vector )
+	else if( table->Type() == sym_vector )
 	{
 		// if this is a string index and it was a vector or UDT, 
 		// this is a method call on a vector builtin (or an error)
@@ -612,7 +682,7 @@ void Executor::Vec_load( Instruction const & inst )
 		{
 			// built-in method call
 			// top of stack contains key (fcn name as string)
-			// next-to-top contains value (fcn as sym_function)
+			// next-to-top contains value (fcn as sym_offset)
 			string key( "vector_");
 		   	key += idxkey.str_val; 
 			// key == string
@@ -648,13 +718,13 @@ void Executor::Vec_load( Instruction const & inst )
 		{
 			// key must be an integral number, as it is really an index
 			if( idxkey.Type() != sym_number )
-				throw DevaICE( "Index in vec_load instruction on a map MUST evaluate to a number." );
+				throw DevaICE( "Index in tbl_load instruction on a map MUST evaluate to a number." );
 			// TODO: error on non-integral value
 			int idx = (int)idxkey.num_val;
 			// get the value from the map
 			smart_ptr<DOMap> mp( table->map_val );
 			if( idx >= mp->size() )
-				throw DevaICE( "Index out-of-range in vec_load instruction." );
+				throw DevaICE( "Index out-of-range in tbl_load instruction." );
 			DOMap::iterator it;
 			// this loop is equivalent of "it = mp->begin() + idx;" 
 			// (which is required because map iterators don't support the + op)
@@ -662,7 +732,7 @@ void Executor::Vec_load( Instruction const & inst )
 			for( int i = 0; i < idx; ++i ) ++it;
 
 			if( it == mp->end() )
-				throw DevaICE( "Index out-of-range in vec_load instruction, after being checked. Memory corruption?" );
+				throw DevaICE( "Index out-of-range in tbl_load instruction, after being checked. Memory corruption?" );
 			// push it onto the stack
 			pair<DevaObject, DevaObject> p = *it;
 			stack.push_back( p.second );
@@ -683,7 +753,7 @@ void Executor::Vec_load( Instruction const & inst )
 			{
 				// built-in method call??
 				// top of stack contains key (fcn name as string)
-				// next-to-top contains value (fcn as sym_function)
+				// next-to-top contains value (fcn as sym_offset)
 				string key( "map_");
 				key += idxkey.str_val; 
 				// key == string
@@ -710,7 +780,7 @@ void Executor::Vec_load( Instruction const & inst )
 		{
 			// built-in method call
 			// top of stack contains key (fcn name as string)
-			// next-to-top contains value (fcn as sym_function)
+			// next-to-top contains value (fcn as sym_offset)
 			string key( "string_");
 		   	key += idxkey.str_val; 
 			// key == string
@@ -742,12 +812,12 @@ void Executor::Vec_load( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
 }
-// 10 set item in vector. args: index, value
-void Executor::Vec_store( Instruction const & inst )
+// 10 set item in vector or map. args: index, value
+void Executor::Tbl_store( Instruction const & inst )
 {
     // enough data on stack
     if( stack.size() < 3 )
-        throw DevaICE( "Invalid 'vec_store' instruction: not enough data on stack." );
+        throw DevaICE( "Invalid 'tbl_store' instruction: not enough data on stack." );
 	// top of stack has value
 	DevaObject val = stack.back();
 	stack.pop_back();
@@ -758,8 +828,9 @@ void Executor::Vec_store( Instruction const & inst )
 	DevaObject vecmap = stack.back();
 	stack.pop_back();
 
-	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
-		throw DevaRuntimeException( "Invalid object for 'vec_store' instruction." );
+	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector 
+		&& vecmap.Type() != sym_class && vecmap.Type() != sym_instance )
+		throw DevaRuntimeException( "Invalid object for 'tbl_store' instruction." );
 
 	// if the value is a variable, look it up
 	if( val.Type() == sym_unknown )
@@ -796,7 +867,7 @@ void Executor::Vec_store( Instruction const & inst )
 		// set the value in the vector
 		if( idx < 0 || idx >= v->size() )
 			throw DevaRuntimeException( "Index to vector out-of-range." );
-		v->operator[]( idx ) = val;
+		(*v)[idx] = val;
 	}
 	// maps can be indexed by number/string/user-defined-type
 	else if( table->Type() == sym_map )
@@ -805,7 +876,18 @@ void Executor::Vec_store( Instruction const & inst )
 		// TODO: user-defined-type as key
 		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
-		// set the value in the map
+		// set the value in the map (whether it already exists or not)
+		smart_ptr<DOMap> mp( table->map_val) ;
+		mp->operator[]( idxkey ) = val;
+	}
+	// classes/instances members are methods or variables and must be indexed by
+	// name
+	else if( table->Type() == sym_class || table->Type() == sym_instance )
+	{
+		// key (string)
+		if( idxkey.Type() != sym_string )
+			throw DevaRuntimeException( "Member added to a class or instance must be accessed by name." );
+		// set the value in the map (whether it already exists or not)
 		smart_ptr<DOMap> mp( table->map_val) ;
 		mp->operator[]( idxkey ) = val;
 	}
@@ -839,7 +921,7 @@ void Executor::Jmp( Instruction const & inst )
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_function )
+	if( dest.Type() != sym_offset )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 	// jump execution to the function offset
 	ip = dest.func_offset;
@@ -851,7 +933,7 @@ void Executor::Jmpf( Instruction const & inst )
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_function )
+	if( dest.Type() != sym_offset )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 
 	// get the value on the top of the stack
@@ -1461,7 +1543,7 @@ void Executor::Output( Instruction const & inst )
 			}
 			break;
 			}
-		case sym_function:
+		case sym_offset:
 			cout << "function: '" << o->name << "'";
 			break;
 		case sym_function_call:
@@ -1499,7 +1581,7 @@ void Executor::Call( Instruction const & inst )
 				throw DevaRuntimeException( "Call made to undefined function." );
 
 			// check the number of args to the fcn
-			if( inst.args[1].Type() != sym_function )
+			if( inst.args[1].Type() != sym_offset )
 				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
 
 			// set the static that tracks the number of args processed
@@ -1511,13 +1593,13 @@ void Executor::Call( Instruction const & inst )
 		else if( inst.args.size() == 1 )
 		{
 			// check the number of args to the fcn
-			if( inst.args[0].Type() != sym_function )
+			if( inst.args[0].Type() != sym_offset )
 				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
 
 			// get the function to call off the stack
 			DevaObject o = stack.back();
 			stack.pop_back();
-			if( o.Type() == sym_function )
+			if( o.Type() == sym_offset )
 				fcn = &o;
 			else if( o.Type() == sym_unknown )
 				fcn = find_symbol( o.name );
@@ -1563,11 +1645,13 @@ void Executor::Call( Instruction const & inst )
 				args_on_stack = -1;
 				return;
 			}
-			// TODO: methods on UDTs
-			//
-
 			// set the static that tracks the number of args processed
-			args_on_stack = inst.args[0].func_offset;
+			// methods on UDTs (classes and instances)
+			// need to adjust arg count for the implicit 'self' (+1)
+			if( fcn->name.find( '@' ) != string::npos )
+				args_on_stack = inst.args[0].func_offset + 1;
+			else
+				args_on_stack = inst.args[0].func_offset;
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
@@ -1612,7 +1696,7 @@ void Executor::Return( Instruction const & inst )
 	// pop the return location off the top of the stack
 	DevaObject ob = stack.back();
 	stack.pop_back();
-	if( ob.Type() != sym_function )
+	if( ob.Type() != sym_offset )
 		throw DevaRuntimeException( "Invalid return destination on stack when executing return instruction" );
 	stack.push_back( ret );
 	// jump to the return location
@@ -1628,7 +1712,7 @@ void Executor::Break( Instruction const & inst )
 {
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid 'break' instruction. No arguments." );
-	if( inst.args[0].Type() != sym_function )
+	if( inst.args[0].Type() != sym_offset )
 		throw DevaICE( "Invalid 'break' instruction. Argument is non-numeric." );
 
 	vector<int> enter_stack;
@@ -1798,6 +1882,65 @@ void Executor::Import( Instruction const & inst )
 	// restore the current scope table
 	current_scopes = orig_scopes;
 }
+// 39 create a new class object and push onto stack
+void Executor::New_class( Instruction const & inst )
+{
+	// create a new class object
+	stack.push_back( DevaObject( "", sym_class ) );
+}
+// 40 create a new class instance object and push onto stack
+void Executor::New_instance( Instruction const & inst )
+{
+	// 1 arg: an offset containing the number of arguments to 'new'
+	if( inst.args.size() != 1 )
+		throw DevaICE( "Invalid number of arguments in 'new_instance' instruction." );
+	if( inst.args[0].Type() != sym_offset )
+		throw DevaICE( "Invalid argument in 'new_instance' instruction." );
+	// class to create instance of is on top of stack
+	DevaObject cls = stack.back();
+	stack.pop_back();
+
+	DevaObject* ob;
+	if( cls.Type() == sym_unknown )
+	{
+		ob = find_symbol( cls );
+		if( !ob )
+			throw DevaRuntimeException( "Invalid class name for new object." );
+	}
+	else
+		*ob = cls;
+
+	// ensure it's a class
+	if( ob->Type() != sym_class )
+		throw DevaRuntimeException( "Invalid class type for new object." );
+
+	// create a new instance object as a copy of the class object
+    DevaObject copy;
+	DOMap* m = new DOMap( *(ob->map_val) );
+	DevaObject instance = DevaObject::InstanceFromMap( "", m );
+	// - add the __class__ member to the instance
+	instance.map_val->insert( make_pair( DevaObject( "", string( "__class__" ) ), DevaObject( "", ob->name ) ) );
+	// - call the constructor ('new' method)
+	size_t num_args = inst.args[0].func_offset;
+	// TODO: look for 'new' function even if the only arg is 'self', in case the user
+	// has overridden it
+	if( num_args > 1 )
+	{
+		// push 'self'
+		stack.push_back( instance );
+		// call the 'new' method for this class
+		string method( "new" );
+		method += "@";
+		method += ob->name;
+		// TODO: this doesn't work for setting fields etc - they don't persist
+		ExecuteDevaFunction( method, num_args );
+		// ignore the return value from 'new'. not allowed
+		stack.pop_back();
+	}
+
+	// push it onto the stack
+	stack.push_back( instance );
+}
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
 {
@@ -1843,11 +1986,11 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_new_vec:		// 8 create a new vector object and push onto stack
 		New_vec( inst );
 		break;
-	case op_vec_load:	// 9 get item from vector/map
-		Vec_load( inst );
+	case op_tbl_load:	// 9 get item from vector/map
+		Tbl_load( inst );
 		break;
-	case op_vec_store:	// 10 set item in vector/map. args: index, value
-		Vec_store( inst );
+	case op_tbl_store:	// 10 set item in vector/map. args: index, value
+		Tbl_store( inst );
 		break;
 	case op_swap:		// 11 swap top two items on stack. no args
 		Swap( inst );
@@ -1933,6 +2076,12 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_import:
 		Import( inst );
 		break;
+	case op_new_class:	// 39 new class
+		New_class( inst );
+		break;
+	case op_new_instance:	// 40 new instance. 1 arg: number of args to pass to class's 'new'
+		New_instance( inst );
+		break;
 	case op_illegal:	// illegal operation, if exists there was a compiler error/fault
 	default:
 		Illegal( inst );
@@ -2006,7 +2155,7 @@ Instruction Executor::NextInstr()
 			case sym_vector:
 				// TODO: is this an error??
 				break;
-			case sym_function:
+			case sym_offset:
 				{
 				// size_t
 				read_size_t( func_offset );
@@ -2099,7 +2248,7 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 	// jump execution to the function offset
 	ip = offset;
 
-	// TODO: execute code until 'return' instruction
+	// execute code until 'return' instruction
 	// read the instructions
 	while( true )
 	{

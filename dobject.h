@@ -67,6 +67,14 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, const DevaObject & o );
 	~DevaObject();
 
+    // factory method: class type from the given map
+    static DevaObject ClassFromMap( string nm, DOMap* m );
+    // factory method: instance type from the given map
+    static DevaObject InstanceFromMap( string nm, DOMap* m );
+	// befriend the factory methods so they have access to private data
+    friend DevaObject ClassFromMap( string nm, DOMap* m );
+    friend DevaObject InstanceFromMap( string nm, DOMap* m );
+
 	DevaObject& operator = ( const DevaObject & o );
 	bool operator < ( const DevaObject & rhs ) const;
 	bool operator == ( const DevaObject & rhs ) const;
