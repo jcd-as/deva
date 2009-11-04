@@ -53,9 +53,10 @@ stack based, all ops pull arguments off stack
 			complete execution engine code and deva executable
 		<comment>aside from bug fixes and new features, it's done
 </comment></note>	
-		<note priority="veryhigh" time="1254868797">		
+		<note done="1257296068" priority="veryhigh" time="1254868797">		
 			objects/user-defined types (fields, method look-up, 'class' keyword etc)
-		</note>	
+		<comment>done. still missing: inheritance, 'copy' built-in for classes and instances
+</comment></note>	
 		<note done="1255753655" priority="veryhigh" time="1255048474">		
 			fix the data/object/ref-counting model
 			<comment>			
@@ -145,4 +146,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
 </note><note priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
+</note><note priority="veryhigh" time="1257296151">library module for file IO
 </note></todo>
