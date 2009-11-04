@@ -104,7 +104,7 @@ void gen_IL_relational_op( iter_t const & i, InstructionStream & is );
 void gen_IL_mult_op( iter_t const & i, InstructionStream & is );
 void gen_IL_add_op( iter_t const & i, InstructionStream & is );
 void gen_IL_unary_op( iter_t const & i, InstructionStream & is );
-void gen_IL_dot_op( iter_t const & i, InstructionStream & is );
+void gen_IL_dot_op( iter_t const & i, InstructionStream & is, bool is_method_call = false );
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is );
 void gen_IL_bracket_op( iter_t const & i, InstructionStream & is );
 

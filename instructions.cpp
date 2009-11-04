@@ -731,13 +731,18 @@ void gen_IL_unary_op( iter_t const & i, InstructionStream & is )
 		is.push( Instruction( op_not ) );
 }
 
-void gen_IL_dot_op( iter_t const & i, InstructionStream & is )
+void gen_IL_dot_op( iter_t const & i, InstructionStream & is, bool is_method_call /*= false*/ )
 {
 	// a.b = a["b"]  <== dot op is syntactic sugar for map lookup
 	// first arg = lhs
 	// second arg = rhs
 	generate_line_num( i, is );
-	is.push( Instruction( op_tbl_load ) );
+	// if this IS a method call, we need to indicate so to the tbl_load
+	// instruction
+	if( is_method_call )
+		is.push( Instruction( op_tbl_load, DevaObject( "", false  ) ) );
+	else
+		is.push( Instruction( op_tbl_load ) );
 }
 
 void gen_IL_paren_op( iter_t const & i, InstructionStream & is )

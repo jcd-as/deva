@@ -748,10 +748,10 @@ push : unknown: 'a' ;
 push : unknown: 'j' ; 
 push : num: '' = 1 ; 
 sub : 
-vec_load : 
+tbl_load : 
 push : unknown: 'a' ; 
 push : unknown: 'j' ; 
-vec_load : 
+tbl_load : 
 gt : 
 jmpf : function: '', offset = 445 ; 
 enter : 
@@ -760,7 +760,7 @@ push : unknown: 'a' ;
 push : unknown: 'j' ; 
 push : num: '' = 1 ; 
 sub : 
-vec_load : 
+tbl_load : 
 store : 
 push : unknown: 'a' ; 
 push : unknown: 'j' ; 
@@ -768,12 +768,12 @@ push : num: '' = 1 ;
 sub : 
 push : unknown: 'a' ; 
 push : unknown: 'j' ; 
-vec_load : 
-vec_store : 
+tbl_load : 
+tbl_store : 
 push : unknown: 'a' ; 
 push : unknown: 'j' ; 
 push : unknown: 'temp' ; 
-vec_store : 
+tbl_store : 
 push : unknown: 'swap' ; 
 push : boolean: '' = 1 ; 
 store : 
@@ -862,7 +862,7 @@ neq :
 jmpf : function: '', offset = 1290 ; 
 push : unknown: 'l' ; 
 dup : num: '' = 1 ; 
-vec_load : 
+tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
@@ -894,7 +894,7 @@ neq :
 jmpf : function: '', offset = 1567 ; 
 push : unknown: 'n' ; 
 dup : num: '' = 1 ; 
-vec_load : 
+tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 

@@ -547,7 +547,10 @@ void Executor::New_vec( Instruction const & inst )
 // (can't tell at compile time what it will be)
 // if there is an arg that is the boolean 'true', then we need to look up items in
 // maps as if the key was a numeric index (i.e. m[0] means the 0'th item in the
-// map, not the item with key '0')
+// map, not the item with key '0'), for use by 'for' loops
+// if there is an arg that is the boolean 'false', it indicates that this is a
+// method call, NOT a normal look-up, and the 'self' arg will need to be loaded
+// as well as the result of the table look-up
 void Executor::Tbl_load( Instruction const & inst )
 {
 	// top of stack has index/key
@@ -628,8 +631,9 @@ void Executor::Tbl_load( Instruction const & inst )
 			if( it == mp->end() )
 				throw DevaRuntimeException( "Invalid method or field. No such item found." );
 		}
-		// for methods, push 'self' (the class itself for class methods)
-		if( is_method )
+		// for method calls, push 'self' (the class itself for class methods)
+		// was the method-call flag passed with this instruction?
+		if( is_method && inst.args.size() > 0 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == false )
 			stack.push_back( *table );
 		// push it onto the stack
 		pair<DevaObject, DevaObject> p = *it;
@@ -664,8 +668,9 @@ void Executor::Tbl_load( Instruction const & inst )
 			if( it == mp->end() )
 				throw DevaRuntimeException( "Invalid method or field. No such item found." );
 		}
-		// for methods, push 'self'
-		if( is_method )
+		// for method calls, push 'self'
+		// was the method-call flag passed with this instruction?
+		if( is_method && inst.args.size() > 0 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == false )
 			stack.push_back( *table );
 		// push the method/field
 		pair<DevaObject, DevaObject> p = *it;
@@ -713,7 +718,7 @@ void Executor::Tbl_load( Instruction const & inst )
 	else if( table->Type() == sym_map )
 	{
 		// if there is an arg, and it's boolean 'true', treat the key as an
-		// index
+		// index (for use by 'for' loops)
 		if( inst.args.size() > 0 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
 		{
 			// key must be an integral number, as it is really an index
@@ -1579,6 +1584,9 @@ void Executor::Call( Instruction const & inst )
 			fcn = find_symbol( inst.args[0] );
 			if( !fcn )
 				throw DevaRuntimeException( "Call made to undefined function." );
+
+			if( fcn->Type() != sym_offset )
+				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			// check the number of args to the fcn
 			if( inst.args[1].Type() != sym_offset )

@@ -372,30 +372,30 @@ Scope 6, parent = 0
 
 Instructions:
 line_num : string: '' = input.dv ; function: '', offset = 0 ; 
-defun : function: 'foo', offset = 19 ; 
+defun : function: 'foo', offset = 23 ; 
 enter : 
 defarg : unknown: 'a' ; 
 defarg : unknown: 'b' ; 
 defarg : 
 push : unknown: 'a' ; 
-jmpf : function: '', offset = 72 ; 
+jmpf : function: '', offset = 88 ; 
 push : unknown: 'b' ; 
 return : 
-jmp : function: '', offset = 114 ; 
+jmp : function: '', offset = 138 ; 
 push : unknown: 'b' ; 
-jmpf : function: '', offset = 100 ; 
+jmpf : function: '', offset = 124 ; 
 push : unknown: 'a' ; 
 return : 
-jmp : function: '', offset = 114 ; 
+jmp : function: '', offset = 138 ; 
 push : num: '' = 0 ; 
 return : 
 push : unknown: 'a' ; 
 new_vec: : 
-push : function: '', offset = 169 ; 
+push : function: '', offset = 211 ; 
 push : num: '' = 5 ; 
 push : unknown: 'a' ; 
 push : string: '' = pushback ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 1 ; 
 pop : 
 push : unknown: 'b' ; 
@@ -413,19 +413,19 @@ push : unknown: 'b' ;
 push : string: '' = foo ; 
 tbl_load : 
 store : 
-push : function: '', offset = 292 ; 
+push : function: '', offset = 342 ; 
 push : num: '' = 1 ; 
 push : num: '' = 0 ; 
 call : function_call: 'x' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 294 ; 
+push : function: '', offset = 344 ; 
 push : unknown: 'b' ; 
 call : function_call: 'length' ; function: '', offset = 1 ; 
 push : num: '' = 0 ; 
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 536 ; 
+jmpf : function: '', offset = 640 ; 
 push : unknown: 'b' ; 
 dup : num: '' = 1 ; 
 tbl_load : boolean: '' = 1 ; 
@@ -435,44 +435,44 @@ store :
 push : unknown: 'value' ; 
 swap : 
 store : 
-push : function: '', offset = 512 ; 
-push : function: '', offset = 454 ; 
+push : function: '', offset = 612 ; 
+push : function: '', offset = 532 ; 
 push : unknown: 'key' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
-push : function: '', offset = 484 ; 
+push : function: '', offset = 570 ; 
 push : unknown: 'value' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
 add : 
 push : unknown: 'io' ; 
 push : string: '' = print ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 335 ; 
+jmp : function: '', offset = 393 ; 
 pop : 
 pop : 
 push : unknown: 'a' ; 
 push : num: '' = 10 ; 
 lt : 
-jmpf : function: '', offset = 667 ; 
+jmpf : function: '', offset = 805 ; 
 enter : 
 push : unknown: 'a' ; 
 push : unknown: 'a' ; 
 push : num: '' = 1 ; 
 add : 
 store : 
-push : function: '', offset = 655 ; 
-push : function: '', offset = 629 ; 
+push : function: '', offset = 789 ; 
+push : function: '', offset = 749 ; 
 push : unknown: 'a' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
 push : unknown: 'io' ; 
 push : string: '' = print ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 1 ; 
 pop : 
 leave : 
-jmp : function: '', offset = 540 ; 
+jmp : function: '', offset = 644 ; 
 halt : 
 compiled input.dv successfully

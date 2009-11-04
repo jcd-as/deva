@@ -749,8 +749,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	}
 	else if( i->value.id() == parser_id( class_decl_id ) )
 	{
-		// TODO: validate
-		
 		// first child is the identifier (class name)
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 
@@ -801,8 +799,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		
 		// create the new instance
 		is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
-		// TODO: this IS NOT TRUE, the number of children could be large if
-		// expressions are used in the arg list!
 		// number of args is size of children - 2 (for the open and close parens),
 		// +1 for 'self'
 		is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[1].children.size()-1) ) ) );	// puts the new instance on the stack
@@ -1021,7 +1017,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
             // walk the rhs
             generate_IL_for_node( i->children.begin() + 1, is, i );
 
-            // add the vector store op
+            // add the table store op
 			generate_line_num( i->children.begin(), is );
             is.push( Instruction( op_tbl_store ) );
 		}
@@ -1096,18 +1092,23 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		generate_line_num( i->children.begin()+1, is );
 		is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
 
-		gen_IL_dot_op( i, is );
-
 		// check for fcn call here too (for 'a.b()' etc)!!
 		// if the first child is an arg_list_exp, it's a fcn call
 		if( i->children[1].children.size() > 0 && i->children[1].children[0].value.id() == arg_list_exp_id )
 		{
+			// this generates a tbl_load instruction with a flag indicating it's
+			// for a method call (so it can push the 'self' arg too)
+			gen_IL_dot_op( i, is, true );
+
 			// we already walked the children and generated the placeholder for
 			// the jump...
 			// so just generate the IL for this node, which will back-patch the
 			// jump placeholder
 			gen_IL_identifier( i->children.begin() + 1, is, parent, true );
 		}
+		else
+			// this generates a tbl_load instruction
+			gen_IL_dot_op( i, is );
 	}
 	// paren ops
 	else if( i->value.id() == parser_id( open_paren_op_id )

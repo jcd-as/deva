@@ -637,6 +637,17 @@ void check_new_decl( iter_t const & i )
 		throw DevaSemanticException( "Invalid 'new' statement", id );
 }
 
+void check_class_decl( iter_t const & i )
+{
+	// is always the rhs of assignment op
+	// 2 children: an identifier and an arg_list_exp
+	NodeInfo id = i->children[0].value.value();
+	if( i->children.size() < 2 )
+		throw DevaSemanticException( "Invalid class definition.", id );
+	if( id.type != variable_type )
+		throw DevaSemanticException( "Invalid class definition", id );
+}
+
 void check_constant( iter_t const & i )
 {
 	// "const" keyword
