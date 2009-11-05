@@ -370,11 +370,9 @@ long DevaObject::Size() const
 	case sym_class:
 	case sym_instance:
 	case sym_map:
-		// TODO: implement??? error??
-		return 0;
+		throw logic_error( "Internal Error. Can't take the size of a map-based object." );
 	case sym_vector:
-		// TODO: implement??? error??
-		return 0;
+		throw logic_error( "Internal Error. Can't take the size of a vector object." );
 	case sym_offset:
 		return sz + sizeof( size_t );
 	case sym_null:

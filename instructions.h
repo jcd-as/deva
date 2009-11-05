@@ -33,6 +33,13 @@ struct Instruction
 		args.push_back( ob1 );
 		args.push_back( ob2 );
 	}
+	Instruction( Opcode o, vector<DevaObject> objects ) : op( o )
+	{
+		for( vector<DevaObject>::iterator i = objects.begin(); i != objects.end(); ++i )
+		{
+			args.push_back( *i );
+		}
+	}
 	long Size() const
 	{
 		// size of the args

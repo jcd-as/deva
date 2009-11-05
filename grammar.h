@@ -179,7 +179,7 @@ public:
 			class_decl =
 				access_node_d[
 				root_node_d[str_p( "class" )]
-				>> identifier 
+				>> identifier >> !( no_node_d[ch_p( ":" )] >> list_p( identifier, no_node_d[comma_op] ) )
 				>> no_node_d[ch_p( "{" )]
 				>> *func_decl
 				>> no_node_d[ch_p( "}" )]

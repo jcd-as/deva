@@ -1893,8 +1893,49 @@ void Executor::Import( Instruction const & inst )
 // 39 create a new class object and push onto stack
 void Executor::New_class( Instruction const & inst )
 {
+	// top of the stack has the name of the class
+	DevaObject cls_name = stack.back();
+	if( cls_name.Type() != sym_unknown )
+		throw DevaICE( "Invalid class name for new class definition." );
+
 	// create a new class object
-	stack.push_back( DevaObject( "", sym_class ) );
+	DevaObject cls( "", sym_class );
+	// merge its parents
+	int num_args = inst.args.size();
+	for( int c = 0; c < num_args; ++c )
+	{
+		DevaObject base = inst.args[c];
+		// look-up the base class
+		DevaObject* ob;
+		if( base.Type() != sym_unknown )
+			throw DevaICE( "Invalid base class for class definition." );
+		ob = find_symbol( base );
+		if( !ob )
+			throw DevaRuntimeException( "Invalid base class name for class definition." );
+		// ensure it's a class
+		if( ob->Type() != sym_class )
+			throw DevaRuntimeException( "Invalid base class type for class definition." );
+
+		// merge the base class into the new class
+		for( DOMap::iterator i = ob->map_val->begin(); i != ob->map_val->end(); ++i )
+		{
+			if( i->first.Type() != sym_string )
+				throw DevaRuntimeException( "Invalid method in base class given for class definition." );
+			// the methods have the name from their base-class (foo@base)
+			// fix it to be from this class (foo@class)
+			// (note the function object still has the base-class name, so
+			// reflection/instrospection can still see where methods came from)
+			string name( i->first.str_val );
+			size_t pos = name.find( '@' );
+			if( pos == string::npos )
+				throw DevaRuntimeException( "Invalid method name in base class given for class definition." );
+			name.replace( pos+1, name.length() - pos, cls_name.name );
+			cls.map_val->insert( make_pair( DevaObject( "", name ), i->second ) );
+		}
+	}
+	// push it onto the stack (subsequent instructions will add its methods,
+	// overriding what it inherited)
+	stack.push_back( cls );
 }
 // 40 create a new class instance object and push onto stack
 void Executor::New_instance( Instruction const & inst )
@@ -1923,7 +1964,6 @@ void Executor::New_instance( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid class type for new object." );
 
 	// create a new instance object as a copy of the class object
-    DevaObject copy;
 	DOMap* m = new DOMap( *(ob->map_val) );
 	DevaObject instance = DevaObject::InstanceFromMap( "", m );
 	// - add the __class__ member to the instance

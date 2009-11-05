@@ -126,35 +126,35 @@ Scope 3, parent = 2
 Instructions:
 line_num : string: '' = input.dv ; function: '', offset = 0 ; 
 push : boolean: '' = 1 ; 
-jmpf : function: '', offset = 90 ; 
-push : function: '', offset = 80 ; 
+jmpf : function: '', offset = 96 ; 
+push : function: '', offset = 86 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
 tbl_load : 
 push : string: '' = c ; 
 tbl_load : 
 push : string: '' = d ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 0 ; 
 pop : 
 jmp : function: '', offset = 19 ; 
-push : function: '', offset = 127 ; 
+push : function: '', offset = 139 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
 tbl_load : 
 push : string: '' = c ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 0 ; 
 pop : 
-defun : function: 'x', offset = 129 ; 
+defun : function: 'x', offset = 141 ; 
 enter : 
 defarg : 
-push : function: '', offset = 179 ; 
+push : function: '', offset = 197 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
 tbl_load : 
 push : string: '' = c ; 
-tbl_load : 
+tbl_load : boolean: '' = 0 ; 
 call : function: '', offset = 0 ; 
 pop : 
 push : null ; 

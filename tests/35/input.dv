@@ -1,6 +1,23 @@
 # test classes and instances
-
-class Bar
+class Foo
+{
+	def Method1()
+	{
+		return 0;
+	}
+}
+class Jam
+{
+	def Method1()
+	{
+		return 1;
+	}
+	def Method2()
+	{
+		return 1;
+	}
+}
+class Bar : Foo, Jam
 {
 	def new( inc )
 	{
@@ -21,4 +38,18 @@ print( y );
 z = new Bar( 2 );
 print( z.increment );
 print( z.foo( 3 ) );
+
+# check base class methods
+print( "calling base class method 'Method1', from base class Foo" );
+print( x.Method1() );
+print( "calling base class method 'Method2', from base class Jam" );
+print( x.Method2() );
+
+# make a copy of x 
+print( "copying object..." );
+z = copy( x );
+# ensure it is a *copy*
+z.increment = 2;
+print( z.increment );
+print( x.increment );
 

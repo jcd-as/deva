@@ -23,18 +23,21 @@ using namespace std;
 
 class Executor
 {
+public:
+	// public data
+	////////////////////////////////////////////////////
+	// the data stack
+	vector<DevaObject> stack;
+
+	// static data
+	static int args_on_stack;
+
 private:
 	// private data
 	////////////////////////////////////////////////////
 	
-	// static data
-	static int args_on_stack;
-
 	// in debug_mode?
 	bool debug_mode;
-
-	// the data stack
-	vector<DevaObject> stack;
 
 	// the current location in the file ("instruction pointer")
 	size_t ip;
@@ -111,10 +114,6 @@ private:
 	// fixup all the offsets in 'function' symbols (fcns, returns, jumps) to
 	// pointers in actual memory
 	void FixupOffsets();
-	// locate a symbol in the symbol table(namespace)
-	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
-	// remove a symbol from the symbol table(namespace)
-	void remove_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
@@ -133,8 +132,6 @@ private:
 	// returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
 	int compare_objects( DevaObject & lhs, DevaObject & rhs );
 	// evaluate an object as a boolean value
-	// object must be evaluated already to a value (i.e. no variables)
-	bool evaluate_object_as_boolean( DevaObject & o );
 
 	// locate a module
 	string find_module( string mod );
@@ -243,57 +240,16 @@ public:
 	bool RunFile( const char* const filename );
 	bool RunText( const char* const text );
 
-	// be-friend the built-in functions
-	friend void do_print( Executor *ex, const Instruction & inst );
-	friend void do_str( Executor *ex, const Instruction & inst );
-	friend void do_append( Executor *ex, const Instruction & inst );
-	friend void do_length( Executor *ex, const Instruction & inst );
-	friend void do_copy( Executor *ex, const Instruction & inst );
-	friend void do_eval( Executor *ex, const Instruction & inst );
-	friend void do_delete( Executor *ex, const Instruction & inst );
+	// helper methods. useful for built-ins
+	////////////////////////////////////////////////////
+	// locate a symbol in the symbol table(namespace)
+	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 
-	// be-friend the vector built-ins
-    friend void do_vector_append( Executor *ex );
-    friend void do_vector_length( Executor *ex );
-    friend void do_vector_copy( Executor *ex );
-    friend void do_vector_concat( Executor *ex );
-    friend void do_vector_min( Executor *ex );
-    friend void do_vector_max( Executor *ex );
-    friend void do_vector_pop( Executor *ex );
-    friend void do_vector_insert( Executor *ex );
-    friend void do_vector_remove( Executor *ex );
-    friend void do_vector_find( Executor *ex );
-    friend void do_vector_rfind( Executor *ex );
-    friend void do_vector_count( Executor *ex );
-    friend void do_vector_reverse( Executor *ex );
-    friend void do_vector_sort( Executor *ex );
-    friend void do_vector_map( Executor *ex );
-    friend void do_vector_filter( Executor *ex );
-    friend void do_vector_reduce( Executor *ex );
-    friend void do_vector_slice( Executor *ex );
+	// remove a symbol from the symbol table(namespace)
+	void remove_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 
-	// be-friend the map built-ins
-    friend void do_map_length( Executor *ex );
-    friend void do_map_copy( Executor *ex );
-    friend void do_map_remove( Executor *ex );
-    friend void do_map_find( Executor *ex );
-    friend void do_map_keys( Executor *ex );
-    friend void do_map_values( Executor *ex );
-    friend void do_map_merge( Executor *ex );
-
-	// be-friend the string builtins
-	friend void do_string_append( Executor *ex );
-	friend void do_string_length( Executor *ex );
-	friend void do_string_copy( Executor *ex );
-	friend void do_string_pop( Executor *ex );
-	friend void do_string_insert( Executor *ex );
-	friend void do_string_remove( Executor *ex );
-	friend void do_string_find( Executor *ex );
-	friend void do_string_rfind( Executor *ex );
-	friend void do_string_count( Executor *ex );
-	friend void do_string_reverse( Executor *ex );
-	friend void do_string_sort( Executor *ex );
-	friend void do_string_slice( Executor *ex );
+	// object must be evaluated already to a value (i.e. no variables)
+	bool evaluate_object_as_boolean( DevaObject & o );
 };
 
 #endif // __EXECUTOR_H__

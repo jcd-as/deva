@@ -13,8 +13,6 @@
 // to add new builtins you must:
 // 1) add a new fcn to the builtin_names and builtin_fcns arrays below
 // 2) implement the function in this file
-// 3) add the function as a friend to Executor (executor.h) so that it can
-//    access the private members of Executor (like the stack)
 
 // pre-decls for builtin executors
 void do_print( Executor *ex, const Instruction & inst );
@@ -331,7 +329,8 @@ void do_length( Executor *ex, const Instruction & inst )
 	{
 		len = o->vec_val->size();
 	}
-	else if( o->Type() == sym_map )
+	// map, class, instance
+	else if( o->Type() == sym_map || o->Type() == sym_class || o->Type() == sym_instance )
 	{
 		len = o->map_val->size();
 	}
@@ -348,7 +347,7 @@ void do_copy( Executor *ex, const Instruction & inst )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'copy'." );
 
-	// vector or string to append to at top of stack
+	// object to copy at top of stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	
@@ -368,6 +367,16 @@ void do_copy( Executor *ex, const Instruction & inst )
         // create a new map object that is a copy of the one we received,
         DOMap* m = new DOMap( *(o->map_val) );
         copy = DevaObject( "", m );
+	}
+	else if( o->Type() == sym_class )
+	{
+        DOMap* m = new DOMap( *(o->map_val) );
+		copy = DevaObject::ClassFromMap( "", m );
+	}
+	else if( o->Type() == sym_instance )
+	{
+        DOMap* m = new DOMap( *(o->map_val) );
+		copy = DevaObject::InstanceFromMap( "", m );
 	}
     else if( o->Type() == sym_vector )
     {

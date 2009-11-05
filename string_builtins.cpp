@@ -13,8 +13,6 @@
 // to add new builtins you must:
 // 1) add a new fcn to the string_builtin_names and string_builtin_fcns arrays below
 // 2) implement the function in this file
-// 3) add the function as a friend to Executor (executor.h) so that it can
-//    access the private members of Executor (namely the stack)
 
 // pre-decls for builtin executors
 void do_string_append( Executor *ex );

@@ -3,8 +3,7 @@
 // created by jcs, october 21, 2009 
 
 // TODO:
-// * keys (return keys as vector), values (return values as
-// vector)
+// * 
 //
 
 #include "map_builtins.h"
@@ -15,8 +14,6 @@
 // to add new builtins you must:
 // 1) add a new fcn to the map_builtin_names and map_builtin_fcns arrays below
 // 2) implement the function in this file
-// 3) add the function as a friend to Executor (executor.h) so that it can
-//    access the private members of Executor (namely the stack)
 
 // pre-decls for builtin executors
 void do_map_length( Executor *ex );

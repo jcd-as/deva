@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
+<?xml version="1.0" ?>
+<todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -150,4 +151,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>actually calling ANY object as a function was allowed, as the look-up in the symbol table was never checked for its type
 </comment></note><note done="1257321274" priority="veryhigh" time="1257302741">BUG: calling a function or method with a method name (not call) as an argument results in the error &quot;Invalid return destination on stack when executing return instruction
 <comment>had to fixup tbl_load code to NOT push the self arg in this case. tricky. required adding an arg to the instruction, a boolean false, to indicate method *calls*
+</comment></note><note done="1257385995" priority="veryhigh" time="1257357749">class inheritance
+<comment>
 </comment></note></todo>
