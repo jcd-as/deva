@@ -1563,7 +1563,7 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 	if( !file.is_open() )
 	{
 		ostringstream oss;
-		oss << "error opening " << filename << endl;
+		oss << "Error opening " << filename << endl;
 		throw DevaRuntimeException( oss.str().c_str() );
 	}
 	// parse the file
@@ -1589,6 +1589,8 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 	// generate final IL bytecode
 	if( !GenerateByteCode( output.c_str(), inst ) )
 		return false;
+
+	return true;
 }
 
 // parse, check semantics, generate IL and generate bytecode for an input string

@@ -145,12 +145,15 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </note><note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
 <comment>
 </comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
-</note><note priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
-</note><note priority="veryhigh" time="1257296151">library module for file IO
+</note><note done="1257397272" priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
+<comment>wasn't checking return value from CompileFile()
+</comment></note><note priority="veryhigh" time="1257296151">library module for file IO
 </note><note done="1257303881" priority="veryhigh" time="1257302175">BUG: calling a class as a method is allowed and crashes (e.g. class Foo{}\nx = Foo();)
 <comment>actually calling ANY object as a function was allowed, as the look-up in the symbol table was never checked for its type
 </comment></note><note done="1257321274" priority="veryhigh" time="1257302741">BUG: calling a function or method with a method name (not call) as an argument results in the error &quot;Invalid return destination on stack when executing return instruction
 <comment>had to fixup tbl_load code to NOT push the self arg in this case. tricky. required adding an arg to the instruction, a boolean false, to indicate method *calls*
 </comment></note><note done="1257385995" priority="veryhigh" time="1257357749">class inheritance
 <comment>
-</comment></note></todo>
+</comment></note><note priority="veryhigh" time="1257396844">operators +=, -=, *=, /=, %=, and possibly -- and ++
+</note><note priority="veryhigh" time="1257403070">add support for default arguments to constructors ('new' methods)
+</note></todo>

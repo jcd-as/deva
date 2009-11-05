@@ -91,15 +91,19 @@ int main( int argc, char** argv )
 
 		if( ext == "dv" )
 		{
-			CompileFile( input_filename );
+			if( !CompileFile( input_filename ) )
+			{
+				cout << "Error compiling " << input_filename << endl;
+				return -1;
+			}
 			fname += "c";
 		}
+
 		// compilation is done, we don't need the scope table any more
 		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
 		{
 			delete i->second;
 		}
-
 
 		// run the .dvc file
 		Executor ex( debug );
