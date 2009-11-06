@@ -22,6 +22,17 @@ void do_length( Executor *ex, const Instruction & inst );
 void do_copy( Executor *ex, const Instruction & inst );
 void do_eval( Executor *ex, const Instruction & inst );
 void do_delete( Executor *ex, const Instruction & inst );
+void do_open( Executor *ex, const Instruction & inst );
+void do_close( Executor *ex, const Instruction & inst );
+void do_flush( Executor *ex, const Instruction & inst );
+void do_read( Executor *ex, const Instruction & inst );
+void do_readline( Executor *ex, const Instruction & inst );
+void do_readlines( Executor *ex, const Instruction & inst );
+void do_write( Executor *ex, const Instruction & inst );
+void do_writeline( Executor *ex, const Instruction & inst );
+void do_writelines( Executor *ex, const Instruction & inst );
+void do_seek( Executor *ex, const Instruction & inst );
+void do_tell( Executor *ex, const Instruction & inst );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -33,6 +44,17 @@ static const string builtin_names[] =
     string( "copy" ),
     string( "eval" ),
     string( "delete" ),
+    string( "open" ),
+    string( "close" ),
+    string( "flush" ),
+    string( "read" ),
+    string( "readline" ),
+    string( "readlines" ),
+    string( "write" ),
+    string( "writeline" ),
+    string( "writelines" ),
+    string( "seek" ),
+    string( "tell" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -45,6 +67,17 @@ builtin_fcn builtin_fcns[] =
     do_copy,
 	do_eval,
 	do_delete,
+	do_open,
+	do_close,
+	do_flush,
+	do_read,
+	do_readline,
+	do_readlines,
+	do_write,
+	do_writeline,
+	do_writelines,
+	do_seek,
+	do_tell,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -434,7 +467,7 @@ void do_delete( Executor *ex, const Instruction & inst )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'delete'." );
 
-	// vector or string to append to at top of stack
+	// object to delete at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	
@@ -453,7 +486,369 @@ void do_delete( Executor *ex, const Instruction & inst )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the copy
+	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
+void do_open( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'open'." );
+
+	// filename to open is on top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// if there are two arguments the second is the file mode
+	// if there is only one, default mode is "r"
+	DevaObject arg;
+	DevaObject* mode;
+	if( Executor::args_on_stack == 2 )
+	{
+		// second argument, if any, *must* be a string
+		arg = ex->stack.back();
+		ex->stack.pop_back();
+		if( arg.Type() == sym_unknown )
+		{
+			mode = ex->find_symbol( arg );
+			if( !mode )
+				throw DevaRuntimeException( "Symbol not found for 'mode' argument in built-in function 'open'" );
+		}
+		if( mode->Type() != sym_string )
+			throw DevaRuntimeException( "'mode' argument to built-in function 'open' must be a string." );
+	}
+	else
+	{
+		arg = DevaObject( "", string( "r" ) );
+		mode = &arg;
+	}
+
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file_name' argument in built-in function 'open'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure filename is a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "'file_name' argument to built-in function 'open' must be a string." );
+
+	FILE* file = fopen( o->str_val, mode->str_val );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the file object as an 'offset'
+	if( file )
+		ex->stack.push_back( DevaObject( "", (size_t)file ) );
+	// or null, on failure
+	else
+		ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_close( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'close'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'close'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'close' is not of the correct type." );
+
+	fclose( (FILE*)(o->func_offset) );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_flush( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'flush'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'flush'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'flush' is not of the correct type." );
+
+	fflush( (FILE*)(o->func_offset) );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_read( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'read'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the number of bytes to read
+	DevaObject bytes = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'read'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'read' is not of the correct type." );
+
+	// get the number of bytes
+	size_t num_bytes = 0;
+	if( bytes.Type() != sym_number )
+	{
+		DevaObject* no = ex->find_symbol( bytes );
+		if( !no )
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'read'" );
+		num_bytes = no->num_val;
+	}
+	else
+		num_bytes = bytes.num_val;
+
+	// allocate space for bytes plus a null-terminator
+	char* s = new char[num_bytes + 1];
+	// zero out the bytes
+	memset( s, 0, num_bytes + 1 );
+	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->func_offset) );
+	// if we didn't read the full amount, we need to re-alloc and copy so that
+	// we don't leak the extra bytes when they are assigned to a string DevaObject
+	if( bytes_read != num_bytes )
+	{
+		char* new_s = new char[bytes_read + 1];
+		new_s[bytes_read] = '\0';
+		memcpy( (void*)new_s, (void*)s, bytes_read );
+		delete [] s;
+		s = new_s;
+	}
+	// TODO: what to do about embedded nulls in the bytes read? the string
+	// handling routines in deva will stop at the first embedded null...
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the read bytes as a string
+	ex->stack.push_back( DevaObject( "", s ) );
+}
+
+void do_readline( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
+
+	// allocate space for some bytes 
+	const size_t BUF_SZ = 10;
+	char* buffer = new char[BUF_SZ];
+	buffer[0] = '\0';
+	// track the original start of the buffer
+	size_t count = BUF_SZ;	// number of bytes read so far
+	char* buf = buffer;
+	while( fgets( buf, BUF_SZ, (FILE*)(o->func_offset) ) )
+	{
+		// read was valid, was the last char read a newline?
+		// if so, we're done
+		size_t len = strlen( buf );
+		if( buf[len-1] == '\n' )
+			break;
+		// if not, 
+		//  - allocate twice as much space
+		char* new_buf = new char[count + BUF_SZ];
+		//  - copy what was read, minus the null
+		memcpy( (void*)new_buf, (void*)buffer, count - 1 );
+		//  - free the orginal memory
+		delete [] buffer;
+		//  - continue
+		buffer = new_buf;
+		buf = buffer + count-1;
+		count += BUF_SZ - 1;
+	}
+	// was there an error??
+	if( ferror( (FILE*)(o->func_offset) ) )
+		throw DevaRuntimeException( "Error accessing file in built-in method 'readline'." );
+
+	// if we didn't fill the buffer, we need to re-alloc and copy so that
+	// we don't leak the extra bytes when they are assigned to a string DevaObject
+	size_t bytes_read = strlen( buffer );
+	if( bytes_read != count )
+	{
+		char* new_buf = new char[bytes_read + 1];
+		new_buf[bytes_read] = '\0';
+		memcpy( (void*)new_buf, (void*)buffer, bytes_read );
+		delete [] buffer;
+		buffer = new_buf;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the read bytes as a string
+	ex->stack.push_back( DevaObject( "", buffer ) );
+}
+
+void do_readlines( Executor *ex, const Instruction & inst )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
+
+	// keep reading lines until we reach the EOF
+	DOVector* vec = new DOVector;
+	while( true )
+	{
+		// allocate space for some bytes 
+		const size_t BUF_SZ = 10;
+		char* buffer = new char[BUF_SZ];
+		buffer[0] = '\0';
+		// track the original start of the buffer
+		size_t count = BUF_SZ;	// number of bytes read so far
+		char* buf = buffer;
+		while( fgets( buf, BUF_SZ, (FILE*)(o->func_offset) ) )
+		{
+			// read was valid, was the last char read a newline?
+			// if so, we're done
+			size_t len = strlen( buf );
+			if( buf[len-1] == '\n' )
+				break;
+			// if not, 
+			//  - allocate twice as much space
+			char* new_buf = new char[count + BUF_SZ];
+			//  - copy what was read, minus the null
+			memcpy( (void*)new_buf, (void*)buffer, count - 1 );
+			//  - free the orginal memory
+			delete [] buffer;
+			//  - continue
+			buffer = new_buf;
+			buf = buffer + count-1;
+			count += BUF_SZ - 1;
+		}
+		// if we didn't fill the buffer, we need to re-alloc and copy so that
+		// we don't leak the extra bytes when they are assigned to a string DevaObject
+		size_t bytes_read = strlen( buffer );
+		if( bytes_read != count )
+		{
+			char* new_buf = new char[bytes_read + 1];
+			new_buf[bytes_read] = '\0';
+			memcpy( (void*)new_buf, (void*)buffer, bytes_read );
+			delete [] buffer;
+			buffer = new_buf;
+		}
+
+		// add this line to our output vector
+		vec->push_back( DevaObject( "", buffer ) );
+
+		// done?
+		if( feof( (FILE*)(o->func_offset) ) )
+			break;
+		// was there an error??
+		if( ferror( (FILE*)(o->func_offset) ) )
+			throw DevaRuntimeException( "Error accessing file in built-in method 'readline'." );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the vector of lines
+	ex->stack.push_back( DevaObject( "", vec ) );
+}
+
+void do_write( Executor *ex, const Instruction & inst )
+{
+}
+
+void do_writeline( Executor *ex, const Instruction & inst )
+{
+}
+
+void do_writelines( Executor *ex, const Instruction & inst )
+{
+}
+
+void do_seek( Executor *ex, const Instruction & inst )
+{
+}
+
+void do_tell( Executor *ex, const Instruction & inst )
+{
+}

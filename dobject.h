@@ -51,9 +51,11 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, double n );
 	// string type
 	DevaObject( string nm, string s );
+	// string type, take ownership of the passed in string
+	DevaObject( string nm, char* s );
 	// boolean type
 	DevaObject( string nm, bool b );
-	// 'function' (incl return/jump target) type
+	// 'offset' type (integral number, incl return/jump target etc)
 	DevaObject( string nm, size_t offs );
     // map type with the given map
     DevaObject( string nm, DOMap* m );

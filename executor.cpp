@@ -373,14 +373,24 @@ void Executor::Store( Instruction const & inst )
 	stack.pop_back();
 	DevaObject lhs = stack.back();
 	stack.pop_back();
-	// if the rhs is a variable or function, get it from the symbol table
-	if( rhs.Type() == sym_unknown || rhs.Type() == sym_offset )
+	// if the rhs is a variable 
+	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
 			throw DevaRuntimeException( "Reference to unknown variable." );
 		rhs = *ob;
 	}
+	// if the rhs is an offset, it could be a function, try to get it from the
+	// symbol table
+	else if( rhs.Type() == sym_offset )
+	{
+		DevaObject* ob = find_symbol( rhs );
+		// if we couldn't find it, assume it's just an offset (integral number)
+		if( ob )
+			rhs = *ob;
+	}
+
 	// verify the lhs is a variable (sym_unknown)
 	if( lhs.Type() != sym_unknown )
 		throw DevaRuntimeException( "Attempting to assign a value into a non-variable l-value." );
@@ -1970,16 +1980,15 @@ void Executor::New_instance( Instruction const & inst )
 	instance.map_val->insert( make_pair( DevaObject( "", string( "__class__" ) ), DevaObject( "", ob->name ) ) );
 	// - call the constructor ('new' method)
 	size_t num_args = inst.args[0].func_offset;
-	// TODO: look for 'new' function even if the only arg is 'self', in case the user
-	// has overridden it
-	if( num_args > 1 )
+	// look for 'new' function (constructor)
+	string method( "new" );
+	method += "@";
+	method += ob->name;
+	if( ob->map_val->find( DevaObject( "", method ) ) != ob->map_val->end() )
 	{
 		// push 'self'
 		stack.push_back( instance );
 		// call the 'new' method for this class
-		string method( "new" );
-		method += "@";
-		method += ob->name;
 		// TODO: this doesn't work for setting fields etc - they don't persist
 		ExecuteDevaFunction( method, num_args );
 		// ignore the return value from 'new'. not allowed
