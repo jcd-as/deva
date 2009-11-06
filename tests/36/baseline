@@ -1,0 +1,52 @@
+56
+# test file built-ins
+#
+
+file = open( "input.dv" );
+byte
+# test file built-ins
+#
+
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes );
+
+seek( file, 0 );
+bytes = readline( file );
+while( bytes )
+{
+	print( bytes, "" );
+	bytes = readline( file );
+}
+
+seek( file, 0, 0 ); 	# 0 = SEEK_SET
+lines = readlines( file );
+for( line in lines )
+{
+	print( line, "" );
+}
+close( file );
+# test file built-ins
+#
+
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes );
+
+seek( file, 0 );
+bytes = readline( file );
+while( bytes )
+{
+	print( bytes, "" );
+	bytes = readline( file );
+}
+
+seek( file, 0, 0 ); 	# 0 = SEEK_SET
+lines = readlines( file );
+for( line in lines )
+{
+	print( line, "" );
+}
+close( file );

@@ -753,7 +753,7 @@ void do_readline( Executor *ex, const Instruction & inst )
 void do_readlines( Executor *ex, const Instruction & inst )
 {
 	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readlines'." );
 
 	// file object to close is at the top of the stack
 	DevaObject obj = ex->stack.back();
@@ -764,14 +764,14 @@ void do_readlines( Executor *ex, const Instruction & inst )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readlines'" );
 	}
 	if( !o )
 		o = &obj;
 
 	// ensure it's an 'offset'
 	if( o->Type() != sym_offset )
-		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
+		throw DevaRuntimeException( "'file' argument to built-in function 'readlines' is not of the correct type." );
 
 	// keep reading lines until we reach the EOF
 	DOVector* vec = new DOVector;
@@ -823,7 +823,7 @@ void do_readlines( Executor *ex, const Instruction & inst )
 			break;
 		// was there an error??
 		if( ferror( (FILE*)(o->func_offset) ) )
-			throw DevaRuntimeException( "Error accessing file in built-in method 'readline'." );
+			throw DevaRuntimeException( "Error accessing file in built-in method 'readlines'." );
 	}
 
 	// pop the return address
@@ -847,8 +847,110 @@ void do_writelines( Executor *ex, const Instruction & inst )
 
 void do_seek( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 2 && Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seek'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the position to seek to
+	DevaObject position = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// next is the origin to seek from
+	// (need to be defined in standard 'io' import)
+	// SEEK_SET = 0
+	// SEEK_CUR = 1
+	// SEEK_END = 2
+	// if there are only two args, default origin is SEEK_SET (0)
+	DevaObject arg;
+	int origin;
+	if( Executor::args_on_stack == 3 )
+	{
+		// third argument, if any, *must* be a number
+		arg = ex->stack.back();
+		ex->stack.pop_back();
+		DevaObject* parg;
+		if( arg.Type() == sym_unknown )
+		{
+			parg = ex->find_symbol( arg );
+			if( !parg )
+				throw DevaRuntimeException( "Symbol not found for 'origin' argument in built-in function 'seek'" );
+		}
+		if( parg->Type() != sym_number )
+			throw DevaRuntimeException( "'origin' argument to built-in function 'seek' must be a number." );
+		// TODO: origin must be an integral number. error on non-integer
+		origin = (int)parg->num_val;
+	}
+	else
+	{
+		origin = 0;
+	}
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'seek'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'seek' is not of the correct type." );
+
+	// get the position
+	long int pos = 0;
+	if( position.Type() != sym_number )
+	{
+		DevaObject* po = ex->find_symbol( position );
+		if( !po )
+			throw DevaRuntimeException( "Symbol not found for 'position' argument in built-in function 'seek'" );
+		pos = (long int)po->num_val;
+	}
+	else
+		pos = (long int)position.num_val;
+
+	fseek( (FILE*)(o->func_offset), pos, origin );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all functions must return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
 void do_tell( Executor *ex, const Instruction & inst )
 {
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'tell'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'tell'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'tell' is not of the correct type." );
+
+	long int pos = ftell( (FILE*)(o->func_offset) );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the position
+	ex->stack.push_back( DevaObject( "", (double)pos ) );
 }
