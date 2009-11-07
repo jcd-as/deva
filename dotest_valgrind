@@ -19,7 +19,7 @@ if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
     exit
 else
     echo "test failed"
-    rm -f '$$$RESULTS$$$'
+#    rm -f '$$$RESULTS$$$'
 	rm -f *.dvc
     exit -1
 fi

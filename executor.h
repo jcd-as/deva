@@ -20,6 +20,8 @@
 
 using namespace std;
 
+class Executor;
+typedef void (*builtin_fcn)(Executor*);
 
 class Executor
 {
@@ -100,6 +102,12 @@ private:
 	ScopeTable global_scopes;
 	map<string, ScopeTable> namespaces;
 	ScopeTable *current_scopes;
+
+	// maps for built-in module fcns
+	// map of module names to a list of fcn names
+	map<string, vector<string> > builtin_modules;
+	// map fcn name to fcn ptr, where fcn name is of the form 'fcn@module'
+	map<string, builtin_fcn> builtin_module_fcns;
 
 	// the various pieces of bytecode (file, dynamically loaded pieces etc)
 	vector<unsigned char*> code_blocks;
@@ -239,6 +247,8 @@ public:
 	void EndGlobalScope();
 	bool RunFile( const char* const filename );
 	bool RunText( const char* const text );
+
+	bool AddBuiltinModule( string name, map<string, builtin_fcn> & fcns );
 
 	// helper methods. useful for built-ins
 	////////////////////////////////////////////////////

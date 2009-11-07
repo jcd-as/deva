@@ -139,10 +139,11 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1256879594" priority="veryhigh" time="1256855245">vector builtins: map, filter and reduce (ala python equivalents)
 <comment>
-</comment></note><note done="1256939782" priority="veryhigh" time="1256855256">string builtins
-<comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)
-</comment></note><note priority="veryhigh" time="1256584124">interface to C functions and C objects (void*). Needed to implement &quot;open&quot; built-in and file IO methods
-</note><note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
+</comment></note>
+<note done="1256939782" priority="veryhigh" time="1256855256">string builtins
+	<comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)</comment>
+</note>
+<note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
 <comment>
 </comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
 </note><note done="1257397272" priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
@@ -160,4 +161,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note priority="veryhigh" time="1257459561">support for destructors in instance objects
 </note><note priority="veryhigh" time="1257460226">complete string built-ins (upper, lower, is_a_xxx, etc)
 </note><note priority="veryhigh" time="1257460252">math built-ins (incl. bitwise op fcns)
+</note><note priority="veryhigh" time="1257539732">need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
 </note></todo>

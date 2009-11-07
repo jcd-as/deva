@@ -603,7 +603,16 @@ void Executor::Tbl_load( Instruction const & inst )
 				DevaObject key( idxkey.str_val, sym_unknown );
 				DevaObject* obj = find_symbol( key, ns );
 				if( !obj )
-					throw DevaRuntimeException( "Attempt to reference undefined object in namespace." );
+				{
+					// try looking it up as a fcn in a built-in module 
+					// (i.e. 'fcn@module')
+					string fcn_mod( idxkey.str_val );
+					fcn_mod += "@";
+					fcn_mod += vecmap.name;
+					obj = find_symbol( DevaObject( fcn_mod, sym_unknown ), ns );
+					if( !obj )
+						throw DevaRuntimeException( "Attempt to reference undefined object in namespace." );
+				}
 				// push it onto the stack as our return value
 				DevaObject o( *obj );
 				stack.push_back( o );
@@ -1624,6 +1633,22 @@ void Executor::Call( Instruction const & inst )
 			else
 				throw DevaICE( "Invalid argument (on stack) for 'call' instruction." );
 
+			if( !fcn )
+				throw DevaRuntimeException( "Unable to resolve function." );
+
+			// if this is a built-in module function, execute it
+			if( builtin_module_fcns.find( fcn->name ) != builtin_module_fcns.end() )
+			{
+				// set the static that tracks the number of args processed
+				args_on_stack = inst.args[0].func_offset;
+
+				builtin_module_fcns[fcn->name]( this );
+
+				// reset the static that tracks the number of args (builtins don't run
+				// the 'return' instruction)
+				args_on_stack = -1;
+				return;
+			}
 			// if this is a vector builtin method, execute it
 			if( is_vector_builtin( fcn->name ) )
 			{
@@ -2439,3 +2464,34 @@ bool Executor::RunText( const char* const text )
 	ip = orig_ip;
 	return true;
 }
+
+bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
+{
+	// prevent importing the same module more than once
+	map<string, ScopeTable>::iterator it;
+	it = namespaces.find( mod );
+	// if we found the namespace
+	if( it != namespaces.end() )
+		return false;
+
+	// create a new namespace
+	namespaces[mod] = ScopeTable();
+	// add a scope
+	namespaces[mod].Push();
+	// add an entry in the builtin modules map
+	builtin_modules[mod] = vector<string>();
+
+	// add the fcns to the namespace, the global scope
+	// and to the builtin module map
+	for( map<string, builtin_fcn>::iterator i = fcns.begin(); i != fcns.end(); ++i )
+	{
+		namespaces[mod].AddObject( new DevaObject( i->first, sym_unknown ) );
+		global_scopes.AddObject( new DevaObject( i->first, sym_unknown ) );
+		builtin_modules[mod].push_back( i->first );
+	}
+	// merge the fcn-name to fcn-ptr map with the execution engine's map
+	builtin_module_fcns.insert( fcns.begin(), fcns.end() );
+
+	return true;
+}
+

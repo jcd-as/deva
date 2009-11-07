@@ -15,24 +15,24 @@
 // 2) implement the function in this file
 
 // pre-decls for builtin executors
-void do_print( Executor *ex, const Instruction & inst );
-void do_str( Executor *ex, const Instruction & inst );
-void do_append( Executor *ex, const Instruction & inst );
-void do_length( Executor *ex, const Instruction & inst );
-void do_copy( Executor *ex, const Instruction & inst );
-void do_eval( Executor *ex, const Instruction & inst );
-void do_delete( Executor *ex, const Instruction & inst );
-void do_open( Executor *ex, const Instruction & inst );
-void do_close( Executor *ex, const Instruction & inst );
-void do_flush( Executor *ex, const Instruction & inst );
-void do_read( Executor *ex, const Instruction & inst );
-void do_readline( Executor *ex, const Instruction & inst );
-void do_readlines( Executor *ex, const Instruction & inst );
-void do_write( Executor *ex, const Instruction & inst );
-void do_writeline( Executor *ex, const Instruction & inst );
-void do_writelines( Executor *ex, const Instruction & inst );
-void do_seek( Executor *ex, const Instruction & inst );
-void do_tell( Executor *ex, const Instruction & inst );
+void do_print( Executor *ex );
+void do_str( Executor *ex );
+void do_append( Executor *ex );
+void do_length( Executor *ex );
+void do_copy( Executor *ex );
+void do_eval( Executor *ex );
+void do_delete( Executor *ex );
+void do_open( Executor *ex );
+void do_close( Executor *ex );
+void do_flush( Executor *ex );
+void do_read( Executor *ex );
+void do_readline( Executor *ex );
+void do_readlines( Executor *ex );
+void do_write( Executor *ex );
+void do_writeline( Executor *ex );
+void do_writelines( Executor *ex );
+void do_seek( Executor *ex );
+void do_tell( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -57,7 +57,7 @@ static const string builtin_names[] =
     string( "tell" ),
 };
 // ...and function pointers to the executor functions for them
-typedef void (*builtin_fcn)(Executor*, const Instruction&);
+//typedef void (*builtin_fcn)(Executor*, const Instruction&);
 builtin_fcn builtin_fcns[] = 
 {
     do_print,
@@ -105,7 +105,7 @@ void execute_builtin( Executor *ex, const Instruction & inst )
 		throw DevaICE( "Out-of-array-bounds looking for built-in function." );
     else
         // call the function
-        builtin_fcns[idx]( ex, inst );
+        builtin_fcns[idx]( ex );
 }
 
 // convert an object to a string value
@@ -199,7 +199,7 @@ string obj_to_str( const DevaObject* const o )
 }
 
 // the built-in executor functions:
-void do_print( Executor *ex, const Instruction & inst )
+void do_print( Executor *ex )
 {
 	if( Executor::args_on_stack < 1 || Executor::args_on_stack > 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'print'." );
@@ -248,7 +248,7 @@ void do_print( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_str( Executor *ex, const Instruction & inst )
+void do_str( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'str'." );
@@ -276,7 +276,7 @@ void do_str( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", s ) );
 }
 
-void do_append( Executor *ex, const Instruction & inst )
+void do_append( Executor *ex )
 {
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'append'." );
@@ -332,7 +332,7 @@ void do_append( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_length( Executor *ex, const Instruction & inst )
+void do_length( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'length'." );
@@ -375,7 +375,7 @@ void do_length( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", (double)len ) );
 }
 
-void do_copy( Executor *ex, const Instruction & inst )
+void do_copy( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'copy'." );
@@ -429,7 +429,7 @@ void do_copy( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( copy );
 }
 
-void do_eval( Executor *ex, const Instruction & inst )
+void do_eval( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'eval'." );
@@ -452,7 +452,6 @@ void do_eval( Executor *ex, const Instruction & inst )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "eval() builtin function called with a non-string argument." );
 
-	//ex->Output( inst );
 	ex->RunText( o->str_val );
 
 	// pop the return address
@@ -462,7 +461,7 @@ void do_eval( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_delete( Executor *ex, const Instruction & inst )
+void do_delete( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'delete'." );
@@ -490,9 +489,9 @@ void do_delete( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_open( Executor *ex, const Instruction & inst )
+void do_open( Executor *ex )
 {
-	if( Executor::args_on_stack != 1 )
+	if( Executor::args_on_stack != 1 && Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'open'." );
 
 	// filename to open is on top of the stack
@@ -514,6 +513,8 @@ void do_open( Executor *ex, const Instruction & inst )
 			if( !mode )
 				throw DevaRuntimeException( "Symbol not found for 'mode' argument in built-in function 'open'" );
 		}
+		else
+			mode = &arg;
 		if( mode->Type() != sym_string )
 			throw DevaRuntimeException( "'mode' argument to built-in function 'open' must be a string." );
 	}
@@ -550,7 +551,7 @@ void do_open( Executor *ex, const Instruction & inst )
 		ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_close( Executor *ex, const Instruction & inst )
+void do_close( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'close'." );
@@ -582,7 +583,7 @@ void do_close( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_flush( Executor *ex, const Instruction & inst )
+void do_flush( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'flush'." );
@@ -614,7 +615,7 @@ void do_flush( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_read( Executor *ex, const Instruction & inst )
+void do_read( Executor *ex )
 {
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'read'." );
@@ -678,7 +679,7 @@ void do_read( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", s ) );
 }
 
-void do_readline( Executor *ex, const Instruction & inst )
+void do_readline( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
@@ -750,7 +751,7 @@ void do_readline( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", buffer ) );
 }
 
-void do_readlines( Executor *ex, const Instruction & inst )
+void do_readlines( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readlines'." );
@@ -833,19 +834,179 @@ void do_readlines( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", vec ) );
 }
 
-void do_write( Executor *ex, const Instruction & inst )
+void do_write( Executor *ex )
 {
+	if( Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'write'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the number of bytes to write
+	DevaObject bytes = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the object to write from
+	DevaObject src = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'write'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'write' is not of the correct type." );
+
+	// get the number of bytes
+	size_t num_bytes = 0;
+	if( bytes.Type() != sym_number )
+	{
+		DevaObject* no = ex->find_symbol( bytes );
+		if( !no )
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'write'" );
+		num_bytes = no->num_val;
+	}
+	else
+		num_bytes = bytes.num_val;
+
+	// ensure the source is a string
+	DevaObject* source;
+	if( src.Type() != sym_string )
+	{
+		source = ex->find_symbol( src );
+		if( !source )
+			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'write'" );
+	}
+	else
+		source = &src;
+
+	size_t bytes_written = fwrite( (void*)(source->str_val), 1, num_bytes, (FILE*)(o->func_offset) );
+
+	// TODO: what to do about embedded nulls in the bytes written? the string
+	// handling routines in deva will stop at the first embedded null...
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the number of bytes written
+	ex->stack.push_back( DevaObject( "", (double)bytes_written ) );
 }
 
-void do_writeline( Executor *ex, const Instruction & inst )
+void do_writeline( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writeline'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the object to write from
+	DevaObject src = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writeline'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'writeline' is not of the correct type." );
+
+	// ensure the source is a string
+	DevaObject* source;
+	if( src.Type() != sym_string )
+	{
+		source = ex->find_symbol( src );
+		if( !source )
+			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writeline'" );
+	}
+	else
+		source = &src;
+
+	int ret = 1;
+	if( fputs( source->str_val, (FILE*)(o->func_offset) ) < 0 )
+		ret = 0;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return, true on success, false on failure
+	ex->stack.push_back( DevaObject( "", (bool)ret ) );
 }
 
-void do_writelines( Executor *ex, const Instruction & inst )
+void do_writelines( Executor *ex )
 {
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writelines'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the object to write from
+	DevaObject src = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writelines'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_offset )
+		throw DevaRuntimeException( "'file' argument to built-in function 'writelines' is not of the correct type." );
+
+	// get the source vector
+	DevaObject* source;
+	if( src.Type() != sym_vector )
+	{
+		source = ex->find_symbol( src );
+		if( !source )
+			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writelines'" );
+		// ensure it is a vector
+		if( source->Type() != sym_vector )
+			throw DevaRuntimeException( "'source' argument to built-in function 'writelines' is not of the correct type." );
+	}
+	else
+		source = &src;
+
+	int ret = 0;
+	for( DOVector::iterator i = source->vec_val->begin(); i != source->vec_val->end(); ++i )
+	{
+		// if failed to write the line, break
+		if( fputs( i->str_val, (FILE*)(o->func_offset) ) < 0 )
+			break;
+		++ret;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the number of lines written
+	ex->stack.push_back( DevaObject( "", (double)ret ) );
 }
 
-void do_seek( Executor *ex, const Instruction & inst )
+void do_seek( Executor *ex )
 {
 	if( Executor::args_on_stack != 2 && Executor::args_on_stack != 3 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seek'." );
@@ -878,6 +1039,8 @@ void do_seek( Executor *ex, const Instruction & inst )
 			if( !parg )
 				throw DevaRuntimeException( "Symbol not found for 'origin' argument in built-in function 'seek'" );
 		}
+		else
+			parg = &arg;
 		if( parg->Type() != sym_number )
 			throw DevaRuntimeException( "'origin' argument to built-in function 'seek' must be a number." );
 		// TODO: origin must be an integral number. error on non-integer
@@ -923,7 +1086,7 @@ void do_seek( Executor *ex, const Instruction & inst )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_tell( Executor *ex, const Instruction & inst )
+void do_tell( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'tell'." );

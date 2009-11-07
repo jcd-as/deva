@@ -15,6 +15,7 @@
 #include "compile.h"
 #include "executor.h"
 #include "util.h"
+#include "module_os.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -105,9 +106,16 @@ int main( int argc, char** argv )
 			delete i->second;
 		}
 
-		// run the .dvc file
+		// create our execution engine object
 		Executor ex( debug );
+
+		// create a global scope
 		ex.StartGlobalScope();
+
+		// add the built-in modules
+		AddOsModule( ex );
+
+		// run the .dvc file
 		if( !ex.RunFile( fname.c_str() ) )
 		{
 			ex.EndGlobalScope();
