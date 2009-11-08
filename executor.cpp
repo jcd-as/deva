@@ -2014,7 +2014,6 @@ void Executor::New_instance( Instruction const & inst )
 		// push 'self'
 		stack.push_back( instance );
 		// call the 'new' method for this class
-		// TODO: this doesn't work for setting fields etc - they don't persist
 		ExecuteDevaFunction( method, num_args );
 		// ignore the return value from 'new'. not allowed
 		stack.pop_back();
@@ -2325,24 +2324,37 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 		stack.push_back( tmp );
 	}
 
+	size_t orig_ip = ip;
 	// get the offset for the function
 	size_t offset = fcn->func_offset;
 	// jump execution to the function offset
 	ip = offset;
 
-	// execute code until 'return' instruction
 	// read the instructions
+	bool done = false;
 	while( true )
 	{
 		// get the next instruction in the byte code
 		Instruction inst = NextInstr();
 
+		if( inst.op == op_return )
+		{
+			// are we jumping back to the original ip?
+			if( stack.size() < 2 )
+				throw DevaICE( "not enough values on stack for 'return' instruction." );
+			DevaObject addr = stack[stack.size()-2];
+			if( addr.Type() != sym_offset )
+				throw DevaICE( "return address not correct type." );
+			if( addr.func_offset == orig_ip )
+				done = true;
+		}
+
 		// DoInstr returns false on 'halt' instruction
 		if( !DoInstr( inst ) )
 			break;
 
-		// if this was a 'return', stop
-		if( inst.op == op_return )
+		// if this was the matching 'return', stop
+		if( inst.op == op_return && done )
 			break;
 	}
 

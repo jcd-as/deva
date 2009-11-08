@@ -158,8 +158,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note priority="veryhigh" time="1257396844">operators +=, -=, *=, /=, %=, and possibly -- and ++
 </note><note done="1257454722" priority="veryhigh" time="1257403070">add support for default arguments to constructors ('new' methods)
 <comment>
-</comment></note><note priority="veryhigh" time="1257459561">support for destructors in instance objects
-</note><note priority="veryhigh" time="1257460226">complete string built-ins (upper, lower, is_a_xxx, etc)
+</comment></note><note done="1257640380" priority="veryhigh" time="1257459561">support for destructors in instance objects
+<comment>no. cannot support deterministic destruction and reference-counted objects. complicates things too much
+</comment></note><note priority="veryhigh" time="1257460226">complete string built-ins (upper, lower, is_a_xxx, etc)
 </note><note priority="veryhigh" time="1257460252">math built-ins (incl. bitwise op fcns)
 </note><note priority="veryhigh" time="1257539732">need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
 </note></todo>
