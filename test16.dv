@@ -11,3 +11,7 @@ def bar()
 # namespace:
 foo.foofcn();
 bar();
+
+# class from module
+f = new foo.foocls();
+f.foomethod();

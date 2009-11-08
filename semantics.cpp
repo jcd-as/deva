@@ -626,15 +626,21 @@ void check_const_decl( iter_t const & i )
 void check_new_decl( iter_t const & i )
 {
 	// is always the rhs of assignment op
-	// 2 children: an identifier and an arg_list_exp
-	NodeInfo id = i->children[0].value.value();
-	NodeInfo args = i->children[1].value.value();
-	if( i->children.size() != 2 )
-		throw DevaSemanticException( "Invalid 'new' statement.", id );
-	if( id.type != variable_type )
-		throw DevaSemanticException( "Invalid 'new' statement", id );
-	if( i->children[1].value.id() != arg_list_exp_id )
-		throw DevaSemanticException( "Invalid 'new' statement", id );
+	// children: some number of identifiers and an arg_list_exp
+	int num_children = i->children.size();
+	NodeInfo args = i->children[num_children-1].value.value();
+	// FUTURE: if more than a 'module.class' is allowed, 
+	// this will need to checkto change
+	if( num_children < 2 || num_children > 3 )
+		throw DevaSemanticException( "Invalid 'new' declaration", args );
+	if( i->children[num_children-1].value.id() != arg_list_exp_id )
+		throw DevaSemanticException( "Invalid 'new' statement", args );
+	for( int c = 0; c < num_children - 2; ++c )
+	{
+		NodeInfo id = i->children[c].value.value();
+		if( id.type != variable_type )
+			throw DevaSemanticException( "Invalid 'new' statement", id );
+	}
 }
 
 void check_class_decl( iter_t const & i )

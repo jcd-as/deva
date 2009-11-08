@@ -327,7 +327,7 @@ public:
 			new_decl =
 				access_node_d[
 				root_node_d[str_p( "new" )]
-				>> identifier
+				>> list_p( identifier, no_node_d[ch_p( '.' )] )
 				>> arg_list_exp
 				][&set_node]
 				;

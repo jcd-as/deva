@@ -800,24 +800,59 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	}
 	else if( i->value.id() == parser_id( new_decl_id ) )
 	{
-		// first child is the identifier for the class name to create an
-		// instance of
-		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+		int arg_idx;
+		if( i->children.size() == 2 )
+		{
+			// first child is the identifier for the class name to create an
+			// instance of
+			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			arg_idx = 1;
 
-		// line number. write the current *file* offset, not instruction stream!
-		generate_line_num( i, is );
+			// line number
+			generate_line_num( i, is );
 
-		// push the args to 'new', if any
-		if( i->children[1].children.size() > 2 ) // size at least two, for the parens
-			reverse_walk_children( i->children.begin() + 1, is );
-		
-		// create the new instance
-		is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
-		// number of args is size of children - 2 (for the open and close parens),
-		// +1 for 'self'
-		is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[1].children.size()-1) ) ) );	// puts the new instance on the stack
-		// new instance is on the stack to act as the 'self' arg to 'new'
-		// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
+			// push the args to 'new', if any
+			if( i->children[arg_idx].children.size() > 2 ) // size at least two, for the parens
+				reverse_walk_children( i->children.begin() + 1, is );
+			
+			// create the new instance
+			is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
+			// number of args is size of children - 2 (for the open and close parens),
+			// +1 for 'self'
+			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1) ) ) );	// puts the new instance on the stack
+			// new instance is on the stack to act as the 'self' arg to 'new'
+			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
+		}
+		// if not 2 args, must be 3
+		// FUTURE: if more than 'module.class' is allowed, then this will need
+		// to change
+		else
+		{
+			string module = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			string name = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
+			// line number
+			generate_line_num( i, is );
+
+			// push the args to 'new', if any
+			if( i->children[arg_idx].children.size() > 2 ) // size at least two, for the parens
+				reverse_walk_children( i->children.begin() + 1, is );
+			
+			// create the look up of the name in the module,
+			// the resulting name will be on the stack
+			is.push( Instruction( op_push , DevaObject( module.c_str(), sym_unknown ) ) );
+			is.push( Instruction( op_push , DevaObject( "", name ) ) );
+			is.push( Instruction( op_tbl_load ) );
+
+			arg_idx = 2;
+
+			// number of args is size of children - 2 (for the open and close parens),
+			// +1 for 'self'
+			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1) ) ) );	// puts the new instance on the stack
+			// new instance is on the stack to act as the 'self' arg to 'new'
+			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
+			// create a look up of the name in the namespace 'module'
+		}
+
 	}
 
 	// while_s (keyword 'while')

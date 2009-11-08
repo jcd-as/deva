@@ -1,4 +1,12 @@
+class foocls
+{
+	def foomethod()
+	{
+		print( "foomethod() called from foocls" );
+	}
+}
 def foofcn()
 {
 	print( "foo.dv imported and foofcn() called!" );	
 }
+
