@@ -570,7 +570,12 @@ void Executor::Tbl_load( Instruction const & inst )
 	DevaObject vecmap = stack.back();
 	stack.pop_back();
 
-	if( vecmap.Type() != sym_unknown && vecmap.Type() != sym_map && vecmap.Type() != sym_vector )
+	if( vecmap.Type() != sym_unknown && 
+		vecmap.Type() != sym_map && 
+		vecmap.Type() != sym_vector &&
+		vecmap.Type() != sym_class &&
+		vecmap.Type() != sym_instance &&
+		vecmap.Type() != sym_string )
 		throw DevaRuntimeException( "Invalid object for 'tbl_load' instruction." );
 
 	// if the index/key is a variable, look it up
@@ -690,12 +695,13 @@ void Executor::Tbl_load( Instruction const & inst )
 		// for method calls, push 'self'
 		// was the method-call flag passed with this instruction?
 		if( is_method && inst.args.size() > 0 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == false )
+		{
 			stack.push_back( *table );
-		// push the method/field
+		}
+		// push the field/method
 		pair<DevaObject, DevaObject> p = *it;
 		stack.push_back( p.second );
 	}
-
 	// vector *must* have a numeric (integer) index for actual vector look-ups,
 	// or string index for method calls
 	else if( table->Type() == sym_vector )

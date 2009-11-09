@@ -281,7 +281,7 @@ void do_append( Executor *ex )
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'append'." );
 
-	// vector or string to append to
+	// vector to append to
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	// value to append
@@ -298,33 +298,12 @@ void do_append( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// string
-	if( o->Type() == sym_string )
-	{
-		// TODO: value could be a variable, we need to look it up too!
-		// value has to be a string too
-		DevaObject* v;
-		if( val.Type() == sym_unknown )
-		{
-			v = ex->find_symbol( val );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for the value argument in built-in function 'append'." );
-		}
-		else
-			v = &val;
-
-		if( v->Type() != sym_string )
-			throw DevaRuntimeException( "Cannot append a non-string to a string in append() built-in." );
-		// concat the strings
-		string ret( o->str_val );
-		ret += v->str_val;
-		*o = DevaObject( o->name, ret );
-	}
 	// vector
-	else if( o->Type() == sym_vector )
-	{
-		o->vec_val->push_back( val );
-	}
+	if( o->Type() != sym_vector )
+		throw DevaRuntimeException( "'destination' argument to built-in function 'append' must be a vector." );
+
+	o->vec_val->push_back( val );
+
 	// pop the return address
 	ex->stack.pop_back();
 

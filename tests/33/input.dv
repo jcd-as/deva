@@ -2,18 +2,17 @@
 s = "foo";
 s2 = "bar";
 s3 = "Foo";
-#s.append( "bar" );
-s.append( s2 );
-#append( s, s2 );
+#s = s.concat( "bar" );
+s = s.concat( s2 );
 print( s );
 len = s.length();
 print( len );
 copy = s.copy();
 print( copy );
-s.remove( 0, 3 );
+s = s.remove( 0, 3 );
 print( s );
-#s.insert( 0, "foo" );
-s.insert( 0, s3 );
+#s = s.insert( 0, "foo" );
+s = s.insert( 0, s3 );
 print( s );
 # null ('obaz' won't be found)
 idx = s.find( "obaz", 0, 3 );
@@ -31,22 +30,116 @@ print( idx );
 idx = s.rfind( "obaz", 4 );
 print( idx );
 
-s.reverse();
+s = s.reverse();
 print( s );
-s.reverse( 0, -1 );
+s = s.reverse( 0, -1 );
 print( s );
-s.reverse( 2, 4 );
+s = s.reverse( 2, 4 );
 print( s );
 
-s.sort( 2, 5 );
+s = s.sort( 2, 5 );
 print( s );
-s.sort();
+s = s.sort();
 print( s );
+
+s = " \t\n FOOBAR\t\n \t";
+s = s.strip();
+print( s );
+
+s = "xyzXYZFOOBARZYXzyx";
+s = s.strip( "xyzXYZ" );
+print( s );
+
+s = " \t\n FOOBAR\t\n \txxx";
+s = s.lstrip();
+print( s );
+
+s = "xyzXYZFOOBARZYXzyx";
+s = s.lstrip( "xyzXYZ" );
+print( s );
+
+s = "xxx \t\n FOOBAR\t\n \t";
+s = s.rstrip();
+print( s );
+
+s = "xyzXYZFOOBARZYXzyx";
+s = s.rstrip( "xyzXYZ" );
+print( s );
+
+s = "a,b, c, rq4fadsfaxxxa\t, fdaf;a, d, e, f,,g,";
+v = s.split( "," );
+print( v );
+
+s = "foobar at the bar eating bar all day.";
+s = s.replace( "bar", "jam and toast" );
+print ( s );
+
+s = s.upper();
+print( s );
+# true
+print( s.isupper() );
+# false
+print( s.islower() );
+s = s.lower();
+print( s );
+# false (spaces)
+print( s.islower() );
+# false
+print( s.isupper() );
+
+s = "foobar";
+# false (spaces)
+print( s.isalphanum() );
+s = "this is NOT alpha-numeric!";
+# false
+print( s.isalphanum() );
+
+s = "FOOBAR";
+print( s );
+# true
+print( s.isupper() );
+# false
+print( s.islower() );
+
+s = "foobar";
+print( s );
+# true
+print( s.islower() );
+# false
+print( s.isupper() );
+
+s = "01298";
+# true
+print( s.isdigit() );
+# true
+print( s.isxdigit() );
+s = "049243af";
+# true
+print( s.isxdigit() );
+s = "ff332289g";
+# false
+print( s.isxdigit() );
+s = " \t\n\t\t\n \t \n \n\n\t";
+# true
+print( s.isspace() );
+s = " \t\n\t\t\n x\t \n \n\n\t";
+# false
+print( s.isspace() );
+s = ".!@%%$#";
+# true
+print( s.ispunct() );
+# false
+print( s.iscntrl() );
+# true
+print( s.isprint() );
+
+
+
 
 #for( c in s )
 #{
 ##	c = s[0];
 #	print( c );
 #}
-#s.append( "bar" );
+#s = s.concat( "bar" );
 #print( s );

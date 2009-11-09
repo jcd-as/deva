@@ -3,19 +3,19 @@
 // created by jcs, october 30, 2009 
 
 // TODO:
-// * builtins for: strip, split, replace, lower, upper, is_alnum, is_alpha,
-// is_digit, is_lower, is_upper, is_space,
+// * 
 //
 
 #include "string_builtins.h"
 #include <algorithm>
+#include <locale>
 
 // to add new builtins you must:
 // 1) add a new fcn to the string_builtin_names and string_builtin_fcns arrays below
 // 2) implement the function in this file
 
 // pre-decls for builtin executors
-void do_string_append( Executor *ex );
+void do_string_concat( Executor *ex );
 void do_string_length( Executor *ex );
 void do_string_copy( Executor *ex );
 void do_string_insert( Executor *ex );
@@ -25,11 +25,28 @@ void do_string_rfind( Executor *ex );
 void do_string_reverse( Executor *ex );
 void do_string_sort( Executor *ex );
 void do_string_slice( Executor *ex );
+void do_string_strip( Executor *ex );
+void do_string_lstrip( Executor *ex );
+void do_string_rstrip( Executor *ex );
+void do_string_split( Executor *ex );
+void do_string_replace( Executor *ex );
+void do_string_upper( Executor *ex );
+void do_string_lower( Executor *ex );
+void do_string_isalphanum( Executor *ex );
+void do_string_isalpha( Executor *ex );
+void do_string_isdigit( Executor *ex );
+void do_string_islower( Executor *ex );
+void do_string_isupper( Executor *ex );
+void do_string_isspace( Executor *ex );
+void do_string_ispunct( Executor *ex );
+void do_string_iscntrl( Executor *ex );
+void do_string_isprint( Executor *ex );
+void do_string_isxdigit( Executor *ex );
 
 // tables defining the built-in function names...
 static const string string_builtin_names[] = 
 {
-    string( "string_append" ),
+    string( "string_concat" ),
     string( "string_length" ),
     string( "string_copy" ),
     string( "string_insert" ),
@@ -39,12 +56,29 @@ static const string string_builtin_names[] =
     string( "string_reverse" ),
     string( "string_sort" ),
     string( "string_slice" ),
+    string( "string_strip" ),
+    string( "string_lstrip" ),
+    string( "string_rstrip" ),
+    string( "string_split" ),
+    string( "string_replace" ),
+    string( "string_upper" ),
+    string( "string_lower" ),
+	string( "string_isalphanum" ),
+	string( "string_isalpha" ),
+	string( "string_isdigit" ),
+	string( "string_islower" ),
+	string( "string_isupper" ),
+	string( "string_isspace" ),
+	string( "string_ispunct" ),
+	string( "string_iscntrl" ),
+	string( "string_isprint" ),
+	string( "string_isxdigit" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*string_builtin_fcn)(Executor*);
 string_builtin_fcn string_builtin_fcns[] = 
 {
-    do_string_append,
+    do_string_concat,
     do_string_length,
     do_string_copy,
     do_string_insert,
@@ -54,6 +88,23 @@ string_builtin_fcn string_builtin_fcns[] =
     do_string_reverse,
     do_string_sort,
     do_string_slice,
+    do_string_strip,
+    do_string_lstrip,
+    do_string_rstrip,
+    do_string_split,
+    do_string_replace,
+    do_string_upper,
+    do_string_lower,
+	do_string_isalphanum,
+	do_string_isalpha,
+	do_string_isdigit,
+	do_string_islower,
+	do_string_isupper,
+	do_string_isspace,
+	do_string_ispunct,
+	do_string_iscntrl,
+	do_string_isprint,
+	do_string_isxdigit,
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
@@ -83,10 +134,10 @@ void execute_string_builtin( Executor *ex, const string & name )
 }
 
 // the built-in executor functions:
-void do_string_append( Executor *ex )
+void do_string_concat( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'append' built-in method." );
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'concat' built-in method." );
 
 	// get the string object off the top of the stack
 	DevaObject str = ex->stack.back();
@@ -108,27 +159,31 @@ void do_string_append( Executor *ex )
 
 	// value
 	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "String expected in string built-in method 'append'." );
+		throw DevaRuntimeException( "String expected in string built-in method 'concat'." );
 
 	// get a pointer to the symbol
 	DevaObject* s = NULL;
-	s = ex->find_symbol( str );
+	if( str.Type() == sym_unknown )
+	{
+		s = ex->find_symbol( str );
+		if( !s )
+			throw DevaRuntimeException( "Symbol not found in call to string built-in method 'concat'" );
+	}
 	if( !s )
-		throw DevaRuntimeException( "Symbol not found in call to string built-in method 'append'" );
+		s = &str;
 
 	if( s->Type() != sym_string )
-		throw DevaICE( "String expected in string built-in method 'append'." );
+		throw DevaICE( "String expected in string built-in method 'concat'." );
 
 	// concatenate the strings
 	string ret( s->str_val );
 	ret += o->str_val;
-	*s = DevaObject( s->name, ret );
 
 	// pop the return address
 	ex->stack.pop_back();
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
 void do_string_length( Executor *ex )
@@ -175,7 +230,6 @@ void do_string_copy( Executor *ex )
 	ex->stack.push_back( copy );
 }
 
-
 void do_string_insert( Executor *ex )
 {
 	if( Executor::args_on_stack != 2 )
@@ -195,7 +249,7 @@ void do_string_insert( Executor *ex )
 	
 	// string
 	if( str.Type() != sym_string )
-		throw DevaICE( "Vector expected in string built-in method 'insert'." );
+		throw DevaICE( "String expected in string built-in method 'insert'." );
 
 	// value
 	DevaObject* o;
@@ -230,13 +284,12 @@ void do_string_insert( Executor *ex )
 	// do the insert
 	string ret( s->str_val );
 	ret.insert( i, o->str_val );
-	*s = DevaObject( s->name, ret );
 
 	// pop the return address
 	ex->stack.pop_back();
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
 void do_string_remove( Executor *ex )
@@ -304,14 +357,13 @@ void do_string_remove( Executor *ex )
 	// do the removal
 	string ret( s->str_val );
 	ret.erase( i_start, i_end );
-	*s = DevaObject( s->name, ret );
 
 
 	// pop the return address
 	ex->stack.pop_back();
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
 void do_string_find( Executor *ex )
@@ -537,13 +589,14 @@ void do_string_reverse( Executor *ex )
 	if( s->Type() != sym_string )
 		throw DevaICE( "String expected in string built-in method 'remove'." );
 
-	reverse( s->str_val + i_start, s->str_val + i_end );
+	string ret( s->str_val );
+	reverse( ret.begin() + i_start, ret.begin() + i_end );
 
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the length
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
 void do_string_sort( Executor *ex )
@@ -605,13 +658,14 @@ void do_string_sort( Executor *ex )
 	if( s->Type() != sym_string )
 		throw DevaICE( "String expected in string built-in method 'remove'." );
 
-	sort( s->str_val + i_start, s->str_val + i_end );
+	string ret( s->str_val );
+	sort( ret.begin() + i_start, ret.begin() + i_end );
 
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the length
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
 void do_string_slice( Executor *ex )
@@ -703,4 +757,694 @@ void do_string_slice( Executor *ex )
 	ex->stack.pop_back();
 
 	ex->stack.push_back( ret );
+}
+
+void do_string_strip( Executor *ex )
+{
+	if( Executor::args_on_stack > 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'strip' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'strip'." );
+
+	// value to strip (string containing characters to strip)
+	DevaObject* o;
+	string chars;
+	if( Executor::args_on_stack == 1 )
+	{
+		// value to strip is first on stack
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+		// value
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the value argument in string built-in method 'strip'." );
+		}
+		else
+			o = &val;
+		if( o->Type() != sym_string )
+			throw DevaRuntimeException( "'characters' argument to string built-in method 'strip' must be a string." );
+		chars = o->str_val;
+	}
+	else
+		chars = string( " \t\n" );
+
+	string in( str.str_val );
+	
+	// left-side strip
+	size_t left = in.find_first_not_of( chars );
+	if( left == string::npos )
+		left = 0;
+	// right-side strip
+	size_t right = in.find_last_not_of( chars );
+	if( right == string::npos )
+		right = in.length();
+	string ret = in.substr( left, right - left + 1 );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting string
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_lstrip( Executor *ex )
+{
+	if( Executor::args_on_stack > 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'lstrip' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'lstrip'." );
+
+	// value to strip (string containing characters to strip)
+	DevaObject* o;
+	string chars;
+	if( Executor::args_on_stack == 1 )
+	{
+		// value to strip is first on stack
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+		// value
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the value argument in string built-in method 'lstrip'." );
+		}
+		else
+			o = &val;
+		if( o->Type() != sym_string )
+			throw DevaRuntimeException( "'characters' argument to string built-in method 'lstrip' must be a string." );
+		chars = o->str_val;
+	}
+	else
+		chars = string( " \t\n" );
+
+	string in( str.str_val );
+	
+	// left-side strip
+	size_t left = in.find_first_not_of( chars );
+	if( left == string::npos )
+		left = 0;
+	// right-side
+	size_t right = in.length();
+	if( right == string::npos )
+		right = in.length();
+	string ret = in.substr( left, right - left + 1 );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting string
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_rstrip( Executor *ex )
+{
+	if( Executor::args_on_stack > 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'rstrip' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'rstrip'." );
+
+	// value to strip (string containing characters to strip)
+	DevaObject* o;
+	string chars;
+	if( Executor::args_on_stack == 1 )
+	{
+		// value to strip is first on stack
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+		// value
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the value argument in string built-in method 'rstrip'." );
+		}
+		else
+			o = &val;
+		if( o->Type() != sym_string )
+			throw DevaRuntimeException( "'characters' argument to string built-in method 'rstrip' must be a string." );
+		chars = o->str_val;
+	}
+	else
+		chars = string( " \t\n" );
+
+	string in( str.str_val );
+	
+	// right-side strip
+	size_t right = in.find_last_not_of( chars );
+	string ret = in.substr( 0, right + 1 );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting string
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_split( Executor *ex )
+{
+	if( Executor::args_on_stack > 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'split' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'split'." );
+
+	// value to split at (string containing characters to split on)
+	DevaObject* o;
+	string chars;
+	if( Executor::args_on_stack == 1 )
+	{
+		// value to split is first on stack
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+		// value
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the value argument in string built-in method 'split'." );
+		}
+		else
+			o = &val;
+		if( o->Type() != sym_string )
+			throw DevaRuntimeException( "'characters' argument to string built-in method 'split' must be a string." );
+		chars = o->str_val;
+	}
+	else
+		chars = string( " \t\n" );
+
+	string in( str.str_val );
+	
+	DOVector* ret = new DOVector();
+
+	size_t left = in.find_first_not_of( chars );
+	if( left != string::npos )
+	{	
+		size_t right = in.find_first_of( chars );
+		size_t len = in.length();
+		while( left != string::npos )
+		{
+			string s( in, left, right - left );
+			ret->push_back( DevaObject( "", s ) );
+
+			left = in.find_first_not_of( chars, right );
+			right = in.find_first_of( chars, right + 1 );
+			// if 'left' is greater than 'right', then we passed an empty string 
+			// (two matching split chars in a row), enter it and move forward
+			if( left > right )
+			{
+				ret->push_back( DevaObject( "", string( "" ) ) );
+				right = in.find_first_of( chars, right + 1 );
+			}
+		}
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting string
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_replace( Executor *ex )
+{
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string 'replace' built-in method." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+	// search string is next
+	DevaObject srch = ex->stack.back();
+	ex->stack.pop_back();
+
+	// replacement value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// string
+	if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'replace'." );
+
+	// search string
+	DevaObject* s;
+	if( srch.Type() == sym_unknown )
+	{
+		s = ex->find_symbol( srch );
+		if( !s )
+			throw DevaRuntimeException( "Symbol not found for the 'search_string' argument in string built-in method 'replace'." );
+	}
+	else
+		s = &srch;
+	
+	// replacement value
+	DevaObject* rep;
+	if( val.Type() == sym_unknown )
+	{
+		rep = ex->find_symbol( val );
+		if( !rep )
+			throw DevaRuntimeException( "Symbol not found for the 'replacement_value' argument in string built-in method 'replace'." );
+	}
+	else
+		rep = &val;
+
+	// do the replacement
+	string ret( str.str_val );
+	string search( s->str_val );
+	string rep_val( rep->str_val );
+	size_t pos = ret.find( search );
+	while( pos != string::npos )
+	{
+		// do the replacement
+		ret.replace( pos, search.length(), rep_val );
+		// find the search string
+		pos = ret.find( search, pos + 1 );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the new string
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_upper( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'upper'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'upper'." );
+
+
+	string ret;
+	ret.reserve( strlen( str.str_val ) );
+	locale loc;
+	int i = 0;
+	while( str.str_val[i] )
+	{
+		ret.push_back( toupper( str.str_val[i], loc ) );
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_lower( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'lower'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'lower'." );
+
+
+	string ret;
+	ret.reserve( strlen( str.str_val ) );
+	locale loc;
+	int i = 0;
+	while( str.str_val[i] )
+	{
+		ret.push_back( tolower( str.str_val[i], loc ) );
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+
+void do_string_isalphanum( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isalphanum'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isalphanum'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isalnum( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isalpha( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isalpha'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isalpha'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isalpha( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isdigit( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isdigit'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isdigit'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isdigit( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_islower( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'islower'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'islower'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !islower( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isupper( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isupper'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isupper'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isupper( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isspace( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isspace'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isspace'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isspace( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_ispunct( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'ispunct'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'ispunct'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !ispunct( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_iscntrl( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'iscntrl'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'iscntrl'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !iscntrl( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isprint( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isprint'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isprint'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isprint( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_isxdigit( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isxdigit'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'isxdigit'." );
+
+
+	locale loc;
+	int i = 0;
+	bool ret = true;
+	while( str.str_val[i] )
+	{
+		if( !isxdigit( str.str_val[i], loc ) )
+		{
+			ret = false;
+			break;
+		}
+		++i;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the copy
+	ex->stack.push_back( DevaObject( "", ret ) );
 }

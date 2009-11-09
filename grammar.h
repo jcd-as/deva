@@ -183,6 +183,7 @@ public:
 				>> no_node_d[ch_p( "{" )]
 				>> *func_decl
 				>> no_node_d[ch_p( "}" )]
+				>> !end_p
 				][&set_node]
 				;
 
