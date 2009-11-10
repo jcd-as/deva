@@ -19,7 +19,8 @@ deva_SOURCES= \
 	map_builtins.cpp \
 	string_builtins.cpp \
 	module_os.cpp \
-	module_bit.cpp
+	module_bit.cpp \
+	module_math.cpp
 deva_CPPFLAGS = -I $(top_srcdir)/inc
 deva_LDFLAGS = -g -lboost_program_options
 

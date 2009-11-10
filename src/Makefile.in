@@ -50,7 +50,8 @@ am_deva_OBJECTS = deva-builtins.$(OBJEXT) deva-compile.$(OBJEXT) \
 	deva-semantics.$(OBJEXT) deva-symbol.$(OBJEXT) \
 	deva-util.$(OBJEXT) deva-vector_builtins.$(OBJEXT) \
 	deva-map_builtins.$(OBJEXT) deva-string_builtins.$(OBJEXT) \
-	deva-module_os.$(OBJEXT) deva-module_bit.$(OBJEXT)
+	deva-module_os.$(OBJEXT) deva-module_bit.$(OBJEXT) \
+	deva-module_math.$(OBJEXT)
 deva_OBJECTS = $(am_deva_OBJECTS)
 deva_LDADD = $(LDADD)
 deva_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(deva_LDFLAGS) \
@@ -189,7 +190,8 @@ deva_SOURCES = \
 	map_builtins.cpp \
 	string_builtins.cpp \
 	module_os.cpp \
-	module_bit.cpp
+	module_bit.cpp \
+	module_math.cpp
 
 deva_CPPFLAGS = -I $(top_srcdir)/inc
 deva_LDFLAGS = -g -lboost_program_options
@@ -281,6 +283,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-instructions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-map_builtins.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-module_bit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-module_math.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-module_os.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-parser_ids.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deva-scope.Po@am__quote@
@@ -571,6 +574,20 @@ deva-module_bit.obj: module_bit.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='module_bit.cpp' object='deva-module_bit.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(deva_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o deva-module_bit.obj `if test -f 'module_bit.cpp'; then $(CYGPATH_W) 'module_bit.cpp'; else $(CYGPATH_W) '$(srcdir)/module_bit.cpp'; fi`
+
+deva-module_math.o: module_math.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(deva_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT deva-module_math.o -MD -MP -MF $(DEPDIR)/deva-module_math.Tpo -c -o deva-module_math.o `test -f 'module_math.cpp' || echo '$(srcdir)/'`module_math.cpp
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/deva-module_math.Tpo $(DEPDIR)/deva-module_math.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='module_math.cpp' object='deva-module_math.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(deva_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o deva-module_math.o `test -f 'module_math.cpp' || echo '$(srcdir)/'`module_math.cpp
+
+deva-module_math.obj: module_math.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(deva_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT deva-module_math.obj -MD -MP -MF $(DEPDIR)/deva-module_math.Tpo -c -o deva-module_math.obj `if test -f 'module_math.cpp'; then $(CYGPATH_W) 'module_math.cpp'; else $(CYGPATH_W) '$(srcdir)/module_math.cpp'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/deva-module_math.Tpo $(DEPDIR)/deva-module_math.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='module_math.cpp' object='deva-module_math.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(deva_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o deva-module_math.obj `if test -f 'module_math.cpp'; then $(CYGPATH_W) 'module_math.cpp'; else $(CYGPATH_W) '$(srcdir)/module_math.cpp'; fi`
 
 devac-devac.o: devac.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(devac_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT devac-devac.o -MD -MP -MF $(DEPDIR)/devac-devac.Tpo -c -o devac-devac.o `test -f 'devac.cpp' || echo '$(srcdir)/'`devac.cpp

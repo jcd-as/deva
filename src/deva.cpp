@@ -17,6 +17,7 @@
 #include "util.h"
 #include "module_os.h"
 #include "module_bit.h"
+#include "module_math.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -124,6 +125,7 @@ int main( int argc, char** argv )
 		// add the built-in modules
 		AddOsModule( ex );
 		AddBitModule( ex );
+		AddMathModule( ex );
 
 		// run the .dvc file
 		if( !ex.RunFile( fname.c_str() ) )

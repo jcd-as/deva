@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
+<?xml version="1.0" ?>
+<todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -162,8 +163,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>no. cannot support deterministic destruction and reference-counted objects. complicates things too much
 </comment></note><note done="1257747755" priority="veryhigh" time="1257460226">complete string built-ins (upper, lower, is_a_xxx, etc)
 <comment>whew. lots of string fcns
-</comment></note><note priority="veryhigh" time="1257460252">math built-ins (incl. bitwise op fcns)
-</note><note priority="veryhigh" time="1257539732">need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
+</comment></note><note done="1257819688" priority="veryhigh" time="1257460252">math built-ins (incl. bitwise op fcns)
+<comment>
+</comment></note><note priority="veryhigh" time="1257539732">need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
 </note><note priority="high" time="1257647228">constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect until ANOTHER object is created!
 </note><note done="1257655212" priority="veryhigh" time="1257647330">classes from imported modules are not accessible (via &quot;new class.module()&quot;) because the syntax is not allowed in the grammar
 <comment>fixed grammar to allow any number of 'dots' (e.g. 'a.b.c.d'), but semantics and compiler limit it to 'class.module' since neither nested classes nor namespaces are currently supported

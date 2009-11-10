@@ -1,4 +1,4 @@
-// module_bit.h
+// module_bit.cpp
 // built-in module 'bit' for the deva language 
 // created by jcs, november 6, 2009 
 
@@ -7,7 +7,6 @@
 
 
 #include "module_bit.h"
-//#include <cstdlib>
 
 void do_bit_and( Executor* ex )
 {
@@ -303,6 +302,7 @@ void do_bit_shift_right( Executor* ex )
 	// return the return value from the command
 	ex->stack.push_back( DevaObject( "", (double)ret ) );
 }
+
 void AddBitModule( Executor & ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();

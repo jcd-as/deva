@@ -1,0 +1,28 @@
+# test math fcns
+
+const pi = 3.1415;
+
+print( math.cos( pi ) );
+print( math.sin( pi ) );
+print( math.tan( pi ) );
+print( math.acos( 1.0 ) );
+print( math.asin( 1.0 ) );
+print( math.atan( 1.0 ) );
+print( math.cosh( pi ) );
+print( math.sinh( pi ) );
+print( math.tanh( pi ) );
+print( math.exp( pi ) );
+print( math.log( pi ) );
+print( math.log10( pi ) );
+
+print( math.pow( 3.0, 2.0 ) );
+print( math.sqrt( 9.0 ) );
+
+print( math.ceil( pi ) );
+print( math.floor( pi ) );
+print( math.abs( pi ) );
+print( math.abs( -pi ) );
+
+print( math.fmod( 9.0, 2.0 ) );
+
+print( math.modf( pi ) );
