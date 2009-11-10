@@ -15,7 +15,7 @@ string get_cwd()
 	if( maxbufsize == -1 )
 		throw logic_error( "Unable to determine max path size. Unable to continue." );
 	cwd = new char[maxbufsize];
-	getcwd( cwd, (size_t)maxbufsize );
+	(void)getcwd( cwd, (size_t)maxbufsize );
 	string curdir( cwd );
 	delete [] cwd;
 	return curdir;

@@ -81,11 +81,19 @@ int main( int argc, char** argv )
 		{
 			string cwd = get_cwd();
 			string dir = cwd + '/' + in_dir;
-			chdir( dir.c_str() );
+			if( chdir( dir.c_str() ) != 0 ) 
+			{
+				cout << "error: unable to change the current working directory to " << dir.c_str() << endl;
+				return -1;
+			}
 		}
 		else
 		{
-			chdir( in_dir.c_str() );
+			if( chdir( in_dir.c_str() ) != 0 )
+			{
+				cout << "error: unable to change the current working directory to " << in_dir.c_str() << endl;
+				return -1;
+			}
 		}
 
 		// get the filename to compile/run

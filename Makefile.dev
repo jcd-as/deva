@@ -1,5 +1,8 @@
 # makefile for test driver for deva language grammars
 
+# source directories:
+VPATH = src
+
 # sources/objs for test executable
 TEST_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp
 TEST_OBJS=$(patsubst %.cpp, %.o, ${TEST_SOURCES})
@@ -32,10 +35,7 @@ TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
 DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 
-# source directories:
-#VFILES=
-
-CPPFLAGS = -c -g
+CXXFLAGS = -c -g -I inc
 LDFLAGS = -g
 
 all : tags ID test devac deva
@@ -58,9 +58,10 @@ deva : ${DEVA_OBJS}
 	#g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
 
 %.o : %.cpp
-	g++ ${CPPFLAGS} -o $@ $<
+	g++ ${CXXFLAGS} -o $@ $<
 
 clean:
+	cd src
 	rm *.o test devac deva *.dep*
 
 # run tests
@@ -73,7 +74,7 @@ include ${DEVA_DEP_FILES}
 
 %.dep : %.cpp
 	@set -e; rm -f $@; \
-	gcc -MM $(CPPFLAGS) $< > $@.$$$$; \
+	gcc -MM $(CXXFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
