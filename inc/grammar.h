@@ -315,6 +315,11 @@ public:
 				access_node_d[
 				const_decl >> root_node_d[assignment_op] >> (number | string)
 				| identifier >> root_node_d[assignment_op] >> new_decl
+				| logical_exp >> +(root_node_d[add_assignment_op] >> logical_exp)
+				| logical_exp >> +(root_node_d[sub_assignment_op] >> logical_exp)
+				| logical_exp >> +(root_node_d[mul_assignment_op] >> logical_exp)
+				| logical_exp >> +(root_node_d[div_assignment_op] >> logical_exp)
+				| logical_exp >> +(root_node_d[mod_assignment_op] >> logical_exp)
 				| logical_exp >> *(root_node_d[assignment_op] >> logical_exp)
 				][&set_node]
 				;
@@ -511,6 +516,36 @@ public:
 				][&set_node]
 				;
 
+			add_assignment_op = 
+				access_node_d[
+				str_p( "+=" )
+				][&set_node]
+				;
+
+			sub_assignment_op = 
+				access_node_d[
+				str_p( "-=" )
+				][&set_node]
+				;
+
+			mul_assignment_op = 
+				access_node_d[
+				str_p( "*=" )
+				][&set_node]
+				;
+
+			div_assignment_op = 
+				access_node_d[
+				str_p( "/=" )
+				][&set_node]
+				;
+
+			mod_assignment_op = 
+				access_node_d[
+				str_p( "%=" )
+				][&set_node]
+				;
+
 			// map construction op
 			map_op = 
 				access_node_d[
@@ -681,6 +716,11 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( close_bracket_op );
 			BOOST_SPIRIT_DEBUG_RULE( comma_op );
 			BOOST_SPIRIT_DEBUG_RULE( assignment_op );
+			BOOST_SPIRIT_DEBUG_RULE( add_assignment_op );
+			BOOST_SPIRIT_DEBUG_RULE( sub_assignment_op );
+			BOOST_SPIRIT_DEBUG_RULE( mul_assignment_op );
+			BOOST_SPIRIT_DEBUG_RULE( div_assignment_op );
+			BOOST_SPIRIT_DEBUG_RULE( mod_assignment_op );
 			BOOST_SPIRIT_DEBUG_RULE( logical_op );
 			BOOST_SPIRIT_DEBUG_RULE( map_op );
 			BOOST_SPIRIT_DEBUG_RULE( vec_op );
@@ -752,6 +792,11 @@ public:
 			comma_op_id = comma_op.id(); 
 			logical_op_id = logical_op.id();
 			assignment_op_id = assignment_op.id();
+			add_assignment_op_id = add_assignment_op.id();
+			sub_assignment_op_id = sub_assignment_op.id();
+			mul_assignment_op_id = mul_assignment_op.id();
+			div_assignment_op_id = div_assignment_op.id();
+			mod_assignment_op_id = mod_assignment_op.id();
 			map_op_id = map_op.id();
 			vec_op_id = vec_op.id();
 			in_op_id = in_op.id();
@@ -823,6 +868,11 @@ public:
 			comma_op,
 			logical_op,
 			assignment_op,
+			add_assignment_op,
+			sub_assignment_op,
+			mul_assignment_op,
+			div_assignment_op,
+			mod_assignment_op,
 			map_op,
 			vec_op,
 			in_op,

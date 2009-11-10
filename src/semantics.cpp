@@ -88,7 +88,12 @@ void check_while_s( iter_t const & i )
 
 	// 2 children: condition (boolean/number/string/variable/null), compound or single statement
 	NodeInfo condition = i->children[0].value.value();
-	if( i->children[0].value.id() == assignment_op_id )
+	if( i->children[0].value.id() == assignment_op_id ||
+		i->children[0].value.id() == add_assignment_op_id ||
+		i->children[0].value.id() == sub_assignment_op_id ||
+		i->children[0].value.id() == mul_assignment_op_id ||
+		i->children[0].value.id() == div_assignment_op_id ||
+		i->children[0].value.id() == mod_assignment_op_id )
 		throw DevaSemanticException( "Illegal assignment inside 'while' conditional", condition );
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
@@ -124,7 +129,12 @@ void check_if_s( iter_t const & i )
 {
 	// 2 or 3 children: condition, statement|compound_statement, [optional] else
 	NodeInfo condition = i->children[0].value.value();
-	if( i->children[0].value.id() == assignment_op_id )
+	if( i->children[0].value.id() == assignment_op_id ||
+		i->children[0].value.id() == add_assignment_op_id ||
+		i->children[0].value.id() == sub_assignment_op_id ||
+		i->children[0].value.id() == mul_assignment_op_id ||
+		i->children[0].value.id() == div_assignment_op_id ||
+		i->children[0].value.id() == mod_assignment_op_id )
 		throw DevaSemanticException( "Illegal assignment inside 'if' conditional", condition );
 	if( condition.type != boolean_type && condition.type != variable_type 
 		&& condition.type != number_type && condition.type != string_type 
@@ -240,6 +250,33 @@ void check_assignment_op( iter_t const & i )
 //			}
 //		}
 //	}
+
+	NodeInfo ni = ((NodeInfo)(i->value.value()));
+	ni.type = variable_type;
+	i->value.value( ni );
+}
+
+void check_op_assignment_op( iter_t const & i )
+{
+	// first child is lhs - must be an lvalue (variable or map/vector key item) 
+	// second child is rhs - must be a numerical rvalue (number or variable)
+	// and the type of the assignment itself MUST be a variable
+	// optional third child must be semi-colon if it exists
+	NodeInfo lhs = i->children[0].value.value();
+	NodeInfo rhs = i->children[1].value.value();
+	if( lhs.type != variable_type )
+		throw DevaSemanticException( "Left-hand side of math op and assignment not an l-value", lhs );
+	else if( rhs.type != number_type 
+		&& rhs.type != variable_type 
+		&& i->children[1].value.id() != vec_op_id
+		&& i->children[1].value.id() != map_op_id )
+		throw DevaSemanticException( "Right-hand side of math op and assignment not an r-value", rhs );
+
+	// check 'const' of lhs
+	SymbolTable* st = scopes[lhs.scope];
+	SymbolInfo si = find_symbol( lhs.sym, st, scopes );
+	if( si.Type() != sym_end && si.is_const )
+		throw DevaSemanticException( "Cannot assign to a const variable.", lhs );
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;
@@ -524,7 +561,12 @@ void check_arg_list_exp( iter_t const & i )
 	// n children: '(', n identifiers, ')'
 	for( int j = 1; j < i->children.size()-1; ++j )
 	{
-		if( i->children[j].value.id() == assignment_op_id )
+		if( i->children[j].value.id() == assignment_op_id ||
+			i->children[j].value.id() == add_assignment_op_id ||
+			i->children[j].value.id() == sub_assignment_op_id ||
+			i->children[j].value.id() == mul_assignment_op_id ||
+			i->children[j].value.id() == div_assignment_op_id ||
+			i->children[j].value.id() == mod_assignment_op_id )
 		{
 			NodeInfo ni = i->children[j].value.value();
 			throw DevaSemanticException( "Illegal assignment inside function arguments", ni );

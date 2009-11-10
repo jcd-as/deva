@@ -156,8 +156,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>had to fixup tbl_load code to NOT push the self arg in this case. tricky. required adding an arg to the instruction, a boolean false, to indicate method *calls*
 </comment></note><note done="1257385995" priority="veryhigh" time="1257357749">class inheritance
 <comment>
-</comment></note><note priority="veryhigh" time="1257396844">operators +=, -=, *=, /=, %=, and possibly -- and ++
-</note><note done="1257454722" priority="veryhigh" time="1257403070">add support for default arguments to constructors ('new' methods)
+</comment></note><note done="1257829129" priority="veryhigh" time="1257396844">operators +=, -=, *=, /=, %=, and possibly -- and ++
+<comment>no -- or ++
+</comment></note><note done="1257454722" priority="veryhigh" time="1257403070">add support for default arguments to constructors ('new' methods)
 <comment>
 </comment></note><note done="1257640380" priority="veryhigh" time="1257459561">support for destructors in instance objects
 <comment>no. cannot support deterministic destruction and reference-counted objects. complicates things too much

@@ -30,6 +30,7 @@ void check_map_op( iter_t const & i );
 void check_vec_op( iter_t const & i );
 void check_semicolon_op( iter_t const & i );
 void check_assignment_op( iter_t const & i );
+void check_op_assignment_op( iter_t const & i );
 void check_logical_op( iter_t const & i );
 void check_relational_op( iter_t const & i );
 void check_mult_op( iter_t const & i );

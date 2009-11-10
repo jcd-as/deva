@@ -654,6 +654,97 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 	}
 }
 
+void gen_IL_add_assignment_op( iter_t const & i, InstructionStream & is )
+{
+	// store (top of stack (rhs) into the arg (lhs), both args are already on
+	// the stack)
+	
+	generate_line_num( i, is );
+	// dup 1 => get the lhs dup'd on top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// swap  => swap it so we have (<bottom_of_stack>, ..., lhs, lhs, rhs)
+	is.push( Instruction( op_swap ) );
+
+	// do the add
+	is.push( Instruction( op_add ) );
+
+	// do the assignment
+	is.push( Instruction( op_store ) );
+}
+
+void gen_IL_sub_assignment_op( iter_t const & i, InstructionStream & is )
+{
+	// store (top of stack (rhs) into the arg (lhs), both args are already on
+	// the stack)
+	
+	generate_line_num( i, is );
+	// dup 1 => get the lhs dup'd on top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// swap  => swap it so we have (<bottom_of_stack>, ..., lhs, lhs, rhs)
+	is.push( Instruction( op_swap ) );
+
+	// do the sub
+	is.push( Instruction( op_sub ) );
+
+	// do the assignment
+	is.push( Instruction( op_store ) );
+}
+
+void gen_IL_mul_assignment_op( iter_t const & i, InstructionStream & is )
+{
+	// store (top of stack (rhs) into the arg (lhs), both args are already on
+	// the stack)
+	
+	generate_line_num( i, is );
+	// dup 1 => get the lhs dup'd on top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// swap  => swap it so we have (<bottom_of_stack>, ..., lhs, lhs, rhs)
+	is.push( Instruction( op_swap ) );
+
+	// do the mul
+	is.push( Instruction( op_mul ) );
+
+	// do the assignment
+	is.push( Instruction( op_store ) );
+}
+
+void gen_IL_div_assignment_op( iter_t const & i, InstructionStream & is )
+{
+	// store (top of stack (rhs) into the arg (lhs), both args are already on
+	// the stack)
+	
+	generate_line_num( i, is );
+	// dup 1 => get the lhs dup'd on top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// swap  => swap it so we have (<bottom_of_stack>, ..., lhs, lhs, rhs)
+	is.push( Instruction( op_swap ) );
+
+	// do the div
+	is.push( Instruction( op_div ) );
+
+	// do the assignment
+	is.push( Instruction( op_store ) );
+}
+
+void gen_IL_mod_assignment_op( iter_t const & i, InstructionStream & is )
+{
+	// store (top of stack (rhs) into the arg (lhs), both args are already on
+	// the stack)
+	
+	generate_line_num( i, is );
+	// dup 1 => get the lhs dup'd on top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// swap  => swap it so we have (<bottom_of_stack>, ..., lhs, lhs, rhs)
+	is.push( Instruction( op_swap ) );
+
+	// do the mod
+	is.push( Instruction( op_mod ) );
+
+	// do the assignment
+	is.push( Instruction( op_store ) );
+}
+
+
 void gen_IL_logical_op( iter_t const & i, InstructionStream & is )
 {
 	// '||' or '&&'

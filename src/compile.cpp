@@ -301,6 +301,18 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_assignment_op( i );
 	}
+	// add/sub/mul/div/mod assignment op
+	else if( i->value.id() == parser_id( add_assignment_op_id ) ||
+			 i->value.id() == parser_id( sub_assignment_op_id ) ||
+			 i->value.id() == parser_id( mul_assignment_op_id ) ||
+			 i->value.id() == parser_id( div_assignment_op_id ) ||
+			 i->value.id() == parser_id( mod_assignment_op_id ) )
+	{
+        // either the two sides or the two sides and a semi-colon
+        assert( i->children.size() == 2 || i->children.size() == 3 );
+		walk_children( i );
+		check_op_assignment_op( i );
+	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
 	{
@@ -1075,6 +1087,36 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			walk_children( i, is );
 			gen_IL_assignment_op( i, is );
 		}
+	}
+	// add assignment op (+=)
+	else if( i->value.id() == parser_id( add_assignment_op_id ) )
+	{
+		walk_children( i, is );
+		gen_IL_add_assignment_op( i, is );
+	}
+	// sub assignment op (-=)
+	else if( i->value.id() == parser_id( sub_assignment_op_id ) )
+	{
+		walk_children( i, is );
+		gen_IL_sub_assignment_op( i, is );
+	}
+	// mul assignment op (*=)
+	else if( i->value.id() == parser_id( mul_assignment_op_id ) )
+	{
+		walk_children( i, is );
+		gen_IL_mul_assignment_op( i, is );
+	}
+	// div assignment op (/=)
+	else if( i->value.id() == parser_id( div_assignment_op_id ) )
+	{
+		walk_children( i, is );
+		gen_IL_div_assignment_op( i, is );
+	}
+	// mod assignment op (%=)
+	else if( i->value.id() == parser_id( mod_assignment_op_id ) )
+	{
+		walk_children( i, is );
+		gen_IL_mod_assignment_op( i, is );
 	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
