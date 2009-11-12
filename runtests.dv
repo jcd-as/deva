@@ -1,0 +1,69 @@
+# deva script to run all the deva lang tests
+# walks the 'tests' sub-dir looking for directories with a file called
+# 'baseline'. when found, it tries to run "dotest" in the local directory, which
+# should be a program or link to a program to run the actual test on an input
+# file called "input.dv" and comparing the results to the 'baseline' file
+
+# TODO: to this (machine int-size detection) correctly ??
+hosttype = os.getenv( "HOSTTYPE" );
+if( hosttype == "x86_64" )
+    baseline = "baseline.64";
+else
+    baseline = "baseline";
+
+home = os.getenv( "HOME" );
+init_dir = os.getcwd();
+
+failed_tests = [];
+
+dotest = "./dotest";
+
+# check for valgrind cmd line option
+valgrind = false;
+argv = os.argv();
+if( length( argv ) > 1 )
+{
+    if( argv[1] == "v" || argv[1] == "valgrind" )
+	{
+        valgrind = true;
+        dotest = "./dotest_valgrind";
+	}
+}
+
+# run 'dotest input.dv baseline' in each sub-dir
+wd = os.getcwd();
+tests = 0;
+p = [];
+p.append( os.getcwd() );
+p.append( "tests" );
+for( file in os.dirwalk( os.joinpaths( p ) ) )
+{
+    if( os.getfile( file ) == baseline )
+	{
+		root = os.getdir( file );
+        tests += 1;
+        print( "processing " + root + " ..." );
+        os.chdir( root );
+		ret = 0;
+        if( valgrind )
+            ret = os.exec( "./dotest" + " input.dv" );
+        else
+            ret = os.exec( "./dotest" + " input.dv " + baseline );
+        if( ret != 0 )
+            failed_tests.append( root );
+	}
+}
+
+os.chdir( init_dir );
+
+# re-print failures:
+if( length( failed_tests ) != 0 )
+{
+    print( "\n" + str( length( failed_tests ) ) + " FAILED tests:" );
+    for( s in failed_tests )
+	{
+        print( s );
+	}
+}
+else
+	print( "\nall tests SUCCEEDED" );

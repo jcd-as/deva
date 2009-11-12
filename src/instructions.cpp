@@ -376,29 +376,6 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// 			- identifier 'table' (variable naming a vector/map)
 	// 		- statement|compound_statement
 	// 			- call do_stuff
-	// IL:
-	// push 'table'
-	// call 'length'
-	// push 0 				<== 'index' start value
-	// start:
-	//
-	// dup 2
-	// dup 2				<== dups get the top two items (index & length) duplicated
-	// neq					<== and neq removes the first pair
-	// jmpf done 			<== if index equals length, jump to 'done'
-	//
-	// push 'table'
-	// dup 2				<== copies 'index' onto the top of the stack
-	// vec_load				<== puts next item on the stack, null if no more items
-	// push 'item'			<== stack+0 now the value, stack+1 the index
-	// swap					<== swap them for the store op
-	// store				<== store value into 'item'
-	//
-	// <statement/compound_statement IL>
-	//
-	// jmp start
-	// done:
-	// pop					<== pop index
 
 	// if there are 3 children, this is a vector look-up ( 'for( i in t )' )
 	// if there are 4 children, this is a map look-up	( 'for( key,val in t )' )
@@ -420,13 +397,19 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// get the name of the vector/map
 	if( i->children[in_op_index].value.id() != in_op_id || i->children[in_op_index].children.size() != 1 )
 		throw DevaICE( "Invalid 'in' statement in 'for' loop." );
-	string table_name = strip_symbol( string( i->children[in_op_index].children[0].value.begin(), i->children[in_op_index].children[0].value.end() ) );
 
 	generate_line_num( i, is );
 	// push the return address for the call to 'length'
 	is.push( Instruction( op_push, DevaObject( "", is.Offset() ) ) );
-	// push the vector/map
-	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
+
+	// get the vector/map on the stack
+	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index );
+	// save a copy into the magic ".table" variable
+	is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
+	is.push( Instruction( op_push, DevaObject( ".table", sym_unknown ) ) );
+	is.push( Instruction( op_swap ) );
+	is.push( Instruction( op_store ) );
+
 	// call 'length' builtin
 	is.push( Instruction( op_call, DevaObject( "length", sym_function_call ), DevaObject( "", (size_t)1 ) ) );
 	// push 0
@@ -443,8 +426,8 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the jmpf (which ends looping)
 	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1 ) ) );
-	// push 'table'
-	is.push( Instruction( op_push, DevaObject( table_name, sym_unknown ) ) );
+	// load the table
+	is.push( Instruction( op_load, DevaObject( ".table", sym_unknown ) ) );
 	// dup 1
 	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
 	if( is_map )
@@ -600,14 +583,16 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// write the current *file* offset, not instruction stream!
 		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset() ) );
 
-		// if the parent is the translation unit, a loop, or a compound_statement, the return
-		// value is not being used, emit a pop instruction to discard it
+		// if the parent is the translation unit, a loop, a condition (if), 
+		// or a compound_statement, the return value is not being used, 
+		// emit a pop instruction to discard it
 		boost::spirit::parser_id id = parent->value.id();
-		if( parent->value.id() == translation_unit_id 
+		if( id == translation_unit_id 
 			|| id == while_s_id
 			|| id == for_s_id
 			|| id == compound_statement_id 
 			|| id == func_id 
+			|| id == if_s_id 
 			// oddly, if the dot-op expression is at the global scope, there may
 			// not be a translation_unit as its parent...
 			|| id == dot_op_id )

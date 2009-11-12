@@ -403,25 +403,27 @@ defarg :
 push : null ; 
 return : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 207 ; 
+jmpf : function: '', offset = 209 ; 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 207 ; 
+jmpf : function: '', offset = 209 ; 
 push : function: '', offset = 207 ; 
 call : function_call: 'z' ; function: '', offset = 0 ; 
+pop : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 268 ; 
+jmpf : function: '', offset = 272 ; 
 enter : 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 254 ; 
-push : function: '', offset = 254 ; 
+jmpf : function: '', offset = 258 ; 
+push : function: '', offset = 256 ; 
 call : function_call: 'z' ; function: '', offset = 0 ; 
+pop : 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 store : 
 leave : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 289 ; 
-jmp : function: '', offset = 289 ; 
+jmpf : function: '', offset = 293 ; 
+jmp : function: '', offset = 293 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
 tbl_load : 

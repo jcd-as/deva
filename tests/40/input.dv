@@ -1,0 +1,43 @@
+def GetTable()
+{
+	tbl = [];
+	tbl.append( "foo" );
+	tbl.append( "bar" );
+	return tbl;
+}
+for( i in GetTable() )
+{
+	print( i );
+}
+
+tbl = [];
+tbl.append( 0 );
+tbl.append( 1 );
+tbl.append( 2 );
+for( j in tbl )
+{
+	print( j );
+}
+
+class Stuff
+{
+	def new()
+	{
+		a = [];
+		self.tbl = a;
+		self.tbl.append( "a" );
+		self.tbl.append( "b" );
+		self.tbl.append( "c" );
+		self.tbl.append( "d" );
+	}
+	def GetStuff()
+	{
+		return self.tbl;
+	}
+}
+stuff = new Stuff();
+stuff = new Stuff();
+for( k in stuff.GetStuff() )
+{
+	print( k );
+}

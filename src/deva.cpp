@@ -25,9 +25,13 @@ namespace po = boost::program_options;
 // the global scope table (used when compilation is needed, as in imports
 // and dynamic code generation)
 Scopes scopes;
+int _argc;
+char** _argv;
 
 int main( int argc, char** argv )
 {
+	_argc = argc;
+	_argv = argv;
 	try
 	{
 		// declare the command line options

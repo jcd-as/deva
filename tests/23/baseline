@@ -854,57 +854,65 @@ call : function_call: 'print' ; function: '', offset = 1 ;
 pop : 
 push : function: '', offset = 967 ; 
 push : unknown: 'l' ; 
+dup : num: '' = 0 ; 
+push : unknown: '.table' ; 
+swap : 
+store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
 push : num: '' = 0 ; 
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1122 ; 
-push : unknown: 'l' ; 
+jmpf : function: '', offset = 1153 ; 
+load : unknown: '.table' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1098 ; 
+push : function: '', offset = 1129 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1008 ; 
+jmp : function: '', offset = 1034 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : function: '', offset = 1165 ; 
+push : function: '', offset = 1196 ; 
 push : unknown: 'l' ; 
 call : function_call: 'bubble_sort' ; function: '', offset = 1 ; 
 store : 
-push : function: '', offset = 1202 ; 
+push : function: '', offset = 1233 ; 
 push : string: '' = sorted: ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
-push : function: '', offset = 1204 ; 
+push : function: '', offset = 1235 ; 
 push : unknown: 'n' ; 
+dup : num: '' = 0 ; 
+push : unknown: '.table' ; 
+swap : 
+store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
 push : num: '' = 0 ; 
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1359 ; 
-push : unknown: 'n' ; 
+jmpf : function: '', offset = 1421 ; 
+load : unknown: '.table' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1335 ; 
+push : function: '', offset = 1397 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1245 ; 
+jmp : function: '', offset = 1302 ; 
 pop : 
 pop : 
 halt : 

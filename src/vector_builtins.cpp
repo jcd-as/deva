@@ -126,7 +126,23 @@ void do_vector_append( Executor *ex )
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'append'." );
 
-	vec.vec_val->push_back( val );
+	// ref-counted types can be added as variables, simple types need to be
+	// added as values (copies)
+	DevaObject* in;
+	if( val.Type() == sym_unknown )
+	{
+		in = ex->find_symbol( val );
+		if( !in )
+			throw DevaRuntimeException( "Unknown symbol passed to vector built-in method 'append'." );
+		// ref type?
+		if( in->Type() == sym_vector || in->Type() == sym_map || 
+			in->Type() == sym_class || in->Type() == sym_instance )
+			in = &val;
+	}
+	else
+		in = &val;
+
+	vec.vec_val->push_back( *in );
 
 	// pop the return address
 	ex->stack.pop_back();

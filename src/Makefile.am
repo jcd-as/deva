@@ -1,5 +1,5 @@
 bindir=$(top_srcdir)
-CXXFLAGS =
+CXXFLAGS = -g -O1
 bin_PROGRAMS = deva devac test
 deva_SOURCES= \
 	builtins.cpp \
