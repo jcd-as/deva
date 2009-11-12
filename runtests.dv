@@ -27,6 +27,7 @@ if( length( argv ) > 1 )
 	{
         valgrind = true;
         dotest = "./dotest_valgrind";
+		print( "running tests under valgrind..." );
 	}
 }
 
@@ -46,9 +47,9 @@ for( file in os.dirwalk( os.joinpaths( p ) ) )
         os.chdir( root );
 		ret = 0;
         if( valgrind )
-            ret = os.exec( "./dotest" + " input.dv" );
+            ret = os.exec( dotest + " input.dv" );
         else
-            ret = os.exec( "./dotest" + " input.dv " + baseline );
+            ret = os.exec( dotest + " input.dv " + baseline );
         if( ret != 0 )
             failed_tests.append( root );
 	}

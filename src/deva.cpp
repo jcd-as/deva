@@ -46,13 +46,14 @@ int main( int argc, char** argv )
 			( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 			( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
 			( "input", po::value<string>( &input ), "input filename" )
+			( "options", "options to pass to the deva program" )
 			;
 		po::positional_options_description p;
-		p.add( "input", -1 );
+		p.add( "input", 1 ).add( "options", -1 );
 		po::variables_map vm;
 		try
 		{
-			po::store( po::command_line_parser( argc, argv ).options( desc ).positional( p ).run(), vm );
+			po::store( po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run(), vm );
 		}
 		catch( po::error & e )
 		{
