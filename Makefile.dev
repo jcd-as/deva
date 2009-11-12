@@ -73,7 +73,7 @@ clean:
 
 # run tests
 check:
-	./runtests
+	./deva runtests.dv
 
 include ${TEST_DEP_FILES}
 include ${DEVAC_DEP_FILES}

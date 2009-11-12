@@ -34,10 +34,7 @@ if( length( argv ) > 1 )
 # run 'dotest input.dv baseline' in each sub-dir
 wd = os.getcwd();
 tests = 0;
-p = [];
-p.append( os.getcwd() );
-p.append( "tests" );
-for( file in os.dirwalk( os.joinpaths( p ) ) )
+for( file in os.dirwalk( os.joinpaths( [ os.getcwd(), "tests"] ) ) )
 {
     if( os.getfile( file ) == baseline )
 	{

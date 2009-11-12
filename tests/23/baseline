@@ -798,61 +798,62 @@ push : unknown: 'a' ;
 return : 
 push : unknown: 'l' ; 
 new_vec: : 
-push : function: '', offset = 538 ; 
+store : 
+push : function: '', offset = 540 ; 
 push : num: '' = 2 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 581 ; 
+push : function: '', offset = 583 ; 
 push : num: '' = 1 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 624 ; 
+push : function: '', offset = 626 ; 
 push : num: '' = 4 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 667 ; 
+push : function: '', offset = 669 ; 
 push : num: '' = 3 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 710 ; 
+push : function: '', offset = 712 ; 
 push : num: '' = 6 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 753 ; 
+push : function: '', offset = 755 ; 
 push : num: '' = 5 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 796 ; 
+push : function: '', offset = 798 ; 
 push : num: '' = 8 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 839 ; 
+push : function: '', offset = 841 ; 
 push : num: '' = 7 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 882 ; 
+push : function: '', offset = 884 ; 
 push : num: '' = 10 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 925 ; 
+push : function: '', offset = 927 ; 
 push : num: '' = 9 ; 
 push : unknown: 'l' ; 
 call : function_call: 'append' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 965 ; 
+push : function: '', offset = 967 ; 
 push : string: '' = un-sorted: ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
-push : function: '', offset = 967 ; 
+push : function: '', offset = 969 ; 
 push : unknown: 'l' ; 
 dup : num: '' = 0 ; 
 push : unknown: '.table' ; 
@@ -863,32 +864,32 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1153 ; 
+jmpf : function: '', offset = 1155 ; 
 load : unknown: '.table' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1129 ; 
+push : function: '', offset = 1131 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1034 ; 
+jmp : function: '', offset = 1036 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : function: '', offset = 1196 ; 
+push : function: '', offset = 1198 ; 
 push : unknown: 'l' ; 
 call : function_call: 'bubble_sort' ; function: '', offset = 1 ; 
 store : 
-push : function: '', offset = 1233 ; 
+push : function: '', offset = 1235 ; 
 push : string: '' = sorted: ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
-push : function: '', offset = 1235 ; 
+push : function: '', offset = 1237 ; 
 push : unknown: 'n' ; 
 dup : num: '' = 0 ; 
 push : unknown: '.table' ; 
@@ -899,20 +900,20 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1421 ; 
+jmpf : function: '', offset = 1423 ; 
 load : unknown: '.table' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1397 ; 
+push : function: '', offset = 1399 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1302 ; 
+jmp : function: '', offset = 1304 ; 
 pop : 
 pop : 
 halt : 

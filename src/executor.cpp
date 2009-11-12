@@ -298,7 +298,10 @@ void Executor::FixupOffsets()
 					// or new_instances (number of args)
 					// THIS IS MISSING SOMETHING (try running all tests)
 //					if( op == op_defun || op == op_jmp || op == op_jmpf )
-					if( op != op_line_num && op != op_call && op != op_new_instance )
+					if( op != op_line_num && 
+						op != op_call && 
+						op != op_new_instance &&
+						op != op_new_vec )
 					{
 						// read a size_t to get the offset
 						size_t func_offset;
@@ -506,52 +509,51 @@ void Executor::Dup( Instruction const & inst )
 // 7 create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
 {
-	// variable to store as (name) is on top of the stack
-	DevaObject lhs = stack.back();
-	stack.pop_back();
-	// ensure it's a variable
-	if( lhs.Type() != sym_unknown )
-		throw DevaRuntimeException( "Invalid left-hand type for assignment to new map object." );
-	// create a new map object
-	DevaObject *mp = new DevaObject( lhs.name, sym_map );
-
-	// get the lhs from the symbol table
-	DevaObject* ob = find_symbol( lhs );
-	// not found? add it to the current scope
-	if( !ob )
-	{
-		current_scopes->AddObject( mp );
-	}
-	//  set its value to the rhs
-	else
-	{
-		*ob = DevaObject( lhs.name, *mp );
-	}
+	DOMap* m = new DOMap();
+	// TODO: revisit when the grammar supports map initializers
+//	if( inst.args.size() == 1 )
+//	{
+//		if( inst.args[0].Type() != sym_offset )
+//			throw DevaICE( "Invalid argument to 'op_new_vec' instruction." );
+//
+//		for( int i = 0; i < inst.args[0].func_offset; ++i )
+//		{
+//			DevaObject ob = stack.back();
+//			stack.pop_back();
+//			v->push_back( ob );
+//		}
+//	}
+	// create a new object for the map
+	DevaObject *mp = new DevaObject( "", m );
+	// add it to the current scope so that it will be properly ref-counted
+	current_scopes->AddObject( mp );
+	// put it onto the stack
+	stack.push_back( *mp );
 }
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
-	// variable to store as (name) is on top of the stack
-	DevaObject lhs = stack.back();
-	stack.pop_back();
-	// ensure it's a variable
-	if( lhs.Type() != sym_unknown )
-		throw DevaRuntimeException( "Invalid left-hand type for assignment to new vector object." );
-	// create a new vector object 
-	DevaObject *vec = new DevaObject( lhs.name, sym_vector );
+	// if there is an arg, it's an 'offset' type that has the number of items on
+	// the stack to be added to the new vector
+	DOVector* v = new DOVector();
+	if( inst.args.size() == 1 )
+	{
+		if( inst.args[0].Type() != sym_offset )
+			throw DevaICE( "Invalid argument to 'op_new_vec' instruction." );
 
-	// get the lhs from the symbol table
-	DevaObject* ob = find_symbol( lhs );
-	// not found? add it to the current scope
-	if( !ob )
-	{
-		current_scopes->AddObject( vec );
+		for( int i = 0; i < inst.args[0].func_offset; ++i )
+		{
+			DevaObject ob = stack.back();
+			stack.pop_back();
+			v->push_back( ob );
+		}
 	}
-	//  set its value to the rhs
-	else
-	{
-		*ob = DevaObject( lhs.name, *vec );
-	}
+	// create a new object for the vector
+	DevaObject *vec = new DevaObject( "", v );
+	// add it to the current scope so that it will be properly ref-counted
+	current_scopes->AddObject( vec );
+	// put it onto the stack
+	stack.push_back( *vec );
 }
 // 9 get item from vector or map
 // (can't tell at compile time what it will be)

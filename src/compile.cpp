@@ -261,7 +261,6 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( module_name_id ) )
 	{
 		// can have semi-colon
-//        assert( i->children.size() < 3 );
         assert( i->children.size() < 2 );
 		walk_children( i );
 		check_module_name( i );
@@ -282,7 +281,6 @@ void eval_node( iter_t const & i )
 	// vector construction op
 	else if( i->value.id() == parser_id( vec_op_id ) )
 	{
-        assert( i->children.size() == 0 );
 		walk_children( i );
 		check_vec_op( i );
 	}
@@ -985,13 +983,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )
 	{
-		walk_children( i, is );
+		reverse_walk_children( i, is );
 		gen_IL_map_op( i, is );
 	}
 	// vector construction op
 	else if( i->value.id() == parser_id( vec_op_id ) )
 	{
-		walk_children( i, is );
+		reverse_walk_children( i, is );
 		gen_IL_vec_op( i, is );
 	}
 	// semicolon op

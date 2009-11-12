@@ -179,8 +179,6 @@ void eval_expression( iter_t const& i )
 	// vector construction op
 	else if( i->value.id() == parser_id( vec_op_id ) )
 	{
-        assert( i->children.size() == 0 );
-
 		dumpNode( "vec_op", i, indents );
 	}
 	// semicolon op

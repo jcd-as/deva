@@ -189,14 +189,25 @@ void check_in_op( iter_t const & i )
 
 void check_map_op( iter_t const & i )
 {
-	// has no children
-	// always appears on the rhs of an assignment op
+	// TODO: anything we can do here??
 }
 
 void check_vec_op( iter_t const & i )
 {
-	// has no children
-	// always appears on the rhs of an assignment op
+	// TODO: anything we can do here??
+	for( int j = 0; j < i->children.size(); ++j )
+	{
+		if( i->children[j].value.id() == assignment_op_id ||
+			i->children[j].value.id() == add_assignment_op_id ||
+			i->children[j].value.id() == sub_assignment_op_id ||
+			i->children[j].value.id() == mul_assignment_op_id ||
+			i->children[j].value.id() == div_assignment_op_id ||
+			i->children[j].value.id() == mod_assignment_op_id )
+		{
+			NodeInfo ni = i->children[j].value.value();
+			throw DevaSemanticException( "Illegal assignment inside vector initializer", ni );
+		}
+	}
 }
 
 void check_semicolon_op( iter_t const & i )

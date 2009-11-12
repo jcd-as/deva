@@ -4,9 +4,17 @@ class foocls
 	{
 		print( "foomethod() called from foocls" );
 	}
+	def X()
+	{
+		return "X";
+	}
 }
 def foofcn()
 {
 	print( "foo.dv imported and foofcn() called!" );	
 }
 
+foo = new foocls();
+c = "c";
+a = ["a"+foo.X(), 0.0, 1];
+print ( a ) ;

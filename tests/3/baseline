@@ -20,8 +20,25 @@ parse failed!
 ===========================================================
 
 foo.bar() = [ 'duh' ];
-input.dv:2: error: Invalid statement
-parse failed!
+parsed successfully
+In eval_expression. i->value = = i->children.size() = 3
+assignment_op: =
+	In eval_expression. i->value = . i->children.size() = 2
+	dot_op: .
+		In eval_expression. i->value = foo i->children.size() = 0
+		identifier: foo
+		In eval_expression. i->value = bar i->children.size() = 1
+		identifier: bar
+			In eval_expression. i->value =  i->children.size() = 2
+			arg_list_exp: 
+				In eval_expression. i->value = ( i->children.size() = 0
+				(open|close)_paren_op: (
+				In eval_expression. i->value = ) i->children.size() = 0
+				(open|close)_paren_op: )
+	In eval_expression. i->value = 'duh' i->children.size() = 0
+	string: 'duh'
+	In eval_expression. i->value = ; i->children.size() = 0
+	semicolon_op: ;
 ===========================================================
 ===========================================================
 
@@ -736,5 +753,5 @@ dot_op: .
 	semicolon_op: ;
 ===========================================================
 total tests: 36
-tests failed: 4
+tests failed: 3
 exiting...

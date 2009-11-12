@@ -174,4 +174,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>class_decl parser was missing !end_p
 </comment></note><note priority="veryhigh" time="1257732466">can't have a table lookup on both sides of an assignment (e.g. a.b = c[&quot;d&quot;], or a[&quot;b&quot;] = c.d etc). it is explicitly disallowed because the code-gen for it was broken
 </note><note priority="veryhigh" time="1257898807">add debug frame support (stack of frames kept during execution) and debugging support
+</note><note priority="veryhigh" time="1258006939">map initializers. e.g.: a = { 0 = 'a', 1 = 'b' };
 </note></todo>

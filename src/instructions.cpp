@@ -3,7 +3,6 @@
 // created by jcs, september 14, 2009 
 
 // TODO:
-// * implement constants
 // * implement short-circuiting for logical ops ('||', '&&' )
 
 #include "instructions.h"
@@ -609,6 +608,9 @@ void gen_IL_in_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_map_op( iter_t const & i, InstructionStream & is )
 {
+	// TODO: when map initializers are added to the grammar, 
+	// change this to have an arg with the number of children
+	// (like vec_op immediately below)
 	// new map
 	generate_line_num( i, is );
 	is.push( Instruction( op_new_map ) );
@@ -618,7 +620,11 @@ void gen_IL_vec_op( iter_t const & i, InstructionStream & is )
 {
 	// new vector
 	generate_line_num( i, is );
-	is.push( Instruction( op_new_vec ) );
+	int num_children = i->children.size();
+	if( num_children > 0 )
+		is.push( Instruction( op_new_vec, DevaObject( "", (size_t)num_children ) ) );
+	else
+		is.push( Instruction( op_new_vec ) );
 }
 
 void gen_IL_semicolon_op( iter_t const & i, InstructionStream & is )
@@ -630,13 +636,8 @@ void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 {
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
 	// the stack)
-	// unless the rhs (child #2 is a map/vector op, in which case a 'new
-	// vec/map' instruction will be generated instead
-	if( i->children[1].value.id() != vec_op_id && i->children[1].value.id() != map_op_id )
-	{
-		generate_line_num( i, is );
-		is.push( Instruction( op_store ) );
-	}
+	generate_line_num( i, is );
+	is.push( Instruction( op_store ) );
 }
 
 void gen_IL_add_assignment_op( iter_t const & i, InstructionStream & is )
