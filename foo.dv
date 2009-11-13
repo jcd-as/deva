@@ -1,20 +1,17 @@
-class foocls
+class A
 {
-	def foomethod()
+	def fcn()
 	{
-		print( "foomethod() called from foocls" );
+		print( "A.fcn called" );
 	}
-	def X()
-	{
-		return "X";
-	}
-}
-def foofcn()
-{
-	print( "foo.dv imported and foofcn() called!" );	
 }
 
-foo = new foocls();
-c = "c";
-a = ["a"+foo.X(), 0.0, 1];
-print ( a ) ;
+a = new A();
+b = new A();
+
+# this does NOT work when there are TWO elements
+#m = [a, b];
+# but works fine when there is only ONE!!
+m = [a];
+
+m[0].fcn();

@@ -1730,18 +1730,15 @@ void Executor::Return( Instruction const & inst )
 		throw DevaRuntimeException( "Invalid 'return' instruction: not enough data on the stack." );
 	DevaObject ret = stack.back();
 	stack.pop_back();
-	// evaluate the return value *before* leaving this scope, and add it to the
-	// parent scope (to which we'll be returning)
+	// evaluate the return value *before* leaving this scope,
+	// and push the evaluated version, not the variable
 	if( ret.Type() == sym_unknown )
 	{
 		DevaObject* rv = find_symbol( ret );
 		if( !rv )
 			throw DevaRuntimeException( "Invalid object for return value." );
-		if( current_scopes->size() < 2 )
-			throw DevaICE( "No scope to return to!" );
-		// add this to the *parent* scope with a new ref on it
-		DevaObject *r = new DevaObject( *rv );
-		(*current_scopes)[current_scopes->size()-2]->AddObject( r );
+
+		ret = DevaObject( *rv );
 	}
 
 	// pop the return location off the top of the stack

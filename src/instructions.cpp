@@ -12,6 +12,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
+#include <sys/time.h>
 
 
 // the global scopes table
@@ -403,9 +404,23 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 
 	// get the vector/map on the stack
 	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index );
-	// save a copy into the magic ".table" variable
+	// save a copy into a magic ".table" variable
+	// create a reasonably unique name for the table object by using a static
+	// counter AND the system clock (since the static alone might not be enough
+	// in cases of dynamically generated code e.g. eval() )
+	time_t tm = time( NULL );
+	string tbl( ".table" );
+	static int count = 0;
+	char s[32] = {0};
+	sprintf( s, "%d", count++ );
+	tbl += s;
+	memset( s, 0, 32 );
+	timeval tv;
+	gettimeofday( &tv, NULL );
+	sprintf( s, "%lu.%lu", tv.tv_sec, tv.tv_usec );
+	tbl += s;
 	is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
-	is.push( Instruction( op_push, DevaObject( ".table", sym_unknown ) ) );
+	is.push( Instruction( op_push, DevaObject( tbl.c_str(), sym_unknown ) ) );
 	is.push( Instruction( op_swap ) );
 	is.push( Instruction( op_store ) );
 
@@ -426,7 +441,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// generate a place-holder op for the jmpf (which ends looping)
 	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1 ) ) );
 	// load the table
-	is.push( Instruction( op_load, DevaObject( ".table", sym_unknown ) ) );
+	is.push( Instruction( op_load, DevaObject( tbl.c_str(), sym_unknown ) ) );
 	// dup 1
 	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
 	if( is_map )

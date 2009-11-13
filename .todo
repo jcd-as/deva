@@ -172,7 +172,10 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>fixed grammar to allow any number of 'dots' (e.g. 'a.b.c.d'), but semantics and compiler limit it to 'class.module' since neither nested classes nor namespaces are currently supported
 </comment></note><note done="1257732136" priority="veryhigh" time="1257661253">parser fails to parse a fail if code precedes class definitions
 <comment>class_decl parser was missing !end_p
-</comment></note><note priority="veryhigh" time="1257732466">can't have a table lookup on both sides of an assignment (e.g. a.b = c[&quot;d&quot;], or a[&quot;b&quot;] = c.d etc). it is explicitly disallowed because the code-gen for it was broken
-</note><note priority="veryhigh" time="1257898807">add debug frame support (stack of frames kept during execution) and debugging support
+</comment></note><note done="1258070573" priority="veryhigh" time="1257732466">can't have a table lookup on both sides of an assignment (e.g. a.b = c[&quot;d&quot;], or a[&quot;b&quot;] = c.d etc). it is explicitly disallowed because the code-gen for it was broken
+<comment>the support for vector initializers fixed this
+</comment></note><note priority="veryhigh" time="1257898807">add debug frame support (stack of frames kept during execution) and debugging support
 </note><note priority="veryhigh" time="1258006939">map initializers. e.g.: a = { 0 = 'a', 1 = 'b' };
+</note><note priority="veryhigh" time="1258075722">fix tests 6 and 23: the 'for' loop fix for tables means that the .table variable (and thus the byte-code) will be different each time, as it is named with the system time in it. verifying byte code doesn't change will always fail
+</note><note priority="veryhigh" time="1258076507">vector[i].fcn() doesn't work IF there is more than one element in vector, but does work if there's only ONE
 </note></todo>

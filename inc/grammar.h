@@ -204,7 +204,8 @@ public:
 							(
 								no_node_d[ch_p( "(" )] 
 									>> exp >> no_node_d[ch_p( ")" )] 
-									>> access_node_d[compound_statement][&set_node]
+									>> statement 
+									| access_node_d[compound_statement][&set_node]
 							) 
 							| error_invalid_while
 						)
@@ -224,7 +225,8 @@ public:
 									>> !(no_node_d[ch_p( "," )] >> exp)
 								) 
 								>> in_exp >> no_node_d[ch_p( ")" )] 
-								>> access_node_d[compound_statement][&set_node]
+								>> statement 
+								| access_node_d[compound_statement][&set_node]
 						)[&exit_scope]
 						| error_invalid_for
 					)
