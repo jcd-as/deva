@@ -1,0 +1,14 @@
+class A
+{
+	def fcn()
+	{
+		print( "A.fcn called" );
+		s = ["class A instance"];
+		return s;
+	}
+}
+
+a = new A();
+
+m = [a];
+m[0].fcn();

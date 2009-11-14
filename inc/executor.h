@@ -91,7 +91,7 @@ private:
 			// global scope table) to have ONE scope, the module scope, left at
 			// destruction
 			if( size() > 1 )
-				throw DevaRuntimeException( "ScopeTable not empty." );
+				throw DevaRuntimeException( "ScopeTable not empty.\nIf your program exited normally, this indicates an internal memory leak of some kind.\nIf your program did not exit normally, this is expected." );
 			else if( size() == 1 )
 			{
 				delete back();

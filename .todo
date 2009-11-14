@@ -180,5 +180,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>fixed 'dotest_compile' to use diff with an -I regex to ignore lines with .table in them
 </comment></note><note done="1258160413" priority="veryhigh" time="1258076507">vector[i].fcn() doesn't work IF there is more than one element in vector, but does work if there's only ONE
 <comment>had to fix code-gen for 'm = [a]' which didn't gen a new_vec op AND the dot-op code-gen, which wasn't gen'ing a tbl_load for the []
-</comment></note><note priority="veryhigh" time="1258156883">change util.cpp file/path ops (and os built-ins) to use boost's filesystem library
+</comment></note><note done="1258174432" priority="veryhigh" time="1258156883">change util.cpp file/path ops (and os built-ins) to use boost's filesystem library
+<comment>
+</comment></note><note priority="veryhigh" time="1258164943">double vector indexing (e.g. 'm[0][0]') not allowed syntactically
+</note><note priority="veryhigh" time="1258164969">slice syntactic sugar ala python
 </note></todo>

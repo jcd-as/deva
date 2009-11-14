@@ -1,17 +1,22 @@
-class A
-{
-	def fcn()
-	{
-		print( "A.fcn called" );
-		s = ["class A instance"];
-		return s;
-	}
-}
+v = ["zappa", "yabbo", "xavier"];
+print( v[0].slice( 0, 1 ) );
 
-a = new A();
+#def fcn()
+#{
+#	print( "A.fcn called" );
+#	s = ["class A instance"];
+#	i = 0;
+#	while( i < s[0].length() )
+#	{
+#		c = s[0];
+#		print( c[i], " " );
+#		i += 1;
+#	}
+#	return s;
+#}
 
-#m = [a];
-#m[0].fcn();
-
-s = a.fcn()[0];
-print( s );
+# this syntax is disallowed:
+#s = a.fcn()[0];
+#m = fcn();
+#s = m[0].upper();
+#print( s );

@@ -10,7 +10,9 @@
 #include "module_os.h"
 #include "util.h"
 #include <cstdlib>
-#include <ftw.h>
+#include <boost/filesystem.hpp>
+
+using namespace boost;
 
 void do_os_exec( Executor* ex )
 {
@@ -35,7 +37,7 @@ void do_os_exec( Executor* ex )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "'command' argument to module 'os' function 'exec' must be a string." );
 
-	int ret = system( o->str_val );
+	int ret = std::system( o->str_val );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -362,18 +364,6 @@ void do_os_argv( Executor* ex )
 	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
-// static for collecting filenames during a dirwalk
-static DOVector* dw_data;
-// helper fcn for walking dirs (callback fcn for ftw() )
-int dirwalk_fcn( const char* file, const struct stat *sb, int flag )
-{
-	// is this a file?
-	if( flag == FTW_F )
-	{
-		dw_data->push_back( DevaObject( "", string( file ) ) );
-	}
-	return 0;
-}
 void do_os_dirwalk( Executor* ex )
 {
 	if( Executor::args_on_stack != 1 )
@@ -397,15 +387,28 @@ void do_os_dirwalk( Executor* ex )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "'dir' argument to module 'os' function 'dirwalk' must be a string." );
 
-	dw_data = new DOVector();
-	ftw( o->str_val, dirwalk_fcn, 4 );
-	DOVector* ret = new DOVector( *dw_data );
+	DevaObject ret;
+	DOVector* dw_data = new DOVector();
+
+	filesystem::path p( o->str_val );
+	if( !filesystem::exists( p ) )
+		ret = DevaObject( "", sym_null );
+	else
+	{
+		filesystem::recursive_directory_iterator end;
+		for( filesystem::recursive_directory_iterator i( p ); i != end; ++i )
+		{
+			if( filesystem::is_regular_file( i->status() ) )
+				dw_data->push_back( DevaObject( "", i->path().string() ) );
+		}
+		ret = DevaObject( "", dw_data );
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
 
 	// return the return value from the command
-	ex->stack.push_back( DevaObject( "", ret ) );
+	ex->stack.push_back( ret );
 }
 
 void AddOsModule( Executor & ex )

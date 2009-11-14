@@ -86,7 +86,7 @@ int main( int argc, char** argv )
 		if( in_dir[0] != '/' )
 		{
 			string cwd = get_cwd();
-			string dir = cwd + '/' + in_dir;
+			string dir = join_paths( cwd, in_dir );
 			if( chdir( dir.c_str() ) != 0 ) 
 			{
 				cout << "error: unable to change the current working directory to " << dir.c_str() << endl;
@@ -105,7 +105,7 @@ int main( int argc, char** argv )
 		// get the filename to compile/run
 		const char* input_filename = fname.c_str();
 
-		if( ext == "dv" )
+		if( ext == ".dv" )
 		{
 			if( !CompileFile( input_filename ) )
 			{

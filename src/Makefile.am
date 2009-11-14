@@ -22,7 +22,7 @@ deva_SOURCES= \
 	module_bit.cpp \
 	module_math.cpp
 deva_CPPFLAGS = -I $(top_srcdir)/inc
-deva_LDFLAGS = -g -lboost_program_options
+deva_LDFLAGS = -g -lboost_program_options -lboost_filesystem
 
 devac_SOURCES = devac.cpp symbol.cpp fileformat.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp dobject.cpp
 devac_CPPFLAGS = -I $(top_srcdir)/inc

@@ -24,6 +24,7 @@ string get_extension( string & path );
 string get_file_part( string & path );
 string get_dir_part( string & path );
 vector<string> split_path( string & path );
+string join_paths( const string & base, const string & add );
 string join_paths( vector<string> & parts );
 
 #endif // __UTIL_H__

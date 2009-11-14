@@ -7,91 +7,63 @@
 
 #include "util.h"
 #include <stdexcept>
+#include <boost/filesystem.hpp>
+
+using namespace boost;
 
 string get_cwd()
 {
-	char* cwd;
-	long maxbufsize = pathconf( cwdstr, _PC_PATH_MAX );
-	if( maxbufsize == -1 )
-		throw logic_error( "Unable to determine max path size. Unable to continue." );
-	cwd = new char[maxbufsize];
-	(void)getcwd( cwd, (size_t)maxbufsize );
-	string curdir( cwd );
-	delete [] cwd;
-	return curdir;
+	filesystem::path p = filesystem::current_path();
+	return p.string();
 }
 
 string get_extension( string & path )
 {
-	// look backwards for the last '.' and return the following part
-	size_t pos = path.rfind( extsep );
-	if( pos == string::npos )
-		throw logic_error( "Invalid file path. Unable to continue." );
-	string ret( path );
-	ret.erase( 0, pos + 1 );
-	return ret;
+	filesystem::path p( path );
+	return p.extension();
 }
 
 string get_file_part( string & path )
 {
-	// look backwards for the last '/' and return the following part
-	size_t pos = path.rfind( dirsep );
-	// no separator? assume whole thing is filename
-	if( pos == string::npos )
-		return path;
-	string ret( path );
-	ret.erase( 0, pos + 1 );
-	return ret;
+	filesystem::path p( path );
+	return p.filename();
 }
 
 string get_dir_part( string & path )
 {
-	// look backwards for the last '/' and return the preceding part
-	size_t pos = path.rfind( dirsep );
-	// no separator? assume whole thing is filename
-	if( pos == string::npos )
-		return string( "" );
-	string ret( path );
-	ret.erase( pos );
-	return ret;
+	filesystem::path p( path );
+	return p.parent_path().string();
 }
 
 vector<string> split_path( string & path )
 {
-	// parse out the parts of path given (separated by '/'s)
 	vector<string> paths;
-	// find a '/'
-	size_t old_pos = 0;
-    size_t pos = path.find( dirsep );
-    while( pos != string::npos )
-    {
-		// create a new string up to the '/'
-		string n( path, old_pos, pos - old_pos );
-		if( n[0] == dirsep )
-			n.erase( 0, 1 );
-		paths.push_back( n );
-		old_pos = pos;
-        pos = path.find( dirsep, old_pos + 1 );
-    }
-	// push the last string
-	string n( path, old_pos, path.length() - old_pos );
-	if( n[0] == dirsep )
-		n.erase( 0, 1 );
-	paths.push_back( n );
-
+	filesystem::path p( path );
+	for( filesystem::path::iterator i = p.begin(); i != p.end(); ++i )
+	{
+		// don't push slashes and dots
+		if( *i != "." && *i != "/" )
+			paths.push_back( *i );
+	}
 	return paths;
+}
+
+string join_paths( const string & base, const string & add )
+{
+	filesystem::path basepath( base );
+	filesystem::path addpath( add );
+	basepath /= addpath;
+	basepath.normalize();
+	return basepath.string();
 }
 
 string join_paths( vector<string> & parts )
 {
-	string ret;
-	for( int i = 0; i < parts.size() - 1; ++i )
+	filesystem::path retpath;
+	for( int i = 0; i < parts.size(); ++i )
 	{
-		ret += parts[i];
-		// ensure this part ends with a single dirsep ('/')
-		if( i != parts.size()-1 && ret[ret.length()-1] != dirsep )
-			ret.push_back( dirsep );
+		retpath /= filesystem::path( parts[i] );
 	}
-
-	return ret;
+	retpath.normalize();
+	return retpath.string();
 }
