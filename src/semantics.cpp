@@ -181,17 +181,9 @@ void check_module_name( iter_t const & i )
 
 void check_in_op( iter_t const & i )
 {
-	// 1 child: id
 	// TODO: any valid checking we can do?
-
-	// can't make this check, the child could be a complex expression 
-	// (such as a vector initializer etc)
-//	NodeInfo operand = i->children[0].value.value();
-//	if( operand.type != variable_type &&
-//		operand.type != string_type &&
-//		operand.type != vector_type &&
-//		operand.type != map_type )
-//		throw DevaSemanticException( "Attempting to loop over an invalid object or type", operand );
+	// (can't simply check the type of the child, it may be a complex 
+	// expression, like a vector initializer)
 }
 
 void check_map_op( iter_t const & i )

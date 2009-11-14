@@ -635,7 +635,8 @@ void gen_IL_vec_op( iter_t const & i, InstructionStream & is )
 {
 	// new vector
 	generate_line_num( i, is );
-	int num_children = i->children.size();
+	// exclude the '[' and ']' from the count of children
+	int num_children = i->children.size() - 2;
 	if( num_children > 0 )
 		is.push( Instruction( op_new_vec, DevaObject( "", (size_t)num_children ) ) );
 	else

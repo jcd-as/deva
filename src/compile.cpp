@@ -1163,12 +1163,27 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// dot_ops (vector_loads)...
 		walk_children_for_method_call( i, is );
 
-		// lhs stays the same
 		if( i->children[0].value.id() == identifier_id )
 		{
-			string lhs = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
-			generate_line_num( i->children.begin(), is );
-			is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+			// if the lhs is an identifier with a key_exp (vec/map) then generate a
+			// table load
+			if( i->children[0].children.size() > 0 && i->children[0].children[0].value.id() == key_exp_id )
+			{
+				// push the identifier
+				string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+				generate_line_num( i->children.begin(), is );
+				is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+				// push the key exp
+				walk_children( i->children[0].children.begin(), is );
+				is.push( Instruction( op_tbl_load ) );
+			}
+			// lhs stays the same
+			else
+			{
+				string lhs = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+				generate_line_num( i->children.begin(), is );
+				is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+			}
 		}
 		else
 			// don't pass 'self' (i) as parent, keep the parent the root for the

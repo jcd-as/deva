@@ -35,8 +35,14 @@ assignment_op: =
 				(open|close)_paren_op: (
 				In eval_expression. i->value = ) i->children.size() = 0
 				(open|close)_paren_op: )
-	In eval_expression. i->value = 'duh' i->children.size() = 0
-	string: 'duh'
+	In eval_expression. i->value =  i->children.size() = 3
+	vec_op: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = 'duh' i->children.size() = 0
+		string: 'duh'
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================
@@ -477,8 +483,12 @@ In eval_expression. i->value = = i->children.size() = 3
 assignment_op: =
 	In eval_expression. i->value = a i->children.size() = 0
 	identifier: a
-	In eval_expression. i->value =  i->children.size() = 0
+	In eval_expression. i->value =  i->children.size() = 2
 	vec_op: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================
@@ -517,8 +527,12 @@ assignment_op: =
 				(open|close)_paren_op: (
 				In eval_expression. i->value = ) i->children.size() = 0
 				(open|close)_paren_op: )
-	In eval_expression. i->value =  i->children.size() = 0
+	In eval_expression. i->value =  i->children.size() = 2
 	vec_op: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================
@@ -540,8 +554,12 @@ assignment_op: =
 				(open|close)_paren_op: (
 				In eval_expression. i->value = ) i->children.size() = 0
 				(open|close)_paren_op: )
-	In eval_expression. i->value =  i->children.size() = 0
+	In eval_expression. i->value =  i->children.size() = 2
 	vec_op: 
+		In eval_expression. i->value = [ i->children.size() = 0
+		(open|close)_bracket_op: [
+		In eval_expression. i->value = ] i->children.size() = 0
+		(open|close)_bracket_op: ]
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================

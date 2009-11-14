@@ -558,7 +558,7 @@ public:
 			// vector construction op
 			vec_op = 
 				access_node_d[
-				confix_p( no_node_d[ch_p( "[" )], !list_p( exp, no_node_d[comma_op] ), no_node_d[ch_p( "]" )] )
+				confix_p( open_bracket_op, !list_p( exp, no_node_d[comma_op] ), close_bracket_op )
 				][&set_node]
 				;
 

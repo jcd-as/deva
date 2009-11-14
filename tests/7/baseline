@@ -442,6 +442,8 @@ tbl_load :
 push : string: '' = d ; 
 tbl_load : 
 push : unknown: 'a' ; 
+push : unknown: 'b' ; 
+tbl_load : 
 push : string: '' = c ; 
 tbl_load : 
 push : function: '', offset = 4294967295 ; 

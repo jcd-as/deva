@@ -343,9 +343,15 @@ translation_unit:
 		In eval_expression. i->value = l i->children.size() = 0
 		in scope 0, at line: 32
 		identifier: l
-		In eval_expression. i->value =  i->children.size() = 0
+		In eval_expression. i->value =  i->children.size() = 2
 		in scope 0, at line: 32
 		vec_op: 
+			In eval_expression. i->value = [ i->children.size() = 0
+			in scope 0, at line: 32
+			(open|close)_bracket_op: [
+			In eval_expression. i->value = ] i->children.size() = 0
+			in scope 0, at line: 32
+			(open|close)_bracket_op: ]
 		In eval_expression. i->value = ; i->children.size() = 0
 		in scope 0, at line: 32
 		semicolon_op: ;
@@ -856,7 +862,7 @@ pop :
 push : function: '', offset = 969 ; 
 push : unknown: 'l' ; 
 dup : num: '' = 0 ; 
-push : unknown: '.table' ; 
+push : unknown: '.table01258159657.866533' ; 
 swap : 
 store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
@@ -864,35 +870,35 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1155 ; 
-load : unknown: '.table' ; 
+jmpf : function: '', offset = 1191 ; 
+load : unknown: '.table01258159657.866533' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1131 ; 
+push : function: '', offset = 1167 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1036 ; 
+jmp : function: '', offset = 1054 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : function: '', offset = 1198 ; 
+push : function: '', offset = 1234 ; 
 push : unknown: 'l' ; 
 call : function_call: 'bubble_sort' ; function: '', offset = 1 ; 
 store : 
-push : function: '', offset = 1235 ; 
+push : function: '', offset = 1271 ; 
 push : string: '' = sorted: ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
-push : function: '', offset = 1237 ; 
+push : function: '', offset = 1273 ; 
 push : unknown: 'n' ; 
 dup : num: '' = 0 ; 
-push : unknown: '.table' ; 
+push : unknown: '.table11258159657.866589' ; 
 swap : 
 store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
@@ -900,20 +906,20 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1423 ; 
-load : unknown: '.table' ; 
+jmpf : function: '', offset = 1495 ; 
+load : unknown: '.table11258159657.866589' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1399 ; 
+push : function: '', offset = 1471 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1304 ; 
+jmp : function: '', offset = 1358 ; 
 pop : 
 pop : 
 halt : 

@@ -3,15 +3,15 @@ class A
 	def fcn()
 	{
 		print( "A.fcn called" );
+		s = ["class A instance"];
+		return s;
 	}
 }
 
 a = new A();
-b = new A();
 
-# this does NOT work when there are TWO elements
-#m = [a, b];
-# but works fine when there is only ONE!!
-m = [a];
+#m = [a];
+#m[0].fcn();
 
-m[0].fcn();
+s = a.fcn()[0];
+print( s );
