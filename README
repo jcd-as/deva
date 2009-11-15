@@ -1,13 +1,64 @@
+THE DEVA LANGUAGE:
+
+
+INTRODUCTION:
+=============================================================================
+This package includes the source code to build the deva language compiler,
+execution engine (byte-code interpreter) and tools. Deva is written in C++ as
+a small and simple language to be embedded in C++ programs or to write
+stand-alone scripts with. It is not intended to compete with major languages
+such as Python or Ruby in the richness of its feature set and power or
+expressibility. Instead it is intended to be as small and simple as practical
+while still offering a reasonably powerful and express multi-paradigm 
+language.
+
+Deva is basically a procedural imperative language, but includes support for
+simple object-oriented and functional programming techniques.
+
+See the document 'deva-language-1.0.pdf' for details on the language.
+
+
+STATUS
+=============================================================================
+Deva is in a near-alpha state. It is basially functional (the test harness
+for the test suite is written in deva, for instance), but there are a few
+missing features and (presumably) many bugs to be found.
+
+
+PRE-REQUISITES:
+=============================================================================
+In order to build the deva language tools you will need to have the GCC 
+C++ toolset (4.3+) and Boost C++ libraries (version 1.36 or newer) installed. 
+GCC is standard on most Unix-like systems; you can find information at 
+gcc.gnu.org. Boost is available from www.boost.org if not from your operating 
+system vendor. (For instance, most Linux and BSD distributions include a 
+package manager tool to download and install packages such as g++ and Boost).
+
+I regularly build deva and run the test suites on Ubuntu Linux 9.04 and Mac
+OS X 10.6 ('Snow Leopard'). In theory it is portable to any POSIX system, 
+including cygwin on MS Windows, but I have not tried it on any other systems.
+
+Another thing to note: installing Boost may get you the multi-threaded libs,
+which are suffixed with "-mt" prior to their extensions. (e.g. 
+libboost_filesystem-mt.so). Since the deva build scripts look for the files
+without the '-mt', you'll need to create links to these files. For instance:
+
+sudo ln -s libboost_filesystem-mt.so libboost_filesystem.so
+
+This was the case with my Ubuntu Linux 9.04 installation. Installing Boost on 
+my Mac OS X installation did not need this change, however.
+
 
 INSTALLATION:
 =============================================================================
-For detailed instructions on compiling and installing, see the 'INSTALL' file.
-
 In brief, run:
 
 ./configure
 make
 make install
+
+(For detailed instructions on compiling and installing, see the 'INSTALL' 
+file).
 
 This will build the deva executables (deva and devac) and install them into the 
 base deva directory. 'devac' is a deva byte-code compiler that will compile
@@ -15,12 +66,23 @@ base deva directory. 'devac' is a deva byte-code compiler that will compile
 execution engine. It will run either compiled '.dvc' files or source files  or
 '.dv' source files (by first compiling them and then executing them).
 
+For instance, to compile and run the file 'my_code.dv', execute the following
+at the command line:
+
+<path_to_deva>/deva my_code.dv
+
+where <path_to_deva> is replaced with the actual directory that you installed 
+deva on your machine. (If you added this to your system's PATH then obviously
+you won't need to specify the directory, but the deva build/install process
+does not place deva into your path).
+
 
 DEVELOPER BUILD/INSTALLATION:
 =============================================================================
 During development it is desirable to have a simple build system that builds
 a non-optimized version of the product. To this end there is a makefile called
-'Makefile.dev' that I use for day-to-day development.
+'Makefile.dev' that I use for day-to-day development. I copy it to 'Makefile'
+and use 'make' to do a normal build and 'make check' to run the test suites.
 
 
 ADDITIONAL STEPS:
@@ -59,5 +121,6 @@ Valgrind on an optimized build the suppressions will not work and you will see
 these spurious errors. They can safely be ignored. There also seem to be
 occasional failures flagged from standard c++ library calls (such as string's
 += operator and cout's << operator used on a string object). These also are
-safe to ignore. I'm not sure why they pop up inconsistently.
+safe to ignore. I'm not sure why they pop up inconsistently. All code should
+run valgrind clean, given these caveats.
 

@@ -1,5 +1,5 @@
 bindir=$(top_srcdir)
-CXXFLAGS = -g -O1
+AM_CXXFLAGS = -fno-inline-small-functions 
 bin_PROGRAMS = deva devac test
 deva_SOURCES= \
 	builtins.cpp \
