@@ -3,5 +3,5 @@ SUBDIRS=src
 
 # run tests
 check:
-	./runtests
+	./deva runtests.dv
 

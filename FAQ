@@ -1,0 +1,22 @@
+The deva language FAQ
+
+since there aren't actually any Qs, let alone FAQs, I'm just going to make up a few...
+
+Q: Why another language?
+
+A: Good question. With the abundance of languages out there, why DID I set out to create a new one? While working on a C++ project, I wanted a small dynamic language to embed into it. I'm a big fan of Python, but Python was rather heavy-weight for what I wanted. I had looked at Lua before, and Squirrel, and while I found them interesting, neither of them fit exactly what I wanted. 
+	To be perfectly honest, in the beginning I didn't set out to actually create an entire language. I started thinking about what features I would like, and what the language would look like, and as a sort of 'just-for-fun' project I started writing a parser for it using Boost's Spirit library. Soon, however, I got carried away and 'deva' began to form into a complete, if small, language.
+
+
+Q: What are the key features/goals of deva?
+
+A: Deva is (or is intended to be!):
+	- Dynamic: Deva is a dynamic language, somewhat akin to a simplified Python. Virtually everything is evaluated at execution time rather than compile time. It is typed similarly to Python as well, which is to say that it is strongly typed internally, but types are not evaluated until they are used.
+	- C-like syntax. Where possible I kept the syntax as close to C as possible. There are some obvious deviations: deva uses "#" to start comments (because this is common in the Un*x scripting world and makes the 'shebang' line at the top of the file sensible) and uses the "def" keyword to start a function definition.
+	- Multi-paradigm. Deva is basically a procedural, imperative language, but it supports some functional programming notions (map, filter and reduce built-in functions) and simple object-oriented programming (classes and instances providing polymorphism, inheritance and data abstraction).
+	- Simple. In spite of these features, a key idea was to keep deva as simple as possible (but no simpler). As it approaches a 1.0 release deva is making it's way up to 16,000 lines of code. Of course it also uses the Boost Spirit parser library, filesystem (C++ TR1 compatible) library and program options library. Features are carefully weighed against their cost in terms of complexity before making (or not making) it into the language. This has to be decided with care however. For instance, there are two basic 'complex' data types in deva: vectors (resizable arrays) and maps (associative arrays). While it may have been simpler to have only maps, as Lua does, getting maps to perform adequately as simple arrays is difficult (the Lua team put a lot of work into one of the later versions (5?) to do exactly this). Having a vector type from the beginning made things simpler, in my opinion.
+
+
+Q: What does 'deva' mean? And how is it pronounced?
+
+A: Devas are mythical beings in Hindu and Buddhist mythology/religion. In Hinduism they are gods and angels, while in Buddhism they are similar to, but not exactly gods or angels. 'Deva' is also part of one of my middle names... It is pronounced 'day-va', not 'dee-va'.
