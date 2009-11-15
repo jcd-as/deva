@@ -6,8 +6,12 @@ if [ $# -ne 2 ] ; then
     exit
 fi
 
-# TODO: shareable path to devac
-~/src/deva/devac -r3 --debug-dump on $1 > '$$$RESULTS$$$'
+if [ -z $DEVA ] ; then
+	echo "DEVA environment variable must be set to point to the directory where 'deva' is installed"
+	exit
+fi
+
+$DEVA/devac -r3 --debug-dump on $1 > '$$$RESULTS$$$'
 
 if diff -I ^.*\.table.*$ '$$$RESULTS$$$' $2 ; then
     echo "test succeeded"

@@ -7,10 +7,13 @@ if [ $# -ne 2 ] ; then
     exit
 fi
 
-# TODO: shareable path to devac
-~/src/deva/devac $1 
-# TODO: generate filename ('input.dvc') from $1 arg
-~/src/deva/deva input.dvc > '$$$RESULTS$$$'
+if [ -z $DEVA ] ; then
+	echo "DEVA environment variable must be set to point to the directory where 'deva' is installed"
+	exit
+fi
+
+$DEVA/devac $1 
+$DEVA/deva input.dvc > '$$$RESULTS$$$'
 
 if cmp -s '$$$RESULTS$$$' $2 ; then
     echo "test succeeded"

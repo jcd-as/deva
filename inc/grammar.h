@@ -376,8 +376,8 @@ public:
 				access_node_d[
 				no_node_d[ch_p( "(" )] >> postfix_only_exp >> no_node_d[ch_p( ")" )] >> +(root_node_d[dot_op] >> postfix_only_exp)
 				| postfix_only_exp >> +(root_node_d[dot_op] >> postfix_only_exp)
-				| root_node_d[identifier] >> access_node_d[arg_list_exp][&set_node]
-				| root_node_d[identifier] >> access_node_d[key_exp][&set_node]
+				| root_node_d[identifier] >> +(access_node_d[arg_list_exp][&set_node])
+				| root_node_d[identifier] >> +(access_node_d[key_exp][&set_node])
 				| primary_exp
 				][&set_node]
 				;

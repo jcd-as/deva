@@ -579,6 +579,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 	// only need to handle function calls here
 	if( i->children[0].value.id() == arg_list_exp_id )
 	{
+		// generate the call for the initial arg list (there could be more
+		// lists chained together)
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 		int num_args = i->children[0].children.size() - 2;
 		generate_line_num( i, is );
@@ -590,18 +592,20 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			// add the call instruction with the name of the fcn to call
 			is.push( Instruction( op_call, DevaObject( name, sym_function_call ), DevaObject( "", (size_t)num_args ) ) );
 
-
 		// back-patch the return address push op
 		int ret_addr_loc = fcn_call_stack.back();
 		fcn_call_stack.pop_back();
 		// write the current *file* offset, not instruction stream!
 		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset() ) );
 
+		// if there are no more arg lists (to consume the return value of this
+		// call) AND
 		// if the parent is the translation unit, a loop, a condition (if), 
 		// or a compound_statement, the return value is not being used, 
 		// emit a pop instruction to discard it
 		boost::spirit::parser_id id = parent->value.id();
-		if( id == translation_unit_id 
+		if( (i->children.size() == 1 || i->children[1].value.id() != arg_list_exp_id )
+			&& (id == translation_unit_id 
 			|| id == while_s_id
 			|| id == for_s_id
 			|| id == compound_statement_id 
@@ -609,9 +613,49 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			|| id == if_s_id 
 			// oddly, if the dot-op expression is at the global scope, there may
 			// not be a translation_unit as its parent...
-			|| id == dot_op_id )
+			|| id == dot_op_id) )
 		{
 			is.push( Instruction( op_pop ) );
+		}
+
+		// generate the calls, back patches and (if needed)
+		// return-value-pops for any chained arg lists
+		for( int c = 1; c < i->children.size(); ++c )
+		{
+			if( i->children[c].value.id() == arg_list_exp_id )
+			{
+				int num_args = i->children[c].children.size() - 2;
+				generate_line_num( i, is );
+				// add the call instruction, passing no args to indicate it needs
+				// to pull the function off the stack
+				is.push( Instruction( op_call, DevaObject( "", (size_t)num_args ) ) );
+
+				// back-patch the return address push op
+				int ret_addr_loc = fcn_call_stack.back();
+				fcn_call_stack.pop_back();
+				// write the current *file* offset, not instruction stream!
+				is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset() ) );
+
+				// if there are no more arg lists (to consume the return value of this
+				// call) AND
+				// if the parent is the translation unit, a loop, a condition (if), 
+				// or a compound_statement, the return value is not being used, 
+				// emit a pop instruction to discard it
+				boost::spirit::parser_id id = parent->value.id();
+				if( (i->children.size() == c+1 || i->children[c+1].value.id() != arg_list_exp_id )
+					&& (id == translation_unit_id 
+					|| id == while_s_id
+					|| id == for_s_id
+					|| id == compound_statement_id 
+					|| id == func_id 
+					|| id == if_s_id 
+					// oddly, if the dot-op expression is at the global scope, there may
+					// not be a translation_unit as its parent...
+					|| id == dot_op_id) )
+				{
+					is.push( Instruction( op_pop ) );
+				}
+			}
 		}
 	}
 }

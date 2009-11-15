@@ -252,8 +252,7 @@ void eval_node( iter_t const & i )
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
-		// can have arg_list & semi-colon
-        assert( i->children.size() < 3 );
+		// can have multiple arg_lists & semi-colon
 		walk_children( i );
 		check_identifier( i );
 	}
@@ -956,10 +955,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if the first child is an arg_list_exp, it's a fcn call
 		else if( i->children[0].value.id() == arg_list_exp_id )
 		{
-			// first walk the children
-			walk_children( i, is );
+			// first walk the children, in reverse order
+			reverse_walk_children( i, is );
 
-			// then generate the IL for this node
+			// then generate the IL for this node (back-patching the return
+			// address etc.)
 			gen_IL_identifier( i, is, parent, false );
 		}
 		// if the id is followed by []'s it is either a vector or map look-up
@@ -1014,35 +1014,17 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// push the key exp
 			walk_children( i->children[0].children.begin(), is );
 			
-			// if the rhs is a new_vec or new_map op, we need to gen code for it
-			// *last*
-			// TODO: currently disallowed (the following generates bad code!)
-			if( i->children[1].value.id() == vec_op_id || i->children[1].value.id() == map_op_id )
-			{
-				NodeInfo ni = ((NodeInfo)(i->value.value()));
-				throw DevaSemanticException( "A new vector or map can only be assigned into a simple variable.", ni );
-//				// add the vector store op
-//				is.push( Instruction( op_tbl_store ) );
-//
-//				// *then* walk the rhs
-//				generate_IL_for_node( i->children.begin() + 1, is, i );
-			}
-			else
-			{
-				// walk the rhs
-				generate_IL_for_node( i->children.begin() + 1, is, i );
+			// walk the rhs
+			generate_IL_for_node( i->children.begin() + 1, is, i );
 
-				// add the vector store op
-				generate_line_num( i->children.begin()+1, is );
-				is.push( Instruction( op_tbl_store ) );
-			}
+			// add the vector store op
+			generate_line_num( i->children.begin()+1, is );
+			is.push( Instruction( op_tbl_store ) );
 		}
 		// a dot-op on the lhs also indicates a vector store instead of load, as
 		// long as it is not a function call.
 		else if ( i->children[0].value.id() == dot_op_id )
 		{
-            // TODO: validate: when the dot op IS a fcn call, etc
-
             // lhs of dot-op stays the same
             if( i->children[0].children[0].value.id() == identifier_id )
             {
@@ -1051,10 +1033,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
                 is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
             }
             else
+			{
                 // don't pass 'self' (i) as parent, keep the parent the root for the
                 // whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
                 // the parent of a)
                 generate_IL_for_node( i->children[0].children.begin(), is, parent );
+			}
 
             // turn the rhs into a string
             string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
@@ -1065,10 +1049,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
             // if the first child is an arg_list_exp, it's a fcn call
             if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
             {
-                // first walk the children
-                walk_children( i->children[0].children.begin() + 1, is );
+                // first walk the children, in reverse order
+                reverse_walk_children( i->children[0].children.begin() + 1, is );
 
-                // then generate the IL for this node
+                // then generate the IL for this node (back-patching the return
+				// address etc.)
 				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true );
             }
 

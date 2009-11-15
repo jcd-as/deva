@@ -1,1 +1,63 @@
 
+INSTALLATION:
+=============================================================================
+For detailed instructions on compiling and installing, see the 'INSTALL' file.
+
+In brief, run:
+
+./configure
+make
+make install
+
+This will build the deva executables (deva and devac) and install them into the 
+base deva directory. 'devac' is a deva byte-code compiler that will compile
+'.dv' source files into byte-code compiled '.dvc' files. 'deva' is the language
+execution engine. It will run either compiled '.dvc' files or source files  or
+'.dv' source files (by first compiling them and then executing them).
+
+
+DEVELOPER BUILD/INSTALLATION:
+=============================================================================
+During development it is desirable to have a simple build system that builds
+a non-optimized version of the product. To this end there is a makefile called
+'Makefile.dev' that I use for day-to-day development.
+
+
+ADDITIONAL STEPS:
+=============================================================================
+In order for the deva executables to locate the files they need (library 
+modules etc.) and for the test suite to run, you need to set the DEVA 
+environment variable to point to the location where you installed. For 
+example, my .bashrc contains the following line:
+
+export DEVA=/home/jcs/src/deva
+
+as /home/jcs/src/deva is the directory where I have deva installed.
+
+
+TESTS:
+=============================================================================
+To run the deva test suite you first must have the DEVA environment variable
+set, as above. Then simply run:
+
+make check
+
+This will run the entire test suite. (Note that the driver for the tests is a
+deva language file called 'runtests.dv').
+
+If you have valgrind installed, you can run the test suite under valgrind.
+From the deva directory execute:
+
+./deva runtests.dv valgrind
+
+Warning! Valgrind causes applications to run very slowly, so be prepared to 
+wait if you run the tests under it. In addition, there is a suppression file
+provided that suppresses some false-positive failures originating in the
+Boost Spirit code. However, this file is for the non-optimized developer build
+above, which means that things run even more slowly. If you run the tests under
+Valgrind on an optimized build the suppressions will not work and you will see
+these spurious errors. They can safely be ignored. There also seem to be
+occasional failures flagged from standard c++ library calls (such as string's
++= operator and cout's << operator used on a string object). These also are
+safe to ignore. I'm not sure why they pop up inconsistently.
+
