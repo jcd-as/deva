@@ -9,7 +9,7 @@ a small and simple language to be embedded in C++ programs or to write
 stand-alone scripts with. It is not intended to compete with major languages
 such as Python or Ruby in the richness of its feature set and power or
 expressibility. Instead it is intended to be as small and simple as practical
-while still offering a reasonably powerful and express multi-paradigm 
+while still offering a reasonably powerful and expressive multi-paradigm 
 language.
 
 Deva is basically a procedural imperative language, but includes support for

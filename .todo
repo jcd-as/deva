@@ -189,5 +189,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>libs are checked for now, but headers aren't (haven't gotten it to work properly)
 </comment></note><note done="1258246113" priority="veryhigh" time="1258242338">chaining function calls doesn't work (e.g. foo()(n), where foo returns a function that is then called with argument n)
 <comment>
-</comment></note><note priority="veryhigh" time="1258265918">add copyright/license notice to all source files
-</note></todo>
+</comment></note><note done="1258348597" priority="veryhigh" time="1258265918">add copyright/license notice to all source files
+<comment>
+</comment></note><note done="1258348607" priority="veryhigh" time="1258267526">language definition pdf ('deva-language-1.0.pdf')
+<comment>section on embedding un-started
+</comment></note></todo>

@@ -1,3 +1,26 @@
+// Copyright (c) 2009 Joshua C. Shepard
+// 
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 // module_math.cpp
 // built-in module 'math' for the deva language 
 // created by jcs, november 9, 2009 
@@ -610,11 +633,11 @@ void do_math_fmod( Executor* ex )
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to module 'math' function 'fmod'." );
 
-	// base is on top of the stack
+	// numerator is on top of the stack
 	DevaObject num = ex->stack.back();
 	ex->stack.pop_back();
 	
-	// exponent is next
+	// denominator is next
 	DevaObject arg = ex->stack.back();
 	ex->stack.pop_back();
 	
@@ -623,7 +646,7 @@ void do_math_fmod( Executor* ex )
 	{
 		o = ex->find_symbol( num );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'base' argument in module 'math' function 'fmod'" );
+			throw DevaRuntimeException( "Symbol not found for 'numerator' argument in module 'math' function 'fmod'" );
 	}
 	if( !o )
 		o = &num;
@@ -633,16 +656,16 @@ void do_math_fmod( Executor* ex )
 	{
 		a = ex->find_symbol( arg );
 		if( !a )
-			throw DevaRuntimeException( "Symbol not found for 'exponent' argument in module 'math' function 'fmod'" );
+			throw DevaRuntimeException( "Symbol not found for 'denominator' argument in module 'math' function 'fmod'" );
 	}
 	if( !a )
 		a = &arg;
 
 	// ensure args are numbers
 	if( o->Type() != sym_number )
-		throw DevaRuntimeException( "'base' argument to module 'math' function 'fmod' must be a number." );
+		throw DevaRuntimeException( "'numerator' argument to module 'math' function 'fmod' must be a number." );
 	if( a->Type() != sym_number )
-		throw DevaRuntimeException( "'exponent' argument to module 'math' function 'fmod' must be a number." );
+		throw DevaRuntimeException( "'denominator' argument to module 'math' function 'fmod' must be a number." );
 
 	double ret = fmod( o->num_val, a->num_val );
 

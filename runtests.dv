@@ -11,7 +11,6 @@ if( hosttype == "x86_64" )
 else
     baseline = "baseline";
 
-home = os.getenv( "HOME" );
 init_dir = os.getcwd();
 
 failed_tests = [];
