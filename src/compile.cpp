@@ -1686,7 +1686,12 @@ bool CompileFile( const char* filename, bool debug_info /*= true*/ )
 
 	// generate final IL bytecode
 	if( !GenerateByteCode( output.c_str(), inst ) )
-		return false;
+	{
+		// only returns false on failure to open the file
+		ostringstream oss;
+		oss << "Error opengin the byte-code file: " << output << " for output." << endl;
+		throw DevaRuntimeException( oss.str().c_str() );
+	}
 
 	return true;
 }

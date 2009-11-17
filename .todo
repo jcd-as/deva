@@ -1,197 +1,368 @@
-<?xml version="1.0" ?><todo version="0.1.20">	
-		<note done="1252965849" priority="veryhigh" time="1252903036">		
-			semantic checking
-				<note done="1252965684" priority="veryhigh" time="1252903146">			
-					func_decl: set id symbol type to function
-						<comment>				
-							no can do, must be done at run-time, not in semantic checking
-						</comment>			
-				</note>		
-				<note done="1252965709" priority="veryhigh" time="1252903167">			
-					const_decl: set id symbol type to const
-						<comment>				
-							no can do, must be done at run-time, not in semantic checking. did emit warning on re-def'ing a variable as const
-						</comment>			
-				</note>		
-				<note done="1252904955" priority="veryhigh" time="1252903280">			
-					for_s: loop variables need to be injected into a new scope, which is the parent of the loop (statement|compound_statement) 
-						<comment>				
-							done in grammar, not semantics
-						</comment>			
-				</note>		
-				<note done="1252904971" priority="veryhigh" time="1252903330">			
-					arg_list_decl: arguments need to be injected into a new scope, which is the parent of the function body (statement|compound_statement)
-					<comment>				
-						done in grammar, not semantics
-					</comment>			
-				</note>		
-		</note>	
-		<note done="1254025727" priority="veryhigh" time="1252903578">		
-			intermediate language: need to define the IL code, which will transform to virtual machine code
-		</note>	
-		<note done="1254025738" priority="veryhigh" time="1252903640">		
-			Virtual Machine: need to define the VM and opcodes. 
+<?xml version="1.0"?>
+<todo version="0.1.20">
+    <note priority="veryhigh" time="1252903036" done="1252965849">
+        semantic checking
+        <note priority="veryhigh" time="1252903146" done="1252965684">
+            func_decl: set id symbol type to function
+            <comment>
+                no can do, must be done at run-time, not in semantic checking
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903167" done="1252965709">
+            const_decl: set id symbol type to const
+            <comment>
+                no can do, must be done at run-time, not in semantic checking. did emit warning on re-def'ing a variable as const
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903280" done="1252904955">
+            for_s: loop variables need to be injected into a new scope, which is the parent of the loop (statement|compound_statement)
+            <comment>
+                done in grammar, not semantics
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1252903330" done="1252904971">
+            arg_list_decl: arguments need to be injected into a new scope, which is the parent of the function body (statement|compound_statement)
+            <comment>
+                done in grammar, not semantics
+            </comment>
+        </note>
+    </note>
+    <note priority="veryhigh" time="1252903578" done="1254025727">
+        intermediate language: need to define the IL code, which will transform to virtual machine code
+    </note>
+    <note priority="veryhigh" time="1252903640" done="1254025738">
+        Virtual Machine: need to define the VM and opcodes. 
 stack based, all ops pull arguments off stack
-		</note>	
-		<note done="1255025028" priority="veryhigh" time="1254025793">		
-			map and vector handling, including dot op and for loop
-		</note>	
-		<note done="1252906732" priority="high" time="1252904662">		
-			make vim syntax file for deva files
-			<comment>			
-				based off awk.vim. needs some work, but functional
-			</comment>		
-		</note>	
-		<note done="1252979519" priority="high" time="1252904695">		
-			add deva file support to my .vimrc (set cindent etc) OR filetype plugin to do this??
-		</note>	
-		<note done="1254025745" priority="high" time="1253124087">		
-			make dot operator chainable (e.g. a.b.c)
-		</note>	
-		<note done="1256161537" priority="veryhigh" time="1254025776">		
-			complete execution engine code and deva executable
-		<comment>aside from bug fixes and new features, it's done
-</comment></note>	
-		<note done="1257296068" priority="veryhigh" time="1254868797">		
-			objects/user-defined types (fields, method look-up, 'class' keyword etc)
-		<comment>done. still missing: inheritance, 'copy' built-in for classes and instances
-</comment></note>	
-		<note done="1255753655" priority="veryhigh" time="1255048474">		
-			fix the data/object/ref-counting model
-			<comment>			
-				runtime scope/symbol tbl object needs to track pointers.
+    </note>
+    <note priority="veryhigh" time="1254025776" done="1256161537">
+        complete execution engine code and deva executable
+        <comment>
+            aside from bug fixes and new features, it's done
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1254025793" done="1255025028">
+        map and vector handling, including dot op and for loop
+    </note>
+    <note priority="veryhigh" time="1254868797" done="1257296068">
+        objects/user-defined types (fields, method look-up, 'class' keyword etc)
+        <comment>
+            done. still missing: inheritance, 'copy' built-in for classes and instances
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1255048474" done="1255753655">
+        fix the data/object/ref-counting model
+        <comment>
+            runtime scope/symbol tbl object needs to track pointers.
 need ref-count and add-ref/release-ref operations on DevaObject class.
-			</comment>		
-		</note>	
-		<note done="1255656185" priority="veryhigh" time="1255237872">		
-			get bsort.dv working (bubble sort)
-		</note>	
-		<note done="1255903163" priority="high" time="1252905837">		
-			accept hex numbers (and octal and binary??)
-		<comment>0o as prefix for octal, instead of just '0', and 0b as prefix for binary
-</comment></note>	
-		<note done="1256951910" priority="high" time="1254444594">		
-			vector and string slicing (ala python)
-		<comment>
-</comment></note>	
-		<note done="1255582640" priority="high" time="1255048474">		
-			tests 6,7,22 fail on mac os x. the jmp/fcn/return offsets are all different, presumably because of the sizeof a long
-		</note>	
-		<note done="1255839736" priority="high" time="1255237571">		
-			remove Redefining symbol warning?
-		<comment>done. left code commented out with a comment asking if it could be put to some use, bue any sense... maybe only for vector/map new's and const definitions?
-</comment></note>	
-		<note done="1255632626" priority="veryhigh" time="1255582612">		
-			something with debug-info messes up back-patching of fcns. compile and run test11.dv for repro.
-		</note>	
-		<note done="1255726500" priority="veryhigh" time="1255670572">		
-			debugging info causes BAD CODE GEN. compile test 16 with debug info and run for repro case.
-		</note>	
-		<note done="1255846484" priority="high" time="1255807306">		
-			print() builtin doesn't handle escape sequences ('\t', '\n' etc)
-		<comment>actually the compiler wasn't 'unescaping' the strings
-</comment></note>	
-		<note done="1255839681" priority="veryhigh" time="1255807935">		
-			testing...
-		<comment>delete me
-</comment></note>	
-<note done="1255839706" priority="veryhigh" time="1255814228">add 'copy' built-in function to create copies of vectors and maps
-<comment>
-</comment></note><note done="1255903825" priority="high" time="1255839820">make 'const' work
-<comment>compiler rejects changes to consts (compile-time, not run-time). no instructions specific to const-ness, compile-time only information
-</comment></note><note done="1256363440" priority="veryhigh" time="1255846573">modules and 'import' keyword
-<note done="1256173525" priority="veryhigh" time="1256082030">namespace support, where each module is a namespace
-<comment>namespaces (modules) are in-place, but currently modules are only files found in the cwd (no directory or path searching support)
-</comment></note><comment>no search path yet, only loaded from local directory
-</comment></note><note priority="high" time="1255897503">printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
-</note><note done="1256161479" priority="veryhigh" time="1255897957">eval() builtin to compile code blocks at run-time
-<comment>eval() implemented. it imports the eval'd code into the current namespace/module
-</comment></note><note done="1256344247" priority="veryhigh" time="1255897996">modify 'deva' executable to compile and run if passed a .dv file instead of .dvc
-<comment>
-</comment></note><note priority="high" time="1256007195">import() builtin that replicates 'import' statement, but accepts paths/filenames instead of module names
-</note><note done="1256173450" priority="high" time="1256160412">bug: escaped quotest (\&quot;) don't work properly inside of strings
-<comment>replace() helper fcn called from unescape() was incorrectly using string::replace() (was passing the second arg as the offset into the string instead of the length of the replaced text)
-</comment></note><note done="1256363667" priority="veryhigh" time="1256184973">code gen for a.b() (function calls on dot-op rhs) so vector/map builtins can be implemented (and the basis for user-defined types)
-<note done="1256362642" priority="veryhigh" time="1256361141">the way arguments are passed needs modification to indicate HOW MANY args are being passed on the stack (another arg to the &quot;call&quot; instruction which is a 'function'/offset indicating how many args to pop off the stack)
-<comment>actually, don't need that, there is one defarg op for each argument
-</comment></note><comment>done. see test18.dv for a sample
-</comment></note><note done="1256363388" priority="veryhigh" time="1256362973">function/method arguments are passed in the REVERSE order (backwards)!!
-<comment>easy fix, reverse loop over children in gen_IL_arg_list_decl() (instructions.cpp)
-</comment></note><note done="1256530077" priority="veryhigh" time="1256363869">add support for vector and map built-ins (e.g. vec.append(n))
-<note done="1256446846" priority="veryhigh" time="1256446828">vector built-ins
-<comment>completed
-</comment></note><note done="1256530056" priority="veryhigh" time="1256446839">map built-ins
-<comment>map builtins added
-</comment></note><comment>
-</comment></note><note done="1256756297" priority="veryhigh" time="1256442335">default arguments to functions/methods. defarg instruction can have an arg to define the default value.
-<comment>done and done. now need to add support for them to builtins
-</comment></note><note priority="high" time="1256516559">on unexpected exit (exception caught) from 'deva', the scope table will complain and throw an exception saying that it isn't empty, which is true, but unhelpful since we already know there was an unexpected failure
-</note><note done="1256669946" priority="veryhigh" time="1256600502">detect when TOO MANY arguments are passed to a function/method
-<comment>added empty, trailing 'defarg' instruction with no args to act as &quot;end-of-arguments&quot; marker
-</comment></note><note done="1256623844" priority="veryhigh" time="1256621246">detect wrong number of arguments in the builtin functions (global, map and vector)
-<comment>
-</comment></note><note done="1256790201" priority="veryhigh" time="1256764666">add support for default args to all the builtins
-<comment>vector builtins mostly
-</comment></note><note done="1256843445" priority="veryhigh" time="1256793809">ScopeBuilder global (&quot;scope_bldr&quot;) is the source of 'leaks' reported by valgrind. it should be made a pointer and allocated and freed in main() (for devac and deva)
-<comment>didn't need to make it a ptr, just release all the scope ptrs it holds after compilation is done (didn't bother in devac.cpp, as the process exits when compilation is done).
-</comment></note><note done="1256847908" priority="high" time="1256843036">replace 'vector' and 'map' in the DevaObject code with typedefs so the types could be switched to more efficient types (deque &amp; hash_map, for instance) more easily
-<comment>
-</comment></note><note done="1256879594" priority="veryhigh" time="1256855245">vector builtins: map, filter and reduce (ala python equivalents)
-<comment>
-</comment></note>
-<note done="1256939782" priority="veryhigh" time="1256855256">string builtins
-	<comment>added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)</comment>
-</note>
-<note done="1257018344" priority="veryhigh" time="1256951898">BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
-<comment>
-</comment></note><note priority="veryhigh" time="1257036976">list comprehensions: syntactic sugar for the map/filter vector builtins
-</note><note done="1257397272" priority="veryhigh" time="1257048895">BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
-<comment>wasn't checking return value from CompileFile()
-</comment></note><note done="1257655312" priority="veryhigh" time="1257296151">library module for file IO
-<comment>builtins do this
-</comment></note><note done="1257303881" priority="veryhigh" time="1257302175">BUG: calling a class as a method is allowed and crashes (e.g. class Foo{}\nx = Foo();)
-<comment>actually calling ANY object as a function was allowed, as the look-up in the symbol table was never checked for its type
-</comment></note><note done="1257321274" priority="veryhigh" time="1257302741">BUG: calling a function or method with a method name (not call) as an argument results in the error &quot;Invalid return destination on stack when executing return instruction
-<comment>had to fixup tbl_load code to NOT push the self arg in this case. tricky. required adding an arg to the instruction, a boolean false, to indicate method *calls*
-</comment></note><note done="1257385995" priority="veryhigh" time="1257357749">class inheritance
-<comment>
-</comment></note><note done="1257829129" priority="veryhigh" time="1257396844">operators +=, -=, *=, /=, %=, and possibly -- and ++
-<comment>no -- or ++
-</comment></note><note done="1257454722" priority="veryhigh" time="1257403070">add support for default arguments to constructors ('new' methods)
-<comment>
-</comment></note><note done="1257640380" priority="veryhigh" time="1257459561">support for destructors in instance objects
-<comment>no. cannot support deterministic destruction and reference-counted objects. complicates things too much
-</comment></note><note done="1257747755" priority="veryhigh" time="1257460226">complete string built-ins (upper, lower, is_a_xxx, etc)
-<comment>whew. lots of string fcns
-</comment></note><note done="1257819688" priority="veryhigh" time="1257460252">math built-ins (incl. bitwise op fcns)
-<comment>
-</comment></note><note priority="veryhigh" time="1257539732">need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
-</note><note priority="high" time="1257647228">constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect until ANOTHER object is created!
-</note><note done="1257655212" priority="veryhigh" time="1257647330">classes from imported modules are not accessible (via &quot;new class.module()&quot;) because the syntax is not allowed in the grammar
-<comment>fixed grammar to allow any number of 'dots' (e.g. 'a.b.c.d'), but semantics and compiler limit it to 'class.module' since neither nested classes nor namespaces are currently supported
-</comment></note><note done="1257732136" priority="veryhigh" time="1257661253">parser fails to parse a fail if code precedes class definitions
-<comment>class_decl parser was missing !end_p
-</comment></note><note done="1258070573" priority="veryhigh" time="1257732466">can't have a table lookup on both sides of an assignment (e.g. a.b = c[&quot;d&quot;], or a[&quot;b&quot;] = c.d etc). it is explicitly disallowed because the code-gen for it was broken
-<comment>the support for vector initializers fixed this
-</comment></note><note priority="veryhigh" time="1257898807">add debug frame support (stack of frames kept during execution) and debugging support
-</note><note priority="veryhigh" time="1258006939">map initializers. e.g.: a = { 0 = 'a', 1 = 'b' };
-</note><note done="1258160339" priority="veryhigh" time="1258075722">fix tests 6 and 23: the 'for' loop fix for tables means that the .table variable (and thus the byte-code) will be different each time, as it is named with the system time in it. verifying byte code doesn't change will always fail
-<comment>fixed 'dotest_compile' to use diff with an -I regex to ignore lines with .table in them
-</comment></note><note done="1258160413" priority="veryhigh" time="1258076507">vector[i].fcn() doesn't work IF there is more than one element in vector, but does work if there's only ONE
-<comment>had to fix code-gen for 'm = [a]' which didn't gen a new_vec op AND the dot-op code-gen, which wasn't gen'ing a tbl_load for the []
-</comment></note><note done="1258174432" priority="veryhigh" time="1258156883">change util.cpp file/path ops (and os built-ins) to use boost's filesystem library
-<comment>
-</comment></note><note done="1258246102" priority="veryhigh" time="1258164943">double vector indexing (e.g. 'm[0][0]') not allowed syntactically
-<comment>
-</comment></note><note priority="veryhigh" time="1258164969">slice syntactic sugar ala python
-</note><note done="1258265329" priority="high" time="1258176624">add check for boost &amp; boost libs to autotools file(s)
-<comment>libs are checked for now, but headers aren't (haven't gotten it to work properly)
-</comment></note><note done="1258246113" priority="veryhigh" time="1258242338">chaining function calls doesn't work (e.g. foo()(n), where foo returns a function that is then called with argument n)
-<comment>
-</comment></note><note done="1258348597" priority="veryhigh" time="1258265918">add copyright/license notice to all source files
-<comment>
-</comment></note><note done="1258348607" priority="veryhigh" time="1258267526">language definition pdf ('deva-language-1.0.pdf')
-<comment>section on embedding un-started
-</comment></note><note priority="veryhigh" time="1258418794">chained assignments (a=b=c) cause bad code gen
-</note><note priority="veryhigh" time="1258418826">function calls as conditionals cause bad code gen: (bogus) pop instruction is generated
-</note></todo>
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1255237872" done="1255656185">
+        get bsort.dv working (bubble sort)
+    </note>
+    <note priority="veryhigh" time="1255582612" done="1255632626">
+        something with debug-info messes up back-patching of fcns. compile and run test11.dv for repro.
+    </note>
+    <note priority="veryhigh" time="1255670572" done="1255726500">
+        debugging info causes BAD CODE GEN. compile test 16 with debug info and run for repro case.
+    </note>
+    <note priority="veryhigh" time="1255807935" done="1255839681">
+        testing...
+        <comment>
+            delete me
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1255814228" done="1255839706">
+        add 'copy' built-in function to create copies of vectors and maps
+    </note>
+    <note priority="veryhigh" time="1255846573" done="1256363440">
+        modules and 'import' keyword
+        <comment>
+            no search path yet, only loaded from local directory
+        </comment>
+        <note priority="veryhigh" time="1256082030" done="1256173525">
+            namespace support, where each module is a namespace
+            <comment>
+                namespaces (modules) are in-place, but currently modules are only files found in the cwd (no directory or path searching support)
+            </comment>
+        </note>
+    </note>
+    <note priority="veryhigh" time="1255897957" done="1256161479">
+        eval() builtin to compile code blocks at run-time
+        <comment>
+            eval() implemented. it imports the eval'd code into the current namespace/module
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1255897996" done="1256344247">
+        modify 'deva' executable to compile and run if passed a .dv file instead of .dvc
+    </note>
+    <note priority="veryhigh" time="1256184973" done="1256363667">
+        code gen for a.b() (function calls on dot-op rhs) so vector/map builtins can be implemented (and the basis for user-defined types)
+        <comment>
+            done. see test18.dv for a sample
+        </comment>
+        <note priority="veryhigh" time="1256361141" done="1256362642">
+            the way arguments are passed needs modification to indicate HOW MANY args are being passed on the stack (another arg to the quot;callquot; instruction which is a 'function'/offset indicating how many args to pop off the stack)
+            <comment>
+                actually, don't need that, there is one defarg op for each argument
+            </comment>
+        </note>
+    </note>
+    <note priority="veryhigh" time="1256362973" done="1256363388">
+        function/method arguments are passed in the REVERSE order (backwards)!!
+        <comment>
+            easy fix, reverse loop over children in gen_IL_arg_list_decl() (instructions.cpp)
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256363869" done="1256530077">
+        add support for vector and map built-ins (e.g. vec.append(n))
+        <note priority="veryhigh" time="1256446828" done="1256446846">
+            vector built-ins
+            <comment>
+                completed
+            </comment>
+        </note>
+        <note priority="veryhigh" time="1256446839" done="1256530056">
+            map built-ins
+            <comment>
+                map builtins added
+            </comment>
+        </note>
+    </note>
+    <note priority="veryhigh" time="1256442335" done="1256756297">
+        default arguments to functions/methods. defarg instruction can have an arg to define the default value.
+        <comment>
+            done and done. now need to add support for them to builtins
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256600502" done="1256669946">
+        detect when TOO MANY arguments are passed to a function/method
+        <comment>
+            added empty, trailing 'defarg' instruction with no args to act as quot;end-of-argumentsquot; marker
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256621246" done="1256623844">
+        detect wrong number of arguments in the builtin functions (global, map and vector)
+    </note>
+    <note priority="veryhigh" time="1256764666" done="1256790201">
+        add support for default args to all the builtins
+        <comment>
+            vector builtins mostly
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256793809" done="1256843445">
+        ScopeBuilder global (quot;scope_bldrquot;) is the source of 'leaks' reported by valgrind. it should be made a pointer and allocated and freed in main() (for devac and deva)
+        <comment>
+            didn't need to make it a ptr, just release all the scope ptrs it holds after compilation is done (didn't bother in devac.cpp, as the process exits when compilation is done).
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256855245" done="1256879594">
+        vector builtins: map, filter and reduce (ala python equivalents)
+    </note>
+    <note priority="veryhigh" time="1256855256" done="1256939782">
+        string builtins
+        <comment>
+            added all vector equivalents that made sense. should examine python's string builtins for additional ideas. (and a 'slice' or substr method would make sense)
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1256951898" done="1257018344">
+        BUG: adding a new vector with a name that already exists does NOT override the name to point at the vector (it remains pointing at whatever it used to point at)!
+    </note>
+    <note priority="veryhigh" time="1257048895" done="1257397272">
+        BUG: when parsing fails deva continues to try and read the .dvc file (and if an old one exists, will execute it) instead of bailing out. (devac correctly bails out, of course)
+        <comment>
+            wasn't checking return value from CompileFile()
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257296151" done="1257655312">
+        library module for file IO
+        <comment>
+            builtins do this
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257302175" done="1257303881">
+        BUG: calling a class as a method is allowed and crashes (e.g. class Foo{}\nx = Foo();)
+        <comment>
+            actually calling ANY object as a function was allowed, as the look-up in the symbol table was never checked for its type
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257302741" done="1257321274">
+        BUG: calling a function or method with a method name (not call) as an argument results in the error quot;Invalid return destination on stack when executing return instruction
+        <comment>
+            had to fixup tbl_load code to NOT push the self arg in this case. tricky. required adding an arg to the instruction, a boolean false, to indicate method *calls*
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257357749" done="1257385995">
+        class inheritance
+    </note>
+    <note priority="veryhigh" time="1257396844" done="1257829129">
+        operators +=, -=, *=, /=, %=, and possibly -- and ++
+        <comment>
+            no -- or ++
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257403070" done="1257454722">
+        add support for default arguments to constructors ('new' methods)
+    </note>
+    <note priority="veryhigh" time="1257459561" done="1257640380">
+        support for destructors in instance objects
+        <comment>
+            no. cannot support deterministic destruction and reference-counted objects. complicates things too much
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257460226" done="1257747755">
+        complete string built-ins (upper, lower, is_a_xxx, etc)
+        <comment>
+            whew. lots of string fcns
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257460252" done="1257819688">
+        math built-ins (incl. bitwise op fcns)
+    </note>
+    <note priority="veryhigh" time="1257647330" done="1257655212">
+        classes from imported modules are not accessible (via quot;new class.module()quot;) because the syntax is not allowed in the grammar
+        <comment>
+            fixed grammar to allow any number of 'dots' (e.g. 'a.b.c.d'), but semantics and compiler limit it to 'class.module' since neither nested classes nor namespaces are currently supported
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257661253" done="1257732136">
+        parser fails to parse a fail if code precedes class definitions
+        <comment>
+            class_decl parser was missing !end_p
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257732466" done="1258070573">
+        can't have a table lookup on both sides of an assignment (e.g. a.b = c[quot;dquot;], or a[quot;bquot;] = c.d etc). it is explicitly disallowed because the code-gen for it was broken
+        <comment>
+            the support for vector initializers fixed this
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1258075722" done="1258160339">
+        fix tests 6 and 23: the 'for' loop fix for tables means that the .table variable (and thus the byte-code) will be different each time, as it is named with the system time in it. verifying byte code doesn't change will always fail
+        <comment>
+            fixed 'dotest_compile' to use diff with an -I regex to ignore lines with .table in them
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1258076507" done="1258160413">
+        vector[i].fcn() doesn't work IF there is more than one element in vector, but does work if there's only ONE
+        <comment>
+            had to fix code-gen for 'm = [a]' which didn't gen a new_vec op AND the dot-op code-gen, which wasn't gen'ing a tbl_load for the []
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1258156883" done="1258174432">
+        change util.cpp file/path ops (and os built-ins) to use boost's filesystem library
+    </note>
+    <note priority="veryhigh" time="1258164943" done="1258246102">
+        double vector indexing (e.g. 'm[0][0]') not allowed syntactically
+    </note>
+    <note priority="veryhigh" time="1258242338" done="1258246113">
+        chaining function calls doesn't work (e.g. foo()(n), where foo returns a function that is then called with argument n)
+    </note>
+    <note priority="veryhigh" time="1258265918" done="1258348597">
+        add copyright/license notice to all source files
+    </note>
+    <note priority="veryhigh" time="1258267526" done="1258348607">
+        language definition pdf ('deva-language-1.0.pdf')
+        <comment>
+            section on embedding un-started
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1258418826" done="1258441314">
+        function calls as conditionals cause bad code gen: (bogus) pop instruction is generated
+        <comment>
+            added parameter to IL gen'ing function to track which child the node is (conditionals are the first children) and code to the gen_IL_identifier function to check this when deciding whether to add the pop instruction or not
+        </comment>
+    </note>
+    <note priority="high" time="1252904662" done="1252906732">
+        make vim syntax file for deva files
+        <comment>
+            based off awk.vim. needs some work, but functional
+        </comment>
+    </note>
+    <note priority="high" time="1252904695" done="1252979519">
+        add deva file support to my .vimrc (set cindent etc) OR filetype plugin to do this??
+    </note>
+    <note priority="high" time="1252905837" done="1255903163">
+        accept hex numbers (and octal and binary??)
+        <comment>
+            0o as prefix for octal, instead of just '0', and 0b as prefix for binary
+        </comment>
+    </note>
+    <note priority="high" time="1253124087" done="1254025745">
+        make dot operator chainable (e.g. a.b.c)
+    </note>
+    <note priority="high" time="1254444594" done="1256951910">
+        vector and string slicing (ala python)
+    </note>
+    <note priority="high" time="1255048474" done="1255582640">
+        tests 6,7,22 fail on mac os x. the jmp/fcn/return offsets are all different, presumably because of the sizeof a long
+    </note>
+    <note priority="high" time="1255237571" done="1255839736">
+        remove Redefining symbol warning?
+        <comment>
+            done. left code commented out with a comment asking if it could be put to some use, bue any sense... maybe only for vector/map new's and const definitions?
+        </comment>
+    </note>
+    <note priority="high" time="1255807306" done="1255846484">
+        print() builtin doesn't handle escape sequences ('\t', '\n' etc)
+        <comment>
+            actually the compiler wasn't 'unescaping' the strings
+        </comment>
+    </note>
+    <note priority="high" time="1255839820" done="1255903825">
+        make 'const' work
+        <comment>
+            compiler rejects changes to consts (compile-time, not run-time). no instructions specific to const-ness, compile-time only information
+        </comment>
+    </note>
+    <note priority="high" time="1256160412" done="1256173450">
+        bug: escaped quotest (\quot;) don't work properly inside of strings
+        <comment>
+            replace() helper fcn called from unescape() was incorrectly using string::replace() (was passing the second arg as the offset into the string instead of the length of the replaced text)
+        </comment>
+    </note>
+    <note priority="high" time="1256843036" done="1256847908">
+        replace 'vector' and 'map' in the DevaObject code with typedefs so the types could be switched to more efficient types (deque &amp; hash_map, for instance) more easily
+    </note>
+    <note priority="high" time="1258176624" done="1258265329">
+        add check for boost &amp; boost libs to autotools file(s)
+        <comment>
+            libs are checked for now, but headers aren't (haven't gotten it to work properly)
+        </comment>
+    </note>
+    <note priority="veryhigh" time="1257036976">
+        list comprehensions: syntactic sugar for the map/filter vector builtins
+    </note>
+    <note priority="veryhigh" time="1257539732">
+        need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
+    </note>
+    <note priority="veryhigh" time="1257898807">
+        add debug frame support (stack of frames kept during execution) and debugging support
+    </note>
+    <note priority="veryhigh" time="1258006939">
+        map initializers. e.g.: a = { 0 = 'a', 1 = 'b' };
+    </note>
+    <note priority="veryhigh" time="1258164969">
+        slice syntactic sugar ala python
+    </note>
+    <note priority="veryhigh" time="1258418794">
+        chained assignments (a=b=c) cause bad code gen
+    </note>
+    <note priority="high" time="1255897503">
+        printing maps/vectors that contain maps/vectors doesn't walk the contained maps/vectors, just prints them as 'variables (sym_unknown)
+    </note>
+    <note priority="high" time="1256007195">
+        import() builtin that replicates 'import' statement, but accepts paths/filenames instead of module names
+    </note>
+    <note priority="high" time="1256516559">
+        on unexpected exit (exception caught) from 'deva', the scope table will complain and throw an exception saying that it isn't empty, which is true, but unhelpful since we already know there was an unexpected failure
+    </note>
+    <note priority="high" time="1257647228">
+        constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect until ANOTHER object is created!
+    </note>
+    <note priority="high" time="1258441963" done="1258443577">
+        tests that check the compiler debug dump output (tests 6, 7, 22 and 23) fail randomly because of the for loop code-gen: it generates a variable with a name based on the time, which is ignored, but also sometimes has a different size, which makes all the jump locations different and the output fails to match the baseline
+        <comment>
+            formatted the magic names with padding (zeros)
+        </comment>
+    </note>
+</todo>

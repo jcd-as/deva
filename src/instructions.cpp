@@ -434,13 +434,13 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	time_t tm = time( NULL );
 	string tbl( ".table" );
 	static int count = 0;
-	char s[32] = {0};
+	char s[33] = {0};
 	sprintf( s, "%d", count++ );
 	tbl += s;
-	memset( s, 0, 32 );
+	memset( s, 0, 33 );
 	timeval tv;
 	gettimeofday( &tv, NULL );
-	sprintf( s, "%lu.%lu", tv.tv_sec, tv.tv_usec );
+	sprintf( s, "%016lu.%010lu", tv.tv_sec, tv.tv_usec );
 	tbl += s;
 	is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
 	is.push( Instruction( op_push, DevaObject( tbl.c_str(), sym_unknown ) ) );
