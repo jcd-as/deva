@@ -426,7 +426,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	is.push( Instruction( op_push, DevaObject( "", is.Offset() ) ) );
 
 	// get the vector/map on the stack
-	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index );
+	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index, 0 );
 	// save a copy into a magic ".table" variable
 	// create a reasonably unique name for the table object by using a static
 	// counter AND the system clock (since the static alone might not be enough
@@ -596,7 +596,7 @@ void gen_IL_import( iter_t const & i, InstructionStream & is )
 
 // stack of fcn returns for back-patching return addresses in
 static vector<size_t> fcn_call_stack;
-void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack )
+void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack, int child_num )
 {
 	// simple variable and map/vector lookups handled by caller,
 	// only need to handle function calls here
@@ -623,20 +623,21 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 
 		// if there are no more arg lists (to consume the return value of this
 		// call) AND
-		// if the parent is the translation unit, a loop, a condition (if), 
-		// or a compound_statement, the return value is not being used, 
+		// if the parent is the translation unit or a compound statment,
+		// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
+		// then the return value is not being used, 
 		// emit a pop instruction to discard it
 		boost::spirit::parser_id id = parent->value.id();
 		if( (i->children.size() == 1 || i->children[1].value.id() != arg_list_exp_id )
 			&& (id == translation_unit_id 
-			|| id == while_s_id
-			|| id == for_s_id
 			|| id == compound_statement_id 
-			|| id == func_id 
-			|| id == if_s_id 
 			// oddly, if the dot-op expression is at the global scope, there may
 			// not be a translation_unit as its parent...
-			|| id == dot_op_id) )
+			|| id == dot_op_id
+			|| id == func_id 
+			|| (id == while_s_id && child_num != 0)
+			|| (id == for_s_id && child_num != 0)
+			|| (id == if_s_id  && child_num != 0) ) )
 		{
 			is.push( Instruction( op_pop ) );
 		}
@@ -661,20 +662,21 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 
 				// if there are no more arg lists (to consume the return value of this
 				// call) AND
-				// if the parent is the translation unit, a loop, a condition (if), 
-				// or a compound_statement, the return value is not being used, 
+				// if the parent is the translation unit or a compound statment,
+				// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
+				// then the return value is not being used, 
 				// emit a pop instruction to discard it
 				boost::spirit::parser_id id = parent->value.id();
 				if( (i->children.size() == c+1 || i->children[c+1].value.id() != arg_list_exp_id )
 					&& (id == translation_unit_id 
-					|| id == while_s_id
-					|| id == for_s_id
 					|| id == compound_statement_id 
-					|| id == func_id 
-					|| id == if_s_id 
 					// oddly, if the dot-op expression is at the global scope, there may
 					// not be a translation_unit as its parent...
-					|| id == dot_op_id) )
+					|| id == dot_op_id
+					|| id == func_id 
+					|| (id == while_s_id && child_num != 0)
+					|| (id == for_s_id && child_num != 0)
+					|| (id == if_s_id  && child_num != 0) ) )
 				{
 					is.push( Instruction( op_pop ) );
 				}

@@ -40,8 +40,7 @@ for( file in files )
 {
     if( os.getfile( file ) == baseline )
 	{
-		path_exists = os.exists( os.joinpaths( [os.getdir( file ), baseline_sized] ) );
-        if( path_exists )
+		if( os.exists( os.joinpaths( [os.getdir( file ), baseline_sized] ) ) )
             bl = baseline_sized;
         else
             bl = baseline;
@@ -55,7 +54,6 @@ for( file in files )
             ret = os.exec( dotest + " input.dv" );
         else
             ret = os.exec( dotest + " input.dv " + bl );
-#            ret = os.exec( dotest + " input.dv " + baseline );
         if( ret != 0 )
             failed_tests.append( root );
 	}

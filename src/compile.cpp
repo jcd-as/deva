@@ -587,7 +587,7 @@ void eval_node( iter_t const & i )
 }
 
 
-void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent );
+void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num );
 extern bool debug_info_on;
 // generate IL stream
 bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info )
@@ -610,7 +610,7 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
 
         // walk the tree, generating the IL for each node
         iter_t i = info.trees.begin();
-        generate_IL_for_node( i, is, i );
+        generate_IL_for_node( i, is, i, 0 );
 
         // last node always a halt
         is.push( Instruction( op_halt ) );
@@ -633,7 +633,7 @@ void walk_children( iter_t const & i, InstructionStream & is )
 	// walk children
 	for( int c = 0; c < i->children.size(); ++c )
 	{
-		generate_IL_for_node( i->children.begin() + c, is, i );
+		generate_IL_for_node( i->children.begin() + c, is, i, c );
 	}
 }
 
@@ -643,7 +643,7 @@ void reverse_walk_children( iter_t const & i, InstructionStream & is )
 	// (for handling arguments to functions)
 	for( int c = i->children.size() - 1; c >= 0; --c )
 	{
-		generate_IL_for_node( i->children.begin() + c, is, i );
+		generate_IL_for_node( i->children.begin() + c, is, i, c );
 	}
 }
 
@@ -682,7 +682,7 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	}
 }
 
-void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent )
+void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
 {
 	///////////////////////////////////////
 	// statics used for building classes
@@ -759,10 +759,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 
 		// second child is the arg_list, process it
-		generate_IL_for_node( i->children.begin() + 1, is, i );
+		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
 		// third child is statement|compound_statement, process it
-		generate_IL_for_node( i->children.begin() + 2, is, i );
+		generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 
 		// if no return statement was generated, we need to generate one
 		bool returned = false;
@@ -811,7 +811,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		class_name = name;
 		for( ; c < i->children.size(); ++c )
 		{
-			generate_IL_for_node( i->children.begin() + c, is, i );
+			generate_IL_for_node( i->children.begin() + c, is, i, c );
 		}
 		// add all the method names created to the class object
 		for( vector<string>::iterator i = method_names.begin(); i != method_names.end(); ++i )
@@ -893,11 +893,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// pre-gen stores the start value, for the jump-to-start
 		pre_gen_IL_while_s( i, is );
 		// first child has the relational op stuff, walk it
-		generate_IL_for_node( i->children.begin(), is, i );
+		generate_IL_for_node( i->children.begin(), is, i, 0 );
 		// gen_IL adds the placeholder for the jmpf
 		gen_IL_while_s( i, is );
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is, i );
+		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 		// post-gen-IL will to the back-patching and add the jump to start
 		post_gen_IL_while_s( i, is );
 	}
@@ -910,9 +910,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// second or third child has the 'in' operator
 		// third or fourth child has the statement|compound_statement, walk it
 		if( i->children.size() == 3 )
-			generate_IL_for_node( i->children.begin() + 2, is, i );
+			generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 		else if( i->children.size() == 4 )
-			generate_IL_for_node( i->children.begin() + 3, is, i );
+			generate_IL_for_node( i->children.begin() + 3, is, i, 3 );
 		else
 			throw DevaSemanticException( "invalid for loop", i->value.value() );
 
@@ -923,11 +923,11 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	else if( i->value.id() == parser_id( if_s_id ) )
 	{
 		// first child has the conditional, walk it
-		generate_IL_for_node( i->children.begin(), is, i );
+		generate_IL_for_node( i->children.begin(), is, i, 0 );
 		// generate the jump-placeholder
 		pre_gen_IL_if_s( i, is );
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is, i );
+		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
 		// if there's no 'else' clause
 		// (third child, if any, has the else clause)
@@ -947,7 +947,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			gen_IL_if_s( i, is );
 
 			// ...then walk the children (statement|compound_statement)
-			generate_IL_for_node( i->children.begin() + 2, is, i );
+			generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 
 			// ...and then back-patch the 'else' jump to jump to here
 			gen_IL_else_s( i, is );
@@ -958,7 +958,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// always a child of an 'if', which handles this, see above
 		// so just walk the children
-		generate_IL_for_node( i->children.begin(), is, i );
+		generate_IL_for_node( i->children.begin(), is, i, 0 );
 	}
 	// import_statement_s
 	else if( i->value.id() == parser_id( import_statement_id ) )
@@ -983,7 +983,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// then generate the IL for this node (back-patching the return
 			// address etc.)
-			gen_IL_identifier( i, is, parent, false );
+			gen_IL_identifier( i, is, parent, false, child_num );
 		}
 		// if the id is followed by []'s it is either a vector or map look-up
 		else if( i->children[0].value.id() == key_exp_id )
@@ -1038,7 +1038,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			walk_children( i->children[0].children.begin(), is );
 			
 			// walk the rhs
-			generate_IL_for_node( i->children.begin() + 1, is, i );
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
 			// add the vector store op
 			generate_line_num( i->children.begin()+1, is );
@@ -1060,7 +1060,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
                 // don't pass 'self' (i) as parent, keep the parent the root for the
                 // whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
                 // the parent of a)
-                generate_IL_for_node( i->children[0].children.begin(), is, parent );
+                generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
 			}
 
             // turn the rhs into a string
@@ -1077,12 +1077,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
                 // then generate the IL for this node (back-patching the return
 				// address etc.)
-				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true );
+				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num );
             }
 
             // rhs of assignment op
             // walk the rhs
-            generate_IL_for_node( i->children.begin() + 1, is, i );
+            generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
             // add the table store op
 			generate_line_num( i->children.begin(), is );
@@ -1197,7 +1197,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// don't pass 'self' (i) as parent, keep the parent the root for the
 			// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
 			// the parent of a)
-			generate_IL_for_node( i->children.begin(), is, parent );
+			generate_IL_for_node( i->children.begin(), is, parent, 0 );
 
 		// turn the rhs into a string
 		string rhs = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
@@ -1216,7 +1216,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// the jump...
 			// so just generate the IL for this node, which will back-patch the
 			// jump placeholder
-			gen_IL_identifier( i->children.begin() + 1, is, parent, true );
+			gen_IL_identifier( i->children.begin() + 1, is, parent, true, child_num );
 		}
 		else
 			// this generates a tbl_load instruction

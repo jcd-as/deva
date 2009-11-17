@@ -209,9 +209,9 @@ bool Executor::evaluate_object_as_boolean( DevaObject & o )
 	case sym_number:
 		// TODO: use epsilon diff for comparing floating point numbers
 		if( o.num_val != 0 )
-			return false;
-		else
 			return true;
+		else
+			return false;
 	case sym_boolean:
 		return o.bool_val;
 	case sym_string:
