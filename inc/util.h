@@ -46,6 +46,7 @@ string get_cwd();
 string get_extension( string & path );
 string get_file_part( string & path );
 string get_dir_part( string & path );
+bool exists( string & path );
 vector<string> split_path( string & path );
 string join_paths( const string & base, const string & add );
 string join_paths( vector<string> & parts );

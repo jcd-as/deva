@@ -4,12 +4,14 @@
 # should be a program or link to a program to run the actual test on an input
 # file called "input.dv" and comparing the results to the 'baseline' file
 
+baseline = "baseline";
+
 # TODO: to this (machine int-size detection) correctly ??
 hosttype = os.getenv( "HOSTTYPE" );
 if( hosttype == "x86_64" )
-    baseline = "baseline.64";
+    baseline_sized = "baseline.64";
 else
-    baseline = "baseline";
+	baseline_sized = baseline;
 
 init_dir = os.getcwd();
 
@@ -33,10 +35,17 @@ if( length( argv ) > 1 )
 # run 'dotest input.dv baseline' in each sub-dir
 wd = os.getcwd();
 tests = 0;
-for( file in os.dirwalk( os.joinpaths( [ os.getcwd(), "tests"] ) ) )
+files = os.dirwalk( os.joinpaths( [ os.getcwd(), "tests"] ) );
+for( file in files )
 {
     if( os.getfile( file ) == baseline )
 	{
+		path_exists = os.exists( os.joinpaths( [os.getdir( file ), baseline_sized] ) );
+        if( path_exists )
+            bl = baseline_sized;
+        else
+            bl = baseline;
+
 		root = os.getdir( file );
         tests += 1;
         print( "processing " + root + " ..." );
@@ -45,7 +54,8 @@ for( file in os.dirwalk( os.joinpaths( [ os.getcwd(), "tests"] ) ) )
         if( valgrind )
             ret = os.exec( dotest + " input.dv" );
         else
-            ret = os.exec( dotest + " input.dv " + baseline );
+            ret = os.exec( dotest + " input.dv " + bl );
+#            ret = os.exec( dotest + " input.dv " + baseline );
         if( ret != 0 )
             failed_tests.append( root );
 	}

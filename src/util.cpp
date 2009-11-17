@@ -58,6 +58,12 @@ string get_dir_part( string & path )
 	return p.parent_path().string();
 }
 
+bool exists( string & path )
+{
+	filesystem::path p( path );
+	return filesystem::exists( p );
+}
+
 vector<string> split_path( string & path )
 {
 	vector<string> paths;

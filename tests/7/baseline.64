@@ -403,25 +403,27 @@ defarg :
 push : null ; 
 return : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 251 ; 
+jmpf : function: '', offset = 253 ; 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 251 ; 
+jmpf : function: '', offset = 253 ; 
 push : function: '', offset = 251 ; 
 call : function_call: 'z' ; function: '', offset = 0 ; 
+pop : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 328 ; 
+jmpf : function: '', offset = 332 ; 
 enter : 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 314 ; 
-push : function: '', offset = 314 ; 
+jmpf : function: '', offset = 318 ; 
+push : function: '', offset = 316 ; 
 call : function_call: 'z' ; function: '', offset = 0 ; 
+pop : 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 store : 
 leave : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 357 ; 
-jmp : function: '', offset = 357 ; 
+jmpf : function: '', offset = 361 ; 
+jmp : function: '', offset = 361 ; 
 push : unknown: 'a' ; 
 push : string: '' = b ; 
 tbl_load : 
@@ -440,6 +442,8 @@ tbl_load :
 push : string: '' = d ; 
 tbl_load : 
 push : unknown: 'a' ; 
+push : unknown: 'b' ; 
+tbl_load : 
 push : string: '' = c ; 
 tbl_load : 
 push : function: '', offset = 18446744073709551615 ; 

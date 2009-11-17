@@ -1,5 +1,4 @@
-<?xml version="1.0" ?>
-<todo version="0.1.20">	
+<?xml version="1.0" ?><todo version="0.1.20">	
 		<note done="1252965849" priority="veryhigh" time="1252903036">		
 			semantic checking
 				<note done="1252965684" priority="veryhigh" time="1252903146">			
@@ -193,4 +192,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1258348607" priority="veryhigh" time="1258267526">language definition pdf ('deva-language-1.0.pdf')
 <comment>section on embedding un-started
-</comment></note></todo>
+</comment></note><note priority="veryhigh" time="1258418794">chained assignments (a=b=c) cause bad code gen
+</note><note priority="veryhigh" time="1258418826">function calls as conditionals cause bad code gen: (bogus) pop instruction is generated
+</note></todo>

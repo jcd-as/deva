@@ -26,8 +26,7 @@
 // created by jcs, november 6, 2009 
 
 // TODO:
-// * dirwalk (dir walk)
-// * putenv(?), remove, rename
+// * remove, rename
 
 
 #include "module_os.h"
@@ -36,6 +35,8 @@
 #include <boost/filesystem.hpp>
 
 using namespace boost;
+
+extern char** environ;
 
 void do_os_exec( Executor* ex )
 {
@@ -191,7 +192,8 @@ void do_os_joinpaths( Executor* ex )
 		if( s->Type() != sym_string )
 			throw DevaRuntimeException( "'paths' argument to module 'os' function 'joinpaths' must be a vector containing only strings." );
 
-		v.push_back( o->vec_val->at( i ).str_val );
+//		v.push_back( o->vec_val->at( i ).str_val );
+		v.push_back( s->str_val );
 	}
 	string ret = join_paths( v );
 
@@ -300,6 +302,40 @@ void do_os_getext( Executor* ex )
 	// return value
 	ex->stack.push_back( DevaObject( "", ret ) );
 }
+
+void do_os_exists( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'os' function 'exists'." );
+
+	// path is on top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'path' argument in module 'os' function 'exists'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure path is a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "'path' argument to module 'os' function 'exists' must be a string." );
+
+	string path( o->str_val );
+	bool ret = exists( path );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return value
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
 
 void do_os_environ( Executor* ex )
 {
@@ -445,6 +481,7 @@ void AddOsModule( Executor & ex )
 	fcns.insert( make_pair( string( "getdir@os" ), do_os_getdir ) );
 	fcns.insert( make_pair( string( "getfile@os" ), do_os_getfile ) );
 	fcns.insert( make_pair( string( "getext@os" ), do_os_getext ) );
+	fcns.insert( make_pair( string( "exists@os" ), do_os_exists ) );
 	fcns.insert( make_pair( string( "environ@os" ), do_os_environ ) );
 	fcns.insert( make_pair( string( "getenv@os" ), do_os_getenv ) );
 	fcns.insert( make_pair( string( "argv@os" ), do_os_argv ) );
