@@ -682,6 +682,46 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	}
 }
 
+// walk the chained assignment and generate code
+void walk_children_for_chained_assignment( iter_t const & i, InstructionStream & is )
+{
+	static int depth = 0;
+	static int max_depth = 0;
+
+	// if the lhs is an assignment op, walk it
+	if( i->children[0].value.id() == assignment_op_id )
+	{
+		++depth; ++max_depth;
+		// lhs
+		walk_children_for_chained_assignment( i->children.begin(), is );
+		// rhs
+		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+		// no dup op for the first time through
+		if( depth > 1 )
+			is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
+		--depth;
+	}
+
+	else
+	{
+		++depth; ++max_depth;
+		// lhs not an assign. op, gen code for the children
+		walk_children( i, is );
+		is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
+		--depth;
+	}
+
+	// if we're exiting the recursion
+	if( depth == 0 && max_depth != 0 )
+	{
+		for( int n = 0; n < max_depth; ++n )
+			is.push( Instruction( op_store ) );
+
+		// reset the max_depth
+		max_depth = 0;
+	}
+}
+
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
 {
 	///////////////////////////////////////
@@ -1024,10 +1064,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// assignment op
 	else if( i->value.id() == parser_id( assignment_op_id ) )
 	{
+		// if the lhs is another assignment op, we need to walk the chain
+		if( i->children[0].value.id() == assignment_op_id )
+		{
+			walk_children_for_chained_assignment( i, is );
+		}
         // either the two sides or the two sides and a semi-colon
 		// if the lhs is an identifier with a key_exp (vec/map) then generate a
 		// vector store
-		if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
+		else if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
 			 i->children[0].children[0].value.id() == key_exp_id )
 		{
 			// push the identifier

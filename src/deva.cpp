@@ -125,14 +125,11 @@ int main( int argc, char** argv )
 			}
 		}
 
-		// get the filename to compile/run
-		const char* input_filename = fname.c_str();
-
 		if( ext == ".dv" )
 		{
-			if( !CompileFile( input_filename ) )
+			if( !CompileFile( fname.c_str() ) )
 			{
-				cout << "Error compiling " << input_filename << endl;
+				cout << "Error compiling " << fname << endl;
 				return -1;
 			}
 			fname += "c";
@@ -159,7 +156,7 @@ int main( int argc, char** argv )
 		if( !ex.RunFile( fname.c_str() ) )
 		{
 			ex.EndGlobalScope();
-			cout << "Error executing " << input_filename << endl;
+			cout << "Error executing " << fname << endl;
 			return -1;
 		}
 		ex.EndGlobalScope();
