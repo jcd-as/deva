@@ -695,16 +695,34 @@ void walk_children_for_chained_assignment( iter_t const & i, InstructionStream &
 		// lhs
 		walk_children_for_chained_assignment( i->children.begin(), is );
 		// rhs
+		// TODO: someday non "simple types" will be allowed in chained
+		// assignments and we can do away with these checks
+		if( depth > 1 && 
+			(i->children[1].value.id() == dot_op_id ||
+		    (i->children[1].value.id() == identifier_id && i->children[1].children.size() > 0)) )
+		{
+			NodeInfo ni = ((NodeInfo)(i->value.value()));
+			throw DevaSemanticException( "Only simple types are allowed in chained assignment operators.", ni );
+		}
 		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 		// no dup op for the first time through
 		if( depth > 1 )
 			is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
 		--depth;
 	}
-
 	else
 	{
 		++depth; ++max_depth;
+		// TODO: someday non "simple types" will be allowed in chained
+		// assignments and we can do away with these checks
+		if( i->children[0].value.id() == dot_op_id ||
+		    (i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0) ||
+			i->children[1].value.id() == dot_op_id ||
+		    (i->children[1].value.id() == identifier_id && i->children[1].children.size() > 0) )
+		{
+			NodeInfo ni = ((NodeInfo)(i->value.value()));
+			throw DevaSemanticException( "Only simple types are allowed in chained assignment operators.", ni );
+		}
 		// lhs not an assign. op, gen code for the children
 		walk_children( i, is );
 		is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );

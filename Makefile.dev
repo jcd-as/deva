@@ -44,7 +44,8 @@ CXXFLAGS = -c -g -I inc
 #-O2 -fno-inline-small-functions 
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-LDFLAGS = -g -undefined dynamic_lookup
+LDFLAGS = -g
+#LDFLAGS = -g -undefined dynamic_lookup
 
 all : tags ID test devac deva
 

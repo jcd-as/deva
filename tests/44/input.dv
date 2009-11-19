@@ -1,0 +1,10 @@
+# test chained assignments
+a=b=c=d=e=1;
+print( str(a) + " " + str(b) + " " + str(c ) + " " + str( d) + " " + str(  e	) );
+m = {};
+m["a"] = "foo";
+a = b= c = d = e = m.a;
+print( str(a) + " " + str(b) + " " + str(c ) + " " + str( d) + " " + str(  e	) );
+m.a = "bar";
+a = b= c = d = e = m["a"];
+print( str(a) + " " + str(b) + " " + str(c ) + " " + str( d) + " " + str(  e	) );

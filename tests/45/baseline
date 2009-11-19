@@ -1,0 +1,2 @@
+input.dv:2: error: Only simple types are allowed in chained assignment operators.
+fatal error generating IL for input.dv
