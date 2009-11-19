@@ -22,5 +22,5 @@ AX_BOOST_FILESYSTEM
 AC_SUBST(MY_CXXFLAGS)
 AC_SUBST(MY_LDFLAGS)
 AX_CXX_CHECK_FLAG(-fno-inline-small-functions,,,export MY_CXXFLAGS=-fno-inline-small-functions,)
-AX_LD_CHECK_FLAG(-undefined dynamic_lookup,,,export MY_LDFLAGS=-undefined dynamic_lookup,)
+AX_LD_CHECK_FLAG("-undefined dynamic_lookup",,,export MY_LDFLAGS="-undefined dynamic_lookup",)
 AC_OUTPUT(src/Makefile Makefile)

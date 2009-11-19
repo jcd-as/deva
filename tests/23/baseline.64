@@ -862,7 +862,7 @@ pop :
 push : function: '', offset = 1113 ; 
 push : unknown: 'l' ; 
 dup : num: '' = 0 ; 
-push : unknown: '.table01258407676.193149' ; 
+push : unknown: '.table00000001258662923.0000987284' ; 
 swap : 
 store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
@@ -870,35 +870,35 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1359 ; 
-load : unknown: '.table01258407676.193149' ; 
+jmpf : function: '', offset = 1379 ; 
+load : unknown: '.table00000001258662923.0000987284' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1331 ; 
+push : function: '', offset = 1351 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1206 ; 
+jmp : function: '', offset = 1216 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : function: '', offset = 1410 ; 
+push : function: '', offset = 1430 ; 
 push : unknown: 'l' ; 
 call : function_call: 'bubble_sort' ; function: '', offset = 1 ; 
 store : 
-push : function: '', offset = 1455 ; 
+push : function: '', offset = 1475 ; 
 push : string: '' = sorted: ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
-push : function: '', offset = 1457 ; 
+push : function: '', offset = 1477 ; 
 push : unknown: 'n' ; 
 dup : num: '' = 0 ; 
-push : unknown: '.table11258407676.193221' ; 
+push : unknown: '.table10000001258662923.0000987313' ; 
 swap : 
 store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
@@ -906,20 +906,20 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 1703 ; 
-load : unknown: '.table11258407676.193221' ; 
+jmpf : function: '', offset = 1743 ; 
+load : unknown: '.table10000001258662923.0000987313' ; 
 dup : num: '' = 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : function: '', offset = 1675 ; 
+push : function: '', offset = 1715 ; 
 push : unknown: 'i' ; 
 call : function_call: 'print' ; function: '', offset = 1 ; 
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 1550 ; 
+jmp : function: '', offset = 1580 ; 
 pop : 
 pop : 
 halt : 
