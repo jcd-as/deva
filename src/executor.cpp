@@ -313,31 +313,20 @@ void Executor::FixupOffsets()
 					ip += sizeof( long );
 					break;
 					}
-				case sym_offset:
-					{
-					// TODO: select on which ops DO need to be fixed up, not
-					// which don't (jmp, jmpf
-					// don't fix-up line numbers or calls (number of args)
-					// or new_instances (number of args)
-					// THIS IS MISSING SOMETHING (try running all tests)
-//					if( op == op_defun || op == op_jmp || op == op_jmpf )
-					if( op != op_line_num && 
-						op != op_call && 
-						op != op_new_instance &&
-						op != op_new_vec )
+				case sym_address:
 					{
 						// read a size_t to get the offset
-						size_t func_offset;
-						memcpy( (void*)&func_offset, (char*)(ip), sizeof( size_t ) );
+						size_t sz_val;
+						memcpy( (void*)&sz_val, (char*)(ip), sizeof( size_t ) );
 						// calculate the actual address
-						size_t address = (size_t)code + func_offset;
+						size_t address = (size_t)code + sz_val;
 						// 'fix-up' the 'bytecode' with the actual address
 						size_t* p_add = (size_t*)ip;
 						*p_add = address;
-					}
+					} // fall-through to 'sym_size' for the ip increment
+				case sym_size:
 					ip += sizeof( size_t );
 					break;
-					}
 				case sym_null:
 					{
 					// skip a long
@@ -409,7 +398,7 @@ void Executor::Store( Instruction const & inst )
 	}
 	// if the rhs is an offset, it could be a function, try to get it from the
 	// symbol table
-	else if( rhs.Type() == sym_offset )
+	else if( rhs.Type() == sym_address )
 	{
 		DevaObject* ob = find_symbol( rhs );
 		// if we couldn't find it, assume it's just an offset (integral number)
@@ -440,13 +429,13 @@ void Executor::Defun( Instruction const & inst )
 	// ensure 1st arg to instruction is a function object
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid defun opcode, no arguments." );
-	if( inst.args[0].Type() != sym_offset )
+	if( inst.args[0].Type() != sym_address )
 		throw DevaICE( "Invalid defun opcode argument." );
 	// create a new entry in the local symbol table
 	// (offset to HERE (function start))
 	size_t offset = ip;
-	// also the same as: long offset = inst.args[0].func_offset + inst.args[0].Size() + 2;
-	DevaObject* fcn = new DevaObject( inst.args[0].name, offset );
+	// also the same as: long offset = inst.args[0].sz_val + inst.args[0].Size() + 2;
+	DevaObject* fcn = new DevaObject( inst.args[0].name, offset, true );
 	current_scopes->AddObject( fcn );
 	// skip the function body
 	Opcode op = PeekInstr();
@@ -536,10 +525,10 @@ void Executor::New_map( Instruction const & inst )
 	// TODO: revisit when the grammar supports map initializers
 //	if( inst.args.size() == 1 )
 //	{
-//		if( inst.args[0].Type() != sym_offset )
-//			throw DevaICE( "Invalid argument to 'op_new_vec' instruction." );
+//		if( inst.args[0].Type() != sym_size )
+//			throw DevaICE( "Invalid argument to 'op_new_map' instruction." );
 //
-//		for( int i = 0; i < inst.args[0].func_offset; ++i )
+//		for( int i = 0; i < inst.args[0].sz_val; ++i )
 //		{
 //			DevaObject ob = stack.back();
 //			stack.pop_back();
@@ -556,15 +545,15 @@ void Executor::New_map( Instruction const & inst )
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
-	// if there is an arg, it's an 'offset' type that has the number of items on
+	// if there is an arg, it's a 'size' type that has the number of items on
 	// the stack to be added to the new vector
 	DOVector* v = new DOVector();
 	if( inst.args.size() == 1 )
 	{
-		if( inst.args[0].Type() != sym_offset )
+		if( inst.args[0].Type() != sym_size )
 			throw DevaICE( "Invalid argument to 'op_new_vec' instruction." );
 
-		for( int i = 0; i < inst.args[0].func_offset; ++i )
+		for( int i = 0; i < inst.args[0].sz_val; ++i )
 		{
 			DevaObject ob = stack.back();
 			stack.pop_back();
@@ -737,7 +726,7 @@ void Executor::Tbl_load( Instruction const & inst )
 		{
 			// built-in method call
 			// top of stack contains key (fcn name as string)
-			// next-to-top contains value (fcn as sym_offset)
+			// next-to-top contains value (fcn as sym_address)
 			string key( "vector_");
 		   	key += idxkey.str_val; 
 			// key == string
@@ -749,7 +738,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			stack.push_back( *table );
 			// push a fcn with 'key' as its name (it's a builtin, so the offset
 			// given is irrelevant)
-			stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+			stack.push_back( DevaObject( key.c_str(), (size_t)-1, true ) );
 			return;
 		}
 		if( idxkey.Type() != sym_number )
@@ -796,8 +785,10 @@ void Executor::Tbl_load( Instruction const & inst )
 		else
 		{
 			// key (number/string/user-defined-type)?
-			// TODO: user-defined-type as key
-			if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
+			if( idxkey.Type() != sym_number &&  
+				idxkey.Type() != sym_string &&
+				idxkey.Type() != sym_class &&
+				idxkey.Type() != sym_instance )
 				throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 			// get the value from the map
 			smart_ptr<DOMap> mp( table->map_val );
@@ -808,7 +799,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			{
 				// built-in method call??
 				// top of stack contains key (fcn name as string)
-				// next-to-top contains value (fcn as sym_offset)
+				// next-to-top contains value (fcn as sym_address)
 				string key( "map_");
 				key += idxkey.str_val; 
 				// key == string
@@ -820,7 +811,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				stack.push_back( *table );
 				// push a fcn with 'key' as its name (it's a builtin, so the offset
 				// given is irrelevant)
-				stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+				stack.push_back( DevaObject( key.c_str(), (size_t)-1, true ) );
 				return;
 			}
 			// push it onto the stack
@@ -835,7 +826,7 @@ void Executor::Tbl_load( Instruction const & inst )
 		{
 			// built-in method call
 			// top of stack contains key (fcn name as string)
-			// next-to-top contains value (fcn as sym_offset)
+			// next-to-top contains value (fcn as sym_address)
 			string key( "string_");
 		   	key += idxkey.str_val; 
 			// key == string
@@ -847,7 +838,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			stack.push_back( *table );
 			// push a fcn with 'key' as its name (it's a builtin, so the offset
 			// given is irrelevant)
-			stack.push_back( DevaObject( key.c_str(), (size_t)-1 ) );
+			stack.push_back( DevaObject( key.c_str(), (size_t)-1, true ) );
 			return;
 		}
 		// index to a string must be an integral number
@@ -967,7 +958,7 @@ void Executor::Swap( Instruction const & inst )
 void Executor::Line_num( Instruction const & inst )
 {
     file = inst.args[0].str_val;
-    line = inst.args[1].func_offset;
+    line = inst.args[1].sz_val;
 }
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
@@ -976,10 +967,10 @@ void Executor::Jmp( Instruction const & inst )
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_offset )
+	if( dest.Type() != sym_address )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 	// jump execution to the function offset
-	ip = dest.func_offset;
+	ip = dest.sz_val;
 }
 // 14 jump on top of stack evaluating to false 
 void Executor::Jmpf( Instruction const & inst )
@@ -988,7 +979,7 @@ void Executor::Jmpf( Instruction const & inst )
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid jmp instruction: no arguments." );
 	DevaObject dest = inst.args[0];
-	if( dest.Type() != sym_offset )
+	if( dest.Type() != sym_address )
 		throw DevaICE( "Invalid jmp instruction argument: not a jump target offset." );
 
 	// get the value on the top of the stack
@@ -1009,7 +1000,7 @@ void Executor::Jmpf( Instruction const & inst )
 	if( evaluate_object_as_boolean( o ) )
 		return;
 	// else jump to the offset in the argument
-	ip = dest.func_offset;
+	ip = dest.sz_val;
 }
 // 15 == compare top two values on stack
 void Executor::Eq( Instruction const & inst )
@@ -1598,7 +1589,8 @@ void Executor::Output( Instruction const & inst )
 			}
 			break;
 			}
-		case sym_offset:
+		case sym_address:
+		case sym_size:
 			cout << "function: '" << o->name << "'";
 			break;
 		case sym_function_call:
@@ -1617,7 +1609,7 @@ void Executor::Call( Instruction const & inst )
 	if( inst.args.size() == 2 && is_builtin( inst.args[0].name ) )
 	{
 		// set the static that tracks the number of args processed
-		args_on_stack = inst.args[1].func_offset;
+		args_on_stack = inst.args[1].sz_val;
 		execute_builtin( this, inst );
 		// reset the static that tracks the number of args (builtins don't run
 		// the 'return' instruction)
@@ -1635,15 +1627,15 @@ void Executor::Call( Instruction const & inst )
 			if( !fcn )
 				throw DevaRuntimeException( "Call made to undefined function." );
 
-			if( fcn->Type() != sym_offset )
+			if( fcn->Type() != sym_address )
 				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			// check the number of args to the fcn
-			if( inst.args[1].Type() != sym_offset )
+			if( inst.args[1].Type() != sym_size )
 				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
 
 			// set the static that tracks the number of args processed
-			args_on_stack = inst.args[1].func_offset;
+			args_on_stack = inst.args[1].sz_val;
 		}
 		// if there's one arg (the num of args to the fcn), 
 		// then it's a method invokation,
@@ -1651,13 +1643,13 @@ void Executor::Call( Instruction const & inst )
 		else if( inst.args.size() == 1 )
 		{
 			// check the number of args to the fcn
-			if( inst.args[0].Type() != sym_offset )
+			if( inst.args[0].Type() != sym_size )
 				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
 
 			// get the function to call off the stack
 			DevaObject o = stack.back();
 			stack.pop_back();
-			if( o.Type() == sym_offset )
+			if( o.Type() == sym_address )
 				fcn = &o;
 			else if( o.Type() == sym_unknown )
 				fcn = find_symbol( o.name );
@@ -1671,7 +1663,7 @@ void Executor::Call( Instruction const & inst )
 			if( builtin_module_fcns.find( fcn->name ) != builtin_module_fcns.end() )
 			{
 				// set the static that tracks the number of args processed
-				args_on_stack = inst.args[0].func_offset;
+				args_on_stack = inst.args[0].sz_val;
 
 				builtin_module_fcns[fcn->name]( this );
 
@@ -1684,7 +1676,7 @@ void Executor::Call( Instruction const & inst )
 			if( is_vector_builtin( fcn->name ) )
 			{
 				// set the static that tracks the number of args processed
-				args_on_stack = inst.args[0].func_offset;
+				args_on_stack = inst.args[0].sz_val;
 
 				execute_vector_builtin( this, fcn->name );
 
@@ -1697,7 +1689,7 @@ void Executor::Call( Instruction const & inst )
 			if( is_map_builtin( fcn->name ) )
 			{
 				// set the static that tracks the number of args processed
-				args_on_stack = inst.args[0].func_offset;
+				args_on_stack = inst.args[0].sz_val;
 
 				execute_map_builtin( this, fcn->name );
 
@@ -1710,7 +1702,7 @@ void Executor::Call( Instruction const & inst )
 			if( is_string_builtin( fcn->name ) )
 			{
 				// set the static that tracks the number of args processed
-				args_on_stack = inst.args[0].func_offset;
+				args_on_stack = inst.args[0].sz_val;
 
 				execute_string_builtin( this, fcn->name );
 
@@ -1723,15 +1715,15 @@ void Executor::Call( Instruction const & inst )
 			// methods on UDTs (classes and instances)
 			// need to adjust arg count for the implicit 'self' (+1)
 			if( fcn->name.find( '@' ) != string::npos )
-				args_on_stack = inst.args[0].func_offset + 1;
+				args_on_stack = inst.args[0].sz_val + 1;
 			else
-				args_on_stack = inst.args[0].func_offset;
+				args_on_stack = inst.args[0].sz_val;
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
 
 		// get the offset for the function
-		size_t offset = fcn->func_offset;
+		size_t offset = fcn->sz_val;
 		// jump execution to the function offset
 		ip = offset;
 	}
@@ -1767,11 +1759,11 @@ void Executor::Return( Instruction const & inst )
 	// pop the return location off the top of the stack
 	DevaObject ob = stack.back();
 	stack.pop_back();
-	if( ob.Type() != sym_offset )
+	if( ob.Type() != sym_address )
 		throw DevaRuntimeException( "Invalid return destination on stack when executing return instruction" );
 	stack.push_back( ret );
 	// jump to the return location
-	size_t offset = ob.func_offset;
+	size_t offset = ob.sz_val;
 	ip = offset;
 	// pop this scope (same as 'leave' instruction)
 	current_scopes->Pop();
@@ -1783,8 +1775,8 @@ void Executor::Break( Instruction const & inst )
 {
 	if( inst.args.size() < 1 )
 		throw DevaICE( "Invalid 'break' instruction. No arguments." );
-	if( inst.args[0].Type() != sym_offset )
-		throw DevaICE( "Invalid 'break' instruction. Argument is non-numeric." );
+	if( inst.args[0].Type() != sym_address )
+		throw DevaICE( "Invalid 'break' instruction. Argument is not an address." );
 
 	vector<int> enter_stack;
 	size_t original_ip = ip;
@@ -1792,7 +1784,7 @@ void Executor::Break( Instruction const & inst )
 	// set the ip back to the start of the loop, then scan forward looking 
 	// and count the enter/leave instructions so we know how many leaves we need to
 	// execute to get out of the loop
-	ip = inst.args[0].func_offset;
+	ip = inst.args[0].sz_val;
 	while( ip < original_ip )
 	{
 		switch( PeekInstr() )
@@ -2006,7 +1998,7 @@ void Executor::New_instance( Instruction const & inst )
 	// 1 arg: an offset containing the number of arguments to 'new'
 	if( inst.args.size() != 1 )
 		throw DevaICE( "Invalid number of arguments in 'new_instance' instruction." );
-	if( inst.args[0].Type() != sym_offset )
+	if( inst.args[0].Type() != sym_size )
 		throw DevaICE( "Invalid argument in 'new_instance' instruction." );
 	// class to create instance of is on top of stack
 	DevaObject cls = stack.back();
@@ -2032,7 +2024,7 @@ void Executor::New_instance( Instruction const & inst )
 	// - add the __class__ member to the instance
 	instance.map_val->insert( make_pair( DevaObject( "", string( "__class__" ) ), DevaObject( "", ob->name ) ) );
 	// - call the constructor ('new' method)
-	size_t num_args = inst.args[0].func_offset;
+	size_t num_args = inst.args[0].sz_val;
 	// look for 'new' function (constructor)
 	string method( "new" );
 	method += "@";
@@ -2218,7 +2210,7 @@ Instruction Executor::NextInstr()
 	double num_val;
 	char* str_val = NULL;
 	long bool_val;
-	size_t func_offset;
+	size_t sz_val;
 	// read the byte for the opcode
 	unsigned char op;
 	read_byte( op );
@@ -2264,11 +2256,19 @@ Instruction Executor::NextInstr()
 			case sym_vector:
 				// TODO: is this an error??
 				break;
-			case sym_offset:
+			case sym_address:
 				{
 				// size_t
-				read_size_t( func_offset );
-				DevaObject ob( name, (size_t)func_offset );
+				read_size_t( sz_val );
+				DevaObject ob( name, (size_t)sz_val, true );
+				inst.args.push_back( ob );
+				break;
+				}
+			case sym_size:
+				{
+				// size_t
+				read_size_t( sz_val );
+				DevaObject ob( name, (size_t)sz_val, false );
 				inst.args.push_back( ob );
 				break;
 				}
@@ -2342,7 +2342,7 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 		args.push_back( tmp );
 	}
 	// push the return value (ip) onto the stack
-	stack.push_back( DevaObject( "", (size_t)ip ) );
+	stack.push_back( DevaObject( "", (size_t)ip, true ) );
 
 	// restore the args
 	for( int i = num_args - 1; i >= 0; --i )
@@ -2354,7 +2354,7 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 
 	size_t orig_ip = ip;
 	// get the offset for the function
-	size_t offset = fcn->func_offset;
+	size_t offset = fcn->sz_val;
 	// jump execution to the function offset
 	ip = offset;
 
@@ -2371,9 +2371,9 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 			if( stack.size() < 2 )
 				throw DevaICE( "not enough values on stack for 'return' instruction." );
 			DevaObject addr = stack[stack.size()-2];
-			if( addr.Type() != sym_offset )
+			if( addr.Type() != sym_address )
 				throw DevaICE( "return address not correct type." );
-			if( addr.func_offset == orig_ip )
+			if( addr.sz_val == orig_ip )
 				done = true;
 		}
 

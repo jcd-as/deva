@@ -862,7 +862,7 @@ void do_vector_map( Executor *ex )
 		o = &val;
 
 	// check fcn value
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'map'." );
 
 	// return vector
@@ -922,7 +922,7 @@ void do_vector_filter( Executor *ex )
 		o = &val;
 
 	// check fcn value
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'filter'." );
 
 	// return vector
@@ -991,7 +991,7 @@ void do_vector_reduce( Executor *ex )
 		o = &val;
 
 	// check fcn value
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
 
 	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)

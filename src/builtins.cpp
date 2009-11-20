@@ -179,7 +179,7 @@ string obj_to_str( const DevaObject* const o )
 			}
 			break;
 			}
-		case sym_offset:
+		case sym_address:
 			s << "function: '" << o->name << "'";
 			break;
 		case sym_function_call:
@@ -545,9 +545,9 @@ void do_open( Executor *ex )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the file object as an 'offset'
+	// return the file object as a 'size' type
 	if( file )
-		ex->stack.push_back( DevaObject( "", (size_t)file ) );
+		ex->stack.push_back( DevaObject( "", (size_t)file, false ) );
 	// or null, on failure
 	else
 		ex->stack.push_back( DevaObject( "", sym_null ) );
@@ -573,10 +573,10 @@ void do_close( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'close' is not of the correct type." );
 
-	fclose( (FILE*)(o->func_offset) );
+	fclose( (FILE*)(o->sz_val) );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -605,10 +605,10 @@ void do_flush( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'flush' is not of the correct type." );
 
-	fflush( (FILE*)(o->func_offset) );
+	fflush( (FILE*)(o->sz_val) );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -641,7 +641,7 @@ void do_read( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'read' is not of the correct type." );
 
 	// get the number of bytes
@@ -660,7 +660,7 @@ void do_read( Executor *ex )
 	char* s = new char[num_bytes + 1];
 	// zero out the bytes
 	memset( s, 0, num_bytes + 1 );
-	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->func_offset) );
+	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->sz_val) );
 	// if we didn't read the full amount, we need to re-alloc and copy so that
 	// we don't leak the extra bytes when they are assigned to a string DevaObject
 	if( bytes_read != num_bytes )
@@ -701,7 +701,7 @@ void do_readline( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
 
 	// allocate space for some bytes 
@@ -711,7 +711,7 @@ void do_readline( Executor *ex )
 	// track the original start of the buffer
 	size_t count = BUF_SZ;	// number of bytes read so far
 	char* buf = buffer;
-	while( fgets( buf, BUF_SZ, (FILE*)(o->func_offset) ) )
+	while( fgets( buf, BUF_SZ, (FILE*)(o->sz_val) ) )
 	{
 		// read was valid, was the last char read a newline?
 		// if so, we're done
@@ -731,7 +731,7 @@ void do_readline( Executor *ex )
 		count += BUF_SZ - 1;
 	}
 	// was there an error??
-	if( ferror( (FILE*)(o->func_offset) ) )
+	if( ferror( (FILE*)(o->sz_val) ) )
 		throw DevaRuntimeException( "Error accessing file in built-in method 'readline'." );
 
 	// if we didn't fill the buffer, we need to re-alloc and copy so that
@@ -773,7 +773,7 @@ void do_readlines( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'readlines' is not of the correct type." );
 
 	// keep reading lines until we reach the EOF
@@ -787,7 +787,7 @@ void do_readlines( Executor *ex )
 		// track the original start of the buffer
 		size_t count = BUF_SZ;	// number of bytes read so far
 		char* buf = buffer;
-		while( fgets( buf, BUF_SZ, (FILE*)(o->func_offset) ) )
+		while( fgets( buf, BUF_SZ, (FILE*)(o->sz_val) ) )
 		{
 			// read was valid, was the last char read a newline?
 			// if so, we're done
@@ -822,10 +822,10 @@ void do_readlines( Executor *ex )
 		vec->push_back( DevaObject( "", buffer ) );
 
 		// done?
-		if( feof( (FILE*)(o->func_offset) ) )
+		if( feof( (FILE*)(o->sz_val) ) )
 			break;
 		// was there an error??
-		if( ferror( (FILE*)(o->func_offset) ) )
+		if( ferror( (FILE*)(o->sz_val) ) )
 			throw DevaRuntimeException( "Error accessing file in built-in method 'readlines'." );
 	}
 
@@ -864,7 +864,7 @@ void do_write( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'write' is not of the correct type." );
 
 	// get the number of bytes
@@ -890,7 +890,7 @@ void do_write( Executor *ex )
 	else
 		source = &src;
 
-	size_t bytes_written = fwrite( (void*)(source->str_val), 1, num_bytes, (FILE*)(o->func_offset) );
+	size_t bytes_written = fwrite( (void*)(source->str_val), 1, num_bytes, (FILE*)(o->sz_val) );
 
 	// TODO: what to do about embedded nulls in the bytes written? the string
 	// handling routines in deva will stop at the first embedded null...
@@ -926,7 +926,7 @@ void do_writeline( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'writeline' is not of the correct type." );
 
 	// ensure the source is a string
@@ -941,7 +941,7 @@ void do_writeline( Executor *ex )
 		source = &src;
 
 	int ret = 1;
-	if( fputs( source->str_val, (FILE*)(o->func_offset) ) < 0 )
+	if( fputs( source->str_val, (FILE*)(o->sz_val) ) < 0 )
 		ret = 0;
 
 	// pop the return address
@@ -975,7 +975,7 @@ void do_writelines( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'writelines' is not of the correct type." );
 
 	// get the source vector
@@ -996,7 +996,7 @@ void do_writelines( Executor *ex )
 	for( DOVector::iterator i = source->vec_val->begin(); i != source->vec_val->end(); ++i )
 	{
 		// if failed to write the line, break
-		if( fputs( i->str_val, (FILE*)(o->func_offset) ) < 0 )
+		if( fputs( i->str_val, (FILE*)(o->sz_val) ) < 0 )
 			break;
 		++ret;
 	}
@@ -1064,7 +1064,7 @@ void do_seek( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'seek' is not of the correct type." );
 
 	// get the position
@@ -1079,7 +1079,7 @@ void do_seek( Executor *ex )
 	else
 		pos = (long int)position.num_val;
 
-	fseek( (FILE*)(o->func_offset), pos, origin );
+	fseek( (FILE*)(o->sz_val), pos, origin );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -1108,10 +1108,10 @@ void do_tell( Executor *ex )
 		o = &obj;
 
 	// ensure it's an 'offset'
-	if( o->Type() != sym_offset )
+	if( o->Type() != sym_size )
 		throw DevaRuntimeException( "'file' argument to built-in function 'tell' is not of the correct type." );
 
-	long int pos = ftell( (FILE*)(o->func_offset) );
+	long int pos = ftell( (FILE*)(o->sz_val) );
 
 	// pop the return address
 	ex->stack.pop_back();

@@ -1,0 +1,29 @@
+# test dot-op and '[]' combos
+
+m = {};
+m.a = {};
+m.a.b = {};
+m.a.b["c"] = {};
+m.a["b"].c.d = 3;
+print( m.a.b["c"].d );
+m.a.b.c["d"] = 254;
+print( m["a"].b["c"].d );
+m["a"].b.c["d"] = "foo";
+print( m.a.b.c.d );
+m["a"].b.c.d = [];
+m.a["b"].c.d.append( "bar" );
+print( m.a["b"].c.d[0] );
+print( m["a"].b["c"].d[0] );
+def fcn()
+{
+	print( "fcn called" );
+	return 128;
+}
+m["a"].b["c"].d.append( fcn );
+f = m.a.b.c.d[1];
+f();
+m2 = {};
+m["a"].b["c"].d.append( m2 );
+m2.e = fcn;
+m.a.b.c.d[2].e();
+print( m.a.b.c.d[2].e() );

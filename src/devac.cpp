@@ -198,7 +198,7 @@ int main( int argc, char** argv )
 				cout << "\t" << j->first;
 				if( j->second.is_const )
 					cout << " : constant";
-				if( j->second.Type() == sym_offset )
+				if( j->second.Type() == sym_address )
 					cout << " : function";
 				cout << endl;
 			}

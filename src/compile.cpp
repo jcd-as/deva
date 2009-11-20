@@ -26,7 +26,6 @@
 // created by jcs, september 12, 2009 
 
 // TODO:
-// * 'a["b"] = {};' is disallowed. enable, or disallow in syntax??
 // * change asserts into (non-fatal) errors
 // * semantic checking functions for all valid node types that can have children
 
@@ -605,7 +604,7 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
 			// (the 'translation_unit' node doesn't have the file/line num info)
 			iter_t it = info.trees.begin()->children.begin();
 			NodeInfo ni = ((NodeInfo)(it->value.value()));
-			is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (size_t)0) ) );
+			is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (size_t)0, false) ) );
 		}
 
         // walk the tree, generating the IL for each node
@@ -667,7 +666,7 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	// if this is an identifier with a child that is an arg list
 	if( i->value.id() == identifier_id && i->children.size() > 0 && i->children[0].value.id() == arg_list_exp_id )
 	{
-		// generate the ret-val placeholder (op_push 'sym_offset')
+		// generate the ret-val placeholder (op_push 'sym_address')
 		pre_gen_IL_arg_list_exp( i, is );
 
 		// generate the code for the arg list
@@ -695,7 +694,7 @@ void walk_children_for_chained_assignment( iter_t const & i, InstructionStream &
 		// lhs
 		walk_children_for_chained_assignment( i->children.begin(), is );
 		// rhs
-		// TODO: someday non "simple types" will be allowed in chained
+		// TODO: someday non "simple types" may be allowed in chained
 		// assignments and we can do away with these checks
 		if( depth > 1 && 
 			(i->children[1].value.id() == dot_op_id ||
@@ -713,7 +712,7 @@ void walk_children_for_chained_assignment( iter_t const & i, InstructionStream &
 	else
 	{
 		++depth; ++max_depth;
-		// TODO: someday non "simple types" will be allowed in chained
+		// TODO: someday non "simple types" may be allowed in chained
 		// assignments and we can do away with these checks
 		if( i->children[0].value.id() == dot_op_id ||
 		    (i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0) ||
@@ -800,7 +799,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			name += "@" + class_name;
 			method_names.push_back( name );
 		}
-		is.push( Instruction( op_defun, DevaObject( name, is.Offset() ) ) );
+		is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
 
 		// we need to generate an enter instruction to create the
 		// proper scope for the fcn and its arguments (the 'leave' instruction 
@@ -909,7 +908,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
 			// number of args is size of children - 2 (for the open and close parens),
 			// +1 for 'self'
-			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1) ) ) );	// puts the new instance on the stack
+			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1), false ) ) );	// puts the new instance on the stack
 			// new instance is on the stack to act as the 'self' arg to 'new'
 			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
 		}
@@ -937,7 +936,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// number of args is size of children - 2 (for the open and close parens),
 			// +1 for 'self'
-			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1) ) ) );	// puts the new instance on the stack
+			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1), false ) ) );	// puts the new instance on the stack
 			// new instance is on the stack to act as the 'self' arg to 'new'
 			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
 			// create a look up of the name in the namespace 'module'
@@ -1142,12 +1141,22 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				// address etc.)
 				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num );
             }
+			// check for a table lookup (for 'a.b[0]' etc)
+			// if the first child is a key_exp, it's a table lookup
+			else if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
+			{
+				// first generate the tbl_load instruction for the dot-op
+				generate_line_num( i->children.begin(), is );
+				is.push( Instruction( op_tbl_load ) );
+				// then do the key op 
+				walk_children( i->children[0].children[1].children.begin(), is );
+			}
 
             // rhs of assignment op
             // walk the rhs
             generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
-            // add the table store op
+            // add the table store op (for the assignment op)
 			generate_line_num( i->children.begin(), is );
             is.push( Instruction( op_tbl_store ) );
 		}
@@ -1280,6 +1289,16 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// so just generate the IL for this node, which will back-patch the
 			// jump placeholder
 			gen_IL_identifier( i->children.begin() + 1, is, parent, true, child_num );
+		}
+		// check for a table lookup (for 'a.b[0]' etc)
+		// if the first child is a key_exp, it's a table lookup
+		else if( i->children[1].children.size() > 0 && i->children[1].children[0].value.id() == key_exp_id )
+		{
+			// first generate the tbl_load instruction for the dot-op
+			gen_IL_dot_op( i, is );
+			// then do the key op 
+			walk_children( i->children[1].children.begin(), is );
+			gen_IL_key_exp( i->children[1].children.begin(), is );
 		}
 		else
 			// this generates a tbl_load instruction
@@ -1428,8 +1447,9 @@ bool GenerateByteCode( char const* filename, InstructionStream & is )
 					// TODO: implement
 					//is.args[j].vec_val
 					break;
-				case sym_offset:
-					file.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
+				case sym_address:
+				case sym_size:
+					file.write( (char*)&(inst.args[j].sz_val), sizeof( size_t ) );
 					break;
 				case sym_function_call:
 					// TODO: can this happen??
@@ -1512,8 +1532,9 @@ unsigned char* GenerateByteCode( InstructionStream & is )
 					// TODO: implement
 					//is.args[j].vec_val
 					break;
-				case sym_offset:
-					oss.write( (char*)&(inst.args[j].func_offset), sizeof( size_t ) );
+				case sym_address:
+				case sym_size:
+					oss.write( (char*)&(inst.args[j].sz_val), sizeof( size_t ) );
 					break;
 				case sym_function_call:
 					// TODO: can this happen??
@@ -1587,7 +1608,7 @@ bool DeCompileFile( char const* filename )
 		double num_val;
 		char str_val[256] = {0};
 		long bool_val;
-		size_t func_offset;
+		size_t sz_val;
 		// read the byte for the opcode
 		unsigned char op;
 		file.read( (char*)&op, 1 );
@@ -1635,10 +1656,11 @@ bool DeCompileFile( char const* filename )
 				case sym_vector:
 					// TODO: implement
 					break;
-				case sym_offset:
+				case sym_address:
+				case sym_size:
 					{
-					file.read( (char*)&func_offset, sizeof( size_t ) );
-					DevaObject ob( name, func_offset );
+					file.read( (char*)&sz_val, sizeof( size_t ) );
+					DevaObject ob( name, sz_val, true );
 					inst.args.push_back( ob );
 					break;
 					}

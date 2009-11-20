@@ -441,6 +441,8 @@ push : string: '' = c ;
 tbl_load : 
 push : string: '' = d ; 
 tbl_load : 
+push : string: '' = foo ; 
+tbl_load : 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 tbl_load : 

@@ -41,11 +41,12 @@ enum SymbolType
 	sym_boolean,		// 3
     sym_vector,			// 4
 	sym_map,			// 5
-    sym_offset,			// 6	a size_t number/offset (fcn defs (locations), return addresses etc)
+    sym_address,		// 6	a size_t offset/address (fcn defs (locations), return addresses etc)
     sym_function_call,	// 7
     sym_unknown,		// 8	a variable (unknown type, has to be looked-up)
 	sym_class,			// 9	a class def
 	sym_instance,		// 10	a class instance (object)
+	sym_size,			// 11 	a size_t number (num of args etc)
 	sym_end = 255		// end of enum and signal for end of instruction arg list
 };
 

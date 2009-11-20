@@ -62,8 +62,9 @@ DevaObject::DevaObject( const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_offset:
-		func_offset = o.func_offset;
+	case sym_address:
+	case sym_size:
+		sz_val = o.sz_val;
 		break;
 	case sym_function_call:
 		// TODO: anything???
@@ -107,8 +108,9 @@ DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_va
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_offset:
-		func_offset = o.func_offset;
+	case sym_address:
+	case sym_size:
+		sz_val = o.sz_val;
 		break;
 	case sym_function_call:
 		// TODO: anything???
@@ -145,9 +147,9 @@ DevaObject::DevaObject( string nm, char* s ) : SymbolInfo( sym_string ), name( n
 // boolean type
 DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_val( b ), name( nm ), map_val( 0 ), vec_val( 0 )
 {}
-// 'function' type
-DevaObject::DevaObject( string nm, size_t offs ) : SymbolInfo( sym_offset ), func_offset( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
-{}
+// 'address' or 'size' type
+DevaObject::DevaObject( string nm, size_t offs, bool is_address ) : SymbolInfo( sym_address ), sz_val( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
+{ if( !is_address ) type = sym_size; }
 // map type with the given map
 DevaObject::DevaObject( string nm, DOMap* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
 {}
@@ -185,8 +187,9 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 		vec_val = v;
 		break;
 		}
-	case sym_offset:
-		func_offset = -1;
+	case sym_address:
+	case sym_size:
+		sz_val = -1;
 		break;
 	case sym_function_call:
 		// TODO: anything???
@@ -257,8 +260,9 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 	case sym_vector:
 		vec_val = o.vec_val;
 		break;
-	case sym_offset:
-		func_offset = o.func_offset;
+	case sym_address:
+	case sym_size:
+		sz_val = o.sz_val;
 		break;
 	case sym_function_call:
 		// TODO: anything???
@@ -312,8 +316,9 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 			return true;
 		else
 			return false;
-	case sym_offset:
-		if( func_offset < rhs.func_offset )
+	case sym_address:
+	case sym_size:
+		if( sz_val < rhs.sz_val )
 			return true;
 		else
 			return false;
@@ -365,8 +370,9 @@ bool DevaObject::operator == ( const DevaObject & rhs ) const
 	case sym_vector:
 		// TODO: deep compare instead of "is" pointer compare??
 		return (void*)vec_val == (void*)rhs.vec_val;
-	case sym_offset:
-		return func_offset == rhs.func_offset;
+	case sym_address:
+	case sym_size:
+		return sz_val == rhs.sz_val;
 	case sym_function_call:
 		// TODO: ???
 		return false;
@@ -401,7 +407,8 @@ long DevaObject::Size() const
 		throw logic_error( "Internal Error. Can't take the size of a map-based object." );
 	case sym_vector:
 		throw logic_error( "Internal Error. Can't take the size of a vector object." );
-	case sym_offset:
+	case sym_address:
+	case sym_size:
 		return sz + sizeof( size_t );
 	case sym_null:
 		return sz + sizeof( long );

@@ -47,16 +47,12 @@ typedef map<DevaObject, DevaObject> DOMap;
 // the basic piece of data stored on the data stack
 struct DevaObject : public SymbolInfo
 {
-	// TODO: types for C function and UserCode (C "void*")block?
-	// TODO: type for User-Defined Types (classes) ??
 	union 
 	{
 		double num_val;
 		char* str_val;
 		bool bool_val;
-//		map<DevaObject, DevaObject>* map_val;
-//		vector<DevaObject>* vec_val;
-		size_t func_offset;	// offset into instruction stream to function start
+		size_t sz_val;
 	};
 	// objects with destructors not allowed in unions. bleh
 	smart_ptr<DOMap> map_val;
@@ -78,8 +74,9 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, char* s );
 	// boolean type
 	DevaObject( string nm, bool b );
-	// 'offset' type (integral number, incl return/jump target etc)
-	DevaObject( string nm, size_t offs );
+	// 'address' type (incl return/jump target etc) or 'size' type (integral
+	// number, incl native ptrs etc)
+	DevaObject( string nm, size_t offs, bool is_address );
     // map type with the given map
     DevaObject( string nm, DOMap* m );
     // vector type with the given vector
