@@ -442,7 +442,7 @@ tbl_load :
 push : string: '' = d ; 
 tbl_load : 
 push : string: '' = foo ; 
-tbl_load : 
+tbl_load : function: '', offset = 1 ; 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 tbl_load : 

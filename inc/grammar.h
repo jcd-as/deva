@@ -442,7 +442,11 @@ public:
 			// map key (inside "[]"s) - only 'math' expresssions allowed inside, 
 			// not general expressions
 			key_exp = 
-				confix_p( open_bracket_op, add_exp, close_bracket_op )
+				confix_p( 
+						open_bracket_op, 
+						add_exp >> !(( no_node_d[ch_p(':')] >> add_exp) >> !( no_node_d[ch_p(':')] >> add_exp)), 
+						close_bracket_op 
+						)
 				;
 
 			// 'in' keyword expression

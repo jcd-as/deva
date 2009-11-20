@@ -988,7 +988,7 @@ void gen_IL_key_exp( iter_t const & i, InstructionStream & is )
 	// in compile.cpp, generate_IL_for_node() for tbl store code gen)
 	// a[b] <= a is parent, b is child[1] ('[' is child[0] and ']' is child[2])
 	generate_line_num( i, is );
-	is.push( Instruction( op_tbl_load ) );
+	is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)i->children.size()-2, false ) ) );
 }
 
 void gen_IL_const_decl( iter_t const & i, InstructionStream & is )

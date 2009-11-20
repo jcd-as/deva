@@ -1099,8 +1099,8 @@ void do_vector_slice( Executor *ex )
 		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
 	if( i_end < i_start )
 		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
-	if( i_step < 0 )
-		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than zero." );
+	if( i_step < 1 )
+		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than one." );
 
 	// slice the vector
 	DevaObject ret;

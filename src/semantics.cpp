@@ -640,23 +640,31 @@ void check_arg( iter_t const & i )
 
 void check_key_exp( iter_t const & i )
 {
-	// 3 children: '[', index, ']'
-	// where index is a string, number or variable type
-	// key_exp always generates a variable_type, as it is indexing into a
+	// 3 - 5 children: '[', 1, 2 or 3 indices, ']'
+	// where indices are strings, numbers or variables
+	// key_exp always generates a variable_type, as it is indexing/slicing into a
 	// collection that could contain anything
+	int num_children = i->children.size();
 	NodeInfo left = i->children[0].value.value();
-	NodeInfo operand = i->children[1].value.value();
-	NodeInfo right = i->children[2].value.value();
+	NodeInfo right = i->children[num_children-1].value.value();
 
+	// check the number of children
+	if( num_children < 3 || num_children > 5 )
+		throw DevaSemanticException( "Invalid indexing/slicing expression", left );
+	// check the brackets
 	if( left.sym != "[" )
-		throw DevaSemanticException( "Invalid indexing expression", left );
+		throw DevaSemanticException( "Invalid indexing/slicing expression", left );
 	else if( right.sym != "]" )
-		throw DevaSemanticException( "Invalid indexing expression", right );
-
-	if( operand.type != number_type 
-		&& operand.type != string_type
-		&& operand.type != variable_type )
-		throw DevaSemanticException( "Index must be a numeric, string or variable value", operand );
+		throw DevaSemanticException( "Invalid indexing/slicing expression", right );
+	// check the indices
+	for( int c = 1; c < num_children-1; ++c )
+	{
+		NodeInfo operand = i->children[c].value.value();
+		if( operand.type != number_type 
+			&& operand.type != string_type
+			&& operand.type != variable_type )
+			throw DevaSemanticException( "Index or slice component must be a numeric, string or variable value", operand );
+	}
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;

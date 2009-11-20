@@ -567,6 +567,17 @@ void Executor::New_vec( Instruction const & inst )
 	// put it onto the stack
 	stack.push_back( *vec );
 }
+
+// helper for slicing in steps, for Tbl_load instruction
+static size_t s_step = 1;
+static size_t s_i = 0;
+bool tbl_load_slice_if_step( DevaObject )
+{
+	if( s_i++ % s_step == 0 )
+		return false;
+	else
+		return true;
+}
 // 9 get item from vector or map
 // (can't tell at compile time what it will be)
 // if there is an arg that is the boolean 'true', then we need to look up items in
@@ -575,9 +586,156 @@ void Executor::New_vec( Instruction const & inst )
 // if there is an arg that is the boolean 'false', it indicates that this is a
 // method call, NOT a normal look-up, and the 'self' arg will need to be loaded
 // as well as the result of the table look-up
+// if there is an arg that is of sym_size type, it is an index or slice
+// operation and that's how many indices are on the stack
 void Executor::Tbl_load( Instruction const & inst )
 {
-	// top of stack has index/key
+	int num_indices = 1;
+	if( inst.args.size() > 0 && inst.args[0].Type() == sym_size )
+		num_indices = inst.args[0].sz_val;
+
+	// if this is a slice
+	if( num_indices > 1 )
+	{
+		if( num_indices > 3 )
+			throw DevaICE( "Too many arguments to tbl_load instruction." );
+
+		DevaObject start_idx = stack.back();
+		stack.pop_back();
+		DevaObject end_idx, step_val, table;
+		if( num_indices == 2 )
+		{
+			end_idx = stack.back();
+			stack.pop_back();
+			step_val = DevaObject( "", 1.0 );
+			table = stack.back();
+			stack.pop_back();
+		}
+		else
+		{
+			end_idx = stack.back();
+			stack.pop_back();
+			step_val = stack.back();
+			stack.pop_back();
+			table = stack.back();
+			stack.pop_back();
+		}
+		// ensure the args are numeric
+		if( start_idx.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( start_idx );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'start' index." );
+			start_idx = *o;
+		}
+		if( start_idx.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'start' index: must be numeric." );
+		if( end_idx.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( end_idx );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'end' index." );
+			end_idx = *o;
+		}
+		if( end_idx.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'end' index: must be numeric." );
+		if( step_val.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( step_val );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'step' value." );
+			step_val = *o;
+		}
+		if( step_val.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'step' value: must be numeric." );
+
+		// ensure the table is a vector or string
+		if( table.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( table );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object for slice operation." );
+			table = *o;
+		}
+		if( table.Type() != sym_vector && table.Type() != sym_string )
+				throw DevaRuntimeException( "Invalid type for slice operation: must be a string or vector." );
+
+		// convert to integer values
+		// TODO: error on non-integer numbers
+		size_t start = (size_t)start_idx.num_val;
+		size_t end = (size_t)end_idx.num_val;
+		size_t step = (size_t)step_val.num_val;
+
+		size_t sz;
+		if( table.Type() == sym_vector )
+			sz = table.vec_val->size();
+		else
+			sz = strlen( table.str_val );
+
+		// check the indices & step value
+		if( start >= sz || start < 0 )
+			throw DevaRuntimeException( "Invalid 'start' index slice." );
+		if( end > sz || end < 0 )
+			throw DevaRuntimeException( "Invalid 'end' index in slice." );
+		if( end < start )
+			throw DevaRuntimeException( "Invalid slice indices in slice: 'start' is greater than 'end'." );
+		if( step < 1 )
+			throw DevaRuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
+
+		// perform the slice
+		if( table.Type() == sym_vector )
+		{
+			DevaObject ret;
+			// 'step' is '1' (the default)
+			if( step == 1 )
+			{
+				// create a new vector object that is a copy of the 'sub-vector' we're
+				// looking for
+				DOVector* v = new DOVector( table.vec_val->begin() + start, table.vec_val->begin() + end );
+				ret = DevaObject( "", v );
+			}
+			// otherwise the vector class doesn't help us, have to do it manually
+			else
+			{
+				DOVector* v = new DOVector();
+				s_i = 0;
+				s_step = step;
+				remove_copy_if( table.vec_val->begin() + start, table.vec_val->begin() + end, back_inserter( *v ), tbl_load_slice_if_step );
+				ret = DevaObject( "", v );
+			}
+			stack.push_back( ret );
+			return;
+		}
+		else
+		{
+			DevaObject ret;
+			string s( table.str_val );
+			// 'step' is '1' (the default)
+			if( step == 1 )
+			{
+				string r = s.substr( start, end - start );
+				ret = DevaObject( "", r );
+			}
+			// otherwise the string class doesn't help us, have to do it manually
+			else
+			{
+				// first get the substring from start to end positions
+				string r = s.substr( start, end - start );
+				// TODO: call 'reserve' on the string to reduce allocations?
+				// then walk it grabbing every 'nth' character
+				string slice;
+				for( int i = 0; i < r.length(); i += step )
+				{
+					slice += r[i];
+				}
+				ret = DevaObject( "", slice );
+			}
+			stack.push_back( ret );
+			return;
+		}
+	}
+
+	// top of stack has indices/key
 	DevaObject idxkey = stack.back();
 	stack.pop_back();
 	// next-to-top of stack has name of vector/map

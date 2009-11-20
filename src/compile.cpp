@@ -1051,7 +1051,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// then walk the children - key_exp will push it's children (the key) and
 			// the key-lookup op
-			walk_children( i, is );
+			reverse_walk_children( i, is );
 		}
 	}
 	// in op ('in' keyword in for loops)
@@ -1088,7 +1088,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
         // either the two sides or the two sides and a semi-colon
 		// if the lhs is an identifier with a key_exp (vec/map) then generate a
-		// vector store
+		// table store
 		else if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
 			 i->children[0].children[0].value.id() == key_exp_id )
 		{
@@ -1096,6 +1096,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+			// TODO: handle slicing 
 			// push the key exp
 			walk_children( i->children[0].children.begin(), is );
 			
@@ -1149,7 +1150,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				generate_line_num( i->children.begin(), is );
 				is.push( Instruction( op_tbl_load ) );
 				// then do the key op 
-				walk_children( i->children[0].children[1].children.begin(), is );
+				reverse_walk_children( i->children[0].children[1].children.begin(), is );
 			}
 
             // rhs of assignment op
@@ -1254,7 +1255,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				generate_line_num( i->children.begin(), is );
 				is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
 				// push the key exp
-				walk_children( i->children[0].children.begin(), is );
+				reverse_walk_children( i->children[0].children.begin(), is );
 				is.push( Instruction( op_tbl_load ) );
 			}
 			// lhs stays the same
@@ -1297,7 +1298,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// first generate the tbl_load instruction for the dot-op
 			gen_IL_dot_op( i, is );
 			// then do the key op 
-			walk_children( i->children[1].children.begin(), is );
+			reverse_walk_children( i->children[1].children.begin(), is );
 			gen_IL_key_exp( i->children[1].children.begin(), is );
 		}
 		else
@@ -1337,7 +1338,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// key exp
 	else if( i->value.id() == parser_id( key_exp_id ) )
 	{
-		walk_children( i, is );
+		reverse_walk_children( i, is );
 		gen_IL_key_exp( i, is );
 	}
 	// const decl
