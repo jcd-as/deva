@@ -1,2 +1,2 @@
-input.dv:2: error: Only simple types are allowed in chained assignment operators.
-fatal error generating IL for input.dv
+input.dv:2: error: Chained assignments are not allowed.
+error checking semantics in input.dv

@@ -245,6 +245,10 @@ void check_assignment_op( iter_t const & i )
 	// and the type of the assignment itself MUST be a variable
 	// optional third child must be semi-colon if it exists
 	NodeInfo lhs = i->children[0].value.value();
+	// if the lhs is an assignment operator, error out, chained assignments are
+	// verboten
+	if( i->children[0].value.id() == assignment_op_id )
+		throw DevaSemanticException( "Chained assignments are not allowed.", lhs );
 	NodeInfo rhs = i->children[1].value.value();
 	if( lhs.type != variable_type && i->children[0].value.id() != const_decl_id )
 		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value", lhs );
