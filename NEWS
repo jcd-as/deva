@@ -7,5 +7,6 @@ release 0.9.1
 - (hopefully) builds correctly under Mac OS X 10.6 and Ubuntu/Debian
 
 release 0.9.2
+- slicing added. deva-language-1.0 doc updated to document it. test 47 added to test it.
 - bug fixes: mixed dot-operator and indexers ('[]' op) were broken in several
   cases. added test cases as well (test 46).
