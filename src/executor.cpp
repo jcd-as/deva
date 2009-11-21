@@ -1019,9 +1019,141 @@ void Executor::Tbl_load( Instruction const & inst )
 // 10 set item in vector or map. args: index, value
 void Executor::Tbl_store( Instruction const & inst )
 {
-    // enough data on stack
-    if( stack.size() < 3 )
-        throw DevaICE( "Invalid 'tbl_store' instruction: not enough data on stack." );
+	// enough data on stack?
+	if( stack.size() < 3 )
+		throw DevaICE( "Invalid 'tbl_store' instruction: not enough data on stack." );
+
+	int num_indices = 1;
+	if( inst.args.size() > 0 && inst.args[0].Type() == sym_size )
+		num_indices = inst.args[0].sz_val;
+
+	// if this is a slice
+	if( num_indices > 1 )
+	{
+		if( num_indices > 3 )
+			throw DevaICE( "Too many arguments to tbl_load instruction." );
+
+		// top of stack has value
+		DevaObject val = stack.back();
+		stack.pop_back();
+		// if the value is a variable, look it up
+		if( val.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Invalid type for operand to a vector store operation." );
+			val = *o;
+		}
+
+		DevaObject start_idx = stack.back();
+		stack.pop_back();
+		DevaObject end_idx, step_val, table;
+		if( num_indices == 2 )
+		{
+			end_idx = stack.back();
+			stack.pop_back();
+			step_val = DevaObject( "", 1.0 );
+			table = stack.back();
+			stack.pop_back();
+		}
+		else
+		{
+			end_idx = stack.back();
+			stack.pop_back();
+			step_val = stack.back();
+			stack.pop_back();
+			table = stack.back();
+			stack.pop_back();
+		}
+		// ensure the args are numeric
+		if( start_idx.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( start_idx );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'start' index." );
+			start_idx = *o;
+		}
+		if( start_idx.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'start' index: must be numeric." );
+		if( end_idx.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( end_idx );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'end' index." );
+			end_idx = *o;
+		}
+		if( end_idx.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'end' index: must be numeric." );
+		if( step_val.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( step_val );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object used in slice 'step' value." );
+			step_val = *o;
+		}
+		if( step_val.Type() != sym_number )
+			throw DevaRuntimeException( "Invalid type for slice 'step' value: must be numeric." );
+
+		// ensure the table is a vector
+		if( table.Type() == sym_unknown )
+		{
+			DevaObject* o = find_symbol( table );
+			if( !o )
+				throw DevaRuntimeException( "Invalid object for slice assignment." );
+			table = *o;
+		}
+		if( table.Type() != sym_vector )
+				throw DevaRuntimeException( "Invalid type for slice assignment: must be a vector." );
+
+		// convert to integer values
+		// TODO: error on non-integer numbers
+		size_t start = (size_t)start_idx.num_val;
+		size_t end = (size_t)end_idx.num_val;
+		size_t step = (size_t)step_val.num_val;
+
+		size_t sz = table.vec_val->size();
+
+		// check the indices & step value
+		if( start >= sz || start < 0 )
+			throw DevaRuntimeException( "Invalid 'start' index slice." );
+		if( end > sz || end < 0 )
+			throw DevaRuntimeException( "Invalid 'end' index in slice." );
+		if( end < start )
+			throw DevaRuntimeException( "Invalid slice indices in slice: 'start' is greater than 'end'." );
+		if( step < 1 )
+			throw DevaRuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
+
+		// perform the slice
+		// 'step' is '1' (the default) is a simple insertion
+		if( step == 1 )
+		{
+			// first erase the destination range
+			table.vec_val->erase( table.vec_val->begin() + start, table.vec_val->begin() + end );
+			// if the source is a vector, insert its contents
+			if( val.Type() == sym_vector )
+				table.vec_val->insert( table.vec_val->begin() + start, val.vec_val->begin(), val.vec_val->end() );
+			// otherwise insert whatever the object is
+			table.vec_val->insert( table.vec_val->begin() + start, val );
+		}
+		// other steps are separate deletions and insertions
+		else
+		{
+			// ensure the source is a vector
+			if( val.Type() != sym_vector )
+				throw DevaRuntimeException( "Source in slice assignment must be a vector." );
+			// then ensure the destination and source lengths are identical
+			if( val.vec_val->size() != (int)((end - start + 1)/step) )
+				throw DevaRuntimeException( "Source in slice assignment must be the same size as the destination." );
+			int j = 0;
+			for( int i = 0; i < end - start; ++i )
+			{
+				if( i % step == 0 )
+					table.vec_val->at( start + i ) = val.vec_val->at( j++ );
+			}
+		}
+		return;
+	}
+
 	// top of stack has value
 	DevaObject val = stack.back();
 	stack.pop_back();
@@ -1053,11 +1185,11 @@ void Executor::Tbl_store( Instruction const & inst )
 		idxkey = *o;
 	}
 	// find the map/vector from the symbol table
-    DevaObject *table;
-    if( vecmap.Type() == sym_unknown )
-        table = find_symbol( vecmap );
-    else
-        table = &vecmap;
+	DevaObject *table;
+	if( vecmap.Type() == sym_unknown )
+		table = find_symbol( vecmap );
+	else
+		table = &vecmap;
 
 	// ensure it is the correct type
 	// vector *must* have a numeric (integer) index
@@ -1115,8 +1247,8 @@ void Executor::Swap( Instruction const & inst )
 // 12 line number
 void Executor::Line_num( Instruction const & inst )
 {
-    file = inst.args[0].str_val;
-    line = inst.args[1].sz_val;
+	file = inst.args[0].str_val;
+	line = inst.args[1].sz_val;
 }
 // 13 unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
@@ -2585,23 +2717,23 @@ bool Executor::RunFile( const char* const filepath )
 	}
 	catch( DevaICE & e )
 	{
-        if( file.length() != 0 )
-        {
-            cout << file << ":";
-            if( line != 0 )
-                cout << line << ":";
-        }
+		if( file.length() != 0 )
+		{
+			cout << file << ":";
+			if( line != 0 )
+				cout << line << ":";
+		}
 		cout << "Internal compiler error: " << e.what() << endl;
 		return false;
 	}
 	catch( DevaRuntimeException & e )
 	{
-        if( file.length() != 0 )
-        {
-            cout << file << ":";
-            if( line != 0 )
-                cout << line << ":";
-        }
+		if( file.length() != 0 )
+		{
+			cout << file << ":";
+			if( line != 0 )
+				cout << line << ":";
+		}
 		cout << e.what() << endl;
 		return false;
 	}
@@ -2637,23 +2769,23 @@ bool Executor::RunText( const char* const text )
 	}
 	catch( DevaICE & e )
 	{
-        if( file.length() != 0 )
-        {
-            cout << file << ":";
-            if( line != 0 )
-                cout << line << ":";
-        }
+		if( file.length() != 0 )
+		{
+			cout << file << ":";
+			if( line != 0 )
+				cout << line << ":";
+		}
 		cout << "Internal compiler error: " << e.what() << endl;
 		return false;
 	}
 	catch( DevaRuntimeException & e )
 	{
-        if( file.length() != 0 )
-        {
-            cout << file << ":";
-            if( line != 0 )
-                cout << line << ":";
-        }
+		if( file.length() != 0 )
+		{
+			cout << file << ":";
+			if( line != 0 )
+				cout << line << ":";
+		}
 		cout << e.what() << endl;
 		return false;
 	}

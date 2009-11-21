@@ -62,73 +62,73 @@ void do_vector_slice( Executor *ex );
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
 {
-    string( "vector_append" ),
-    string( "vector_length" ),
-    string( "vector_copy" ),
-    string( "vector_concat" ),
-    string( "vector_min" ),
-    string( "vector_max" ),
-    string( "vector_pop" ),
-    string( "vector_insert" ),
-    string( "vector_remove" ),
-    string( "vector_find" ),
-    string( "vector_rfind" ),
-    string( "vector_count" ),
-    string( "vector_reverse" ),
-    string( "vector_sort" ),
-    string( "vector_map" ),
-    string( "vector_filter" ),
-    string( "vector_reduce" ),
-    string( "vector_slice" ),
+	string( "vector_append" ),
+	string( "vector_length" ),
+	string( "vector_copy" ),
+	string( "vector_concat" ),
+	string( "vector_min" ),
+	string( "vector_max" ),
+	string( "vector_pop" ),
+	string( "vector_insert" ),
+	string( "vector_remove" ),
+	string( "vector_find" ),
+	string( "vector_rfind" ),
+	string( "vector_count" ),
+	string( "vector_reverse" ),
+	string( "vector_sort" ),
+	string( "vector_map" ),
+	string( "vector_filter" ),
+	string( "vector_reduce" ),
+	string( "vector_slice" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*vector_builtin_fcn)(Executor*);
 vector_builtin_fcn vector_builtin_fcns[] = 
 {
-    do_vector_append,
-    do_vector_length,
-    do_vector_copy,
-    do_vector_concat,
-    do_vector_min,
-    do_vector_max,
-    do_vector_pop,
-    do_vector_insert,
-    do_vector_remove,
-    do_vector_find,
-    do_vector_rfind,
-    do_vector_count,
-    do_vector_reverse,
-    do_vector_sort,
-    do_vector_map,
-    do_vector_filter,
-    do_vector_reduce,
-    do_vector_slice,
+	do_vector_append,
+	do_vector_length,
+	do_vector_copy,
+	do_vector_concat,
+	do_vector_min,
+	do_vector_max,
+	do_vector_pop,
+	do_vector_insert,
+	do_vector_remove,
+	do_vector_find,
+	do_vector_rfind,
+	do_vector_count,
+	do_vector_reverse,
+	do_vector_sort,
+	do_vector_map,
+	do_vector_filter,
+	do_vector_reduce,
+	do_vector_slice,
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
 // is this name a built-in function?
 bool is_vector_builtin( const string & name )
 {
-    const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
-    if( i != vector_builtin_names + num_of_vector_builtins ) return true;
+	const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
+	if( i != vector_builtin_names + num_of_vector_builtins ) return true;
 	else return false;
 }
 
 // execute built-in function
 void execute_vector_builtin( Executor *ex, const string & name )
 {
-    const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
-    if( i == vector_builtin_names + num_of_vector_builtins )
+	const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
+	if( i == vector_builtin_names + num_of_vector_builtins )
 		throw DevaICE( "No such vector built-in method." );
-    // compute the index of the function in the look-up table(s)
-    long l = (long)i;
-    l -= (long)&vector_builtin_names;
-    int idx = l / sizeof( string );
-    if( idx > num_of_vector_builtins )
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&vector_builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_vector_builtins )
 		throw DevaICE( "Out-of-array-bounds looking for vector built-in method." );
-    else
-        // call the function
-        vector_builtin_fcns[idx]( ex );
+	else
+		// call the function
+		vector_builtin_fcns[idx]( ex );
 }
 
 // the built-in executor functions:
@@ -205,10 +205,10 @@ void do_vector_copy( Executor *ex )
 	DevaObject vec = ex->stack.back();
 	ex->stack.pop_back();
 
-    if( vec.Type() != sym_vector )
+	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'copy'." );
 
-    DevaObject copy;
+	DevaObject copy;
 	// create a new vector object that is a copy of the one we received,
 	DOVector* v = new DOVector( *(vec.vec_val) );
 	copy = DevaObject( "", v );

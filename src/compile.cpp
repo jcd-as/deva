@@ -194,25 +194,25 @@ void eval_node( iter_t const & i )
 	ni.sym = s;
 	i->value.value( ni );
 
-//    cout << "In eval_node. i->value = " << s << 
-//        " i->children.size() = " << i->children.size() << endl;
+//	cout << "In eval_node. i->value = " << s << 
+//		" i->children.size() = " << i->children.size() << endl;
 
 	//////////////////////////////////////////////////////////////////
 	// valid node types:
 	//////////////////////////////////////////////////////////////////
 	// number
-    if( i->value.id() == parser_id( number_id ) )
-    {
+	if( i->value.id() == parser_id( number_id ) )
+	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 		walk_children( i );
 		check_number( i );
-    }
+	}
 	// string
 	else if( i->value.id() == parser_id( string_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 		walk_children( i );
 		check_string( i );
 	}
@@ -220,7 +220,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( boolean_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 		walk_children( i );
 		check_boolean( i );
 	}
@@ -228,7 +228,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( null_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 		walk_children( i );
 		check_null( i );
 	}
@@ -236,7 +236,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( func_id ) )
 	{
 		// children: id, arg_list, compound_statement | statement
-        //assert( i->children.size() == 3 );
+		//assert( i->children.size() == 3 );
 		walk_children( i );
 		check_func( i );
 	}
@@ -282,7 +282,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( module_name_id ) )
 	{
 		// can have semi-colon
-        assert( i->children.size() < 2 );
+		assert( i->children.size() < 2 );
 		walk_children( i );
 		check_module_name( i );
 	}
@@ -295,7 +295,7 @@ void eval_node( iter_t const & i )
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_map_op( i );
 	}
@@ -308,15 +308,15 @@ void eval_node( iter_t const & i )
 	// semicolon op
 	else if( i->value.id() == parser_id( semicolon_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_semicolon_op( i );
 	}
 	// assignment op
 	else if( i->value.id() == parser_id( assignment_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_assignment_op( i );
 	}
@@ -327,40 +327,40 @@ void eval_node( iter_t const & i )
 			 i->value.id() == parser_id( div_assignment_op_id ) ||
 			 i->value.id() == parser_id( mod_assignment_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_op_assignment_op( i );
 	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_logical_op( i );
 	}
 	// relational op
 	else if( i->value.id() == parser_id( relational_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_relational_op( i );
 	}
 	// mult_op
 	else if( i->value.id() == parser_id( mult_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_mult_op( i );
 	}
 	// add_op
 	else if( i->value.id() == parser_id( add_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_add_op( i );
 	}
@@ -368,7 +368,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( unary_op_id ) )
 	{
 		// operand and possibly semi-colon
-        assert( i->children.size() == 1 || i->children.size() == 2 );
+		assert( i->children.size() == 1 || i->children.size() == 2 );
 		walk_children( i );
 		check_unary_op( i );
 	}
@@ -376,7 +376,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( dot_op_id ) )
 	{
 		// operands (lhs & rhs) and possibly semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 		walk_children( i );
 		check_dot_op( i );
 	}
@@ -384,7 +384,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( open_paren_op_id )
 		  || i->value.id() == parser_id( close_paren_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_paren_op( i );
 	}
@@ -392,7 +392,7 @@ void eval_node( iter_t const & i )
 	else if( i->value.id() == parser_id( open_bracket_op_id ) 
 			|| i->value.id() == parser_id( close_bracket_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_bracket_op( i );
 	}
@@ -577,12 +577,12 @@ void eval_node( iter_t const & i )
 		emit_error( i->value.value(), "Semantic error: Encountered invalid node type" );
 		throw DevaSemanticException( "invalid node type", i->value.value() );
 	}
-    else
-    {
+	else
+	{
 		// error, invalid node type
 		emit_error( i->value.value(), "Semantic error: Encountered unknown node type" );
 		throw DevaSemanticException( "invalid node type", i->value.value() );
-    }
+	}
 }
 
 
@@ -592,9 +592,9 @@ extern bool debug_info_on;
 bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info )
 {
 	// set global flag (shared with instructions.cpp, where it is defined)
-    debug_info_on = debug_info;
-    try
-    {
+	debug_info_on = debug_info;
+	try
+	{
 		// if we're NOT in debug mode, we at least need one "line num" op to say
 		// what file we're in (in order for 'import' and module-finding to work
 		// properly)
@@ -607,18 +607,18 @@ bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream 
 			is.push( Instruction( op_line_num, DevaObject( "", ni.file ), DevaObject( "", (size_t)0, false) ) );
 		}
 
-        // walk the tree, generating the IL for each node
-        iter_t i = info.trees.begin();
-        generate_IL_for_node( i, is, i, 0 );
+		// walk the tree, generating the IL for each node
+		iter_t i = info.trees.begin();
+		generate_IL_for_node( i, is, i, 0 );
 
-        // last node always a halt
-        is.push( Instruction( op_halt ) );
-    }
-    catch( DevaSemanticException & e )
-    {
-        emit_error( e.node, e.what() );
-        return false;
-    }
+		// last node always a halt
+		is.push( Instruction( op_halt ) );
+	}
+	catch( DevaSemanticException & e )
+	{
+		emit_error( e.node, e.what() );
+		return false;
+	}
 
 	return true;
 }
@@ -698,12 +698,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	///////////////////////////////////////
 
 	// number
-    if( i->value.id() == parser_id( number_id ) )
-    {
+	if( i->value.id() == parser_id( number_id ) )
+	{
 		// self and possibly semi-colon
 		walk_children( i, is );
 		gen_IL_number( i, is );
-    }
+	}
 	// string
 	else if( i->value.id() == parser_id( string_id ) )
 	{
@@ -1023,11 +1023,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// assignment op
 	else if( i->value.id() == parser_id( assignment_op_id ) )
 	{
-		// if the lhs is another assignment op, we need to walk the chain
+		// either the two sides of the assignment, or the two sides and a semi-colon
+
+		// if the lhs is another assignment op, ICE
 		if( i->children[0].value.id() == assignment_op_id )
 			throw DevaICE( "Chained assignment found. Semantic checking should have disallowed this." );
 			
-        // either the two sides or the two sides and a semi-colon
 		// if the lhs is an identifier with a key_exp (vec/map) then generate a
 		// table store
 		else if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
@@ -1037,52 +1038,51 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
-			// TODO: handle slicing 
 			// push the key exp
-			walk_children( i->children[0].children.begin(), is );
+			reverse_walk_children( i->children[0].children.begin(), is );
 			
 			// walk the rhs
 			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
-			// add the vector store op
+			// add the tbl_store op
 			generate_line_num( i->children.begin()+1, is );
-			is.push( Instruction( op_tbl_store ) );
+			is.push( Instruction( op_tbl_store, DevaObject( "", (size_t)i->children[0].children[0].children.size()-2, false ) ) );
 		}
 		// a dot-op on the lhs also indicates a vector store instead of load, as
 		// long as it is not a function call.
 		else if ( i->children[0].value.id() == dot_op_id )
 		{
-            // lhs of dot-op stays the same
-            if( i->children[0].children[0].value.id() == identifier_id )
-            {
-                string lhs = strip_symbol( string( i->children[0].children[0].value.begin(), i->children[0].children[0].value.end() ) );
-				generate_line_num( i->children[0].children.begin(), is );
-                is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
-            }
-            else
+			// lhs of dot-op stays the same
+			if( i->children[0].children[0].value.id() == identifier_id )
 			{
-                // don't pass 'self' (i) as parent, keep the parent the root for the
-                // whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
-                // the parent of a)
-                generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
+				string lhs = strip_symbol( string( i->children[0].children[0].value.begin(), i->children[0].children[0].value.end() ) );
+				generate_line_num( i->children[0].children.begin(), is );
+				is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+			}
+			else
+			{
+				// don't pass 'self' (i) as parent, keep the parent the root for the
+				// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
+				// the parent of a)
+				generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
 			}
 
-            // turn the rhs into a string
-            string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
+			// turn the rhs into a string
+			string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
 			generate_line_num( i->children[0].children.begin()+1, is );
-            is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
+			is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
 
-            // rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
-            // if the first child is an arg_list_exp, it's a fcn call
-            if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
-            {
-                // first walk the children, in reverse order
-                reverse_walk_children( i->children[0].children.begin() + 1, is );
+			// rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
+			// if the first child is an arg_list_exp, it's a fcn call
+			if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
+			{
+				// first walk the children, in reverse order
+				reverse_walk_children( i->children[0].children.begin() + 1, is );
 
-                // then generate the IL for this node (back-patching the return
+				// then generate the IL for this node (back-patching the return
 				// address etc.)
 				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num );
-            }
+			}
 			// check for a table lookup (for 'a.b[0]' etc)
 			// if the first child is a key_exp, it's a table lookup
 			else if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
@@ -1094,13 +1094,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				reverse_walk_children( i->children[0].children[1].children.begin(), is );
 			}
 
-            // rhs of assignment op
-            // walk the rhs
-            generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+			// rhs of assignment op
+			// walk the rhs
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
-            // add the table store op (for the assignment op)
+			// add the table store op (for the assignment op)
 			generate_line_num( i->children.begin(), is );
-            is.push( Instruction( op_tbl_store ) );
+			is.push( Instruction( op_tbl_store ) );
 		}
 		else
 		{
@@ -1141,28 +1141,28 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
+		// either the two sides or the two sides and a semi-colon
 		walk_children( i, is );
 		gen_IL_logical_op( i, is );
 	}
 	// relational op
 	else if( i->value.id() == parser_id( relational_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
+		// either the two sides or the two sides and a semi-colon
 		walk_children( i, is );
 		gen_IL_relational_op( i, is );
 	}
 	// mult_op
 	else if( i->value.id() == parser_id( mult_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
+		// either the two sides or the two sides and a semi-colon
 		walk_children( i, is );
 		gen_IL_mult_op( i, is );
 	}
 	// add_op
 	else if( i->value.id() == parser_id( add_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
+		// either the two sides or the two sides and a semi-colon
 		walk_children( i, is );
 		gen_IL_add_op( i, is );
 	}

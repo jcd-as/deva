@@ -238,7 +238,7 @@ void generate_line_num( iter_t const & i, InstructionStream & is )
 	if( !debug_info_on )
 		return;
 
-    // get the node info
+	// get the node info
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	// if the file or line number has changed since the last call, generate a
 	// line num op
@@ -305,7 +305,7 @@ void gen_IL_number( iter_t const & i, InstructionStream & is )
 void gen_IL_string( iter_t const & i, InstructionStream & is )
 {
 	// push the string onto the stack
-    // "un-escape" the string
+	// "un-escape" the string
 	string s = unescape( strip_quotes( strip_symbol( string( i->value.begin(), i->value.end() ) ) ) );
 	generate_line_num( i, is );
 	is.push( Instruction( op_push, DevaObject( "", s ) ) );
@@ -1006,10 +1006,10 @@ void gen_IL_translation_unit( iter_t const & i, InstructionStream & is )
 
 void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
-    // don't generate an 'enter' statement for function defs, as the 'def'
+	// don't generate an 'enter' statement for function defs, as the 'def'
 	// handling code does this for you (so that the defarg's are included
 	// *inside* the new scope, not outside)
-    if( parent->value.id() != func_id )
+	if( parent->value.id() != func_id )
 	{
 		// generate enter
 		generate_line_num( i, is );
@@ -1019,13 +1019,13 @@ void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is, it
 
 void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t const & parent )
 {
-    // don't generate a 'leave' statement for function defs, as the 'return'
-    // statement accomplishes the same thing
-    if( parent->value.id() != func_id )
+	// don't generate a 'leave' statement for function defs, as the 'return'
+	// statement accomplishes the same thing
+	if( parent->value.id() != func_id )
 	{
 		generate_line_num( i, is );
-        // generate leave
-        is.push( Instruction( op_leave ) );
+		// generate leave
+		is.push( Instruction( op_leave ) );
 	}
 }
 
