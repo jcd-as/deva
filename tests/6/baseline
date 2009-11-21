@@ -411,25 +411,25 @@ store :
 push : unknown: 'b' ; 
 push : num: '' = 0 ; 
 push : string: '' = foo ; 
-tbl_store : 
+tbl_store : function: '', offset = 1 ; 
 push : unknown: 'b' ; 
 push : string: '' = foo ; 
 push : unknown: 'foo' ; 
-tbl_store : 
+tbl_store : function: '', offset = 1 ; 
 push : unknown: 'x' ; 
 push : unknown: 'b' ; 
 push : string: '' = foo ; 
 tbl_load : function: '', offset = 1 ; 
 store : 
-push : function: '', offset = 308 ; 
+push : function: '', offset = 320 ; 
 push : num: '' = 1 ; 
 push : num: '' = 0 ; 
 call : function_call: 'x' ; function: '', offset = 2 ; 
 pop : 
-push : function: '', offset = 310 ; 
+push : function: '', offset = 322 ; 
 push : unknown: 'b' ; 
 dup : num: '' = 0 ; 
-push : unknown: '.table00000001258699889.0000292990' ; 
+push : unknown: '.table00000001258779196.0000716188' ; 
 swap : 
 store : 
 call : function_call: 'length' ; function: '', offset = 1 ; 
@@ -437,8 +437,8 @@ push : num: '' = 0 ;
 dup : num: '' = 1 ; 
 dup : num: '' = 1 ; 
 neq : 
-jmpf : function: '', offset = 645 ; 
-load : unknown: '.table00000001258699889.0000292990' ; 
+jmpf : function: '', offset = 657 ; 
+load : unknown: '.table00000001258779196.0000716188' ; 
 dup : num: '' = 1 ; 
 tbl_load : boolean: '' = 1 ; 
 push : unknown: 'key' ; 
@@ -447,11 +447,11 @@ store :
 push : unknown: 'value' ; 
 swap : 
 store : 
-push : function: '', offset = 621 ; 
-push : function: '', offset = 557 ; 
+push : function: '', offset = 633 ; 
+push : function: '', offset = 569 ; 
 push : unknown: 'key' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
-push : function: '', offset = 587 ; 
+push : function: '', offset = 599 ; 
 push : unknown: 'value' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
 add : 
@@ -462,21 +462,21 @@ call : function: '', offset = 1 ;
 pop : 
 push : num: '' = 1 ; 
 add : 
-jmp : function: '', offset = 405 ; 
+jmp : function: '', offset = 417 ; 
 pop : 
 pop : 
 push : unknown: 'a' ; 
 push : num: '' = 10 ; 
 lt : 
-jmpf : function: '', offset = 782 ; 
+jmpf : function: '', offset = 794 ; 
 enter : 
 push : unknown: 'a' ; 
 push : unknown: 'a' ; 
 push : num: '' = 1 ; 
 add : 
 store : 
-push : function: '', offset = 770 ; 
-push : function: '', offset = 738 ; 
+push : function: '', offset = 782 ; 
+push : function: '', offset = 750 ; 
 push : unknown: 'a' ; 
 call : function_call: 'str' ; function: '', offset = 1 ; 
 push : unknown: 'io' ; 
@@ -485,6 +485,6 @@ tbl_load : boolean: '' = 0 ;
 call : function: '', offset = 1 ; 
 pop : 
 leave : 
-jmp : function: '', offset = 649 ; 
+jmp : function: '', offset = 661 ; 
 halt : 
 compiled input.dv successfully
