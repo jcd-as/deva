@@ -47,6 +47,7 @@ enum SymbolType
 	sym_class,			// 9	a class def
 	sym_instance,		// 10	a class instance (object)
 	sym_size,			// 11 	a size_t number (num of args etc)
+	sym_native_obj,		// 12	a native (C/C++) object (void*)
 	sym_end = 255		// end of enum and signal for end of instruction arg list
 };
 

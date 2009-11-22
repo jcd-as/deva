@@ -53,6 +53,7 @@ struct DevaObject : public SymbolInfo
 		char* str_val;
 		bool bool_val;
 		size_t sz_val;
+		void* nat_obj_val;
 	};
 	// objects with destructors not allowed in unions. bleh
 	smart_ptr<DOMap> map_val;
@@ -77,6 +78,8 @@ struct DevaObject : public SymbolInfo
 	// 'address' type (incl return/jump target etc) or 'size' type (integral
 	// number, incl native ptrs etc)
 	DevaObject( string nm, size_t offs, bool is_address );
+	// 'native object' (C void*) type
+	DevaObject( string nm, void* ptr );
     // map type with the given map
     DevaObject( string nm, DOMap* m );
     // vector type with the given vector

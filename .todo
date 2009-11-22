@@ -338,9 +338,10 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
     <note priority="veryhigh" time="1257036976">
         list comprehensions: syntactic sugar for the map/filter vector builtins
     </note>
-    <note priority="veryhigh" time="1257539732">
+    <note done="1258857809" priority="veryhigh" time="1257539732">
         need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
-    </note>
+    <comment>for 1.0, using vectors of numbers. not the most efficient way to do it, but functional
+</comment></note>
     <note priority="veryhigh" time="1257898807">
         add debug frame support (stack of frames kept during execution) and debugging support
     </note>

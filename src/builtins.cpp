@@ -589,9 +589,9 @@ void do_open( Executor *ex )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the file object as a 'size' type
+	// return the file object as a 'native object' type
 	if( file )
-		ex->stack.push_back( DevaObject( "", (size_t)file, false ) );
+		ex->stack.push_back( DevaObject( "", (void*)file ) );
 	// or null, on failure
 	else
 		ex->stack.push_back( DevaObject( "", sym_null ) );
@@ -616,8 +616,8 @@ void do_close( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'close' is not of the correct type." );
 
 	fclose( (FILE*)(o->sz_val) );
@@ -648,8 +648,8 @@ void do_flush( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'flush' is not of the correct type." );
 
 	fflush( (FILE*)(o->sz_val) );
@@ -684,8 +684,8 @@ void do_read( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'read' is not of the correct type." );
 
 	// get the number of bytes
@@ -749,8 +749,8 @@ void do_readstring( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'readstring' is not of the correct type." );
 
 	// get the number of bytes
@@ -811,8 +811,8 @@ void do_readline( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
 
 	// allocate space for some bytes 
@@ -883,8 +883,8 @@ void do_readlines( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'readlines' is not of the correct type." );
 
 	// keep reading lines until we reach the EOF
@@ -974,8 +974,8 @@ void do_write( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'write' is not of the correct type." );
 
 	// get the number of bytes
@@ -1052,8 +1052,8 @@ void do_writestring( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'writestring' is not of the correct type." );
 
 	// get the number of bytes
@@ -1113,8 +1113,8 @@ void do_writeline( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'writeline' is not of the correct type." );
 
 	// ensure the source is a string
@@ -1162,8 +1162,8 @@ void do_writelines( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'writelines' is not of the correct type." );
 
 	// get the source vector
@@ -1251,8 +1251,8 @@ void do_seek( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'seek' is not of the correct type." );
 
 	// get the position
@@ -1295,8 +1295,8 @@ void do_tell( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	// ensure it's an 'offset'
-	if( o->Type() != sym_size )
+	// ensure it's a native object
+	if( o->Type() != sym_native_obj )
 		throw DevaRuntimeException( "'file' argument to built-in function 'tell' is not of the correct type." );
 
 	long int pos = ftell( (FILE*)(o->sz_val) );

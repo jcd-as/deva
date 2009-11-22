@@ -66,6 +66,9 @@ DevaObject::DevaObject( const DevaObject & o ) : map_val( 0 ), vec_val( 0 )
 	case sym_size:
 		sz_val = o.sz_val;
 		break;
+	case sym_native_obj:
+		nat_obj_val = o.nat_obj_val;
+		break;
 	case sym_function_call:
 		// TODO: anything???
 		break;
@@ -112,6 +115,9 @@ DevaObject::DevaObject( string nm, const DevaObject & o ) : map_val( 0 ), vec_va
 	case sym_size:
 		sz_val = o.sz_val;
 		break;
+	case sym_native_obj:
+		nat_obj_val = o.nat_obj_val;
+		break;
 	case sym_function_call:
 		// TODO: anything???
 		break;
@@ -150,6 +156,9 @@ DevaObject::DevaObject( string nm, bool b ) : SymbolInfo( sym_boolean ), bool_va
 // 'address' or 'size' type
 DevaObject::DevaObject( string nm, size_t offs, bool is_address ) : SymbolInfo( sym_address ), sz_val( offs ), name( nm ), map_val( 0 ), vec_val( 0 )
 { if( !is_address ) type = sym_size; }
+// 'native object' (C void*) type
+DevaObject::DevaObject( string nm, void* ptr ) : SymbolInfo( sym_native_obj ), nat_obj_val( ptr ), name( nm ), map_val( 0 ), vec_val( 0 )
+{}
 // map type with the given map
 DevaObject::DevaObject( string nm, DOMap* m ) : SymbolInfo( sym_map ), name( nm ), map_val( m ), vec_val( 0 )
 {}
@@ -190,6 +199,9 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 	case sym_address:
 	case sym_size:
 		sz_val = -1;
+		break;
+	case sym_native_obj:
+		nat_obj_val = NULL;
 		break;
 	case sym_function_call:
 		// TODO: anything???
@@ -264,6 +276,9 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 	case sym_size:
 		sz_val = o.sz_val;
 		break;
+	case sym_native_obj:
+		nat_obj_val = o.nat_obj_val;
+		break;
 	case sym_function_call:
 		// TODO: anything???
 		break;
@@ -322,6 +337,11 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 			return true;
 		else
 			return false;
+	case sym_native_obj:
+		if( nat_obj_val < rhs.nat_obj_val )
+			return true;
+		else
+			return false;
 	case sym_function_call:
 		if( name.compare( rhs.name ) < 0 )
 			return true;
@@ -373,6 +393,8 @@ bool DevaObject::operator == ( const DevaObject & rhs ) const
 	case sym_address:
 	case sym_size:
 		return sz_val == rhs.sz_val;
+	case sym_native_obj:
+		return nat_obj_val == rhs.nat_obj_val;
 	case sym_function_call:
 		// TODO: ???
 		return false;
@@ -410,6 +432,8 @@ long DevaObject::Size() const
 	case sym_address:
 	case sym_size:
 		return sz + sizeof( size_t );
+	case sym_native_obj:
+		return sz + sizeof( void* );
 	case sym_null:
 		return sz + sizeof( long );
 	case sym_unknown:
