@@ -40,6 +40,7 @@
 // pre-decls for builtin executors
 void do_print( Executor *ex );
 void do_str( Executor *ex );
+void do_chr( Executor *ex );
 void do_append( Executor *ex );
 void do_length( Executor *ex );
 void do_copy( Executor *ex );
@@ -49,9 +50,11 @@ void do_open( Executor *ex );
 void do_close( Executor *ex );
 void do_flush( Executor *ex );
 void do_read( Executor *ex );
+void do_readstring( Executor *ex );
 void do_readline( Executor *ex );
 void do_readlines( Executor *ex );
 void do_write( Executor *ex );
+void do_writestring( Executor *ex );
 void do_writeline( Executor *ex );
 void do_writelines( Executor *ex );
 void do_seek( Executor *ex );
@@ -62,6 +65,7 @@ static const string builtin_names[] =
 {
 	string( "print" ),
     string( "str" ),
+    string( "chr" ),
     string( "append" ),
     string( "length" ),
     string( "copy" ),
@@ -71,9 +75,11 @@ static const string builtin_names[] =
     string( "close" ),
     string( "flush" ),
     string( "read" ),
+    string( "readstring" ),
     string( "readline" ),
     string( "readlines" ),
     string( "write" ),
+    string( "writestring" ),
     string( "writeline" ),
     string( "writelines" ),
     string( "seek" ),
@@ -85,6 +91,7 @@ builtin_fcn builtin_fcns[] =
 {
     do_print,
     do_str,
+    do_chr,
     do_append,
     do_length,
     do_copy,
@@ -94,9 +101,11 @@ builtin_fcn builtin_fcns[] =
 	do_close,
 	do_flush,
 	do_read,
+	do_readstring,
 	do_readline,
 	do_readlines,
 	do_write,
+	do_writestring,
 	do_writeline,
 	do_writelines,
 	do_seek,
@@ -291,6 +300,41 @@ void do_str( Executor *ex )
 		o = &obj;
 
 	string s = obj_to_str( o );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", s ) );
+}
+
+void do_chr( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'chr'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in built-in function 'chr'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure the argument is a number
+	if( o->Type() != sym_number )
+		throw DevaRuntimeException( "'num' argument to built-in function 'chr' must be a numercal value." );
+
+	char c = (char)(o->num_val);
+	char* s = new char[2];
+	s[0] = c;
+	s[1] = '\0';
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -657,6 +701,71 @@ void do_read( Executor *ex )
 		num_bytes = bytes.num_val;
 
 	// allocate space for bytes plus a null-terminator
+	unsigned char* s = new unsigned char[num_bytes + 1];
+	// zero out the bytes
+	memset( s, 0, num_bytes + 1 );
+	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->sz_val) );
+
+	// convert to a vector of numbers
+	DOVector* vec = new DOVector();
+	vec->reserve( bytes_read );
+	for( int c = 0; c < bytes_read; ++c )
+	{
+		vec->push_back( DevaObject( "", (double)(s[c]) ) );
+	}
+
+	delete [] s;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the vector of read bytes
+	ex->stack.push_back( DevaObject( "", vec ) );
+}
+
+// if there are embedded nulls in the bytes read the string
+// returned will only contain up to the first null...
+// read() should be used in this case, not readstring
+void do_readstring( Executor *ex )
+{
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readstring'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the number of bytes to read
+	DevaObject bytes = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readstring'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_size )
+		throw DevaRuntimeException( "'file' argument to built-in function 'readstring' is not of the correct type." );
+
+	// get the number of bytes
+	size_t num_bytes = 0;
+	if( bytes.Type() != sym_number )
+	{
+		DevaObject* no = ex->find_symbol( bytes );
+		if( !no )
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'readstring'." );
+		num_bytes = no->num_val;
+	}
+	else
+		num_bytes = bytes.num_val;
+
+	// allocate space for bytes plus a null-terminator
 	char* s = new char[num_bytes + 1];
 	// zero out the bytes
 	memset( s, 0, num_bytes + 1 );
@@ -671,8 +780,10 @@ void do_read( Executor *ex )
 		delete [] s;
 		s = new_s;
 	}
-	// TODO: what to do about embedded nulls in the bytes read? the string
-	// handling routines in deva will stop at the first embedded null...
+
+	// if there are embedded nulls in the bytes read the string
+	// returned will only contain up to the first null...
+	// read() should be used in this case, not readstring
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -858,7 +969,7 @@ void do_write( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'write'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'write'." );
 	}
 	if( !o )
 		o = &obj;
@@ -873,7 +984,85 @@ void do_write( Executor *ex )
 	{
 		DevaObject* no = ex->find_symbol( bytes );
 		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'write'" );
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'write'." );
+		num_bytes = no->num_val;
+	}
+	else
+		num_bytes = bytes.num_val;
+
+	// ensure the source is a vector
+	DevaObject* source;
+	if( src.Type() != sym_vector )
+	{
+		source = ex->find_symbol( src );
+		if( !source )
+			throw DevaRuntimeException( "'source' argument in built-in function 'write' must be a vector." );
+	}
+	else
+		source = &src;
+
+	size_t len = num_bytes > source->vec_val->size() ? num_bytes : source->vec_val->size();
+	unsigned char* data = new unsigned char[len];
+	// create a native array of unsigned chars to write out
+	for( int c = 0; c < len; ++c )
+	{
+		// ensure this object is a number
+		DevaObject o = source->vec_val->at( c );
+		if( o.Type() != sym_number )
+			throw DevaRuntimeException( "'source' vector in built-in function 'write' contains objects that are not numeric." );
+
+		// copy the item's data
+		data[c] = (unsigned char)o.num_val;
+	}
+	size_t bytes_written = fwrite( (void*)data, 1, len, (FILE*)(o->sz_val) );
+
+	delete [] data;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the number of bytes written
+	ex->stack.push_back( DevaObject( "", (double)bytes_written ) );
+}
+
+void do_writestring( Executor *ex )
+{
+	if( Executor::args_on_stack != 3 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writestring'." );
+
+	// file object to close is at the top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the number of bytes to write
+	DevaObject bytes = ex->stack.back();
+	ex->stack.pop_back();
+
+	// next is the object to write from
+	DevaObject src = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writestring'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's an 'offset'
+	if( o->Type() != sym_size )
+		throw DevaRuntimeException( "'file' argument to built-in function 'writestring' is not of the correct type." );
+
+	// get the number of bytes
+	size_t num_bytes = 0;
+	if( bytes.Type() != sym_number )
+	{
+		DevaObject* no = ex->find_symbol( bytes );
+		if( !no )
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'writestring'." );
 		num_bytes = no->num_val;
 	}
 	else
@@ -885,15 +1074,14 @@ void do_write( Executor *ex )
 	{
 		source = ex->find_symbol( src );
 		if( !source )
-			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'write'" );
+			throw DevaRuntimeException( "'source' argument in built-in function 'writestring' must be a string." );
 	}
 	else
 		source = &src;
 
-	size_t bytes_written = fwrite( (void*)(source->str_val), 1, num_bytes, (FILE*)(o->sz_val) );
-
-	// TODO: what to do about embedded nulls in the bytes written? the string
-	// handling routines in deva will stop at the first embedded null...
+	size_t slen = strlen( source->str_val );
+	size_t len = num_bytes > slen ? num_bytes : slen;
+	size_t bytes_written = fwrite( (void*)(source->str_val), 1, len, (FILE*)(o->sz_val) );
 
 	// pop the return address
 	ex->stack.pop_back();

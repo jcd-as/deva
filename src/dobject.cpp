@@ -139,7 +139,7 @@ DevaObject::DevaObject( string nm, string s ) : SymbolInfo( sym_string ), name( 
 	str_val = new char[s.size() + 1];
 	strcpy( str_val, s.c_str() );
 }
-// string type, _take_ownership_ of the passed in string!!
+// C string type, _take_ownership_ of the passed in string!!
 DevaObject::DevaObject( string nm, char* s ) : SymbolInfo( sym_string ), name( nm ), map_val( 0 ), vec_val( 0 )
 {
 	str_val = s;

@@ -8,7 +8,7 @@ byte
 #
 
 file = open( "input.dv" );
-bytes = read( file, 56 );
+bytes = readstring( file, 56 );
 print( tell( file ) );
 print( bytes );
 
@@ -26,12 +26,20 @@ for( line in lines )
 {
 	print( line, "" );
 }
+close( file );
+
+# binary read
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes.length() );
+print( bytes );
 close( file );
 # test file built-ins
 #
 
 file = open( "input.dv" );
-bytes = read( file, 56 );
+bytes = readstring( file, 56 );
 print( tell( file ) );
 print( bytes );
 
@@ -50,3 +58,71 @@ for( line in lines )
 	print( line, "" );
 }
 close( file );
+
+# binary read
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes.length() );
+print( bytes );
+close( file );
+56
+56
+vector: 'bytes' = 
+num: '' = 35
+num: '' = 32
+num: '' = 116
+num: '' = 101
+num: '' = 115
+num: '' = 116
+num: '' = 32
+num: '' = 102
+num: '' = 105
+num: '' = 108
+num: '' = 101
+num: '' = 32
+num: '' = 98
+num: '' = 117
+num: '' = 105
+num: '' = 108
+num: '' = 116
+num: '' = 45
+num: '' = 105
+num: '' = 110
+num: '' = 115
+num: '' = 10
+num: '' = 35
+num: '' = 10
+num: '' = 10
+num: '' = 102
+num: '' = 105
+num: '' = 108
+num: '' = 101
+num: '' = 32
+num: '' = 61
+num: '' = 32
+num: '' = 111
+num: '' = 112
+num: '' = 101
+num: '' = 110
+num: '' = 40
+num: '' = 32
+num: '' = 34
+num: '' = 105
+num: '' = 110
+num: '' = 112
+num: '' = 117
+num: '' = 116
+num: '' = 46
+num: '' = 100
+num: '' = 118
+num: '' = 34
+num: '' = 32
+num: '' = 41
+num: '' = 59
+num: '' = 10
+num: '' = 98
+num: '' = 121
+num: '' = 116
+num: '' = 101
+
