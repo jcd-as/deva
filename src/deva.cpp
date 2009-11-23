@@ -172,6 +172,8 @@ int main( int argc, char** argv )
 		}
 		catch( DevaRuntimeException & e )
 		{
+			if( typeid( e ) == typeid( DevaICE ) )
+				throw;
 			cout << "Error: " << e.what() << endl;
 			// dump the stack trace
 			ex.DumpTrace( cout, show_all_scopes );

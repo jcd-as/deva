@@ -189,7 +189,7 @@ private:
 	unsigned char* LoadByteCode( const char* const filename );
 	// fixup all the offsets in 'function' symbols (fcns, returns, jumps) to
 	// pointers in actual memory
-	void FixupOffsets();
+	void FixupOffsets( bool in_memory = false );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s

@@ -259,7 +259,7 @@ void do_print( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'print'." );
 	}
 	if( !o )
 		o = &obj;
@@ -294,7 +294,7 @@ void do_str( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'str'." );
 	}
 	if( !o )
 		o = &obj;
@@ -322,7 +322,7 @@ void do_chr( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in built-in function 'chr'." );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'chr'." );
 	}
 	if( !o )
 		o = &obj;
@@ -360,7 +360,7 @@ void do_append( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'append'." );
 	}
 	if( !o )
 		o = &obj;
@@ -392,7 +392,7 @@ void do_length( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'length'." );
 	}
 	if( !o )
 		o = &obj;
@@ -435,7 +435,7 @@ void do_copy( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'copy'." );
 	}
 	if( !o )
 		o = &obj;
@@ -489,7 +489,7 @@ void do_eval( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'eval'." );
 	}
 	if( !o )
 		o = &obj;
@@ -521,7 +521,7 @@ void do_delete( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'delete'." );
 	}
 	if( !o )
 		o = &obj;
@@ -557,7 +557,7 @@ void do_open( Executor *ex )
 		{
 			mode = ex->find_symbol( arg );
 			if( !mode )
-				throw DevaRuntimeException( "Symbol not found for 'mode' argument in built-in function 'open'" );
+				throw DevaRuntimeException( "Symbol not found for 'mode' argument in built-in function 'open'." );
 		}
 		else
 			mode = &arg;
@@ -575,7 +575,7 @@ void do_open( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file_name' argument in built-in function 'open'" );
+			throw DevaRuntimeException( "Symbol not found for 'file_name' argument in built-in function 'open'." );
 	}
 	if( !o )
 		o = &obj;
@@ -611,7 +611,7 @@ void do_close( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'close'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'close'." );
 	}
 	if( !o )
 		o = &obj;
@@ -643,7 +643,7 @@ void do_flush( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'flush'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'flush'." );
 	}
 	if( !o )
 		o = &obj;
@@ -679,7 +679,7 @@ void do_read( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'read'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'read'." );
 	}
 	if( !o )
 		o = &obj;
@@ -694,7 +694,7 @@ void do_read( Executor *ex )
 	{
 		DevaObject* no = ex->find_symbol( bytes );
 		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'read'" );
+			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'read'." );
 		num_bytes = no->num_val;
 	}
 	else
@@ -806,7 +806,7 @@ void do_readline( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'." );
 	}
 	if( !o )
 		o = &obj;
@@ -878,7 +878,7 @@ void do_readlines( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readlines'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readlines'." );
 	}
 	if( !o )
 		o = &obj;
@@ -1108,7 +1108,7 @@ void do_writeline( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writeline'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writeline'." );
 	}
 	if( !o )
 		o = &obj;
@@ -1123,7 +1123,7 @@ void do_writeline( Executor *ex )
 	{
 		source = ex->find_symbol( src );
 		if( !source )
-			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writeline'" );
+			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writeline'." );
 	}
 	else
 		source = &src;
@@ -1157,7 +1157,7 @@ void do_writelines( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writelines'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writelines'." );
 	}
 	if( !o )
 		o = &obj;
@@ -1172,7 +1172,7 @@ void do_writelines( Executor *ex )
 	{
 		source = ex->find_symbol( src );
 		if( !source )
-			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writelines'" );
+			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writelines'." );
 		// ensure it is a vector
 		if( source->Type() != sym_vector )
 			throw DevaRuntimeException( "'source' argument to built-in function 'writelines' is not of the correct type." );
@@ -1227,7 +1227,7 @@ void do_seek( Executor *ex )
 		{
 			parg = ex->find_symbol( arg );
 			if( !parg )
-				throw DevaRuntimeException( "Symbol not found for 'origin' argument in built-in function 'seek'" );
+				throw DevaRuntimeException( "Symbol not found for 'origin' argument in built-in function 'seek'." );
 		}
 		else
 			parg = &arg;
@@ -1246,7 +1246,7 @@ void do_seek( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'seek'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'seek'." );
 	}
 	if( !o )
 		o = &obj;
@@ -1261,7 +1261,7 @@ void do_seek( Executor *ex )
 	{
 		DevaObject* po = ex->find_symbol( position );
 		if( !po )
-			throw DevaRuntimeException( "Symbol not found for 'position' argument in built-in function 'seek'" );
+			throw DevaRuntimeException( "Symbol not found for 'position' argument in built-in function 'seek'." );
 		pos = (long int)po->num_val;
 	}
 	else
@@ -1290,7 +1290,7 @@ void do_tell( Executor *ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'tell'" );
+			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'tell'." );
 	}
 	if( !o )
 		o = &obj;

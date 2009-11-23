@@ -251,12 +251,12 @@ unsigned char* Executor::LoadByteCode( const char* const filename )
 
 	// allocate memory for the byte code array
 	filebuf* buf = file.rdbuf();
-	// size of the byte code array is file length minus the header size (16
-	// bytes)
+	// size of the byte code array is file length minus the header size 
+	// (16 bytes)
 	long len = buf->pubseekoff( 0, ios::end, ios::in );
-	len -= 16;
+	len -= FileHeader::size();
 	// (seek back to the end of the header)
-	buf->pubseekpos( 16, ios::in );
+	buf->pubseekpos( FileHeader::size(), ios::in );
 	bytecode = new unsigned char[len];
 
 	// read the file into the byte code array
@@ -268,7 +268,11 @@ unsigned char* Executor::LoadByteCode( const char* const filename )
 	return bytecode;
 }
 
-void Executor::FixupOffsets()
+// fixup the addresses (offsets) of the instructions
+// if 'in_memory' is true, the file header is included in the code buffer
+// and needs to be accounted for (which is the case when compiling in
+// memory as opposed to reading from a compiled .dvc file)
+void Executor::FixupOffsets( bool in_memory /*= false*/ )
 {
 	char* name;
 	// read the instructions
@@ -319,7 +323,11 @@ void Executor::FixupOffsets()
 						size_t sz_val;
 						memcpy( (void*)&sz_val, (char*)(ip), sizeof( size_t ) );
 						// calculate the actual address
-						size_t address = (size_t)code + sz_val;
+						size_t address;
+						if( in_memory )
+							address = (size_t)code + sz_val + FileHeader::size();
+						else
+							address = (size_t)code + sz_val;
 						// 'fix-up' the 'bytecode' with the actual address
 						size_t* p_add = (size_t*)ip;
 						*p_add = address;
@@ -1832,7 +1840,7 @@ void Executor::Output( Instruction const & inst )
 	{
 		o = find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call" );
+			throw DevaRuntimeException( "Symbol not found in function call." );
 	}
 	if( !o )
 		o = &obj;
@@ -2056,7 +2064,7 @@ void Executor::Return( Instruction const & inst )
 	DevaObject ob = stack.back();
 	stack.pop_back();
 	if( ob.Type() != sym_address )
-		throw DevaRuntimeException( "Invalid return destination on stack when executing return instruction" );
+		throw DevaICE( "Invalid return destination on stack when executing return instruction." );
 	stack.push_back( ret );
 	// jump to the return location
 	size_t offset = ob.sz_val;
@@ -2350,7 +2358,7 @@ void Executor::New_instance( Instruction const & inst )
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
 {
-	throw DevaRuntimeException( "Illegal Instruction" );
+	throw DevaICE( "Illegal Instruction." );
 }
 ///////////////////////////////////////////////////////////
 
@@ -2674,10 +2682,10 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 		{
 			// are we jumping back to the original ip?
 			if( stack.size() < 2 )
-				throw DevaICE( "not enough values on stack for 'return' instruction." );
+				throw DevaICE( "Not enough values on stack for 'return' instruction." );
 			DevaObject addr = stack[stack.size()-2];
 			if( addr.Type() != sym_address )
-				throw DevaICE( "return address not correct type." );
+				throw DevaICE( "Return address not correct type." );
 			if( addr.sz_val == orig_ip )
 				done = true;
 		}
@@ -2739,7 +2747,7 @@ void Executor::RunText( const char* const text )
 
 	// fix-up the offsets into actual machine addresses
 	ip = (size_t)code + FileHeader::size();
-	FixupOffsets();
+	FixupOffsets( true );
 	ip = (size_t)code + FileHeader::size();
 	
 	// read the instructions
