@@ -2789,9 +2789,10 @@ bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
 // dump the stack trace to stdout
 void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 {
-	os << "Traceback (last call first):" << endl;
+	os << "Traceback (most recent first):" << endl;
 	string fcn;
 	int idx = -1;
+	os << " file: " << file << ", line: " << line << ", in " << function << endl;
 	for( vector<Frame>::reverse_iterator i = trace.rbegin(); i != trace.rend() - 1; ++i )
 	{
 		// print the file, function, line number
