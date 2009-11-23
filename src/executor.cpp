@@ -1892,6 +1892,7 @@ void Executor::Output( Instruction const & inst )
 	// print it
 //	cout << endl;
 }
+static bool next_enter_is_from_call = false;
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
@@ -2016,6 +2017,11 @@ void Executor::Call( Instruction const & inst )
 		size_t offset = fcn->sz_val;
 		// jump execution to the function offset
 		ip = offset;
+		// set function tracker
+		function = fcn->name;
+		// set the static that tracks whether an enter instruction is due to a
+		// fcn call or not
+		next_enter_is_from_call = true;
 	}
 }
 // 32 stack holds return value and then (at top) return address
@@ -2135,14 +2141,23 @@ void Executor::Break( Instruction const & inst )
 // 34 enter new scope
 void Executor::Enter( Instruction const & inst )
 {
+	// add scope
 	current_scopes->Push();
+	// add frame
+	trace.Push( *this, next_enter_is_from_call );
+	// reset the static that tracks whether an enter instruction is due to a
+	// fcn call or not (only the first enter can be due to the fcn call)
+	next_enter_is_from_call = false;
 }
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
 	if( current_scopes->size() == 0 )
 		throw DevaRuntimeException( "Invalid Leave operation. No scopes to exit." );
+	// pop scope
 	current_scopes->Pop();
+	// pop frame
+	trace.Pop();
 }
 // 36 no op
 void Executor::Nop( Instruction const & inst )
@@ -2690,109 +2705,55 @@ void Executor::EndGlobalScope()
 	Leave( Instruction( op_leave ) );
 }
 
-bool Executor::RunFile( const char* const filepath )
+void Executor::RunFile( const char* const filepath )
 {
 	executing_filepath = filepath;
-	try
-	{
-		// load the file into memory
-		code = LoadByteCode( filepath );
-		code_blocks.push_back( code );
+	// load the file into memory
+	code = LoadByteCode( filepath );
+	code_blocks.push_back( code );
 
-		// fix-up the offsets into actual machine addresses
-		ip = (size_t)code;
-		FixupOffsets();
-		ip = (size_t)code;
-		
-		// read the instructions
-		while( true )
-		{
-			// get the next instruction in the byte code
-			Instruction inst = NextInstr();
-
-			// DoInstr returns false on 'halt' instruction
-			if( !DoInstr( inst ) )
-				break;
-		}
-	}
-	catch( DevaICE & e )
+	// fix-up the offsets into actual machine addresses
+	ip = (size_t)code;
+	FixupOffsets();
+	ip = (size_t)code;
+	
+	// read the instructions
+	while( true )
 	{
-		if( file.length() != 0 )
-		{
-			cout << file << ":";
-			if( line != 0 )
-				cout << line << ":";
-		}
-		cout << "Internal compiler error: " << e.what() << endl;
-		return false;
-	}
-	catch( DevaRuntimeException & e )
-	{
-		if( file.length() != 0 )
-		{
-			cout << file << ":";
-			if( line != 0 )
-				cout << line << ":";
-		}
-		cout << e.what() << endl;
-		return false;
-	}
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
 
-	return true;
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			break;
+	}
 }
 
-bool Executor::RunText( const char* const text )
+void Executor::RunText( const char* const text )
 {
 	unsigned char* orig_code = code;
 	size_t orig_ip = ip;
-	try
-	{
-		// load the file into memory
-		code = CompileText( text, strlen( text ) );
-		code_blocks.push_back( code );
+	// load the file into memory
+	code = CompileText( text, strlen( text ) );
+	code_blocks.push_back( code );
 
-		// fix-up the offsets into actual machine addresses
-		ip = (size_t)code + FileHeader::size();
-		FixupOffsets();
-		ip = (size_t)code + FileHeader::size();
-		
-		// read the instructions
-		while( true )
-		{
-			// get the next instruction in the byte code
-			Instruction inst = NextInstr();
-
-			// DoInstr returns false on 'halt' instruction
-			if( !DoInstr( inst ) )
-				break;
-		}
-	}
-	catch( DevaICE & e )
+	// fix-up the offsets into actual machine addresses
+	ip = (size_t)code + FileHeader::size();
+	FixupOffsets();
+	ip = (size_t)code + FileHeader::size();
+	
+	// read the instructions
+	while( true )
 	{
-		if( file.length() != 0 )
-		{
-			cout << file << ":";
-			if( line != 0 )
-				cout << line << ":";
-		}
-		cout << "Internal compiler error: " << e.what() << endl;
-		return false;
-	}
-	catch( DevaRuntimeException & e )
-	{
-		if( file.length() != 0 )
-		{
-			cout << file << ":";
-			if( line != 0 )
-				cout << line << ":";
-		}
-		cout << e.what() << endl;
-		return false;
-	}
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
 
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			break;
+	}
 	code = orig_code;
 	ip = orig_ip;
-	return true;
 }
 
 bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
@@ -2823,5 +2784,21 @@ bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
 	builtin_module_fcns.insert( fcns.begin(), fcns.end() );
 
 	return true;
+}
+
+// dump the stack trace to stdout
+void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
+{
+	os << "Traceback (last call first):" << endl;
+	string fcn;
+	int idx = -1;
+	for( vector<Frame>::reverse_iterator i = trace.rbegin(); i != trace.rend() - 1; ++i )
+	{
+		// print the file, function, line number
+		if( show_all_scopes ||(!show_all_scopes && i->is_call) )
+			os << "  file: " << i->file << ", line: " << i->line << ", in " << i->function << endl;
+		fcn = i->function;
+		idx = i->scope_idx;
+	}
 }
 

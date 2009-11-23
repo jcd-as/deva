@@ -49,6 +49,7 @@ typedef void (*builtin_fcn)(Executor*);
 class Executor
 {
 public:
+	////////////////////////////////////////////////////
 	// public data
 	////////////////////////////////////////////////////
 	// the data stack
@@ -58,6 +59,7 @@ public:
 	static int args_on_stack;
 
 private:
+	////////////////////////////////////////////////////
 	// private data
 	////////////////////////////////////////////////////
 	
@@ -70,11 +72,27 @@ private:
 	// the top-level executing file (the path given to RunFile())
 	string executing_filepath;
 
-	// currently executing file and line number. 
+	// currently executing file, function/method and line number. 
 	// (only tracked if compiled with debug info)
 	string file;
+	string function;
 	int line;
 
+	// maps for built-in module fcns
+	// map of module names to a list of fcn names
+	map<string, vector<string> > builtin_modules;
+	// map fcn name to fcn ptr, where fcn name is of the form 'fcn@module'
+	map<string, builtin_fcn> builtin_module_fcns;
+
+	// the various pieces of bytecode (file, dynamically loaded pieces etc)
+	vector<unsigned char*> code_blocks;
+
+	// the current bytecode (current code_block we're working in/with)
+	unsigned char *code;
+
+	////////////////////////////////////////////////////
+	// nested types
+	////////////////////////////////////////////////////
 	// the stack of scopes representing the symbol table(s)
 	// for the current state
 	struct Scope : public map<string, DevaObject*>
@@ -122,22 +140,49 @@ private:
 			}
 		}
 	};
+
+	// class defining a frame of execution
+	struct Frame
+	{
+		// the scope table for this frame
+		ScopeTable* scopes;
+		// index into the scope table for this frame
+		int scope_idx;
+		// index of the initial instruction for this frame
+		size_t ip;
+		// file, function and line number of the initial line for this frame
+		string file;
+		string function;
+		int line;
+		// is this frame the entry to a fcn? (e.g. the result of a call)
+		bool is_call;
+
+		Frame( Executor const & ex, bool call ) : scopes( ex.current_scopes ), scope_idx( ex.current_scopes->size() ), ip( ex.ip ), file( ex.file ), function( ex.function ), line( ex.line ), is_call( call )
+		{}
+	};
+	// class for a call-stack/traceback/backtrace
+	struct CallStack : public vector<Frame>
+	{
+		void Push( Executor const & ex, bool is_call )
+		{
+			push_back( Frame( ex, is_call ) );
+		}
+		void Pop()
+		{
+			pop_back();
+		}
+	};
+
+	////////////////////////////////////////////////////
+	// private data associated with nested types:
+	////////////////////////////////////////////////////
 	ScopeTable global_scopes;
 	map<string, ScopeTable> namespaces;
 	ScopeTable *current_scopes;
 
-	// maps for built-in module fcns
-	// map of module names to a list of fcn names
-	map<string, vector<string> > builtin_modules;
-	// map fcn name to fcn ptr, where fcn name is of the form 'fcn@module'
-	map<string, builtin_fcn> builtin_module_fcns;
+	CallStack trace;
 
-	// the various pieces of bytecode (file, dynamically loaded pieces etc)
-	vector<unsigned char*> code_blocks;
-
-	// the current bytecode (current code_block we're working in/with)
-	unsigned char *code;
-
+	////////////////////////////////////////////////////
 	// private helper functions:
 	////////////////////////////////////////////////////
 	// load the bytecode from the file
@@ -167,6 +212,7 @@ private:
 	// locate a module
 	string find_module( string mod );
 
+	////////////////////////////////////////////////////
 	// individual op-code methods
 	////////////////////////////////////////////////////
 	// 0 pop top item off stack
@@ -260,6 +306,7 @@ private:
 	Instruction NextInstr();
 
 public:
+	////////////////////////////////////////////////////
 	// public methods
 	////////////////////////////////////////////////////
 	Executor( bool debug_mode = false );
@@ -268,11 +315,15 @@ public:
 	void ExecuteDevaFunction( string fcn_name, int num_args );
 	void StartGlobalScope();
 	void EndGlobalScope();
-	bool RunFile( const char* const filename );
-	bool RunText( const char* const text );
+	void RunFile( const char* const filename );
+	void RunText( const char* const text );
 
 	bool AddBuiltinModule( string name, map<string, builtin_fcn> & fcns );
 
+	// dump the stack trace to stdout
+	void DumpTrace( ostream &, bool show_all_scopes = false );
+
+	////////////////////////////////////////////////////
 	// helper methods. useful for built-ins
 	////////////////////////////////////////////////////
 	// locate a symbol in the symbol table(namespace)

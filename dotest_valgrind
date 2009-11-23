@@ -9,8 +9,12 @@ if [ $# -ne 1 ] ; then
     exit
 fi
 
-# TODO: shareable path to deva
-valgrind --leak-check=yes --suppressions=/home/jcs/src/deva/valgrind.supp ~/src/deva/deva $1 2> '$$$RESULTS$$$' > /dev/null
+if [ -z $DEVA ] ; then
+	echo "DEVA environment variable must be set to point to the directory where 'deva' is installed"
+	exit
+fi
+
+valgrind --leak-check=yes --suppressions=$DEVA/valgrind.supp $DEVA/deva $1 2> '$$$RESULTS$$$' > /dev/null
 
 if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
     echo "test succeeded"
@@ -19,7 +23,7 @@ if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
     exit
 else
     echo "test failed"
-#    rm -f '$$$RESULTS$$$'
+    rm -f '$$$RESULTS$$$'
 	rm -f *.dvc
     exit -1
 fi

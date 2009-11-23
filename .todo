@@ -342,9 +342,10 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
         need a way to handle buffers (strings with embedded nulls) (in file io builtins etc) new sym_xxx type? strings with tracked length?
     <comment>for 1.0, using vectors of numbers. not the most efficient way to do it, but functional
 </comment></note>
-    <note priority="veryhigh" time="1257898807">
+    <note done="1258940552" priority="veryhigh" time="1257898807">
         add debug frame support (stack of frames kept during execution) and debugging support
-    </note>
+    <comment>stack frames and tracebacks added. needs to generate an artificial frame of some kind when an error occurs so you can see exactly the line/instruction that caused the error
+</comment></note>
     <note priority="veryhigh" time="1258006939">
         map initializers. e.g.: a = { 0 = 'a', 1 = 'b' };
     </note>
@@ -370,4 +371,5 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
     <note priority="high" time="1257647228">
         constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect until ANOTHER object is created!
     </note>
-</todo>
+<note priority="veryhigh" time="1258926287">error handling: user-defined error handling routine..?
+</note></todo>

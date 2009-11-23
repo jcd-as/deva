@@ -22,7 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 // scope.h
-// deva language grammar for expressions
+// deva language types for variable scopes and symbol tables
 // created by jcs, september 10, 2009 
 
 // TODO:

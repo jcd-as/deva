@@ -60,6 +60,7 @@ int main( int argc, char** argv )
 		// declare the command line options
 		int verbosity;
 		bool debug;
+		bool show_all_scopes = false;
 		string output;
 		string input;
 		po::options_description desc( "Supported options" );
@@ -68,6 +69,7 @@ int main( int argc, char** argv )
 			( "version,ver", "display program version" )
 			( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 			( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
+			( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
 			( "input", po::value<string>( &input ), "input filename" )
 			( "options", "options to pass to the deva program" )
 			;
@@ -81,7 +83,7 @@ int main( int argc, char** argv )
 		catch( po::error & e )
 		{
 			cout << e.what() << endl;
-			exit( 1 );
+			return 1;
 		}
 		po::notify( vm );
 		
@@ -90,6 +92,16 @@ int main( int argc, char** argv )
 		{
 			cout << desc << endl;
 			return 1;
+		}
+		if( vm.count( "version" ) )
+		{
+			// dump the version number
+			cout << "deva " << VERSION << endl;
+			return 1;
+		}
+		if( vm.count( "all-scopes" ) )
+		{
+			show_all_scopes = true;
 		}
 		// must be an input file specified
 		if( !vm.count( "input" ) )
@@ -144,22 +156,27 @@ int main( int argc, char** argv )
 		// create our execution engine object
 		Executor ex( debug );
 
-		// create a global scope
-		ex.StartGlobalScope();
-
-		// add the built-in modules
-		AddOsModule( ex );
-		AddBitModule( ex );
-		AddMathModule( ex );
-
-		// run the .dvc file
-		if( !ex.RunFile( fname.c_str() ) )
+		try
 		{
+			// create a global scope
+			ex.StartGlobalScope();
+
+			// add the built-in modules
+			AddOsModule( ex );
+			AddBitModule( ex );
+			AddMathModule( ex );
+
+			// run the .dvc file
+			ex.RunFile( fname.c_str() );
 			ex.EndGlobalScope();
-			cout << "Error executing " << fname << endl;
+		}
+		catch( DevaRuntimeException & e )
+		{
+			cout << "Error: " << e.what() << endl;
+			// dump the stack trace
+			ex.DumpTrace( cout, show_all_scopes );
 			return -1;
 		}
-		ex.EndGlobalScope();
 
 		// dump ref count map if we're in debug mode
 		if( debug )
@@ -175,6 +192,8 @@ int main( int argc, char** argv )
 		cout << "Internal compiler error: " << e.what() << endl;
 		return -1;
 	}
+	// runtime exceptions really should only stem from the Executor,
+	// but just in case...
 	catch( DevaRuntimeException & e )
 	{
 		cout << "Error: " << e.what() << endl;
