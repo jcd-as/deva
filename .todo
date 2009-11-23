@@ -372,4 +372,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
         constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect until ANOTHER object is created!
     </note>
 <note priority="veryhigh" time="1258926287">error handling: user-defined error handling routine..?
-</note></todo>
+</note><note done="1258959199" priority="high" time="1258957957">eval() causes memory leaks(?) (of SymbolTables)
+<comment>1) symbol tables were being freed after file compilation, but not after late (eval) compilation and 2) each call to ParseText() was adding a new 'global' symbol table at key 0, but as it is a pointer, adding a new one to the map 'lost' the old pointer.
+</comment></note></todo>

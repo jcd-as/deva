@@ -147,12 +147,6 @@ int main( int argc, char** argv )
 			fname += "c";
 		}
 
-		// compilation is done, we don't need the scope table any more
-		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
-		{
-			delete i->second;
-		}
-
 		// create our execution engine object
 		Executor ex( debug );
 
@@ -178,6 +172,12 @@ int main( int argc, char** argv )
 			// dump the stack trace
 			ex.DumpTrace( cout, show_all_scopes );
 			return -1;
+		}
+
+		// done, free the scope tables
+		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
+		{
+			delete i->second;
 		}
 
 		// dump ref count map if we're in debug mode

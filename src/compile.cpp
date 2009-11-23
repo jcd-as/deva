@@ -106,6 +106,8 @@ void emit_warning( DevaSemanticException & e )
 //////////////////////////////////////////////////////////////////////
 
 
+static bool global_sym_tab_created = false;
+
 // parse a deva file
 // returns the AST tree
 tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input, long input_len )
@@ -118,10 +120,14 @@ tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* c
 	iterator_t end;
 
 	// create our initial (global) scope
-	SymbolTable* globals = new SymbolTable();
-	pair<int, SymbolTable*> sym( 0, globals );
-	scope_bldr.push_back( sym );
-	scopes[sym.first] = sym.second;
+	if( !global_sym_tab_created )
+	{
+		SymbolTable* globals = new SymbolTable();
+		pair<int, SymbolTable*> sym( 0, globals );
+		scope_bldr.push_back( sym );
+		scopes[sym.first] = sym.second;
+		global_sym_tab_created = true;
+	}
 
 	// parse 
 	tree_parse_info<iterator_t, factory_t> info;
