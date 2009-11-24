@@ -20,3 +20,9 @@ A: Deva is (or is intended to be!):
 Q: What does 'deva' mean? And how is it pronounced?
 
 A: Devas are mythical beings in Hindu and Buddhist mythology/religion. In Hinduism they are gods and angels, while in Buddhism they are similar to, but not exactly gods or angels. 'Deva' is also part of one of my middle names... It is pronounced 'day-va', not 'dee-va'.
+
+
+Q: Why is the deva compiler so slow?
+
+A: Unfortunately, the Boost Spirit 1.x parser library that deva is currently built on is quite slow. If you run an un-optimized build of deva/devac on a .dv file, you will notice a substantial delay as it parses the code. Once the .dvc file is written to disk the performance should be adequate. Optimized builds fare much better, but the parsing performance still leaves something to be desired. Luckily, Spirit 2.x addresses this. Unluckily, Spirit 2.x is a complete re-write and the deva parsing and semantic checking code will have to be re-written to take advantage of it. Currently, I have this marked as a "future" (post-deva-1.0) work-item.
+

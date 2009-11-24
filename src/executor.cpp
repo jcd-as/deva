@@ -106,8 +106,10 @@ Opcode Executor::PeekInstr()
 
 // read a string from *ip into s
 // (allocates s, which needs to be freed by the caller)
-void Executor::read_string( char* & s )
+unsigned char* Executor::read_string( char* & s, unsigned char* ip /*=0*/ )
 {
+	if( ip == 0 )
+		ip = (unsigned char*)this->ip;
 	// determine how much space we need
 	long len = strlen( (char*)(ip) );
 	// allocate it
@@ -118,34 +120,52 @@ void Executor::read_string( char* & s )
 	s[len] = '\0';
 	// move ip forward
 	ip += len+1;
+
+	return (unsigned char*)ip;
 }
 
 // read a byte
-void Executor::read_byte( unsigned char & b )
+unsigned char* Executor::read_byte( unsigned char & b, unsigned char* ip /*=0*/ )
 {
+	if( ip == 0 )
+		ip = (unsigned char*)this->ip;
 	memcpy( (void*)&b, (char*)(ip), sizeof( unsigned char ) );
 	ip += sizeof( unsigned char );
+
+	return (unsigned char*)ip;
 }
 
 // read a long
-void Executor::read_long( long & l )
+unsigned char* Executor::read_long( long & l, unsigned char* ip /*=0*/ )
 {
+	if( ip == 0 )
+		ip = (unsigned char*)this->ip;
 	memcpy( (void*)&l, (char*)(ip), sizeof( long ) );
 	ip += sizeof( long );
+
+	return (unsigned char*)ip;
 }
 
 // read a size_t
-void Executor::read_size_t( size_t & l )
+unsigned char* Executor::read_size_t( size_t & l, unsigned char* ip /*=0*/ )
 {
+	if( ip == 0 )
+		ip = (unsigned char*)this->ip;
 	memcpy( (void*)&l, (char*)(ip), sizeof( size_t ) );
 	ip += sizeof( size_t );
+
+	return (unsigned char*)ip;
 }
 
 // read a double
-void Executor::read_double( double & d )
+unsigned char* Executor::read_double( double & d, unsigned char* ip /*=0*/ )
 {
+	if( ip == 0 )
+		ip = (unsigned char*)this->ip;
 	memcpy( (void*)&d, (char*)(ip), sizeof( double ) );
 	ip += sizeof( double );
+
+	return (unsigned char*)ip;
 }
 
 // helper for the comparison ops:
@@ -269,11 +289,13 @@ unsigned char* Executor::LoadByteCode( const char* const filename )
 }
 
 // fixup the addresses (offsets) of the instructions
-// if 'in_memory' is true, the file header is included in the code buffer
-// and needs to be accounted for (which is the case when compiling in
-// memory as opposed to reading from a compiled .dvc file)
-void Executor::FixupOffsets( bool in_memory /*= false*/ )
+// from the code block 'cd'
+void Executor::FixupOffsets( unsigned char* cd /*= 0*/ )
 {
+	// save the current code block
+	unsigned char* orig_code = code;
+	code = cd;
+
 	char* name;
 	// read the instructions
 	while( true )
@@ -282,63 +304,60 @@ void Executor::FixupOffsets( bool in_memory /*= false*/ )
 
 		// read the byte for the opcode
 		unsigned char op;
-		read_byte( op );
+		cd = read_byte( op, cd );
 		// stop when we get to the halt instruction at the end of the buffer
 		if( op == op_halt )
 			break;
 
 		// for each argument:
 		unsigned char type;
-		read_byte( type );
+		cd = read_byte( type, cd );
 		while( type != sym_end )
 		{
 			// read the name of the arg
-			read_string( name );
+			cd = read_string( name, cd );
 			// read the value
 			switch( (SymbolType)type )
 			{
 				case sym_number:
 					{
 					// skip double
-					ip += sizeof( double );
+					cd += sizeof( double );
 					break;
 					}
 				case sym_string:
 					{
 					// variable length, null-terminated
 					// skip string
-					long len = strlen( (char*)(ip) );
-					ip += len+1;
+					long len = strlen( (char*)(cd) );
+					cd += len+1;
 					break;
 					}
 				case sym_boolean:
 					{
 					// skip long
-					ip += sizeof( long );
+					cd += sizeof( long );
 					break;
 					}
 				case sym_address:
 					{
 						// read a size_t to get the offset
 						size_t sz_val;
-						memcpy( (void*)&sz_val, (char*)(ip), sizeof( size_t ) );
+						memcpy( (void*)&sz_val, (char*)(cd), sizeof( size_t ) );
 						// calculate the actual address
 						size_t address;
-						if( in_memory )
-							address = (size_t)code + sz_val + FileHeader::size();
-						else
-							address = (size_t)code + sz_val;
+						address = (size_t)code + sz_val;
 						// 'fix-up' the 'bytecode' with the actual address
-						size_t* p_add = (size_t*)ip;
+						size_t* p_add = (size_t*)cd;
 						*p_add = address;
 					} // fall-through to 'sym_size' for the ip increment
 				case sym_size:
-					ip += sizeof( size_t );
+					cd += sizeof( size_t );
 					break;
 				case sym_null:
 					{
 					// skip a long
-					ip += sizeof( long );
+					cd += sizeof( long );
 					break;
 					}
 				default:
@@ -349,9 +368,11 @@ void Executor::FixupOffsets( bool in_memory /*= false*/ )
 			// read the type of the next arg
 			// default to sym_end to drop out of loop if we can't read a byte
 			type = (unsigned char)sym_end;
-			read_byte( type );
+			cd = read_byte( type, cd );
 		}
 	}
+	// restore the current code block
+	code = orig_code;
 }
 
 ///////////////////////////////////////////////////////////
@@ -2250,7 +2271,7 @@ void Executor::Import( Instruction const & inst )
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
 	// compile the file, if needed
-	CompileFile( dvfile.c_str() );
+	CompileAndWriteFile( dvfile.c_str() );
 	// and then run the file
 	RunFile( dvcfile.c_str() );
 	// restore the ip
@@ -2526,22 +2547,22 @@ Instruction Executor::NextInstr()
 	size_t sz_val;
 	// read the byte for the opcode
 	unsigned char op;
-	read_byte( op );
+	ip = (size_t)read_byte( op );
 	Instruction inst( (Opcode)op );
 	// for each argument:
 	unsigned char type;
-	read_byte( type );
+	ip = (size_t)read_byte( type );
 	while( type != sym_end )
 	{
 		// read the name of the arg
-		read_string( name );
+		ip = (size_t)read_string( name );
 		// read the value
 		switch( (SymbolType)type )
 		{
 			case sym_number:
 				{
 				// 64 bit double
-				read_double( num_val );
+				ip = (size_t)read_double( num_val );
 				DevaObject ob( name, num_val );
 				inst.args.push_back( ob );
 				break;
@@ -2549,7 +2570,7 @@ Instruction Executor::NextInstr()
 			case sym_string:
 				{
 				// variable length, null-terminated
-				read_string( str_val );
+				ip = (size_t)read_string( str_val );
 				DevaObject ob( name, string( str_val ) );
 				delete [] str_val;
 				inst.args.push_back( ob );
@@ -2558,7 +2579,7 @@ Instruction Executor::NextInstr()
 			case sym_boolean:
 				{
 				// 32 bit long
-				read_long( bool_val );
+				ip = (size_t)read_long( bool_val );
 				DevaObject ob( name, (bool)bool_val );
 				inst.args.push_back( ob );
 				break;
@@ -2572,7 +2593,7 @@ Instruction Executor::NextInstr()
 			case sym_address:
 				{
 				// size_t
-				read_size_t( sz_val );
+				ip = (size_t)read_size_t( sz_val );
 				DevaObject ob( name, (size_t)sz_val, true );
 				inst.args.push_back( ob );
 				break;
@@ -2580,7 +2601,7 @@ Instruction Executor::NextInstr()
 			case sym_size:
 				{
 				// size_t
-				read_size_t( sz_val );
+				ip = (size_t)read_size_t( sz_val );
 				DevaObject ob( name, (size_t)sz_val, false );
 				inst.args.push_back( ob );
 				break;
@@ -2595,7 +2616,7 @@ Instruction Executor::NextInstr()
 				{
 				// 32 bit long
 				long n = -1;
-				read_long( n );
+				ip = (size_t)read_long( n );
 				DevaObject ob( name, sym_null );
 				inst.args.push_back( ob );
 				break;
@@ -2616,7 +2637,7 @@ Instruction Executor::NextInstr()
 		// read the type of the next arg
 		// default to sym_end to drop out of loop if we can't read a byte
 		type = (unsigned char)sym_end;
-		read_byte( type );
+		ip = (size_t)read_byte( type );
 	}
 	return inst;
 }
@@ -2713,55 +2734,66 @@ void Executor::EndGlobalScope()
 	Leave( Instruction( op_leave ) );
 }
 
+// add a compiled byte-code block and fix-up its addresses
+void Executor::AddCodeBlock( unsigned char* cd )
+{
+	FixupOffsets( cd );
+	code_blocks.push_back( cd );
+}
+
+// run a code block (that is, a block of bytecode that has already had
+// its addresses fixed up)
+void Executor::RunCode( unsigned char* cd )
+{
+	// save the current code & ip, if any
+	unsigned char* orig_code = code;
+	size_t orig_ip = ip;
+
+	// set the new code & ip
+	code = cd;
+	ip = (size_t)code;
+
+	// read the instructions
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			break;
+	}
+
+	// restore the old code & ip
+	code = orig_code;
+	ip = orig_ip;
+}
+
 void Executor::RunFile( const char* const filepath )
 {
 	executing_filepath = filepath;
 	// load the file into memory
-	code = LoadByteCode( filepath );
-	code_blocks.push_back( code );
+	unsigned char* cd = LoadByteCode( filepath );
+	code_blocks.push_back( cd );
 
 	// fix-up the offsets into actual machine addresses
-	ip = (size_t)code;
-	FixupOffsets();
-	ip = (size_t)code;
-	
-	// read the instructions
-	while( true )
-	{
-		// get the next instruction in the byte code
-		Instruction inst = NextInstr();
+	FixupOffsets( cd );
 
-		// DoInstr returns false on 'halt' instruction
-		if( !DoInstr( inst ) )
-			break;
-	}
+	// run the code
+	RunCode( cd );
 }
 
 void Executor::RunText( const char* const text )
 {
-	unsigned char* orig_code = code;
-	size_t orig_ip = ip;
 	// load the file into memory
-	code = CompileText( text, strlen( text ) );
-	code_blocks.push_back( code );
+	unsigned char* cd = CompileText( text, strlen( text ) );
+	code_blocks.push_back( cd );
 
 	// fix-up the offsets into actual machine addresses
-	ip = (size_t)code + FileHeader::size();
-	FixupOffsets( true );
-	ip = (size_t)code + FileHeader::size();
+	FixupOffsets( cd );
 	
-	// read the instructions
-	while( true )
-	{
-		// get the next instruction in the byte code
-		Instruction inst = NextInstr();
-
-		// DoInstr returns false on 'halt' instruction
-		if( !DoInstr( inst ) )
-			break;
-	}
-	code = orig_code;
-	ip = orig_ip;
+	// run the code
+	RunCode( cd );
 }
 
 bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )

@@ -187,22 +187,22 @@ private:
 	////////////////////////////////////////////////////
 	// load the bytecode from the file
 	unsigned char* LoadByteCode( const char* const filename );
-	// fixup all the offsets in 'function' symbols (fcns, returns, jumps) to
+	// fixup all the offsets for a code block in 'function' symbols (fcns, returns, jumps) to
 	// pointers in actual memory
-	void FixupOffsets( bool in_memory = false );
+	void FixupOffsets( unsigned char* code );
 	// peek at what the next instruction is (doesn't modify ip)
 	Opcode PeekInstr();
 	// read a string from *ip into s
 	// (allocates mem for s, caller must delete!)
-	void read_string( char* & s );
+	unsigned char* read_string( char* & s, unsigned char* ip = 0 );
 	// read a byte
-	void read_byte( unsigned char & l );
+	unsigned char* read_byte( unsigned char & l, unsigned char* ip = 0 );
 	// read a long
-	void read_long( long & l );
+	unsigned char* read_long( long & l, unsigned char* ip = 0 );
 	// read a size_t
-	void read_size_t( size_t & l );
+	unsigned char* read_size_t( size_t & l, unsigned char* ip = 0 );
 	// read a double
-	void read_double( double & d );
+	unsigned char* read_double( double & d, unsigned char* ip = 0 );
 
 	// helper for the comparison ops:
 	// returns 0 if equal, -1 if lhs < rhs, +1 if lhs > rhs
@@ -315,6 +315,8 @@ public:
 	void ExecuteDevaFunction( string fcn_name, int num_args );
 	void StartGlobalScope();
 	void EndGlobalScope();
+	void AddCodeBlock( unsigned char* cd );
+	void RunCode( unsigned char* cd );
 	void RunFile( const char* const filename );
 	void RunText( const char* const text );
 

@@ -61,6 +61,7 @@ int main( int argc, char** argv )
 		int verbosity;
 		bool debug;
 		bool show_all_scopes = false;
+		bool no_dvc = false;
 		string output;
 		string input;
 		po::options_description desc( "Supported options" );
@@ -70,6 +71,7 @@ int main( int argc, char** argv )
 			( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 			( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
 			( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
+			( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
 			( "input", po::value<string>( &input ), "input filename" )
 			( "options", "options to pass to the deva program" )
 			;
@@ -102,6 +104,10 @@ int main( int argc, char** argv )
 		if( vm.count( "all-scopes" ) )
 		{
 			show_all_scopes = true;
+		}
+		if( vm.count( "no-dvc" ) )
+		{
+			no_dvc = true;
 		}
 		// must be an input file specified
 		if( !vm.count( "input" ) )
@@ -137,14 +143,48 @@ int main( int argc, char** argv )
 			}
 		}
 
+		bool use_dvc = false;
+		unsigned char* code;
 		if( ext == ".dv" )
 		{
-			if( !CompileFile( fname.c_str() ) )
+			string out_fname = fname + "c";
+			// check for a .dvc file
+			struct stat in_statbuf;
+			struct stat out_statbuf;
+
+			// if we can't open the .dvc file, continue on
+			if( stat( out_fname.c_str(), &out_statbuf ) != -1 )
 			{
-				cout << "Error compiling " << fname << endl;
-				return -1;
+				if( stat( fname.c_str(), &in_statbuf ) != -1 ) 
+				{
+					// if the output is newer than the input, nothing to do
+					if( out_statbuf.st_mtime > in_statbuf.st_mtime )
+						use_dvc = true;
+				}
+				// .dvc file exists, but no .dv file
+				else
+					use_dvc = true;
 			}
-			fname += "c";
+			if( !use_dvc )
+			{
+				size_t code_length;
+				code = CompileFile( fname.c_str(), code_length );
+				if( !code )
+				{
+					cout << "Error compiling " << fname << endl;
+					return -1;
+				}
+				// unless we're not writing .dvc files
+				if( !no_dvc )
+				{
+					// write the .dvc file
+					if( !WriteByteCode( out_fname.c_str(), code, code_length ) )
+					{
+						cout << "Error writing bytecode to " << out_fname << endl;
+						return -1;
+					}
+				}
+			}
 		}
 
 		// create our execution engine object
@@ -160,8 +200,26 @@ int main( int argc, char** argv )
 			AddBitModule( ex );
 			AddMathModule( ex );
 
-			// run the .dvc file
-			ex.RunFile( fname.c_str() );
+			// execute either the .dvc file...
+			if( ext == ".dvc" )
+			{
+				// run the .dvc file 
+				ex.RunFile( fname.c_str() );
+			}
+			else if( use_dvc )
+			{
+				// run the .dvc file 
+				string f = fname + "c";
+				ex.RunFile( f.c_str() );
+			}
+			// ...or the code block we just compiled
+			else
+			{
+				// run the code block
+				ex.AddCodeBlock( code );
+				ex.RunCode( code );
+			}
+
 			ex.EndGlobalScope();
 		}
 		catch( DevaRuntimeException & e )
