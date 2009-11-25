@@ -1,60 +1,15 @@
-vector: 'v' = 
-num: '' = 0
-num: '' = 1
-num: '' = 2
-num: '' = 4
-num: '' = 8
-num: '' = 16
-num: '' = 32
-num: '' = 64
-num: '' = 128
-
+[0, 1, 2, 4, 8, 16, 32, 64, 128]
 0
-vector: 'y' = 
-num: '' = 0
-num: '' = 1
-num: '' = 2
-
-vector: 'z' = 
-num: '' = 0
-num: '' = 2
-num: '' = 8
-num: '' = 32
-
-vector: 'z' = 
-num: '' = 0
-num: '' = 2
-num: '' = 8
-num: '' = 32
-
-vector: '' = 
-num: '' = 4
-
+[0, 1, 2]
+[0, 2, 8, 32]
+[0, 2, 8, 32]
+[4]
 americana
 a
 ame
 aeiaa
 aeiaa
 r
-vector: 'v' = 
-string: '' = f
-string: '' = o
-string: '' = o
-string: '' = b
-string: '' = a
-string: '' = r
-
-vector: 'v' = 
-string: '' = f
-string: '' = u
-string: '' = b
-string: '' = a
-string: '' = r
-
-vector: 'v' = 
-string: '' = f
-string: '' = i
-string: '' = b
-string: '' = e
-string: '' = r
-
+[f, o, o, b, a, r]
+[f, u, b, a, r]
+[f, i, b, e, r]

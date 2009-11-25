@@ -1,12 +1,3 @@
-vector: 'a' = 
-
-vector: 'a' = 
-num: '' = 0
-num: '' = 1
-num: '' = 2
-
-vector: 'b' = 
-num: '' = 0
-num: '' = 1
-num: '' = 2
-
+[]
+[0, 1, 2]
+[0, 1, 2]

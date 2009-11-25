@@ -325,6 +325,19 @@ public:
 	// dump the stack trace to stdout
 	void DumpTrace( ostream &, bool show_all_scopes = false );
 
+	// debugging methods
+	////////////////////////////////////////////////////
+	// start executing a file, stopping before the first instruction
+	void StartExecutingCode( unsigned char* code );
+	// execute one line
+	int StepLine();
+	// execute one line or into one call
+	int StepInto();
+	// execute one instruction
+	int StepInst( Instruction & inst );
+	// execute (with breakpoints enabled)
+	int Run();
+
 	////////////////////////////////////////////////////
 	// helper methods. useful for built-ins
 	////////////////////////////////////////////////////

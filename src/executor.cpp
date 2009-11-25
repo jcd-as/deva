@@ -2753,16 +2753,8 @@ void Executor::RunCode( unsigned char* cd )
 	code = cd;
 	ip = (size_t)code;
 
-	// read the instructions
-	while( true )
-	{
-		// get the next instruction in the byte code
-		Instruction inst = NextInstr();
-
-		// DoInstr returns false on 'halt' instruction
-		if( !DoInstr( inst ) )
-			break;
-	}
+	// execute the instructions
+	Run();
 
 	// restore the old code & ip
 	code = orig_code;
@@ -2843,3 +2835,100 @@ void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 	}
 }
 
+// start executing a file, stopping before the first instruction
+void Executor::StartExecutingCode( unsigned char* cd )
+{
+	// save the current code & ip, if any
+	unsigned char* orig_code = code;
+	size_t orig_ip = ip;
+
+	// set the new code & ip
+	code = cd;
+	ip = (size_t)code;
+
+}
+
+// execute one line
+// returns line number or -1 on halt
+int Executor::StepLine()
+{
+	// keep executing instructions until we reach a new line_num instruction
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			return -1;
+
+		if( inst.op == op_line_num )
+		{
+			// ignore enter and leave instructions
+			Opcode op = PeekInstr();
+			if( op != op_enter && op != op_leave )
+				return (int)inst.args[1].sz_val;
+		}
+	}
+}
+
+// execute one line or into one call
+// returns line number or -1 on halt
+int Executor::StepInto()
+{
+	// read the instructions
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			return -1;
+
+		if( inst.op == op_line_num )
+			return (int)inst.args[1].sz_val;
+	}
+}
+
+// execute one instruction
+// returns line number or -1 on halt
+int Executor::StepInst( Instruction & inst )
+{
+	// get the next instruction in the byte code
+	inst = NextInstr();
+
+	// DoInstr returns false on 'halt' instruction
+	if( !DoInstr( inst ) )
+		return -1;
+
+	if( inst.op == op_line_num )
+		return (int)inst.args[1].sz_val;
+	else
+		return 0;
+}
+
+// execute (until breakpoint or exit)
+// returns line number or -1 on halt
+int Executor::Run()
+{
+	// keep executing instructions until we hit a breakpoint or halt
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			return -1;
+
+		// TODO: check for breakpoints
+//		if( inst.op == op_line_num )
+//		{
+//			// ignore enter and leave instructions
+//			Opcode op = PeekInstr();
+//			if( op != op_enter && op != op_leave )
+//				return (int)inst.args[1].sz_val;
+//		}
+	}
+}

@@ -22,18 +22,7 @@ FOOBARZYXzyx
 xxx 	
  FOOBAR
 xyzXYZFOOBAR
-vector: 'v' = 
-string: '' = a
-string: '' = b
-string: '' =  c
-string: '' =  rq4fadsfaxxxa	
-string: '' =  fdaf;a
-string: '' =  d
-string: '' =  e
-string: '' =  f
-string: '' = 
-string: '' = g
-
+[a, b,  c,  rq4fadsfaxxxa	,  fdaf;a,  d,  e,  f, , g]
 foojam and toast at the jam and toast eating jam and toast all day.
 FOOJAM AND TOAST AT THE JAM AND TOAST EATING JAM AND TOAST ALL DAY.
 false

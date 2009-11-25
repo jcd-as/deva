@@ -1,11 +1,4 @@
 234
 14
-vector: 'slice1' = 
-num: '' = 2
-num: '' = 3
-num: '' = 4
-
-vector: 'slice2' = 
-num: '' = 1
-num: '' = 4
-
+[2, 3, 4]
+[1, 4]

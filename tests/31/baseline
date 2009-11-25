@@ -1,94 +1,26 @@
-vector: 'a' = 
-string: '' = foo
-
+[foo]
 1
-vector: 'a' = 
-string: '' = foo
-string: '' = bar
-
+[foo, bar]
 2
-vector: 'a' = 
-string: '' = foo
-string: '' = bar
-
-vector: 'b' = 
-string: '' = foo
-string: '' = bar
-string: '' = jam
-
-vector: 'a' = 
-string: '' = foo
-string: '' = bar
-string: '' = foo
-string: '' = bar
-string: '' = jam
-
-vector: 'b' = 
-string: '' = foo
-string: '' = bar
-string: '' = jam
-
+[foo, bar]
+[foo, bar, jam]
+[foo, bar, foo, bar, jam]
+[foo, bar, jam]
 min value in 'a' is:
 bar
 max value in 'a' is:
 jam
 the last item is: jam
-vector: 'a' = 
-string: '' = foo
-string: '' = bar
-string: '' = foo
-string: '' = bar
-
-vector: 'a' = 
-string: 'last' = jam
-string: '' = foo
-string: '' = bar
-string: '' = foo
-string: '' = bar
-
-vector: 'a' = 
-string: 'last' = jam
-string: '' = foo
-string: '' = goo
-string: '' = bar
-string: '' = foo
-string: '' = bar
-
-vector: 'a' = 
-string: 'last' = jam
-string: '' = goo
-string: '' = bar
-string: '' = foo
-string: '' = bar
-
+[foo, bar, foo, bar]
+[jam, foo, bar, foo, bar]
+[jam, foo, goo, bar, foo, bar]
+[jam, goo, bar, foo, bar]
 1
 2
 "bar" found 2 times
-vector: 'a' = 
-string: '' = bar
-string: '' = bar
-string: '' = foo
-string: '' = goo
-string: 'last' = jam
-
-vector: 'a' = 
-string: 'last' = jam
-string: '' = goo
-string: '' = foo
-string: '' = bar
-string: '' = bar
-
-vector: 'a' = 
-
-vector: 'b' = 
-string: '' = 0
-string: '' = 1
-string: '' = 2
-string: '' = 3
-
-vector: 'b' = 
-num: '' = 1
-num: '' = 2
-num: '' = 3
-
+[bar, bar, foo, goo, jam]
+[jam, goo, foo, bar, bar]
+[]
+[0, 1, 2, 3]
+[1, 2, 3]
 6

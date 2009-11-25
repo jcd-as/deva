@@ -45,6 +45,8 @@ struct Instruction
 	Opcode op;
 	vector<DevaObject> args;
 
+	Instruction()
+	{}
 	Instruction( Opcode o ) : op( o )
 	{}
 	Instruction( Opcode o, DevaObject ob1 ) : op( o )

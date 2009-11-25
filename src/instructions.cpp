@@ -48,28 +48,54 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 	switch( obj.Type() )
 	{
 		case sym_number:
-			os << "num: '" << obj.name << "' = " << obj.num_val;
+			os << obj.num_val;
 			break;
 		case sym_string:
-			os << "string: '" << obj.name << "' = " << obj.str_val;
+			os << obj.str_val ;
 			break;
 		case sym_boolean:
-			os << "boolean: '" << obj.name << "' = " << obj.bool_val;
+			if( obj.bool_val )
+				os << "true";
+			else
+				os << "false";
 			break;
 		case sym_null:
 			os << "null";
 			break;
 		case sym_map:
-			// TODO: dump some map contents?
-			os << "map: '" << obj.name << "' = ";
+			{
+			// dump map contents
+			os << "{";
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
 			break;
+			}
 		case sym_vector:
-			// TODO: dump some vector contents?
-			os << "vector: '" << obj.name << "' = ";
+			{
+			// dump vector contents
+			os << "[";
+			smart_ptr<DOVector> vec( obj.vec_val );
+			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
+			{
+				DevaObject val = (*it);
+				os << val;
+			   	if( it+1 != vec->end() )
+				   os << ", ";
+			}
+			os << "]";
 			break;
+			}
 		case sym_address:
 		case sym_size:
-			os << "function: '" << obj.name << "', offset = " << obj.sz_val;
+			os << obj.name << ", address/sized-value = " << obj.sz_val;
 			break;
 		case sym_function_call:
 			os << "function_call: '" << obj.name << "'";
@@ -607,7 +633,6 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// lists chained together)
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
 		int num_args = i->children[0].children.size() - 2;
-		generate_line_num( i, is );
 		if( get_fcn_from_stack )
 			// add the call instruction, passing no args to indicate it needs
 			// to pull the function off the stack

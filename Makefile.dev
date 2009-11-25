@@ -31,28 +31,51 @@ DEVA_SOURCES =  \
 	module_bit.cpp \
 	module_math.cpp
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
+# sources/objs for devadb executable
+DEVADB_SOURCES =  \
+	builtins.cpp \
+	compile.cpp \
+	devadb.cpp \
+	dobject.cpp \
+	error_report_parsers.cpp \
+	executor.cpp \
+	fileformat.cpp \
+	instructions.cpp \
+	parser_ids.cpp \
+	scope.cpp \
+	semantics.cpp \
+	symbol.cpp \
+	util.cpp \
+	vector_builtins.cpp \
+	map_builtins.cpp \
+	string_builtins.cpp \
+	module_os.cpp \
+	module_bit.cpp \
+	module_math.cpp
+DEVADB_OBJS=$(patsubst %.cpp, %.o, ${DEVADB_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
 DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
+DEVADB_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVADB_SOURCES})
 
 # on gcc 4.3+:
 # if you enable optimization (-O1 or greater) you have to throw
 # -fno-inline-small-functions too, or else the parser will fail to parse
 # anything (code gen bug, I assume)
-CXXFLAGS = -c -g -I inc
+CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.3\"
 #-O2 -fno-inline-small-functions 
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
 LDFLAGS = -g
 #LDFLAGS = -g -undefined dynamic_lookup
 
-all : tags ID test devac deva
+all : tags ID test devac deva devadb
 
-tags : devac deva
+tags : devac deva devadb
 	ctags -R 
 
-ID : devac deva
+ID : devac deva devadb
 	mkid -i "C++"
 
 test : ${TEST_OBJS}
@@ -66,12 +89,15 @@ deva : ${DEVA_OBJS}
 	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -o deva ${DEVA_OBJS}
 	#g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
 
+devadb : ${DEVADB_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -o devadb ${DEVADB_OBJS}
+
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<
 
 clean:
 	cd src
-	rm *.o test devac deva *.dep*
+	rm *.o test devac deva devadb *.dep*
 
 # run tests
 check:
@@ -80,6 +106,7 @@ check:
 include ${TEST_DEP_FILES}
 include ${DEVAC_DEP_FILES}
 include ${DEVA_DEP_FILES}
+include ${DEVADB_DEP_FILES}
 
 %.dep : %.cpp
 	@set -e; rm -f $@; \

@@ -124,38 +124,38 @@ Scope 2, parent = 0
 Scope 3, parent = 2
 
 Instructions:
-line_num : string: '' = input.dv ; function: '', offset = 0 ; 
-push : boolean: '' = 1 ; 
-jmpf : function: '', offset = 96 ; 
-push : function: '', offset = 86 ; 
+line_num : input.dv ; , address/sized-value = 0 ; 
+push : true ; 
+jmpf : , address/sized-value = 96 ; 
+push : , address/sized-value = 86 ; 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
+push : b ; 
 tbl_load : 
-push : string: '' = c ; 
+push : c ; 
 tbl_load : 
-push : string: '' = d ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 0 ; 
+push : d ; 
+tbl_load : false ; 
+call : , address/sized-value = 0 ; 
 pop : 
-jmp : function: '', offset = 19 ; 
-push : function: '', offset = 139 ; 
+jmp : , address/sized-value = 19 ; 
+push : , address/sized-value = 139 ; 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
+push : b ; 
 tbl_load : 
-push : string: '' = c ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 0 ; 
+push : c ; 
+tbl_load : false ; 
+call : , address/sized-value = 0 ; 
 pop : 
-defun : function: 'x', offset = 141 ; 
+defun : x, address/sized-value = 141 ; 
 enter : 
 defarg : 
-push : function: '', offset = 197 ; 
+push : , address/sized-value = 197 ; 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
+push : b ; 
 tbl_load : 
-push : string: '' = c ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 0 ; 
+push : c ; 
+tbl_load : false ; 
+call : , address/sized-value = 0 ; 
 pop : 
 push : null ; 
 return : 

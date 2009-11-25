@@ -1,35 +1,12 @@
 1
 1
 2
-map: 'm' = 
- - num: '' = 0 : string: '' = a
-
-map: 'n' = 
- - num: '' = 0 : string: '' = a
- - num: '' = 1 : string: '' = b
-
-map: 'n' = 
- - num: '' = 0 : string: '' = a
- - num: '' = 1 : string: '' = b
- - num: '' = 2 : string: '' = c
-
-map: 'n' = 
- - num: '' = 0 : string: '' = a
- - num: '' = 2 : string: '' = c
-
+{0:a}
+{0:a, 1:b}
+{0:a, 1:b, 2:c}
+{0:a, 2:c}
 null
 c
-vector: '' = 
-num: '' = 0
-num: '' = 2
-
-vector: '' = 
-string: '' = a
-string: '' = c
-
-map: 'n' = 
- - num: '' = 0 : string: '' = a
- - num: '' = 2 : string: '' = c
- - string: '' = a : string: '' = item a
- - string: '' = b : string: '' = item b
-
+[0, 2]
+[a, c]
+{0:a, 2:c, a:item a, b:item b}

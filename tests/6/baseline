@@ -377,114 +377,114 @@ Scope 6, parent = 0
 	str
 
 Instructions:
-line_num : string: '' = input.dv ; function: '', offset = 0 ; 
-defun : function: 'foo', offset = 19 ; 
+line_num : input.dv ; , address/sized-value = 0 ; 
+defun : foo, address/sized-value = 19 ; 
 enter : 
 defarg : unknown: 'a' ; 
 defarg : unknown: 'b' ; 
 defarg : 
 push : unknown: 'a' ; 
-jmpf : function: '', offset = 72 ; 
+jmpf : , address/sized-value = 72 ; 
 push : unknown: 'b' ; 
 return : 
-jmp : function: '', offset = 114 ; 
+jmp : , address/sized-value = 114 ; 
 push : unknown: 'b' ; 
-jmpf : function: '', offset = 100 ; 
+jmpf : , address/sized-value = 100 ; 
 push : unknown: 'a' ; 
 return : 
-jmp : function: '', offset = 114 ; 
-push : num: '' = 0 ; 
+jmp : , address/sized-value = 114 ; 
+push : 0 ; 
 return : 
 push : unknown: 'a' ; 
 new_vec: : 
 store : 
-push : function: '', offset = 177 ; 
-push : num: '' = 5 ; 
+push : , address/sized-value = 177 ; 
+push : 5 ; 
 push : unknown: 'a' ; 
-push : string: '' = pushback ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 1 ; 
+push : pushback ; 
+tbl_load : false ; 
+call : , address/sized-value = 1 ; 
 pop : 
 push : unknown: 'b' ; 
 new_map: : 
 store : 
 push : unknown: 'b' ; 
-push : num: '' = 0 ; 
-push : string: '' = foo ; 
-tbl_store : function: '', offset = 1 ; 
+push : 0 ; 
+push : foo ; 
+tbl_store : , address/sized-value = 1 ; 
 push : unknown: 'b' ; 
-push : string: '' = foo ; 
+push : foo ; 
 push : unknown: 'foo' ; 
-tbl_store : function: '', offset = 1 ; 
+tbl_store : , address/sized-value = 1 ; 
 push : unknown: 'x' ; 
 push : unknown: 'b' ; 
-push : string: '' = foo ; 
-tbl_load : function: '', offset = 1 ; 
+push : foo ; 
+tbl_load : , address/sized-value = 1 ; 
 store : 
-push : function: '', offset = 320 ; 
-push : num: '' = 1 ; 
-push : num: '' = 0 ; 
-call : function_call: 'x' ; function: '', offset = 2 ; 
+push : , address/sized-value = 320 ; 
+push : 1 ; 
+push : 0 ; 
+call : function_call: 'x' ; , address/sized-value = 2 ; 
 pop : 
-push : function: '', offset = 322 ; 
+push : , address/sized-value = 322 ; 
 push : unknown: 'b' ; 
-dup : num: '' = 0 ; 
-push : unknown: '.table00000001258779196.0000716188' ; 
+dup : 0 ; 
+push : unknown: '.table00000001259115964.0000061964' ; 
 swap : 
 store : 
-call : function_call: 'length' ; function: '', offset = 1 ; 
-push : num: '' = 0 ; 
-dup : num: '' = 1 ; 
-dup : num: '' = 1 ; 
+call : function_call: 'length' ; , address/sized-value = 1 ; 
+push : 0 ; 
+dup : 1 ; 
+dup : 1 ; 
 neq : 
-jmpf : function: '', offset = 657 ; 
-load : unknown: '.table00000001258779196.0000716188' ; 
-dup : num: '' = 1 ; 
-tbl_load : boolean: '' = 1 ; 
+jmpf : , address/sized-value = 657 ; 
+load : unknown: '.table00000001259115964.0000061964' ; 
+dup : 1 ; 
+tbl_load : true ; 
 push : unknown: 'key' ; 
 swap : 
 store : 
 push : unknown: 'value' ; 
 swap : 
 store : 
-push : function: '', offset = 633 ; 
-push : function: '', offset = 569 ; 
+push : , address/sized-value = 633 ; 
+push : , address/sized-value = 569 ; 
 push : unknown: 'key' ; 
-call : function_call: 'str' ; function: '', offset = 1 ; 
-push : function: '', offset = 599 ; 
+call : function_call: 'str' ; , address/sized-value = 1 ; 
+push : , address/sized-value = 599 ; 
 push : unknown: 'value' ; 
-call : function_call: 'str' ; function: '', offset = 1 ; 
+call : function_call: 'str' ; , address/sized-value = 1 ; 
 add : 
 push : unknown: 'io' ; 
-push : string: '' = print ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 1 ; 
+push : print ; 
+tbl_load : false ; 
+call : , address/sized-value = 1 ; 
 pop : 
-push : num: '' = 1 ; 
+push : 1 ; 
 add : 
-jmp : function: '', offset = 417 ; 
+jmp : , address/sized-value = 417 ; 
 pop : 
 pop : 
 push : unknown: 'a' ; 
-push : num: '' = 10 ; 
+push : 10 ; 
 lt : 
-jmpf : function: '', offset = 794 ; 
+jmpf : , address/sized-value = 794 ; 
 enter : 
 push : unknown: 'a' ; 
 push : unknown: 'a' ; 
-push : num: '' = 1 ; 
+push : 1 ; 
 add : 
 store : 
-push : function: '', offset = 782 ; 
-push : function: '', offset = 750 ; 
+push : , address/sized-value = 782 ; 
+push : , address/sized-value = 750 ; 
 push : unknown: 'a' ; 
-call : function_call: 'str' ; function: '', offset = 1 ; 
+call : function_call: 'str' ; , address/sized-value = 1 ; 
 push : unknown: 'io' ; 
-push : string: '' = print ; 
-tbl_load : boolean: '' = 0 ; 
-call : function: '', offset = 1 ; 
+push : print ; 
+tbl_load : false ; 
+call : , address/sized-value = 1 ; 
 pop : 
 leave : 
-jmp : function: '', offset = 661 ; 
+jmp : , address/sized-value = 661 ; 
 halt : 
 compiled input.dv successfully
