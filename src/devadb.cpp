@@ -147,6 +147,7 @@ void split( string & in, vector<string> & ret )
 const char* commands[] = 
 {
 	"next",
+	"next instruction",
 	"step in",
 	"step out",
 	"quit",
@@ -157,6 +158,7 @@ char command_shortcuts[] =
 {
 	'n',
 	'i',
+	's',
 	'o',
 	'q',
 	'c',
@@ -322,80 +324,87 @@ int main( int argc, char** argv )
 			AddBitModule( ex );
 			AddMathModule( ex );
 
-			// execute the code block we just compiled
+			// add the code block we just compiled
 			ex.AddCodeBlock( code );
-			cout << "starting program..." << endl;
-			ex.StartExecutingCode( code );
-			string input;
-			vector<string> in;
-			char c = 0, c2;
-			int l = 1;
-			bool done = false;
-			while( !done )
-			{
-//				c2 = cin.get();
-//				if( c2 != '\n' )
-//				{
-//					// clear the newline
-//					cin.get();
-//					// set the input value
-//					c = c2;
-//				}
-				getline( cin, input );
-				if( input.length() > 0 )
-				{
-					split( input, in );
-					c = get_command( in[0] );
-					in.clear();
-				}
-				if( c == 0 )
-					cout << "Unknown command" << endl;
-				else
-				{
-					// otherwise, repeat the last command
-					switch( c )
-					{
-					// 'quit'
-					case 'q':
-						done = true;
-						break;
-					// 'next'
-					case 'n':
-						l = ex.StepLine();
-						break;
-					case 'i':
-						{
-						// StepInst returns 0 if this wasn't a linenum op
-						Instruction inst;
-						int il = ex.StepInst( inst );
-						if( il != 0 )
-							l = il;
-						cout << inst << endl;
-						}
-						break;
-					case 'c':
-						l = ex.Run();
-						break;
-	//				case 's':
-	//					l = ex.StepInto();
-	//					break;
-					case 'p':
-						{
-						DevaObject* v = ex.find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
-						if( !v )
-							cout << "Cannot locate variable '" << in[1].c_str() << "'." << endl;
-						else
-							cout << *v << endl;
-						}
-						break;
-					}
-					if( l == -1 )
-						break;
 
-					ShowLine( lines, l );
+			// run
+			cout << "devadb " << VERSION << endl;
+			cout << "starting program..." << endl;
+			while( true )
+			{
+				ex.StartExecutingCode( code );
+				string input;
+				vector<string> in;
+				char c = 0;
+				int l = 1;
+				bool done = false;
+				while( !done )
+				{
+					getline( cin, input );
+					if( input.length() > 0 )
+					{
+						split( input, in );
+						c = get_command( in[0] );
+						in.clear();
+					}
+					if( c == 0 )
+						cout << "Unknown command" << endl;
+					else
+					{
+						// otherwise, repeat the last command
+						switch( c )
+						{
+						// 'quit'
+						case 'q':
+							done = true;
+							break;
+						// 'next'
+						case 'n':
+							l = ex.StepOver();
+							break;
+						// 'step'
+						case 's':
+							l = ex.StepInto();
+							break;
+						// 'next instruction'
+						case 'i':
+							{
+							// StepInst returns 0 if this wasn't a linenum op
+							Instruction inst;
+							int il = ex.StepInst( inst );
+							if( il != 0 )
+								l = il;
+							cout << inst << endl;
+							}
+							break;
+						// 'continue'
+						case 'c':
+							l = ex.Run();
+							break;
+						// 'print'
+						case 'p':
+							{
+							DevaObject* v = ex.find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
+							if( !v )
+								cout << "Cannot locate variable '" << in[1].c_str() << "'." << endl;
+							else
+								cout << *v << endl;
+							}
+							break;
+						}
+						if( l == -1 )
+							break;
+
+						ShowLine( lines, l );
+					}
 				}
+				cout << "program terminated. restart? (y/n)" << endl;
+				char c2 = getchar();
+				if( c2 != 'y' )
+					break;
+				// remove the newline
+				getchar();
 			}
-			cout << "program terminated" << endl;
 
 			ex.EndGlobalScope();
 		}

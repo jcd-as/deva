@@ -330,7 +330,7 @@ public:
 	// start executing a file, stopping before the first instruction
 	void StartExecutingCode( unsigned char* code );
 	// execute one line
-	int StepLine();
+	int StepOver();
 	// execute one line or into one call
 	int StepInto();
 	// execute one instruction

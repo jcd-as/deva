@@ -2850,7 +2850,44 @@ void Executor::StartExecutingCode( unsigned char* cd )
 
 // execute one line
 // returns line number or -1 on halt
-int Executor::StepLine()
+int Executor::StepOver()
+{
+	size_t return_address = 0;
+	// keep executing instructions until we reach the next line_num op,
+	// skipping calls
+	while( true )
+	{
+		// get the next instruction in the byte code
+		Instruction inst = NextInstr();
+
+		// if this is a "top level" call, keep going until we get to the matching return
+		if( inst.op == op_call && return_address == 0 )
+		{
+			return_address = ip;
+		}
+
+		// DoInstr returns false on 'halt' instruction
+		if( !DoInstr( inst ) )
+			return -1;
+
+		if( ip == return_address )
+		{
+			return_address = 0;
+		}
+
+		if( !return_address && inst.op == op_line_num )
+		{
+			// ignore enter and leave instructions
+			Opcode op = PeekInstr();
+			if( op != op_enter && op != op_leave )
+				return (int)inst.args[1].sz_val;
+		}
+	}
+}
+
+// execute one line or into one call
+// returns line number or -1 on halt
+int Executor::StepInto()
 {
 	// keep executing instructions until we reach a new line_num instruction
 	while( true )
@@ -2869,25 +2906,6 @@ int Executor::StepLine()
 			if( op != op_enter && op != op_leave )
 				return (int)inst.args[1].sz_val;
 		}
-	}
-}
-
-// execute one line or into one call
-// returns line number or -1 on halt
-int Executor::StepInto()
-{
-	// read the instructions
-	while( true )
-	{
-		// get the next instruction in the byte code
-		Instruction inst = NextInstr();
-
-		// DoInstr returns false on 'halt' instruction
-		if( !DoInstr( inst ) )
-			return -1;
-
-		if( inst.op == op_line_num )
-			return (int)inst.args[1].sz_val;
 	}
 }
 
