@@ -104,11 +104,37 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			os << "unknown: '" << obj.name << "'";
 			break;
 		case sym_class:
-			os << "class: '" << obj.name << "'";
+			os << "class: '" << obj.name << "' = {";
+			{
+			// dump map contents
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
 			break;
+			}
 		case sym_instance:
-			os << "instance: '" << obj.name << "'";
+			os << "instance: '" << obj.name << "' = {";
+			{
+			// dump map contents
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
 			break;
+			}
 		default:
 			os << "ERROR: unknown type";
 	}

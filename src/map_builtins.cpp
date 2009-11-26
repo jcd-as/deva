@@ -108,8 +108,8 @@ void do_map_length( Executor *ex )
 	ex->stack.pop_back();
 
 	int len;
-	if( map.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'length'." );
+	if( map.Type() != sym_map && map.Type() != sym_class && map.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'length'." );
 
 	len = map.map_val->size();
 
@@ -129,13 +129,18 @@ void do_map_copy( Executor *ex )
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
-    if( mp.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'copy'." );
+    if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'copy'." );
 
     DevaObject copy;
 	// create a new map object that is a copy of the one we received,
 	DOMap* m = new DOMap( *(mp.map_val) );
-	copy = DevaObject( "", m );
+	if( mp.Type() == sym_map )
+		copy = DevaObject( "", m );
+	else if( mp.Type() == sym_class )
+		copy = DevaObject::ClassFromMap( "", m );
+	else if( mp.Type() == sym_instance )
+		copy = DevaObject::InstanceFromMap( "", m );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -158,8 +163,8 @@ void do_map_remove( Executor *ex )
 	ex->stack.pop_back();
 
 	// map
-	if( map.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'remove'." );
+	if( map.Type() != sym_map && map.Type() != sym_class && map.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'remove'." );
 
 	// key
 	DevaObject* o;
@@ -196,8 +201,8 @@ void do_map_find( Executor *ex )
 	ex->stack.pop_back();
 	
 	// map
-	if( mp.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'find'." );
+	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'find'." );
 
 	// key
 	DevaObject* o;
@@ -232,8 +237,8 @@ void do_map_keys( Executor *ex )
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
-	if( mp.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'keys'." );
+	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'keys'." );
 
 	size_t sz = mp.map_val->size();
 	DOVector* v = new DOVector();
@@ -261,8 +266,8 @@ void do_map_values( Executor *ex )
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
-	if( mp.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'keys'." );
+	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'keys'." );
 
 	size_t sz = mp.map_val->size();
 	DOVector* v = new DOVector();
@@ -295,8 +300,8 @@ void do_map_merge( Executor *ex )
 	ex->stack.pop_back();
 	
 	// map
-	if( mp.Type() != sym_map )
-		throw DevaICE( "Map expected in map built-in method 'merge'." );
+	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+		throw DevaICE( "Map, class or instance expected in map built-in method 'merge'." );
 
 	// val (map to merge in)
 	DevaObject* o;
@@ -308,11 +313,6 @@ void do_map_merge( Executor *ex )
 	}
 	else
 		o = &val;
-
-//    DevaObject copy;
-//	// create a new map object that is a copy of the one we received,
-//	DOMap* m = new DOMap( *(mp.map_val) );
-//	copy = DevaObject( "", m );
 
 	mp.map_val->insert( o->map_val->begin(), o->map_val->end() );
 

@@ -212,6 +212,10 @@ private:
 	// locate a module
 	string find_module( string mod );
 
+	// walk the base classes of an object and call constructors on them
+	// with 'self' as the instance to construct
+	void construct_base_classes( DevaObject* cls, DevaObject & self );
+
 	////////////////////////////////////////////////////
 	// individual op-code methods
 	////////////////////////////////////////////////////

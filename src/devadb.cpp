@@ -26,7 +26,6 @@
 // created by jcs, november 23, 2009 
 
 // TODO:
-// * 'next' currently does a step-INTO, not step-OVER
 // * breakpoints
 // * data eval
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
