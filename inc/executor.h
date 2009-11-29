@@ -131,9 +131,7 @@ private:
 			// it is normal for 'namespace' scope tables (i.e. all but the
 			// global scope table) to have ONE scope, the module scope, left at
 			// destruction
-			if( size() > 1 )
-				throw DevaRuntimeException( "ScopeTable not empty.\nIf your program exited normally, this indicates an internal memory leak of some kind.\nIf your program did not exit normally, this is expected." );
-			else if( size() == 1 )
+			if( size() == 1 )
 			{
 				delete back();
 				pop_back();
@@ -181,6 +179,9 @@ private:
 	ScopeTable *current_scopes;
 
 	CallStack trace;
+
+	// list of breakpoints
+	vector<pair<string, int> > breakpoints;
 
 	////////////////////////////////////////////////////
 	// private helper functions:
@@ -320,7 +321,7 @@ public:
 	void StartGlobalScope();
 	void EndGlobalScope();
 	void AddCodeBlock( unsigned char* cd );
-	void RunCode( unsigned char* cd );
+	void RunCode( unsigned char* cd, bool stop_at_breakpoints = true );
 	void RunFile( const char* const filename );
 	void RunText( const char* const text );
 
@@ -340,7 +341,13 @@ public:
 	// execute one instruction
 	int StepInst( Instruction & inst );
 	// execute (with breakpoints enabled)
-	int Run();
+	int Run( bool stop_at_breakpoint = true );
+	// add a breakpoint
+	void AddBreakpoint( string file, int line );
+	// enumerate breakpoints
+	const vector<pair<string, int> > & GetBreakpoints();
+	// remove a breakpoint
+	void RemoveBreakpoint( int idx );
 
 	////////////////////////////////////////////////////
 	// helper methods. useful for built-ins

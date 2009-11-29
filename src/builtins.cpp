@@ -59,6 +59,8 @@ void do_writeline( Executor *ex );
 void do_writelines( Executor *ex );
 void do_seek( Executor *ex );
 void do_tell( Executor *ex );
+void do_name( Executor *ex );
+void do_type( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -84,6 +86,8 @@ static const string builtin_names[] =
     string( "writelines" ),
     string( "seek" ),
     string( "tell" ),
+	string( "name" ),
+	string( "type" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -110,6 +114,8 @@ builtin_fcn builtin_fcns[] =
 	do_writelines,
 	do_seek,
 	do_tell,
+	do_name,
+	do_type,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1226,3 +1232,100 @@ void do_tell( Executor *ex )
 	// return the position
 	ex->stack.push_back( DevaObject( "", (double)pos ) );
 }
+
+void do_name( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'type'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'type'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", o->name ) );
+}
+
+void do_type( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'name'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'name'." );
+	}
+	if( !o )
+		o = &obj;
+
+	string type;
+	switch( o->Type() )
+	{
+	case sym_null:
+		type = "null";
+		break;
+	case sym_boolean:
+		type = "bool";
+		break;
+	case sym_number:
+		type = "number";
+		break;
+	case sym_string:
+		type = "string";
+		break;
+	case sym_vector:
+		type = "vector";
+		break;
+	case sym_map:
+		type = "map";
+		break;
+	case sym_address:
+		type = "address";
+		break;
+	case sym_function_call:
+		type = "call";
+		break;
+	case sym_unknown:
+		type = "variable";
+		break;
+	case sym_class:
+		type = "class";
+		break;
+	case sym_instance:
+		type = "instance";
+		break;
+	case sym_size:
+		type = "size";
+		break;
+	case sym_native_obj:
+		type = "native object";
+		break;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", type ) );
+}
+

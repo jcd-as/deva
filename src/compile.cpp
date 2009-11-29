@@ -431,6 +431,12 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_const_decl( i );
 	}
+	// local decl
+	else if( i->value.id() == parser_id( local_decl_id ) )
+	{
+		walk_children( i );
+		check_local_decl( i );
+	}
 	// new decl ('new' operator)
 	else if( i->value.id() == parser_id( new_decl_id ) )
 	{
@@ -442,6 +448,12 @@ void eval_node( iter_t const & i )
 	{
 		walk_children( i );
 		check_constant( i );
+	}
+	// local (keyword 'local')
+	else if( i->value.id() == parser_id( local_id ) )
+	{
+		walk_children( i );
+		check_local( i );
 	}
 	// translation unit
 	else if( i->value.id() == parser_id( translation_unit_id ) )
@@ -1299,6 +1311,16 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		walk_children( i, is );
 		gen_IL_constant( i, is );
+	}
+	// local decl
+	else if( i->value.id() == parser_id( local_decl_id ) )
+	{
+		walk_children( i, is );
+	}
+	// local (keyword 'local')
+	else if( i->value.id() == parser_id( constant_id ) )
+	{
+		walk_children( i, is );
 	}
 	// translation unit
 	else if( i->value.id() == parser_id( translation_unit_id ) )

@@ -409,6 +409,8 @@ void Executor::Load( Instruction const & inst )
 	stack.push_back( *var );
 }
 // 3 store a variable from the stack to memory
+// if there is a boolean arg with the value 'true', this is a store into a local
+// variable, so a new variable should always be added
 void Executor::Store( Instruction const & inst )
 {
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
@@ -438,18 +440,26 @@ void Executor::Store( Instruction const & inst )
 	// verify the lhs is a variable (sym_unknown)
 	if( lhs.Type() != sym_unknown )
 		throw DevaRuntimeException( "Attempting to assign a value into a non-variable l-value." );
-	// get the lhs from the symbol table
-	DevaObject* ob = find_symbol( lhs );
-	// not found? add it to the current scope
-	if( !ob )
+	if( inst.args.size() == 1 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
 	{
-		ob = new DevaObject( lhs.name, rhs );
+		DevaObject* ob = new DevaObject( lhs.name, rhs );
 		current_scopes->AddObject( ob );
 	}
-	//  set its value to the rhs
 	else
 	{
-		*ob = DevaObject( lhs.name, rhs );
+		// get the lhs from the symbol table
+		DevaObject* ob = find_symbol( lhs );
+		// not found? add it to the current scope
+		if( !ob )
+		{
+			ob = new DevaObject( lhs.name, rhs );
+			current_scopes->AddObject( ob );
+		}
+		//  set its value to the rhs
+		else
+		{
+			*ob = DevaObject( lhs.name, rhs );
+		}
 	}
 }
 // 4 define function. arg is location in instruction stream, named the fcn name
@@ -2472,6 +2482,7 @@ void Executor::Illegal( Instruction const & inst )
 
 
 // execute single instruction
+// returns false on halt or breakpoint
 bool Executor::DoInstr( Instruction & inst )
 {
 	if( debug_mode )
@@ -2519,6 +2530,12 @@ bool Executor::DoInstr( Instruction & inst )
 		break;
 	case op_line_num:	// 12 set item in map. args: index, value
 		Line_num( inst );
+		// check for breakpoints
+		{
+			pair<string, int> p = make_pair( file, line );
+			if( find( breakpoints.begin(), breakpoints.end(), p ) != breakpoints.end() )
+				return false;
+		}
 		break;
 	case op_jmp:			// 13 unconditional jump to the address on top of the stack
 		Jmp( inst );
@@ -2798,9 +2815,14 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 				done = true;
 		}
 
-		// DoInstr returns false on 'halt' instruction
+		// DoInstr returns false on 'halt' instruction or breakpoint
 		if( !DoInstr( inst ) )
-			break;
+		{
+			// do not stop on breakpoints in fcns that need to return to c++
+			// code!
+			if( inst.op == op_halt )
+				break;
+		}
 
 		// if this was the matching 'return', stop
 		if( inst.op == op_return && done )
@@ -2830,7 +2852,7 @@ void Executor::AddCodeBlock( unsigned char* cd )
 
 // run a code block (that is, a block of bytecode that has already had
 // its addresses fixed up)
-void Executor::RunCode( unsigned char* cd )
+void Executor::RunCode( unsigned char* cd, bool stop_at_breakpoints /*= true*/ )
 {
 	// save the current code & ip, if any
 	unsigned char* orig_code = code;
@@ -2841,7 +2863,7 @@ void Executor::RunCode( unsigned char* cd )
 	ip = (size_t)code;
 
 	// execute the instructions
-	Run();
+	Run( stop_at_breakpoints );
 
 	// restore the old code & ip
 	code = orig_code;
@@ -2953,9 +2975,14 @@ int Executor::StepOver()
 			return_address = ip;
 		}
 
-		// DoInstr returns false on 'halt' instruction
+		// DoInstr returns false on 'halt' instruction or breakpoint
 		if( !DoInstr( inst ) )
-			return -1;
+		{
+			if( inst.op == op_halt )
+				return -1;
+			else
+				return line;
+		}
 
 		if( ip == return_address )
 		{
@@ -2982,9 +3009,14 @@ int Executor::StepInto()
 		// get the next instruction in the byte code
 		Instruction inst = NextInstr();
 
-		// DoInstr returns false on 'halt' instruction
+		// DoInstr returns false on 'halt' instruction or breakpoint
 		if( !DoInstr( inst ) )
-			return -1;
+		{
+			if( inst.op == op_halt )
+				return -1;
+			else
+				return line;
+		}
 
 		if( inst.op == op_line_num )
 		{
@@ -3003,9 +3035,14 @@ int Executor::StepInst( Instruction & inst )
 	// get the next instruction in the byte code
 	inst = NextInstr();
 
-	// DoInstr returns false on 'halt' instruction
+	// DoInstr returns false on 'halt' instruction or breakpoint
 	if( !DoInstr( inst ) )
-		return -1;
+	{
+		if( inst.op == op_halt )
+			return -1;
+		else
+			return line;
+	}
 
 	if( inst.op == op_line_num )
 		return (int)inst.args[1].sz_val;
@@ -3015,7 +3052,7 @@ int Executor::StepInst( Instruction & inst )
 
 // execute (until breakpoint or exit)
 // returns line number or -1 on halt
-int Executor::Run()
+int Executor::Run( bool stop_at_breakpoints /*= true*/ )
 {
 	// keep executing instructions until we hit a breakpoint or halt
 	while( true )
@@ -3023,17 +3060,37 @@ int Executor::Run()
 		// get the next instruction in the byte code
 		Instruction inst = NextInstr();
 
-		// DoInstr returns false on 'halt' instruction
+		// DoInstr returns false on 'halt' instruction or breakpoint
 		if( !DoInstr( inst ) )
-			return -1;
+		{
+			if( inst.op == op_halt )
+				return -1;
+			else if( stop_at_breakpoints )
+				return line;
+		}
 
-		// TODO: check for breakpoints
-//		if( inst.op == op_line_num )
-//		{
-//			// ignore enter and leave instructions
-//			Opcode op = PeekInstr();
-//			if( op != op_enter && op != op_leave )
-//				return (int)inst.args[1].sz_val;
-//		}
+		// check for breakpoints
+		if( inst.op == op_line_num )
+		{
+			pair<string, int> p = make_pair( string( inst.args[0].str_val ), inst.args[1].sz_val );
+			if( find( breakpoints.begin(), breakpoints.end(), p ) != breakpoints.end() )
+				return inst.args[1].sz_val;
+		}
 	}
+}
+
+// add a breakpoint
+void Executor::AddBreakpoint( string file, int line )
+{
+	breakpoints.push_back( make_pair(file, line) );
+}
+// enumerate breakpoints
+const vector<pair<string, int> > & Executor::GetBreakpoints()
+{
+	return breakpoints;
+}
+// remove a breakpoint
+void Executor::RemoveBreakpoint( int idx )
+{
+	breakpoints.erase( breakpoints.begin() + idx );
 }

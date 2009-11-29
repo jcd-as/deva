@@ -250,7 +250,9 @@ void check_assignment_op( iter_t const & i )
 	if( i->children[0].value.id() == assignment_op_id )
 		throw DevaSemanticException( "Chained assignments are not allowed.", lhs );
 	NodeInfo rhs = i->children[1].value.value();
-	if( lhs.type != variable_type && i->children[0].value.id() != const_decl_id )
+	if( lhs.type != variable_type && 
+		i->children[0].value.id() != const_decl_id &&
+		i->children[0].value.id() != local_decl_id )
 		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value", lhs );
 	else if( rhs.type != number_type 
 		&& rhs.type != string_type 
@@ -710,6 +712,18 @@ void check_const_decl( iter_t const & i )
 		throw DevaSemanticException( string( string( "Symbol " ) + i->children[1].value.value().sym + " not found in any scope" ).c_str(), i->children[1].value.value() );
 }
 
+void check_local_decl( iter_t const & i )
+{
+	// is always the lhs of assignment op
+	// 2 children: 'local' and identifier
+	NodeInfo keyword = i->children[0].value.value();
+	NodeInfo id = i->children[1].value.value();
+	if( keyword.sym != "local" )
+		throw DevaSemanticException( "Invalid local declaration", keyword );
+	else if( id.type != variable_type )
+		throw DevaSemanticException( "Invalid local declaration", id );
+}
+
 void check_new_decl( iter_t const & i )
 {
 	// is always the rhs of assignment op
@@ -744,6 +758,12 @@ void check_class_decl( iter_t const & i )
 void check_constant( iter_t const & i )
 {
 	// "const" keyword
+	// 0 children
+}
+
+void check_local( iter_t const & i )
+{
+	// "local" keyword
 	// 0 children
 }
 

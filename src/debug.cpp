@@ -119,6 +119,14 @@ void eval_expression( iter_t const& i )
 
 		dumpNode( "const", i, indents );
 	}
+	// local (keyword 'local')
+	else if( i->value.id() == parser_id( local_id ) )
+	{
+		// self and possibly semi-colon
+        assert( i->children.size() == 0 || i->children.size() == 1 );
+
+		dumpNode( "local", i, indents );
+	}
 	// func (keyword 'def' for defining functions)
 	else if( i->value.id() == parser_id( func_id ) )
 	{
@@ -344,6 +352,11 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( const_decl_id ) )
 	{
 		dumpNode( "const_decl", i, indents );
+	}
+	// local decl
+	else if( i->value.id() == parser_id( local_decl_id ) )
+	{
+		dumpNode( "local_decl", i, indents );
 	}
 	// new op
 	else if( i->value.id() == parser_id( new_decl_id ) )

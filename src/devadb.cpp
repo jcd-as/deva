@@ -26,8 +26,10 @@
 // created by jcs, november 23, 2009 
 
 // TODO:
-// * breakpoints
+// * 'list' command
+// * function breakpoints (fcn name)
 // * data eval
+// * eval() command
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
 
 #include <boost/program_options/options_description.hpp>
@@ -152,6 +154,10 @@ const char* commands[] =
 	"quit",
 	"continue",
 	"print",
+	"breakpoint",
+	"delete breakpoint",
+	"display breakpoints",
+	"restart",
 };
 char command_shortcuts[] = 
 {
@@ -162,6 +168,10 @@ char command_shortcuts[] =
 	'q',
 	'c',
 	'p',
+	'b',
+	'd',
+	'y',
+	'r',
 };
 
 char get_command( string & in )
@@ -342,9 +352,9 @@ int main( int argc, char** argv )
 					getline( cin, input );
 					if( input.length() > 0 )
 					{
+						in.clear();
 						split( input, in );
 						c = get_command( in[0] );
-						in.clear();
 					}
 					if( c == 0 )
 						cout << "Unknown command" << endl;
@@ -355,6 +365,7 @@ int main( int argc, char** argv )
 						{
 						// 'quit'
 						case 'q':
+						case 'r':
 							done = true;
 							break;
 						// 'next'
@@ -383,6 +394,12 @@ int main( int argc, char** argv )
 						// 'print'
 						case 'p':
 							{
+							// verify there are sufficient args
+							if( in.size() < 2 )
+							{
+								cout << "print command requires variable name." << endl;
+								break;
+							}
 							DevaObject* v = ex.find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
 							if( !v )
 								cout << "Cannot locate variable '" << in[1].c_str() << "'." << endl;
@@ -390,12 +407,52 @@ int main( int argc, char** argv )
 								cout << *v << endl;
 							}
 							break;
+						// 'breakpoint':
+						case 'b':
+							if( in.size() < 3 )
+							{
+								cout << "add breakpoint command requires filename and line number." << endl;
+								break;
+							}
+							// verify there are sufficient args
+							ex.AddBreakpoint( in[1], atoi( in[2].c_str() ) );
+							break;
+						// 'delete breakpoint':
+						case 'd':
+							if( in.size() < 2 )
+							{
+								cout << "delete breakpoint command requires index of breakpoint to remove." << endl;
+								break;
+							}
+							ex.RemoveBreakpoint( atoi( in[1].c_str() ) );
+							break;
+						// 'display breakpoints':
+						case 'y':
+							{
+							vector<pair<string, int> > bpoints = ex.GetBreakpoints();
+							cout << "breakpoints:" << endl;
+							for( int i = 0; i < bpoints.size(); ++i )
+							{
+								cout << i << ": " << bpoints[i].first << ", line " << bpoints[i].second << endl;
+							}
+							break;
+							}
 						}
 						if( l == -1 )
 							break;
 
 						ShowLine( lines, l );
 					}
+				}
+				if( c == 'q' )
+					break;
+				if( c == 'r' )
+				{
+					// TODO: restart needs to reset the scopes tables...
+					// (i.e. free and clear memory)
+					// without that, this is fairly bogus
+					ex.StartExecutingCode( code );
+					continue;
 				}
 				cout << "program terminated. restart? (y/n)" << endl;
 				char c2 = getchar();

@@ -112,7 +112,8 @@ bool is_keyword( const string & s )
 		|| s == "in"
 		|| s == "import"
 		|| s == "class"
-		|| s == "const" )
+		|| s == "const"
+		|| s == "local" )
 		return true;
 	else
 		return false;

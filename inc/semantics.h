@@ -39,10 +39,13 @@ void check_string( iter_t const & i );
 void check_boolean( iter_t const & i );
 void check_null( iter_t const & i );
 void check_func( iter_t const & i );
+
 void pre_check_while_s( iter_t const & i );
 void check_while_s( iter_t const & i );
+
 void pre_check_for_s( iter_t const & i );
 void check_for_s( iter_t const & i );
+
 void check_if_s( iter_t const & i );
 void check_else_s( iter_t const & i );
 void check_import_s( iter_t const & i );
@@ -66,11 +69,15 @@ void check_arg_list_exp( iter_t const & i );
 void check_arg_list_decl( iter_t const & i );
 void check_arg( iter_t const & i );
 void check_key_exp( iter_t const & i );
+
 void pre_check_const_decl( iter_t const & i );
 void check_const_decl( iter_t const & i );
+
+void check_local_decl( iter_t const & i );
 void check_new_decl( iter_t const & i );
 void check_class_decl( iter_t const & i );
 void check_constant( iter_t const & i );
+void check_local( iter_t const & i );
 void check_translation_unit( iter_t const & i );
 void check_compound_statement( iter_t const & i );
 void check_break_statement( iter_t const & i );

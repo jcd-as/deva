@@ -339,6 +339,7 @@ public:
 			assignment_exp =
 				access_node_d[
 				const_decl >> root_node_d[assignment_op] >> (number | string)
+				| local_decl >> root_node_d[assignment_op] >> logical_exp
 				| identifier >> root_node_d[assignment_op] >> new_decl
 				| logical_exp >> +(root_node_d[add_assignment_op] >> logical_exp)
 				| logical_exp >> +(root_node_d[sub_assignment_op] >> logical_exp)
@@ -352,6 +353,12 @@ public:
 			const_decl = 
 				access_node_d[
 				constant >> identifier
+				][&set_node]
+				;
+
+			local_decl = 
+				access_node_d[
+				local >> identifier
 				][&set_node]
 				;
 
@@ -648,6 +655,12 @@ public:
 				][&set_node]
 				;
 
+			local = 
+				access_node_d[
+				str_p( "local" )
+				][&set_node]
+				;
+
 			func = 
 				access_node_d[
 				str_p( "def" )
@@ -717,6 +730,7 @@ public:
 			// expressions
 			BOOST_SPIRIT_DEBUG_RULE( exp );
 			BOOST_SPIRIT_DEBUG_RULE( const_decl );
+			BOOST_SPIRIT_DEBUG_RULE( local_decl );
 			BOOST_SPIRIT_DEBUG_RULE( new_decl );
 			BOOST_SPIRIT_DEBUG_RULE( assignment_exp );
 			BOOST_SPIRIT_DEBUG_RULE( logical_exp );
@@ -760,6 +774,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( boolean );
 			BOOST_SPIRIT_DEBUG_RULE( null );
 			BOOST_SPIRIT_DEBUG_RULE( constant );
+			BOOST_SPIRIT_DEBUG_RULE( local );
 			BOOST_SPIRIT_DEBUG_RULE( func );
 			BOOST_SPIRIT_DEBUG_RULE( while_s );
 			BOOST_SPIRIT_DEBUG_RULE( for_s );
@@ -792,6 +807,7 @@ public:
 			// expressions
 			exp_id = exp.id();
 			const_decl_id = const_decl.id();
+			local_decl_id = local_decl.id();
 			new_decl_id = new_decl.id();
 			assignment_exp_id = assignment_exp.id();
 			logical_exp_id = logical_exp.id();
@@ -835,6 +851,7 @@ public:
 			boolean_id = boolean.id();
 			null_id = null.id();
 			constant_id = constant.id();
+			local_id = local.id();
 			func_id = func.id();
 			while_s_id = while_s.id();
 			for_s_id = for_s.id();
@@ -869,6 +886,7 @@ public:
 			// expressions
 			exp,
 			const_decl,
+			local_decl,
 			new_decl,
 			assignment_exp,
 			logical_exp,
@@ -911,6 +929,7 @@ public:
 			boolean,
 			null,
 			constant,
+			local,
 			func,
 			while_s,
 			for_s,

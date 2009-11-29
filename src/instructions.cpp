@@ -687,6 +687,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			// not be a translation_unit as its parent...
 			|| id == dot_op_id
 			|| id == func_id 
+			|| id == else_s_id
 			|| (id == while_s_id && child_num != 0)
 			|| (id == for_s_id && child_num != 0)
 			|| (id == if_s_id  && child_num != 0) ) )
@@ -726,6 +727,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 					// not be a translation_unit as its parent...
 					|| id == dot_op_id
 					|| id == func_id 
+					|| id == else_s_id
 					|| (id == while_s_id && child_num != 0)
 					|| (id == for_s_id && child_num != 0)
 					|| (id == if_s_id  && child_num != 0) ) )
@@ -771,10 +773,19 @@ void gen_IL_semicolon_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_assignment_op( iter_t const & i, InstructionStream & is )
 {
+	
 	// store (top of stack (rhs) into the arg (lhs), both args are already on
 	// the stack)
 	generate_line_num( i, is );
-	is.push( Instruction( op_store ) );
+	// if the lhs is a local decl
+	if( i->children[0].value.id() == local_decl_id )
+	{
+		// first child of the local_decl is the keyword 'local'
+		// second child is the variable name
+		is.push( Instruction( op_store, DevaObject( "", true ) ) );
+	}
+	else
+		is.push( Instruction( op_store ) );
 }
 
 void gen_IL_add_assignment_op( iter_t const & i, InstructionStream & is )

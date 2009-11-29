@@ -51,6 +51,7 @@ parser_id semicolon_op_id;
 // expressions
 parser_id exp_id;
 parser_id const_decl_id;
+parser_id local_decl_id;
 parser_id new_decl_id;
 parser_id assignment_exp_id;
 parser_id logical_exp_id;
@@ -94,6 +95,7 @@ parser_id number_id;
 parser_id boolean_id;
 parser_id null_id;
 parser_id constant_id;
+parser_id local_id;
 parser_id func_id;
 parser_id while_s_id;
 parser_id for_s_id;

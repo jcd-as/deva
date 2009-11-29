@@ -52,6 +52,7 @@ extern parser_id semicolon_op_id;
 // expressions
 extern parser_id exp_id;
 extern parser_id const_decl_id;
+extern parser_id local_decl_id;
 extern parser_id new_decl_id;
 extern parser_id assignment_exp_id;
 extern parser_id logical_exp_id;
@@ -95,6 +96,7 @@ extern parser_id number_id;
 extern parser_id boolean_id;
 extern parser_id null_id;
 extern parser_id constant_id;
+extern parser_id local_id;
 extern parser_id func_id;
 extern parser_id while_s_id;
 extern parser_id for_s_id;
