@@ -383,5 +383,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>not sure there's anything to be done about this. anytime a variable is an 'alias' of another variable, the name of the original is lost. would mean a big change to the internals of how variables are handled (change symbol/scopes AddObject() methods to take the name as a param and fix everywhere this breaks things)
 </comment></note><note done="1259475236" priority="veryhigh" time="1259274954">BUG: local variables in recursion still not working properly: as the 'scopes' stack unwinds the locals aren't removed, meaning when you are moving back down the call-stack in the recurring routine the locals will have the wrong values (sometimes, not sure why/when exactly)
 <comment>added 'local' keyword
-</comment></note><note priority="veryhigh" time="1259546603">builtin module fcns can't be called from imported modules
-</note></todo>
+</comment></note><note done="1259709111" priority="veryhigh" time="1259546603">calling from inside imported modules is broken: methods can't call other methods in the module, builtin module fcns can't be called etc, because of namespace/scope lookup issues (current scope is 'global', find_symbol won't search module namespaces for unqualified names) 
+<comment>changed look-up sequence. order of variable look-up is now: 1) see if we're in an imported module and if so check it's scope tables 2) look in the 'current' scope tables and 3) if the 'current' scope tables is the not the global table, look in the global scope (where the builtin modules are found, for instance)
+</comment></note></todo>

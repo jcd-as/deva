@@ -26,7 +26,7 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * 'call stack' for tracking where errors occur (rudimentary debugging support)
+// * 
 
 #include "executor.h"
 #include "builtins.h"
@@ -62,6 +62,31 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 {
 	if( !scopes )
 		scopes = current_scopes;
+	
+	// first see if this file is an imported module, 
+	// and look in its scopes if it is
+	string filepart = get_file_part( file );
+	string ext = get_extension( file );
+	string mod( filepart, 0, filepart.length() - ext.length() );
+	ScopeTable* ns = NULL;
+	map<string, ScopeTable>::iterator it;
+	it = namespaces.find( mod );
+	// if we found the namespace
+	if( it != namespaces.end() )
+	{
+		ScopeTable* ns_scopes = &(it->second);
+		for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
+		{
+			// get the scope object
+			Scope* p = *i;
+
+			// check for the symbol
+			if( p->count( ob.name ) != 0 )
+				return p->find( ob.name )->second;
+		}
+	}
+
+	// next, look in the current scopes:
 	// check each scope on the stack
 	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i < scopes->rend(); ++i )
 	{
@@ -69,6 +94,15 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 		Scope* p = *i;
 
 		// check for the symbol
+		if( p->count( ob.name ) != 0 )
+			return p->find( ob.name )->second;
+	}
+	// finally, if this scope table isn't the 'global' scope table, 
+	// we need to look in the global scope too 
+	// (which is available to all scopes/modules always)
+	if( scopes != &global_scopes )
+	{
+		Scope* p = global_scopes[0];
 		if( p->count( ob.name ) != 0 )
 			return p->find( ob.name )->second;
 	}
@@ -2001,7 +2035,12 @@ void Executor::Call( Instruction const & inst )
 				throw DevaICE( "Function call doesn't indicate number of arguments passed." );
 
 			// set the static that tracks the number of args processed
-			args_on_stack = inst.args[1].sz_val;
+			// methods on UDTs (classes and instances)
+			// need to adjust arg count for the implicit 'self' (+1)
+			if( fcn->name.find( '@' ) != string::npos )
+				args_on_stack = inst.args[1].sz_val + 1;
+			else
+				args_on_stack = inst.args[1].sz_val;
 		}
 		// if there's one arg (the num of args to the fcn), 
 		// then it's a method invokation,
