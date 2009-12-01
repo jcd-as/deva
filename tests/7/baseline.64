@@ -376,25 +376,25 @@ Scope 10, parent = 0
 	z
 
 Instructions:
-line_num : string: '' = input.dv ; function: '', offset = 0 ; 
+line_num : input.dv ; , address/sized-value = 0 ; 
 push : unknown: 'a' ; 
-jmpf : function: '', offset = 94 ; 
+jmpf : , address/sized-value = 94 ; 
 enter : 
 push : unknown: 'a' ; 
-push : num: '' = 0 ; 
+push : 0 ; 
 store : 
 push : unknown: 'b' ; 
-push : num: '' = 1 ; 
+push : 1 ; 
 store : 
 leave : 
-jmp : function: '', offset = 23 ; 
+jmp : , address/sized-value = 23 ; 
 push : unknown: 'a' ; 
-jmpf : function: '', offset = 142 ; 
+jmpf : , address/sized-value = 142 ; 
 push : unknown: 'a' ; 
-push : num: '' = 0 ; 
+push : 0 ; 
 store : 
-jmp : function: '', offset = 94 ; 
-defun : function: 'foo', offset = 142 ; 
+jmp : , address/sized-value = 94 ; 
+defun : foo, address/sized-value = 142 ; 
 enter : 
 defarg : unknown: 'a' ; 
 defarg : unknown: 'b' ; 
@@ -403,70 +403,70 @@ defarg :
 push : null ; 
 return : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 253 ; 
+jmpf : , address/sized-value = 253 ; 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 253 ; 
-push : function: '', offset = 251 ; 
-call : function_call: 'z' ; function: '', offset = 0 ; 
+jmpf : , address/sized-value = 253 ; 
+push : , address/sized-value = 251 ; 
+call : function_call: 'z' ; , address/sized-value = 0 ; 
 pop : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 332 ; 
+jmpf : , address/sized-value = 332 ; 
 enter : 
 push : unknown: 'y' ; 
-jmpf : function: '', offset = 318 ; 
-push : function: '', offset = 316 ; 
-call : function_call: 'z' ; function: '', offset = 0 ; 
+jmpf : , address/sized-value = 318 ; 
+push : , address/sized-value = 316 ; 
+call : function_call: 'z' ; , address/sized-value = 0 ; 
 pop : 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 store : 
 leave : 
 push : unknown: 'x' ; 
-jmpf : function: '', offset = 361 ; 
-jmp : function: '', offset = 361 ; 
+jmpf : , address/sized-value = 361 ; 
+jmp : , address/sized-value = 361 ; 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
-tbl_load : 
-push : unknown: 'a' ; 
-push : string: '' = b ; 
-tbl_load : 
-push : string: '' = c ; 
-tbl_load : 
-push : string: '' = d ; 
+push : b ; 
 tbl_load : 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
+push : b ; 
 tbl_load : 
-push : string: '' = c ; 
+push : c ; 
 tbl_load : 
-push : string: '' = d ; 
+push : d ; 
 tbl_load : 
-push : string: '' = foo ; 
-tbl_load : function: '', offset = 1 ; 
+push : unknown: 'a' ; 
+push : b ; 
+tbl_load : 
+push : c ; 
+tbl_load : 
+push : d ; 
+tbl_load : 
+push : foo ; 
+tbl_load : , address/sized-value = 1 ; 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 tbl_load : 
-push : string: '' = c ; 
+push : c ; 
 tbl_load : 
-push : function: '', offset = 18446744073709551615 ; 
+push : , address/sized-value = 18446744073709551615 ; 
 push : unknown: 'a' ; 
-push : string: '' = b ; 
+push : b ; 
 tbl_load : 
-push : string: '' = foo ; 
+push : foo ; 
 push : unknown: 'a' ; 
-push : num: '' = 1 ; 
+push : 1 ; 
 store : 
-push : num: '' = 5 ; 
-push : num: '' = 5 ; 
+push : 5 ; 
+push : 5 ; 
 add : 
-push : num: '' = 2 ; 
+push : 2 ; 
 div : 
-push : num: '' = 2 ; 
-push : num: '' = 2 ; 
+push : 2 ; 
+push : 2 ; 
 mul : 
-push : num: '' = 3 ; 
+push : 3 ; 
 mod : 
-push : num: '' = 1 ; 
+push : 1 ; 
 add : 
 halt : 
 compiled input.dv successfully
