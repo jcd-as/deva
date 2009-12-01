@@ -797,7 +797,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				// call the base constructor
 				string fcn( "new@" );
 				fcn += it->name;
-				is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
+				is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)0, false ) ) );
 				// back-patch the return address
 				is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 				// pop the return value, 'new' can't return anything
@@ -915,7 +915,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// call 'new' on the object
 			string fcn( "new@" );
 			fcn += name;
-			is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)num_args + 1, false ) ) );
+			is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)num_args, false ) ) );
 			// back-patch the return address
 			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 		}
@@ -960,7 +960,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_push , DevaObject( "", fcn ) ) );
 			is.push( Instruction( op_tbl_load ) );
 			// call 'new' on the object
-			is.push( Instruction( op_call, DevaObject( "", (size_t)num_args + 1, false ) ) );
+			is.push( Instruction( op_call, DevaObject( "", (size_t)num_args, false ) ) );
 			// back-patch the return address
 			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 		}

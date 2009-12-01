@@ -58,6 +58,7 @@ def Foo()
 def Bar()
 {
 	Foo();
+	print( os.getenv( "DEVA" ) );
 }
 
 #v = [["zappa"], "yabbo", "xavier"];
@@ -74,5 +75,5 @@ def Bar()
 #}
 
 #print( fcn_b()( 1 ) );
-#devadir = os.getenv( "DEVA" );
+devadir = os.getenv( "DEVA" );
 
