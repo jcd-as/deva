@@ -1,16 +1,78 @@
-v = [["zappa"], "yabbo", "xavier"];
-print( v[0][0][0] );
-
-def fcn_a( n )
+class AA
 {
-	return n + 1;
+	def new()
+	{
+		self.aa = 0;
+		print( "AA.new() called" );
+	}
+	def AA()
+	{
+		print( "AA.AA() called" );
+	}
 }
 
-def fcn_b()
+class A
 {
-	return fcn_a;
+	def new()
+	{
+		self.a = 0;
+		print( "A.new() called" );
+	}
+	def A()
+	{
+		print( "A.A() called" );
+	}
 }
 
-print( fcn_b()( 1 ) );
-devadir = os.getenv( "DEVA" );
+class B : A
+{
+	def new()
+	{
+		self.b = 1;
+		print( "B.new() called" );
+	}
+	def B()
+	{
+		print( "B.B() called" );
+	}
+}
+
+class C : B, AA
+{
+	def new()
+	{
+		self.c = 2;
+		print( "C.new() called" );
+	}
+	def C()
+	{
+		print( "C.C() called" );
+	}
+}
+
+def Foo()
+{
+	print( "Foo() called" );
+}
+
+def Bar()
+{
+	Foo();
+}
+
+#v = [["zappa"], "yabbo", "xavier"];
+#print( v[0][0][0] );
+
+#def fcn_a( n )
+#{
+#	return n + 1;
+#}
+#
+#def fcn_b()
+#{
+#	return fcn_a;
+#}
+
+#print( fcn_b()( 1 ) );
+#devadir = os.getenv( "DEVA" );
 

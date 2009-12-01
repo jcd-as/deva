@@ -699,6 +699,8 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	}
 }
 
+// static for tracking parents to classes
+static vector<DevaObject> parents;
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
 {
 	///////////////////////////////////////
@@ -778,6 +780,31 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
+		// if this is a constructor ("new" method), add code to call the
+		// base-class constructors...
+		string nw( "new@" );
+		nw += class_name;
+		if( in_class_def && name == nw )
+		{
+			// for each parent
+			for( vector<DevaObject>::iterator it = parents.begin(); it != parents.end(); ++it )
+			{
+				// push the return address
+				int ret_addr_loc = is.size();
+				is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+				// push self
+				is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+				// call the base constructor
+				string fcn( "new@" );
+				fcn += it->name;
+				is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
+				// back-patch the return address
+				is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
+				// pop the return value, 'new' can't return anything
+				is.push( Instruction( op_pop ) );
+			}
+		}
+
 		// third child is statement|compound_statement, process it
 		generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 
@@ -790,10 +817,20 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			returned = walk_looking_for_return( iter );
 		if( !returned )
 		{
-			// all fcns return *something*
 			generate_line_num( iter, is );
-			is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
-			is.push( Instruction( op_return ) );
+			// constructors must return 'self'
+			string basename( name, 0, 3 );
+			if( basename == "new" )
+			{
+				is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+				is.push( Instruction( op_return ) );
+			}
+			// all fcns return *something*
+			else
+			{
+				is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+				is.push( Instruction( op_return ) );
+			}
 		}
 	}
 	else if( i->value.id() == parser_id( class_decl_id ) )
@@ -807,7 +844,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// next come parent classes
 		int c = 1;
 		parser_id type = i->children[c].value.id();
-		vector<DevaObject> parents;
+		parents.clear();
 		while( type == identifier_id )
 		{
 			string parent = strip_symbol( string( i->children[c].value.begin(), i->children[c].value.end() ) );
@@ -860,17 +897,27 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// line number
 			generate_line_num( i, is );
 
+			// push the return address for the call to 'new'
+			int ret_addr_loc = is.size();
+			is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+
+			// number of args is size of children - 2 (for the open and close parens),
+			int num_args = i->children[arg_idx].children.size() - 2;
 			// push the args to 'new', if any
-			if( i->children[arg_idx].children.size() > 2 ) // size at least two, for the parens
+			if( num_args > 0 )
 				reverse_walk_children( i->children.begin() + 1, is );
 			
 			// create the new instance
 			is.push( Instruction( op_push, DevaObject( name, sym_unknown ) ) );
-			// number of args is size of children - 2 (for the open and close parens),
 			// +1 for 'self'
 			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1), false ) ) );	// puts the new instance on the stack
 			// new instance is on the stack to act as the 'self' arg to 'new'
-			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
+			// call 'new' on the object
+			string fcn( "new@" );
+			fcn += name;
+			is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)num_args + 1, false ) ) );
+			// back-patch the return address
+			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 		}
 		// if not 2 args, must be 3
 		// FUTURE: if more than 'module.class' is allowed, then this will need
@@ -879,11 +926,19 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		{
 			string module = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 			string name = strip_symbol( string( i->children[1].value.begin(), i->children[1].value.end() ) );
+			arg_idx = 2;
+
 			// line number
 			generate_line_num( i, is );
 
+			// push the return address for the call to 'new'
+			int ret_addr_loc = is.size();
+			is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+
 			// push the args to 'new', if any
-			if( i->children[arg_idx].children.size() > 2 ) // size at least two, for the parens
+			// number of args is size of children - 2 (for the open and close parens),
+			int num_args = i->children[arg_idx].children.size() - 2;
+			if( num_args > 0 ) 
 				reverse_walk_children( i->children.begin() + 1, is );
 			
 			// create the look up of the name in the module,
@@ -892,16 +947,23 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_push , DevaObject( "", name ) ) );
 			is.push( Instruction( op_tbl_load ) );
 
-			arg_idx = 2;
-
 			// number of args is size of children - 2 (for the open and close parens),
 			// +1 for 'self'
 			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1), false ) ) );	// puts the new instance on the stack
 			// new instance is on the stack to act as the 'self' arg to 'new'
 			// (execution engine will have to push the fcn object (e.g. 'foo@bar' offset = nnnn)
-			// create a look up of the name in the namespace 'module'
+			// new, "un-constructed" instance is on the stack
+			// get the 'new' fcn onto the stack
+			string fcn( "new@" );
+			fcn += name;
+			is.push( Instruction( op_push , DevaObject( module.c_str(), sym_unknown ) ) );
+			is.push( Instruction( op_push , DevaObject( "", fcn ) ) );
+			is.push( Instruction( op_tbl_load ) );
+			// call 'new' on the object
+			is.push( Instruction( op_call, DevaObject( "", (size_t)num_args + 1, false ) ) );
+			// back-patch the return address
+			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 		}
-
 	}
 
 	// while_s (keyword 'while')

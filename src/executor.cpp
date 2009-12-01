@@ -2378,47 +2378,14 @@ void Executor::New_class( Instruction const & inst )
 	// add the "__bases__" member
 	cls.map_val->insert( make_pair( DevaObject( "", string( "__bases__" ) ), DevaObject( "", bases ) ) );
 
+	// - add the __name__ member
+	cls.map_val->insert( make_pair( DevaObject( "", string( "__name__" ) ), DevaObject( "", cls_name.name ) ) );
+
 	// push it onto the stack (subsequent instructions will add its methods,
 	// overriding what it inherited)
 	stack.push_back( cls );
 }
 
-// walk the base classes of an object and call constructors on them
-void Executor::construct_base_classes( DevaObject* ob, DevaObject & instance )
-{
-	// ensure it's a class
-	if( ob->Type() != sym_class )
-		throw DevaRuntimeException( "Invalid class type for new object." );
-
-	// call the base class (no-arg) constructors
-	DOMap::iterator it = ob->map_val->find( DevaObject( "", string( "__bases__" ) ) );
-	if( it != ob->map_val->end() )
-	{
-		for( DOVector::iterator i = it->second.vec_val->begin(); i != it->second.vec_val->end(); ++i )
-		{
-			// walk the base classes first
-			construct_base_classes( &(*i), instance );
-
-			// then call this class' constructor
-			string method( "new" );
-			method += "@";
-			method += i->name;
-			if( i->Type() != sym_class )
-				// TODO: user could potentially have caused this via
-				// changing/setting the '__bases__' field
-				throw DevaICE( "A non-class was found in a base class list." );
-			if( i->map_val->find( DevaObject( "", method ) ) != i->map_val->end() )
-			{
-				// push 'self'
-				stack.push_back( instance );
-				// call the 'new' method for this class
-				ExecuteDevaFunction( method, 1 );
-				// ignore the return value from 'new'. not allowed
-				stack.pop_back();
-			}
-		}
-	}
-}
 // 40 create a new class instance object and push onto stack
 void Executor::New_instance( Instruction const & inst )
 {
@@ -2439,7 +2406,7 @@ void Executor::New_instance( Instruction const & inst )
 			throw DevaRuntimeException( "Invalid class name for new object." );
 	}
 	else
-		*ob = cls;
+		ob = new DevaObject( cls );
 
 	// ensure it's a class
 	if( ob->Type() != sym_class )
@@ -2450,25 +2417,6 @@ void Executor::New_instance( Instruction const & inst )
 	DevaObject instance = DevaObject::InstanceFromMap( "", m );
 	// - add the __class__ member to the instance
 	instance.map_val->insert( make_pair( DevaObject( "", string( "__class__" ) ), DevaObject( "", ob->name ) ) );
-
-	// call the base class constructors
-	construct_base_classes( ob, instance ); 
-
-	// - call the constructor ('new' method)
-	size_t num_args = inst.args[0].sz_val;
-	// look for 'new' function (constructor)
-	string method( "new" );
-	method += "@";
-	method += ob->name;
-	if( ob->map_val->find( DevaObject( "", method ) ) != ob->map_val->end() )
-	{
-		// push 'self'
-		stack.push_back( instance );
-		// call the 'new' method for this class
-		ExecuteDevaFunction( method, num_args );
-		// ignore the return value from 'new'. not allowed
-		stack.pop_back();
-	}
 
 	// push it onto the stack
 	stack.push_back( instance );

@@ -377,8 +377,11 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <note priority="veryhigh" time="1258926287">error handling: user-defined error handling routine..?
 </note><note done="1258959199" priority="high" time="1258957957">eval() causes memory leaks(?) (of SymbolTables)
 <comment>1) symbol tables were being freed after file compilation, but not after late (eval) compilation and 2) each call to ParseText() was adding a new 'global' symbol table at key 0, but as it is a pointer, adding a new one to the map 'lost' the old pointer.
-</comment></note><note priority="high" time="1259268315">move instance construction 'new' method handling to compile-time instead of run-time, so that breakpoints can be caught during calls to 'new' (??)
-</note><note done="1259274795" priority="veryhigh" time="1259271679">BUG: the 'name' of the iterated items in a 'for' loop is changed to be the name of the iterator variable, meaning the name() builtin cannot get the 'real' name of the object
+</comment></note><note done="1259631935" priority="high" time="1259268315">move instance construction 'new' method handling to compile-time instead of run-time, so that breakpoints can be caught during calls to 'new' (??)
+<comment>done. discovered in the process that module/namespaces really don't work properly
+</comment></note><note done="1259274795" priority="veryhigh" time="1259271679">BUG: the 'name' of the iterated items in a 'for' loop is changed to be the name of the iterator variable, meaning the name() builtin cannot get the 'real' name of the object
 <comment>not sure there's anything to be done about this. anytime a variable is an 'alias' of another variable, the name of the original is lost. would mean a big change to the internals of how variables are handled (change symbol/scopes AddObject() methods to take the name as a param and fix everywhere this breaks things)
-</comment></note><note priority="veryhigh" time="1259274954">BUG: local variables in recursion still not working properly: as the 'scopes' stack unwinds the locals aren't removed, meaning when you are moving back down the call-stack in the recurring routine the locals will have the wrong values (sometimes, not sure why/when exactly)
+</comment></note><note done="1259475236" priority="veryhigh" time="1259274954">BUG: local variables in recursion still not working properly: as the 'scopes' stack unwinds the locals aren't removed, meaning when you are moving back down the call-stack in the recurring routine the locals will have the wrong values (sometimes, not sure why/when exactly)
+<comment>added 'local' keyword
+</comment></note><note priority="veryhigh" time="1259546603">builtin module fcns can't be called from imported modules
 </note></todo>

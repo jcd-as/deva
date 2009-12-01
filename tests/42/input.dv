@@ -1,5 +1,8 @@
 class A
 {
+	# all classes must have a constructor
+	def new()
+	{}
 	def fcn()
 	{
 		print( "A.fcn called" );

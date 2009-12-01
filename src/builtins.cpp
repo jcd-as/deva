@@ -1252,11 +1252,28 @@ void do_name( Executor *ex )
 	if( !o )
 		o = &obj;
 
+	string name;
+	// if this is a class, get the name attribute
+	if( o->Type() == sym_class )
+	{
+		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__name__" ) ) );
+		if( it != o->map_val->end() )
+		{
+			if( it->second.Type() != sym_string )
+				throw DevaICE( "__name__ attribute on a class object is not of type 'string'." );
+			name = it->second.str_val;
+		}
+		else
+			throw DevaICE( "__name__ attribute not found on a class object." );
+	}
+	else
+		name = o->name;
+	
 	// pop the return address
 	ex->stack.pop_back();
 
 	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", o->name ) );
+	ex->stack.push_back( DevaObject( "", name ) );
 }
 
 void do_type( Executor *ex )
