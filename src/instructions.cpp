@@ -282,12 +282,12 @@ ostream & operator << ( ostream & os, Opcode & op )
 // helper to generate line number ops, IF debugging info is turned on
 // (ops indicate a change in the current line num)
 bool debug_info_on;
-void generate_line_num( iter_t const & i, InstructionStream & is )
+void generate_line_num( iter_t const & i, InstructionStream & is, bool force /*= false*/  )
 {
 	static int line = 1;
 	static string file = "";
 
-	if( !debug_info_on )
+	if( !force && !debug_info_on )
 		return;
 
 	// get the node info
@@ -658,6 +658,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// generate the call for the initial arg list (there could be more
 		// lists chained together)
 		string name = strip_symbol( string( i->value.begin(), i->value.end() ) );
+		// force a line num for calls
+		generate_line_num( i, is, true );
 		int num_args = i->children[0].children.size() - 2;
 		if( get_fcn_from_stack )
 			// add the call instruction, passing no args to indicate it needs
@@ -686,6 +688,9 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			// oddly, if the dot-op expression is at the global scope, there may
 			// not be a translation_unit as its parent...
 			|| id == dot_op_id
+			// and, if this is from code that is being run dynamically, an
+			// identifier may itself be the parent
+			|| id == identifier_id
 			|| id == func_id 
 			|| id == else_s_id
 			|| (id == while_s_id && child_num != 0)
@@ -702,7 +707,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			if( i->children[c].value.id() == arg_list_exp_id )
 			{
 				int num_args = i->children[c].children.size() - 2;
-				generate_line_num( i, is );
+				// force a line num for calls
+				generate_line_num( i, is, true );
 				// add the call instruction, passing no args to indicate it needs
 				// to pull the function off the stack
 				is.push( Instruction( op_call, DevaObject( "", (size_t)num_args, false ) ) );
@@ -726,6 +732,9 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 					// oddly, if the dot-op expression is at the global scope, there may
 					// not be a translation_unit as its parent...
 					|| id == dot_op_id
+					// and, if this is from code that is being run dynamically, an
+					// identifier may itself be the parent
+					|| id == identifier_id
 					|| id == func_id 
 					|| id == else_s_id
 					|| (id == while_s_id && child_num != 0)

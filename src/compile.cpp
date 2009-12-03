@@ -108,7 +108,7 @@ void emit_warning( DevaSemanticException & e )
 
 static bool global_sym_tab_created = false;
 
-// parse a deva file
+// parse a buffer containing deva code
 // returns the AST tree
 tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input, long input_len )
 {
@@ -794,6 +794,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
 				// push self
 				is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+				// force a line num for calls
+				generate_line_num( i, is, true );
 				// call the base constructor
 				string fcn( "new@" );
 				fcn += it->name;
@@ -912,6 +914,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// +1 for 'self'
 			is.push( Instruction( op_new_instance, DevaObject( "", (size_t)(i->children[arg_idx].children.size()-1), false ) ) );	// puts the new instance on the stack
 			// new instance is on the stack to act as the 'self' arg to 'new'
+			// force a line num for calls
+			generate_line_num( i, is, true );
 			// call 'new' on the object
 			string fcn( "new@" );
 			fcn += name;
@@ -959,6 +963,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is.push( Instruction( op_push , DevaObject( module.c_str(), sym_unknown ) ) );
 			is.push( Instruction( op_push , DevaObject( "", fcn ) ) );
 			is.push( Instruction( op_tbl_load ) );
+			// force a line num for calls
+			generate_line_num( i, is, true );
 			// call 'new' on the object
 			is.push( Instruction( op_call, DevaObject( "", (size_t)num_args, false ) ) );
 			// back-patch the return address

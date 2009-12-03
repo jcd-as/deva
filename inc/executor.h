@@ -326,6 +326,8 @@ public:
 	// dump the stack trace to stdout
 	void DumpTrace( ostream &, bool show_all_scopes = false );
 
+	string GetExecutingFile(){ return file; }
+
 	// debugging methods
 	////////////////////////////////////////////////////
 	// start executing a file, stopping before the first instruction

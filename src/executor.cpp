@@ -2873,15 +2873,38 @@ void Executor::RunFile( const char* const filepath )
 
 void Executor::RunText( const char* const text )
 {
-	// load the file into memory
-	unsigned char* cd = CompileText( text, strlen( text ) );
-	code_blocks.push_back( cd );
+	// save the current file, code & ip, if any
+	string old_file = file;
+	unsigned char* orig_code = code;
+	size_t orig_ip = ip;
 
-	// fix-up the offsets into actual machine addresses
-	FixupOffsets( cd );
-	
-	// run the code
-	RunCode( cd );
+	try
+	{
+		// load the file into memory
+		unsigned char* cd = CompileText( text, strlen( text ) );
+		if( !cd )
+			throw DevaRuntimeException( "Unable to compile text." );
+		code_blocks.push_back( cd );
+
+		// fix-up the offsets into actual machine addresses
+		FixupOffsets( cd );
+		
+		// run the code
+		RunCode( cd );
+	}
+	catch( DevaRuntimeException & e )
+	{
+
+		// ensure the file gets set back
+		file = old_file;
+		// restore the old code & ip
+		code = orig_code;
+		ip = orig_ip;
+		// let the exception go
+		throw;
+	}
+
+	file = old_file;
 }
 
 bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )

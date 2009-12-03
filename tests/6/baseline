@@ -398,11 +398,12 @@ return :
 push : unknown: 'a' ; 
 new_vec: : 
 store : 
-push : , address/sized-value = 177 ; 
+push : , address/sized-value = 196 ; 
 push : 5 ; 
 push : unknown: 'a' ; 
 push : pushback ; 
 tbl_load : false ; 
+line_num : input.dv ; , address/sized-value = 17 ; 
 call : , address/sized-value = 1 ; 
 pop : 
 push : unknown: 'b' ; 
@@ -421,15 +422,16 @@ push : unknown: 'b' ;
 push : foo ; 
 tbl_load : , address/sized-value = 1 ; 
 store : 
-push : , address/sized-value = 320 ; 
+push : , address/sized-value = 358 ; 
 push : 1 ; 
 push : 0 ; 
+line_num : input.dv ; , address/sized-value = 29 ; 
 call : function_call: 'x' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 322 ; 
+push : , address/sized-value = 360 ; 
 push : unknown: 'b' ; 
 dup : 0 ; 
-push : unknown: '.table00000001259115964.0000061964' ; 
+push : unknown: '.table00000001259717862.0000223463' ; 
 swap : 
 store : 
 call : function_call: 'length' ; , address/sized-value = 1 ; 
@@ -437,8 +439,8 @@ push : 0 ;
 dup : 1 ; 
 dup : 1 ; 
 neq : 
-jmpf : , address/sized-value = 657 ; 
-load : unknown: '.table00000001259115964.0000061964' ; 
+jmpf : , address/sized-value = 714 ; 
+load : unknown: '.table00000001259717862.0000223463' ; 
 dup : 1 ; 
 tbl_load : true ; 
 push : unknown: 'key' ; 
@@ -447,11 +449,12 @@ store :
 push : unknown: 'value' ; 
 swap : 
 store : 
-push : , address/sized-value = 633 ; 
-push : , address/sized-value = 569 ; 
+push : , address/sized-value = 690 ; 
+push : , address/sized-value = 626 ; 
 push : unknown: 'key' ; 
+line_num : input.dv ; , address/sized-value = 33 ; 
 call : function_call: 'str' ; , address/sized-value = 1 ; 
-push : , address/sized-value = 599 ; 
+push : , address/sized-value = 656 ; 
 push : unknown: 'value' ; 
 call : function_call: 'str' ; , address/sized-value = 1 ; 
 add : 
@@ -462,22 +465,23 @@ call : , address/sized-value = 1 ;
 pop : 
 push : 1 ; 
 add : 
-jmp : , address/sized-value = 417 ; 
+jmp : , address/sized-value = 455 ; 
 pop : 
 pop : 
 push : unknown: 'a' ; 
 push : 10 ; 
 lt : 
-jmpf : , address/sized-value = 794 ; 
+jmpf : , address/sized-value = 870 ; 
 enter : 
 push : unknown: 'a' ; 
 push : unknown: 'a' ; 
 push : 1 ; 
 add : 
 store : 
-push : , address/sized-value = 782 ; 
-push : , address/sized-value = 750 ; 
+push : , address/sized-value = 858 ; 
+push : , address/sized-value = 826 ; 
 push : unknown: 'a' ; 
+line_num : input.dv ; , address/sized-value = 42 ; 
 call : function_call: 'str' ; , address/sized-value = 1 ; 
 push : unknown: 'io' ; 
 push : print ; 
@@ -485,6 +489,6 @@ tbl_load : false ;
 call : , address/sized-value = 1 ; 
 pop : 
 leave : 
-jmp : , address/sized-value = 661 ; 
+jmp : , address/sized-value = 718 ; 
 halt : 
 compiled input.dv successfully

@@ -26,10 +26,10 @@
 // created by jcs, november 23, 2009 
 
 // TODO:
-// * 'list' command
 // * function breakpoints (fcn name)
 // * data eval
 // * eval() command
+// * enable re-start: reset all state
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
 
 #include <boost/program_options/options_description.hpp>
@@ -60,6 +60,8 @@ ostream & operator << ( ostream & os, Instruction & inst );
 void ReadFile( const char* const filename, vector<string> & vec )
 {
 	FILE* file = fopen( filename, "r" );
+	if( !file )
+		return;
 
 	// keep reading lines until we reach the EOF
 	while( true )
@@ -115,9 +117,9 @@ void ReadFile( const char* const filename, vector<string> & vec )
 	}
 }
 
-void ShowLine( vector<string> & lines, int line )
+void ShowLine( vector<string> & lines, string file, int line )
 {
-	cout << "[" << line << "] " << lines[line-1];
+	cout << "[" << file << ":" << line << "] " << lines[line-1];
 }
 
 void split( string & in, vector<string> & ret )
@@ -158,6 +160,8 @@ const char* commands[] =
 	"delete breakpoint",
 	"display breakpoints",
 	"restart",
+	"list",
+	"eval",
 };
 char command_shortcuts[] = 
 {
@@ -172,6 +176,8 @@ char command_shortcuts[] =
 	'd',
 	'y',
 	'r',
+	'l',
+	'e',
 };
 
 char get_command( string & in )
@@ -313,12 +319,10 @@ int main( int argc, char** argv )
 			}
 		}
 
-		// TODO: handle multiple source files
-		// (map filenames to vectors)
-		//
 		// read the source file
-		vector<string> lines;
-		ReadFile( fname.c_str(), lines );
+		map<string, vector<string> > files;
+		string filepart = get_file_part( fname );
+		ReadFile( fname.c_str(), files[filepart] );
 
 		// create our execution engine object
 		Executor ex;
@@ -437,11 +441,59 @@ int main( int argc, char** argv )
 							}
 							break;
 							}
+						// 'list' code:
+						case 'l':
+							{
+							// if we're in a new file, make sure we've read it for
+							// display
+							string file = ex.GetExecutingFile();
+							if( files.find( file ) == files.end() )
+								ReadFile( file.c_str(), files[file] );
+							// display 10 lines of code around the current line
+							int start = l;
+							if( start < 5 )
+								start = 0;
+							else
+								start -= 5;
+							int end = start + 10;
+							if( end > files[file].size() )
+								end = files[file].size();
+							for( int c = start; c < end; ++c )
+								ShowLine( files[file], file, c );
+							break;
+							}
+						// 'eval'
+						case 'e':
+							{
+							// strip the command off the input
+							size_t idx = input.find( ' ' );
+							string code( input, idx );
+							// execute this as code
+							char* s = new char[code.length() + 1];
+							s[code.length()] = '\0';
+							memcpy( s, code.c_str(), code.length() );
+							try
+							{
+								ex.RunText( s );
+							}
+							catch( DevaRuntimeException & e )
+							{
+								if( typeid( e ) == typeid( DevaICE ) )
+									throw;
+								cout << "Error: " << e.what() << endl;
+							}
+							break;
+							}
 						}
 						if( l == -1 )
 							break;
 
-						ShowLine( lines, l );
+						// if we're in a new file, make sure we've read it for
+						// display
+						string file = ex.GetExecutingFile();
+						if( files.find( file ) == files.end() )
+							ReadFile( file.c_str(), files[file] );
+						ShowLine( files[file], file, l );
 					}
 				}
 				if( c == 'q' )

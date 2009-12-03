@@ -862,80 +862,150 @@ public:
 		}
 
 		// declare the rules
+		// statements
 		rule<ScannerT> 
-			// statements
-			translation_unit,
-			top_level_statement,
-			statement,
-			compound_statement,
-			while_statement,
-			for_statement,
-			if_statement,
-			else_statement,
-			import_statement,
-			func_decl,
-			class_decl,
-			jump_statement,
-			break_statement,
-			continue_statement,
-			return_statement,
-			exp_statement,
-			open_brace_op,
-			close_brace_op,
-			semicolon_op,
-			// expressions
-			exp,
-			const_decl,
-			local_decl,
-			new_decl,
-			assignment_exp,
-			logical_exp,
-			relational_exp,
-			add_exp, 
-			mult_exp, 
-			unary_exp, 
-			postfix_exp, 
-			postfix_only_exp, 
-			arg_list_exp, 
-			arg_list_decl, 
-			arg,
-			key_exp, 
-			in_exp, 
-			primary_exp, 
-			factor_exp, 
-			unary_op, 
-			mult_op, 
-			add_op, 
-			relational_op, 
-			dot_op,
-			open_paren_op,
-			close_paren_op,
-			open_bracket_op,
-			close_bracket_op,
-			comma_op,
-			logical_op,
-			assignment_op,
-			add_assignment_op,
-			sub_assignment_op,
-			mul_assignment_op,
-			div_assignment_op,
-			mod_assignment_op,
-			map_op,
-			vec_op,
-			in_op,
-			// constants
-			string, 
-			number, 
-			boolean,
-			null,
-			constant,
-			local,
-			func,
-			while_s,
-			for_s,
-			if_s,
-			else_s,
-			identifier,
+			translation_unit;
+		rule<parser_tag<1>, ScannerT> 
+			top_level_statement;
+		rule<parser_tag<2>, ScannerT> 
+			statement;
+		rule<parser_tag<3>, ScannerT> 
+			compound_statement;
+		rule<parser_tag<4>, ScannerT> 
+			while_statement;
+		rule<parser_tag<5>, ScannerT> 
+			for_statement;
+		rule<parser_tag<6>, ScannerT> 
+			if_statement;
+		rule<parser_tag<7>, ScannerT> 
+			else_statement;
+		rule<parser_tag<8>, ScannerT> 
+			import_statement;
+		rule<parser_tag<9>, ScannerT> 
+			func_decl;
+		rule<parser_tag<10>, ScannerT> 
+			class_decl;
+		rule<parser_tag<11>, ScannerT> 
+			jump_statement;
+		rule<parser_tag<12>, ScannerT> 
+			break_statement;
+		rule<parser_tag<13>, ScannerT> 
+			continue_statement;
+		rule<parser_tag<14>, ScannerT> 
+			return_statement;
+		rule<parser_tag<15>, ScannerT> 
+			exp_statement;
+		rule<parser_tag<16>, ScannerT> 
+			open_brace_op;
+		rule<parser_tag<17>, ScannerT> 
+			close_brace_op;
+		rule<parser_tag<18>, ScannerT> 
+			semicolon_op;
+		// expressions
+		rule<parser_tag<19>, ScannerT> 
+			exp;
+		rule<parser_tag<20>, ScannerT> 
+			const_decl;
+		rule<parser_tag<21>, ScannerT> 
+			local_decl;
+		rule<parser_tag<22>, ScannerT> 
+			new_decl;
+		rule<parser_tag<23>, ScannerT> 
+			assignment_exp;
+		rule<parser_tag<24>, ScannerT> 
+			logical_exp;
+		rule<parser_tag<25>, ScannerT> 
+			relational_exp;
+		rule<parser_tag<26>, ScannerT> 
+			add_exp; 
+		rule<parser_tag<27>, ScannerT> 
+			mult_exp; 
+		rule<parser_tag<28>, ScannerT> 
+			unary_exp; 
+		rule<parser_tag<29>, ScannerT> 
+			postfix_exp; 
+		rule<parser_tag<30>, ScannerT> 
+			postfix_only_exp; 
+		rule<parser_tag<31>, ScannerT> 
+			arg_list_exp; 
+		rule<parser_tag<32>, ScannerT> 
+			arg_list_decl; 
+		rule<parser_tag<33>, ScannerT> 
+			arg;
+		rule<parser_tag<34>, ScannerT> 
+			key_exp; 
+		rule<parser_tag<35>, ScannerT> 
+			in_exp; 
+		rule<parser_tag<36>, ScannerT> 
+			primary_exp; 
+		rule<parser_tag<37>, ScannerT> 
+			factor_exp; 
+		rule<parser_tag<38>, ScannerT> 
+			unary_op; 
+		rule<parser_tag<39>, ScannerT> 
+			mult_op; 
+		rule<parser_tag<40>, ScannerT> 
+			add_op; 
+		rule<parser_tag<41>, ScannerT> 
+			relational_op; 
+		rule<parser_tag<42>, ScannerT> 
+			dot_op;
+		rule<parser_tag<43>, ScannerT> 
+			open_paren_op;
+		rule<parser_tag<44>, ScannerT> 
+			close_paren_op;
+		rule<parser_tag<45>, ScannerT> 
+			open_bracket_op;
+		rule<parser_tag<46>, ScannerT> 
+			close_bracket_op;
+		rule<parser_tag<47>, ScannerT> 
+			comma_op;
+		rule<parser_tag<48>, ScannerT> 
+			logical_op;
+		rule<parser_tag<49>, ScannerT> 
+			assignment_op;
+		rule<parser_tag<50>, ScannerT> 
+			add_assignment_op;
+		rule<parser_tag<51>, ScannerT> 
+			sub_assignment_op;
+		rule<parser_tag<52>, ScannerT> 
+			mul_assignment_op;
+		rule<parser_tag<53>, ScannerT> 
+			div_assignment_op;
+		rule<parser_tag<54>, ScannerT> 
+			mod_assignment_op;
+		rule<parser_tag<55>, ScannerT> 
+			map_op;
+		rule<parser_tag<56>, ScannerT> 
+			vec_op;
+		rule<parser_tag<57>, ScannerT> 
+			in_op;
+		// constants
+		rule<parser_tag<58>, ScannerT> 
+			string; 
+		rule<parser_tag<59>, ScannerT> 
+			number; 
+		rule<parser_tag<60>, ScannerT> 
+			boolean;
+		rule<parser_tag<61>, ScannerT> 
+			null;
+		rule<parser_tag<62>, ScannerT> 
+			constant;
+		rule<parser_tag<63>, ScannerT> 
+			local;
+		rule<parser_tag<64>, ScannerT> 
+			func;
+		rule<parser_tag<65>, ScannerT> 
+			while_s;
+		rule<parser_tag<66>, ScannerT> 
+			for_s;
+		rule<parser_tag<67>, ScannerT> 
+			if_s;
+		rule<parser_tag<68>, ScannerT> 
+			else_s;
+		rule<parser_tag<69>, ScannerT> 
+			identifier;
+		rule<parser_tag<70>, ScannerT> 
 			module_name;
 
 		rule<ScannerT> const& start() const { return translation_unit; }

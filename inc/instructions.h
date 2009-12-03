@@ -101,7 +101,7 @@ public:
 
 
 // helper fcn to generate op_line_num instructions
-void generate_line_num( iter_t const & i, InstructionStream & is );
+void generate_line_num( iter_t const & i, InstructionStream & is, bool force = false );
 
 // declare IL gen functions
 void gen_IL_number( iter_t const & i, InstructionStream & is );
