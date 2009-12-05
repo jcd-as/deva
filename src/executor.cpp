@@ -2617,9 +2617,9 @@ bool Executor::DoInstr( Instruction & inst )
 	if( debug_mode )
 	{
 		cout << " - stack: ";
-		for( vector<DevaObject>::reverse_iterator ri = stack.rbegin(); ri < stack.rend(); ++ri )
+		for( int c = stack.size()-1; c >= 0; --c )
 		{
-			DevaObject o = *ri;
+			DevaObject o = stack[c];
 			cout << o << " | ";
 		}
 		cout << endl;
@@ -2871,6 +2871,7 @@ void Executor::RunFile( const char* const filepath )
 	RunCode( cd );
 }
 
+// TODO: RunText should return the index of the code block 
 void Executor::RunText( const char* const text )
 {
 	// save the current file, code & ip, if any
@@ -2878,9 +2879,11 @@ void Executor::RunText( const char* const text )
 	unsigned char* orig_code = code;
 	size_t orig_ip = ip;
 
+	int stack_depth = stack.size();
+	stack.SetLimit();
 	try
 	{
-		// load the file into memory
+		// load the code into memory
 		unsigned char* cd = CompileText( text, strlen( text ) );
 		if( !cd )
 			throw DevaRuntimeException( "Unable to compile text." );
@@ -2891,19 +2894,31 @@ void Executor::RunText( const char* const text )
 		
 		// run the code
 		RunCode( cd );
+
+		if( stack.size() != stack_depth )
+			throw DevaStackException( "Evaluated code has compromised the stack. Program state is bad." );
 	}
 	catch( DevaRuntimeException & e )
 	{
-
+		stack.UnsetLimit();
 		// ensure the file gets set back
 		file = old_file;
 		// restore the old code & ip
 		code = orig_code;
 		ip = orig_ip;
-		// let the exception go
+
+		// try to clean up the stack
+		while( stack.size() > stack_depth )
+		{
+			cout << "removing excess item from stack..." << endl;
+			stack.pop_back();
+		}
+
+		// propagate the exception
 		throw;
 	}
 
+	stack.UnsetLimit();
 	file = old_file;
 }
 
@@ -2985,7 +3000,7 @@ int Executor::StepOver()
 			return_address = ip;
 		}
 
-		// DoInstr returns false on 'halt' instruction or breakpoint
+		// DoInstr returns false on 'halt' instruction
 		if( !DoInstr( inst ) )
 		{
 			if( inst.op == op_halt )
@@ -3019,7 +3034,7 @@ int Executor::StepInto()
 		// get the next instruction in the byte code
 		Instruction inst = NextInstr();
 
-		// DoInstr returns false on 'halt' instruction or breakpoint
+		// DoInstr returns false on 'halt' instruction
 		if( !DoInstr( inst ) )
 		{
 			if( inst.op == op_halt )

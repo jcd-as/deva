@@ -48,16 +48,6 @@ typedef void (*builtin_fcn)(Executor*);
 
 class Executor
 {
-public:
-	////////////////////////////////////////////////////
-	// public data
-	////////////////////////////////////////////////////
-	// the data stack
-	vector<DevaObject> stack;
-
-	// static data
-	static int args_on_stack;
-
 private:
 	////////////////////////////////////////////////////
 	// private data
@@ -171,6 +161,52 @@ private:
 		}
 	};
 
+	class dataStack
+	{
+		size_t limit;
+		vector<DevaObject> stack;
+
+	public:
+		dataStack() : limit( 0 )
+		{}
+		void push_back( const DevaObject & obj )
+		{
+			stack.push_back( obj );
+		}
+		void pop_back()
+		{
+			if( stack.size() == 0 )
+				throw DevaCriticalException( "Stack underflow." );
+			if( limit )
+			{
+				if( stack.size() == limit )
+					throw DevaStackException( "Stack limit underflow." );
+			}
+			stack.pop_back();
+		}
+		DevaObject back()
+		{
+			return stack.back();
+		}
+		size_t size()
+		{
+			return stack.size();
+		}
+		DevaObject operator[]( size_t idx )
+		{
+			return stack[idx];
+		}
+		// set the current size as a minimum limit
+		void SetLimit()
+		{
+			limit = stack.size();
+		}
+		void UnsetLimit()
+		{
+			limit = 0;
+		}
+	};
+
 	////////////////////////////////////////////////////
 	// private data associated with nested types:
 	////////////////////////////////////////////////////
@@ -183,6 +219,17 @@ private:
 	// list of breakpoints
 	vector<pair<string, int> > breakpoints;
 
+public:
+	////////////////////////////////////////////////////
+	// public data associated with nested types:
+	////////////////////////////////////////////////////
+	// the data stack
+	dataStack stack;
+
+	// static data
+	static int args_on_stack;
+
+private:
 	////////////////////////////////////////////////////
 	// private helper functions:
 	////////////////////////////////////////////////////

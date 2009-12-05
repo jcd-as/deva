@@ -26,7 +26,7 @@
 // created by jcs, september 26, 2009 
 
 // TODO:
-// * derive from logic_error and runtime_error, instead of 'exception'
+// * 
 
 #ifndef __EXCEPTIONS_H__
 #define __EXCEPTIONS_H__
@@ -48,6 +48,21 @@ class DevaRuntimeException : public runtime_error
 {
 public:
 	DevaRuntimeException( const char* const s ) : runtime_error( s )
+	{}
+};
+
+class DevaStackException : public DevaRuntimeException
+{
+public:
+	DevaStackException( const char* const s ) : DevaRuntimeException( s )
+	{}
+};
+
+// critical (often non-recoverable) error
+class DevaCriticalException : public runtime_error
+{
+public:
+	DevaCriticalException( const char* const s ) : runtime_error( s )
 	{}
 };
 

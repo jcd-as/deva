@@ -537,6 +537,11 @@ int main( int argc, char** argv )
 		cout << "Internal compiler error: " << e.what() << endl;
 		return -1;
 	}
+	catch( DevaCriticalException & e )
+	{
+		cout << "Unrecoverable error: " << e.what() << endl;
+		return -1;
+	}
 	// runtime exceptions really should only stem from the Executor,
 	// but just in case...
 	catch( DevaRuntimeException & e )
