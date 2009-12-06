@@ -401,12 +401,35 @@ int main( int argc, char** argv )
 							// verify there are sufficient args
 							if( in.size() < 2 )
 							{
-								cout << "print command requires variable name." << endl;
+								cout << "print command requires variable name or expression." << endl;
 								break;
 							}
+							// if not a simple variable, eval the args and try printing the result
 							DevaObject* v = ex.find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
 							if( !v )
-								cout << "Cannot locate variable '" << in[1].c_str() << "'." << endl;
+							{
+								// strip the command off the input
+								size_t idx = input.find( ' ' );
+								string code( input, idx );
+								code = string( "print( " ) + code + string( " );" );
+								int stack_depth = ex.stack.size();
+								// execute the rest as code
+								char* s = new char[code.length() + 1];
+								s[code.length()] = '\0';
+								memcpy( s, code.c_str(), code.length() );
+								try
+								{
+									ex.RunText( s );
+								}
+								catch( DevaRuntimeException & e )
+								{
+									if( typeid( e ) == typeid( DevaICE ) )
+										throw;
+									cout << "Error: " << e.what() << endl;
+									cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
+								}
+							}
+							// otherwise, it is a simple var, just print it
 							else
 								cout << *v << endl;
 							}

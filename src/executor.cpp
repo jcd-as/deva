@@ -2910,7 +2910,6 @@ void Executor::RunText( const char* const text )
 		// try to clean up the stack
 		while( stack.size() > stack_depth )
 		{
-			cout << "removing excess item from stack..." << endl;
 			stack.pop_back();
 		}
 

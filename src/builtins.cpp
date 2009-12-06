@@ -61,6 +61,9 @@ void do_seek( Executor *ex );
 void do_tell( Executor *ex );
 void do_name( Executor *ex );
 void do_type( Executor *ex );
+void do_stdin( Executor *ex );
+void do_stdout( Executor *ex );
+void do_stderr( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -88,6 +91,9 @@ static const string builtin_names[] =
     string( "tell" ),
 	string( "name" ),
 	string( "type" ),
+	string( "stdin" ),
+	string( "stdout" ),
+	string( "stderr" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -116,6 +122,9 @@ builtin_fcn builtin_fcns[] =
 	do_tell,
 	do_name,
 	do_type,
+	do_stdin,
+	do_stdout,
+	do_stderr,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -722,7 +731,7 @@ void do_readline( Executor *ex )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
 
-	// file object to close is at the top of the stack
+	// file object to read from is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -794,7 +803,7 @@ void do_readlines( Executor *ex )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readlines'." );
 
-	// file object to close is at the top of the stack
+	// file object to read from is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -877,7 +886,7 @@ void do_write( Executor *ex )
 	if( Executor::args_on_stack != 3 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'write'." );
 
-	// file object to close is at the top of the stack
+	// file object to write to is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -926,7 +935,8 @@ void do_write( Executor *ex )
 	else
 		source = &src;
 
-	size_t len = num_bytes > source->vec_val->size() ? num_bytes : source->vec_val->size();
+//	size_t len = num_bytes > source->vec_val->size() ? num_bytes : source->vec_val->size();
+	size_t len = num_bytes < source->vec_val->size() ? num_bytes : source->vec_val->size();
 	unsigned char* data = new unsigned char[len];
 	// create a native array of unsigned chars to write out
 	for( int c = 0; c < len; ++c )
@@ -955,7 +965,7 @@ void do_writestring( Executor *ex )
 	if( Executor::args_on_stack != 3 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writestring'." );
 
-	// file object to close is at the top of the stack
+	// file object to write to is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -1005,7 +1015,8 @@ void do_writestring( Executor *ex )
 		source = &src;
 
 	size_t slen = strlen( source->str_val );
-	size_t len = num_bytes > slen ? num_bytes : slen;
+//	size_t len = num_bytes > slen ? num_bytes : slen;
+	size_t len = num_bytes < slen ? num_bytes : slen;
 	size_t bytes_written = fwrite( (void*)(source->str_val), 1, len, (FILE*)(o->sz_val) );
 
 	// pop the return address
@@ -1020,7 +1031,7 @@ void do_writeline( Executor *ex )
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writeline'." );
 
-	// file object to close is at the top of the stack
+	// file object to write to is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -1069,7 +1080,7 @@ void do_writelines( Executor *ex )
 	if( Executor::args_on_stack != 2 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writelines'." );
 
-	// file object to close is at the top of the stack
+	// file object to write to is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -1126,7 +1137,7 @@ void do_seek( Executor *ex )
 	if( Executor::args_on_stack != 2 && Executor::args_on_stack != 3 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seek'." );
 
-	// file object to close is at the top of the stack
+	// file object to operate on is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 
@@ -1206,7 +1217,7 @@ void do_tell( Executor *ex )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'tell'." );
 
-	// file object to close is at the top of the stack
+	// file object to operate on is at the top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	
@@ -1346,3 +1357,38 @@ void do_type( Executor *ex )
 	ex->stack.push_back( DevaObject( "", type ) );
 }
 
+void do_stdin( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Built-in function 'stdin' takes no arguments." );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", (void*)stdin ) );
+}
+
+void do_stdout( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Built-in function 'stdout' takes no arguments." );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", (void*)stdout ) );
+}
+
+void do_stderr( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Built-in function 'stderr' takes no arguments." );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", (void*)stderr ) );
+}
