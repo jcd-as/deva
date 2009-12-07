@@ -629,6 +629,14 @@ void Executor::New_vec( Instruction const & inst )
 		for( int i = 0; i < inst.args[0].sz_val; ++i )
 		{
 			DevaObject ob = stack.back();
+			DevaObject *o;
+			if( ob.Type() == sym_unknown )
+			{
+				o = find_symbol( ob );
+				if( !o )
+					throw DevaRuntimeException( "Invalid object used in vector initializer." );
+				ob = *o;
+			}
 			stack.pop_back();
 			v->push_back( ob );
 		}
@@ -2919,6 +2927,11 @@ void Executor::RunText( const char* const text )
 
 	stack.UnsetLimit();
 	file = old_file;
+}
+
+void Executor::Exit( int val )
+{
+	exit( val );
 }
 
 bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )

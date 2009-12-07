@@ -64,6 +64,8 @@ void do_type( Executor *ex );
 void do_stdin( Executor *ex );
 void do_stdout( Executor *ex );
 void do_stderr( Executor *ex );
+void do_exit( Executor *ex );
+void do_num( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -94,6 +96,8 @@ static const string builtin_names[] =
 	string( "stdin" ),
 	string( "stdout" ),
 	string( "stderr" ),
+	string( "exit" ),
+	string( "num" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -125,6 +129,8 @@ builtin_fcn builtin_fcns[] =
 	do_stdin,
 	do_stdout,
 	do_stderr,
+	do_exit,
+	do_num,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1391,4 +1397,98 @@ void do_stderr( Executor *ex )
 
 	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", (void*)stderr ) );
+}
+
+void do_exit( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments in built-in function 'exit'." );
+
+	// number is on top of the stack
+	DevaObject num = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( num.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( num );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'return_value' argument built-function 'exit'" );
+	}
+	if( !o )
+		o = &num;
+
+	// check type
+	if( o->Type() != sym_number )
+		throw DevaRuntimeException( "'return_value' argument to built-in function 'exit' must be a number." );
+
+	ex->Exit( (int)o->num_val );
+
+	// nothing from here on will actually ever happen, but whatever, let's
+	// pretend to be a good citizen for the sake for uniformity
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_num( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'num'." );
+
+	// get the argument off the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found in call to built-in function 'num'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it is not a vector, map, instance or class
+	if( o->Type() == sym_vector || o->Type() == sym_map ||
+		o->Type() == sym_class || o->Type() == sym_instance ||
+		o->Type() == sym_unknown || o->Type() == sym_function_call )
+		throw DevaRuntimeException( "Invalid argument to built-in function 'num'." );
+
+	double d = 0.0;
+	switch( o->Type() )
+	{
+	case sym_number:
+		d = o->num_val;
+		break;
+	case sym_string:
+		d = atof( o->str_val );
+		break;
+	case sym_boolean:
+		if( o->bool_val	)
+			d = 1.0;
+		break;
+	case sym_address:
+	case sym_size:
+		d = o->sz_val;
+		break;
+	case sym_native_obj:
+		d = (size_t)o->nat_obj_val;
+		break;
+	case sym_null:
+		d = 0;
+		break;
+	default:
+		break;
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", d ) );
 }

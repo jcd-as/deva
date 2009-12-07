@@ -385,4 +385,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>added 'local' keyword
 </comment></note><note done="1259709111" priority="veryhigh" time="1259546603">calling from inside imported modules is broken: methods can't call other methods in the module, builtin module fcns can't be called etc, because of namespace/scope lookup issues (current scope is 'global', find_symbol won't search module namespaces for unqualified names) 
 <comment>changed look-up sequence. order of variable look-up is now: 1) see if we're in an imported module and if so check it's scope tables 2) look in the 'current' scope tables and 3) if the 'current' scope tables is the not the global table, look in the global scope (where the builtin modules are found, for instance)
-</comment></note></todo>
+</comment></note><note priority="veryhigh" time="1260149417">keywords (e.g. 'true') as part of identifiers (e.g. 'truewind') cause syntax errors
+</note><note priority="veryhigh" time="1260165362">range( start, end, increment ) built-in
+</note><note priority="veryhigh" time="1260165377">string.format() builtin
+</note><note priority="veryhigh" time="1260167181">regex built-in module
+</note></todo>

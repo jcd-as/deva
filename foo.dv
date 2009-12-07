@@ -43,6 +43,7 @@ class C : B, AA
 	{
 		self.c = 2;
 		print( "C.new() called" );
+		exit( 0 );
 	}
 	def C()
 	{

@@ -64,6 +64,7 @@ int main( int argc, char** argv )
 		bool no_dvc = false;
 		string output;
 		string input;
+		vector<string> inputs;
 		po::options_description desc( "Supported options" );
 		desc.add_options()
 			( "help", "help message" )
@@ -73,14 +74,16 @@ int main( int argc, char** argv )
 			( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
 			( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
 			( "input", po::value<string>( &input ), "input filename" )
-			( "options", "options to pass to the deva program" )
+			( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
 			;
 		po::positional_options_description p;
 		p.add( "input", 1 ).add( "options", -1 );
 		po::variables_map vm;
 		try
 		{
-			po::store( po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run(), vm );
+			po::parsed_options parsed = po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run();
+			po::store( parsed, vm );
+
 		}
 		catch( po::error & e )
 		{
@@ -88,7 +91,7 @@ int main( int argc, char** argv )
 			return 1;
 		}
 		po::notify( vm );
-		
+
 		// handle the command line args
 		if( vm.count( "help" ) )
 		{
@@ -145,7 +148,7 @@ int main( int argc, char** argv )
 
 		bool use_dvc = false;
 		unsigned char* code;
-		if( ext == ".dv" )
+		if( ext != ".dvc" )
 		{
 			string out_fname = fname + "c";
 			// check for a .dvc file

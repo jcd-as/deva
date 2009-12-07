@@ -676,6 +676,81 @@ void do_math_fmod( Executor* ex )
 	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
+void do_math_pi( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'math' function 'pi' takes no arguments." );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the return value from the command
+	ex->stack.push_back( DevaObject( "", 3.14159265359 ) );
+}
+
+void do_math_radians( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'math' function 'radians'." );
+
+	// number is on top of the stack
+	DevaObject num = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( num.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( num );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 'math' function 'radians'" );
+	}
+	if( !o )
+		o = &num;
+
+	// check type
+	if( o->Type() != sym_number )
+		throw DevaRuntimeException( "'input' argument to module 'math' function 'radians' must be a number." );
+
+	double ret = (3.14159265359 / 180.0) * o->num_val;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the return value from the command
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_math_degrees( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'math' function 'degrees'." );
+
+	// number is on top of the stack
+	DevaObject num = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( num.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( num );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 'math' function 'degrees'" );
+	}
+	if( !o )
+		o = &num;
+
+	// check type
+	if( o->Type() != sym_number )
+		throw DevaRuntimeException( "'input' argument to module 'math' function 'degrees' must be a number." );
+
+	double ret = (180 / 3.14159265359) * o->num_val;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the return value from the command
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
 
 void AddMathModule( Executor & ex )
 {
@@ -699,5 +774,8 @@ void AddMathModule( Executor & ex )
 	fcns.insert( make_pair( string( "fmod@math" ), do_math_fmod ) );
 	fcns.insert( make_pair( string( "floor@math" ), do_math_floor ) );
 	fcns.insert( make_pair( string( "ceil@math" ), do_math_ceil ) );
+	fcns.insert( make_pair( string( "pi@math" ), do_math_pi ) );
+	fcns.insert( make_pair( string( "radians@math" ), do_math_radians ) );
+	fcns.insert( make_pair( string( "degrees@math" ), do_math_degrees ) );
 	ex.AddBuiltinModule( string( "math" ), fcns );
 }

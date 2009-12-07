@@ -367,6 +367,7 @@ public:
 	void RunCode( unsigned char* cd, bool stop_at_breakpoints = true );
 	void RunFile( const char* const filename );
 	void RunText( const char* const text );
+	void Exit( int val );
 
 	bool AddBuiltinModule( string name, map<string, builtin_fcn> & fcns );
 
