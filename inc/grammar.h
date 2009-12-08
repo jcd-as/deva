@@ -213,9 +213,9 @@ public:
 			func_decl =
 				access_node_d[
 				root_node_d[func] 
-					>> (identifier | error_invalid_func_decl)[&enter_scope]
-					>> (access_node_d[arg_list_decl][&set_node] | error_invalid_func_decl) 
-					>> (access_node_d[compound_statement][&set_node] | error_invalid_func_decl)[&exit_scope]
+					>> identifier[&enter_scope]
+					>> access_node_d[arg_list_decl][&set_node] 
+					>> access_node_d[compound_statement][&set_node][&exit_scope]
 				][&set_node]
 				;
 
@@ -230,7 +230,6 @@ public:
 									>> statement 
 									| access_node_d[compound_statement][&set_node]
 							) 
-							| error_invalid_while
 						)
 				][&set_node]
 				;
@@ -251,7 +250,6 @@ public:
 								>> statement 
 								| access_node_d[compound_statement][&set_node]
 						)[&exit_scope]
-						| error_invalid_for
 					)
 				][&set_node]
 				;
@@ -268,7 +266,6 @@ public:
 						>> statement 
 						| access_node_d[compound_statement][&set_node]
 					)
-					| error_invalid_if
 				)
 				>> !else_statement
 				][&set_node]
@@ -305,19 +302,21 @@ public:
 
 			break_statement =
 				access_node_d[
-				leaf_node_d[str_p( "break" )]
+				leaf_node_d[str_p( "break" )] >> eps_p( ch_p( ';' ) )
 				][&set_node]
 				;
 			
 			continue_statement =
 				access_node_d[
-				leaf_node_d[str_p( "continue" )]
+				leaf_node_d[str_p( "continue" )] >> eps_p( ch_p( ';' ) )
 				][&set_node]
 				;
 
 			return_statement =
 				access_node_d[
-				root_node_d[str_p( "return" )] >> !exp
+				lexeme_d[
+					root_node_d[str_p( "return" )] >> no_node_d[+space_p] >> !logical_exp
+				]
 				][&set_node]
 				;
 
@@ -352,13 +351,13 @@ public:
 
 			const_decl = 
 				access_node_d[
-				constant >> identifier
+				lexeme_d[constant >> no_node_d[+space_p] >> identifier]
 				][&set_node]
 				;
 
 			local_decl = 
 				access_node_d[
-				local >> identifier
+				lexeme_d[local >> no_node_d[+space_p] >> identifier]
 				][&set_node]
 				;
 
@@ -639,13 +638,13 @@ public:
 
 			boolean = 
 				access_node_d[
-				leaf_node_d[str_p( "true" ) | str_p( "false" )]
+				leaf_node_d[str_p( "true" ) | str_p( "false" )] >> ~eps_p( alnum_p | ch_p( '_' ) )
 				][&set_node]
 				;
 
 			null =
 				access_node_d[
-				leaf_node_d[str_p( "null" )]
+				leaf_node_d[str_p( "null" )] >> ~eps_p( alnum_p | ch_p( '_' ) )
 				][&set_node]
 				;
 

@@ -12,7 +12,7 @@ if [ -z $DEVA ] ; then
 	exit
 fi
 
-$DEVA/devac $1 
+$DEVA/devac -d $1 
 $DEVA/deva input.dvc > '$$$RESULTS$$$'
 
 if cmp -s '$$$RESULTS$$$' $2 ; then

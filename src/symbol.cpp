@@ -112,6 +112,8 @@ bool is_keyword( const string & s )
 		|| s == "in"
 		|| s == "import"
 		|| s == "class"
+        // 'new' IS a keyword, but acts as an identifier too
+//		|| s == "new"
 		|| s == "const"
 		|| s == "local" )
 		return true;

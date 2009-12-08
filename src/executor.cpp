@@ -2245,6 +2245,9 @@ void Executor::Break( Instruction const & inst )
 			// if we've left enough scopes to get out of the loop
 			if( enter_stack.size() == 0 )
 			{
+                // ignore debug (line-num) instructions
+                if( PeekInstr() == op_line_num )
+                    NextInstr();
 				// need to skip the jmp back to loop start
 				if( PeekInstr() != op_jmp )
 					throw DevaICE( "Invalid loop. Final 'leave' instruction not followed by 'jmp'." );
