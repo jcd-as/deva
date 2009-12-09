@@ -752,6 +752,42 @@ void do_math_degrees( Executor* ex )
 	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
+void do_math_round( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'math' function 'round'." );
+
+	// number is on top of the stack
+	DevaObject num = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( num.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( num );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 'math' function 'round'" );
+	}
+	if( !o )
+		o = &num;
+
+	// check type
+	if( o->Type() != sym_number )
+		throw DevaRuntimeException( "'input' argument to module 'math' function 'round' must be a number." );
+
+	double intpart;
+	double fracpart = modf( o->num_val, &intpart );
+
+	if( fracpart >= 0.5 )
+		intpart += 1.0;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the return value from the command
+	ex->stack.push_back( DevaObject( "", intpart ) );
+}
+
 void AddMathModule( Executor & ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
@@ -777,5 +813,6 @@ void AddMathModule( Executor & ex )
 	fcns.insert( make_pair( string( "pi@math" ), do_math_pi ) );
 	fcns.insert( make_pair( string( "radians@math" ), do_math_radians ) );
 	fcns.insert( make_pair( string( "degrees@math" ), do_math_degrees ) );
+	fcns.insert( make_pair( string( "round@math" ), do_math_round ) );
 	ex.AddBuiltinModule( string( "math" ), fcns );
 }

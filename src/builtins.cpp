@@ -66,6 +66,7 @@ void do_stdout( Executor *ex );
 void do_stderr( Executor *ex );
 void do_exit( Executor *ex );
 void do_num( Executor *ex );
+void do_range( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -98,6 +99,7 @@ static const string builtin_names[] =
 	string( "stderr" ),
 	string( "exit" ),
 	string( "num" ),
+	string( "range" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -131,6 +133,7 @@ builtin_fcn builtin_fcns[] =
 	do_stderr,
 	do_exit,
 	do_num,
+	do_range,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1491,4 +1494,70 @@ void do_num( Executor *ex )
 
 	// push the string onto the stack
 	ex->stack.push_back( DevaObject( "", d ) );
+}
+
+void do_range( Executor *ex )
+{
+	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'range'." );
+
+	double i_start = 0;
+	double i_end = -1;
+	double i_step = 1;
+	if( Executor::args_on_stack > 0 )
+	{
+		// start is first on stack
+		DevaObject start = ex->stack.back();
+		ex->stack.pop_back();
+		// start position
+		if( start.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for start position argument in built-in function 'range'." );
+		i_start = start.num_val;
+	}
+	if( Executor::args_on_stack > 1 )
+	{
+		// end of range
+		DevaObject end = ex->stack.back();
+		ex->stack.pop_back();
+		if( end.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'end' argument in built-in function 'range'." );
+		i_end = end.num_val;
+	}
+	if( Executor::args_on_stack > 2 )
+	{
+		// 'step' value
+		DevaObject step = ex->stack.back();
+		ex->stack.pop_back();
+		if( step.Type() != sym_number )
+			throw DevaRuntimeException( "Number expected in for 'step' argument in built-in function 'range'." );
+		i_step = step.num_val;
+	}
+
+	// default length is the entire search string
+	if( i_end == -1 )
+	{
+		i_end = i_start;
+		i_start = 0.0;
+	}
+
+	if( i_start < 0 )
+		throw DevaRuntimeException( "Invalid 'start' argument in built-in function 'range'." );
+	if( i_end < 0 )
+		throw DevaRuntimeException( "Invalid 'end' argument in built-in function 'range'." );
+	if( i_end < i_start )
+		throw DevaRuntimeException( "Invalid arguments in built-in function 'range': start is greater than end." );
+
+	// generate the range
+	// convert to a vector of numbers
+	DOVector* vec = new DOVector();
+	vec->reserve( (int)((i_end - i_start) / i_step) );
+	for( double c = i_start; c <= i_end; c += i_step )
+	{
+		vec->push_back( DevaObject( "", c ) );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	ex->stack.push_back( DevaObject( "", vec ) );
 }

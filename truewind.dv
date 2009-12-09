@@ -1,0 +1,55 @@
+# program to compute the true wind angle and speed from: boat speed (true) and
+# apparent wind angle and speed
+
+# function to compute the true wind angle and speed from boat speed (true) and
+# apparent wind angle and speed
+def Truewind( spd, app_angle, app_speed )
+{
+    app_speed = app_speed / spd;
+    local angle = math.radians( app_angle );
+    local tan_alpha = math.sin( angle ) / (app_speed - math.cos( angle ) );
+    local alpha = math.atan( tan_alpha );
+    local true_speed = math.sin( angle ) / math.sin( alpha );
+    true_speed *= spd;
+    local true_angle = math.degrees( angle + alpha );
+    return [true_speed, true_angle];
+}
+
+# generate a apparent wind speed/angle chart for a particular boat speed, as comma-delimited lists
+def GenerateChart( spd )
+{
+    # for apparent angles from 20 to 175, in 5 degree increments
+	print( range( 20, 175, 5 ) );
+	for( angle in range( 20, 175, 5 ) )
+	{
+        # for apparent speeds for each beaufort force
+        beaufort = [3, 6, 10, 16, 21, 27, 33, 40, 47, 55];
+        for( vel in beaufort )
+		{
+            truewind = Truewind( spd, angle, vel );
+			print( str( math.round( truewind[0] ) ) + "/" + str( math.abs( math.round( truewind[1] ) ) ) + ", ", '' );
+		}
+		print( '' );
+	}
+}
+
+args = os.argv();
+if( args.length() == 2 )
+{
+    GenerateChart( num( args[1] ) );
+    exit( 0 );
+}
+if( args.length() != 4 )
+{
+    print( "Usage:\ntruewind.dv <boat_speed> <apparent wind angle> <apparent wind speed>" );
+    exit( 0 );
+}
+
+spd = num( args[1] );
+app_angle = num( args[2] );
+app_speed = num( args[3] );
+truwind = Truewind( spd, app_angle, app_speed );
+
+print( "true wind angle: " + str( truwind[1] ) );
+print( "true wind speed: " + str( truwind[0] ) );
+

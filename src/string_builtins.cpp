@@ -721,7 +721,7 @@ void do_string_slice( Executor *ex )
 		ex->stack.pop_back();
 		if( end.Type() != sym_number )
 			throw DevaRuntimeException( "Number expected in for 'length' argument in string built-in method 'slice'." );
-		// TODO: length need to be integral values. error if they aren't
+		// TODO: length needs to be integral values. error if they aren't
 		i_end = (size_t)end.num_val;
 	}
 	if( Executor::args_on_stack > 2 )
@@ -730,8 +730,8 @@ void do_string_slice( Executor *ex )
 		DevaObject step = ex->stack.back();
 		ex->stack.pop_back();
 		if( step.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for 'length' argument in string built-in method 'slice'." );
-		// TODO: length need to be integral values. error if they aren't
+			throw DevaRuntimeException( "Number expected in for 'step' argument in string built-in method 'slice'." );
+		// TODO: step needs to be integral values. error if they aren't
 		i_step = (size_t)step.num_val;
 	}
 
