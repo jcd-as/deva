@@ -1,3 +1,19 @@
+release 0.9.4
+- new regex builtin module, 're'
+- bug fixes: tracebacks didn't track calls properlyr; map/vector/class/instance
+  types couldn't be used as booleans (in 'if' statements etc)
+- added 'trace' command to devadb
+- added builtin range() fcn and math module built-in round() function
+- bug fixes: identifiers that began with keywords caused errors; debug 
+  (line number) info caused break statements to fail
+- added exit() built-in function
+- added builtins: stdin(), stdout(), stderr() which return the objects they 
+  are named after
+- added stack underflow checking and stack "min-limit" checking (which is 
+  enabled during eval() so that eval'd code can't blow the stack). added 
+  relevant exceptions: DevaCriticalException (for non-recoverable errors) and 
+  DevaStackException for stack exceptions
+
 release 0.9.3
 - numerous bug fixes, most importantly regarding the name look-up sequences.
   modules/imports should now work properly (or better at least!)
