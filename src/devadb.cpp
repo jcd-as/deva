@@ -27,8 +27,6 @@
 
 // TODO:
 // * function breakpoints (fcn name)
-// * data eval
-// * eval() command
 // * enable re-start: reset all state
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
 
@@ -45,6 +43,7 @@
 #include "module_os.h"
 #include "module_bit.h"
 #include "module_math.h"
+#include "module_re.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -162,6 +161,7 @@ const char* commands[] =
 	"restart",
 	"list",
 	"eval",
+	"trace",
 };
 char command_shortcuts[] = 
 {
@@ -178,6 +178,7 @@ char command_shortcuts[] =
 	'r',
 	'l',
 	'e',
+	't',
 };
 
 char get_command( string & in )
@@ -341,6 +342,7 @@ int main( int argc, char** argv )
 			AddOsModule( ex );
 			AddBitModule( ex );
 			AddMathModule( ex );
+			AddReModule( ex );
 
 			// add the code block we just compiled
 			ex.AddCodeBlock( code );
@@ -512,6 +514,9 @@ int main( int argc, char** argv )
 							}
 							break;
 							}
+						case 't':
+							ex.DumpTrace( cout, false );
+							break;
 						}
 						if( l == -1 )
 							break;

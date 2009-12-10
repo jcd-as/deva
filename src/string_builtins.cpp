@@ -989,24 +989,35 @@ void do_string_split( Executor *ex )
 	
 	DOVector* ret = new DOVector();
 
-	size_t left = in.find_first_not_of( chars );
-	if( left != string::npos )
-	{	
-		size_t right = in.find_first_of( chars );
-		size_t len = in.length();
-		while( left != string::npos )
-		{
-			string s( in, left, right - left );
-			ret->push_back( DevaObject( "", s ) );
-
-			left = in.find_first_not_of( chars, right );
-			right = in.find_first_of( chars, right + 1 );
-			// if 'left' is greater than 'right', then we passed an empty string 
-			// (two matching split chars in a row), enter it and move forward
-			if( left > right )
+	// special case empty string, which means split into a vector of individual
+	// characters, NOT a vector containing only the original string
+	if( chars.length() == 0 )
+	{
+		ret->reserve( in.length() );
+		for( int c = 0; c < in.length(); ++c )
+			ret->push_back( DevaObject( "", string( 1, in[c] ) ) );
+	}
+	else
+	{
+		size_t left = in.find_first_not_of( chars );
+		if( left != string::npos )
+		{	
+			size_t right = in.find_first_of( chars );
+			size_t len = in.length();
+			while( left != string::npos )
 			{
-				ret->push_back( DevaObject( "", string( "" ) ) );
+				string s( in, left, right - left );
+				ret->push_back( DevaObject( "", s ) );
+
+				left = in.find_first_not_of( chars, right );
 				right = in.find_first_of( chars, right + 1 );
+				// if 'left' is greater than 'right', then we passed an empty string 
+				// (two matching split chars in a row), enter it and move forward
+				if( left > right )
+				{
+					ret->push_back( DevaObject( "", string( "" ) ) );
+					right = in.find_first_of( chars, right + 1 );
+				}
 			}
 		}
 	}

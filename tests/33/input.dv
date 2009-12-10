@@ -70,6 +70,10 @@ s = "a,b, c, rq4fadsfaxxxa\t, fdaf;a, d, e, f,,g,";
 v = s.split( "," );
 print( v );
 
+s = "foobar";
+v = s.split( "" );
+print( v );
+
 s = "foobar at the bar eating bar all day.";
 s = s.replace( "bar", "jam and toast" );
 print ( s );

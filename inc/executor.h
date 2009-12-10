@@ -143,17 +143,19 @@ private:
 		string function;
 		int line;
 		// is this frame the entry to a fcn? (e.g. the result of a call)
-		bool is_call;
+		// -1 if this is NOT a call, otherwise the linenum of the originating
+		// call-site
+		int call_site;
 
-		Frame( Executor const & ex, bool call ) : scopes( ex.current_scopes ), scope_idx( ex.current_scopes->size() ), ip( ex.ip ), file( ex.file ), function( ex.function ), line( ex.line ), is_call( call )
+		Frame( Executor const & ex, int call ) : scopes( ex.current_scopes ), scope_idx( ex.current_scopes->size() ), ip( ex.ip ), file( ex.file ), function( ex.function ), line( ex.line ), call_site( call )
 		{}
 	};
 	// class for a call-stack/traceback/backtrace
 	struct CallStack : public vector<Frame>
 	{
-		void Push( Executor const & ex, bool is_call )
+		void Push( Executor const & ex, int call )
 		{
-			push_back( Frame( ex, is_call ) );
+			push_back( Frame( ex, call ) );
 		}
 		void Pop()
 		{

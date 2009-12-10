@@ -251,17 +251,12 @@ int Executor::compare_objects( DevaObject & lhs, DevaObject & rhs )
 // object must be evaluated already to a value (i.e. no variables)
 bool Executor::evaluate_object_as_boolean( DevaObject & o )
 {
-	// it must be a number, string, boolean, or null
-	if( o.Type() != sym_number && o.Type() != sym_string
-		&& o.Type() != sym_boolean && o.Type() != sym_null )
-		throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
 	switch( o.Type() )
 	{
 	case sym_null:
 		// null is always false
 		return false;
 	case sym_number:
-		// TODO: use epsilon diff for comparing floating point numbers
 		if( o.num_val != 0 )
 			return true;
 		else
@@ -273,6 +268,17 @@ bool Executor::evaluate_object_as_boolean( DevaObject & o )
 			return true;
 		else
 			return false;
+	case sym_class:
+	case sym_instance:
+	case sym_map:
+		return (void*)o.map_val->size() != 0;
+	case sym_vector:
+		return (void*)o.vec_val->size() != 0;
+	case sym_address:
+	case sym_size:
+		return o.sz_val != 0;
+	case sym_native_obj:
+		return o.nat_obj_val != 0;
 	default:
 		throw DevaRuntimeException( "Invalid type in boolean conditional." );
 	}
@@ -1398,9 +1404,6 @@ void Executor::Jmpf( Instruction const & inst )
 		DevaObject* var = find_symbol( o );
 		if( !var )
 			throw DevaRuntimeException( "Undefined variable referenced in jmpf instruction." );
-		if( var->Type() != sym_unknown && var->Type() != sym_number && var->Type() != sym_string
-			&& var->Type() != sym_boolean && var->Type() != sym_null )
-			throw DevaRuntimeException( "Type of condition for jmpf cannot be evaluated to a true/false value." );
 		o = *var;
 	}
 	// if it evaluates to 'true', return
@@ -2009,7 +2012,7 @@ void Executor::Output( Instruction const & inst )
 	// print it
 //	cout << endl;
 }
-static bool next_enter_is_from_call = false;
+static int next_enter_is_from_call = -1;
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
@@ -2143,7 +2146,7 @@ void Executor::Call( Instruction const & inst )
 		function = fcn->name;
 		// set the static that tracks whether an enter instruction is due to a
 		// fcn call or not
-		next_enter_is_from_call = true;
+		next_enter_is_from_call = line;
 	}
 }
 // 32 stack holds return value and then (at top) return address
@@ -2183,8 +2186,8 @@ void Executor::Return( Instruction const & inst )
 	// jump to the return location
 	size_t offset = ob.sz_val;
 	ip = offset;
-	// pop this scope (same as 'leave' instruction)
-	current_scopes->Pop();
+	// perform 'leave' instruction - pops scope, adjusts trace stack etc
+	Leave( inst );
 	// reset the static that tracks the number of args processed
 	args_on_stack = -1;
 }
@@ -2272,13 +2275,13 @@ void Executor::Enter( Instruction const & inst )
 	trace.Push( *this, next_enter_is_from_call );
 	// reset the static that tracks whether an enter instruction is due to a
 	// fcn call or not (only the first enter can be due to the fcn call)
-	next_enter_is_from_call = false;
+	next_enter_is_from_call = -1;
 }
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
 	if( current_scopes->size() == 0 )
-		throw DevaRuntimeException( "Invalid Leave operation. No scopes to exit." );
+		throw DevaICE( "Invalid 'Leave' operation. No scopes to exit." );
 	// pop scope
 	current_scopes->Pop();
 	// pop frame
@@ -2977,8 +2980,8 @@ void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 	for( vector<Frame>::reverse_iterator i = trace.rbegin(); i != trace.rend() - 1; ++i )
 	{
 		// print the file, function, line number
-		if( show_all_scopes ||(!show_all_scopes && i->is_call) )
-			os << "  file: " << i->file << ", line: " << i->line << ", in " << i->function << endl;
+		if( show_all_scopes || (!show_all_scopes && (i->call_site != -1) ) )
+			os << "  file: " << i->file << ", line: " << (i->call_site != -1 ? i->call_site : i->line) << ", in " << i->function << endl;
 		fcn = i->function;
 		idx = i->scope_idx;
 	}

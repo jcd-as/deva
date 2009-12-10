@@ -1,0 +1,29 @@
+# program to determine the needed change in speed to maintain the same VMG
+# when changing the angle of tacking
+# e.g. if bearing off from 45 degrees to 50 degrees, how much does boat speed
+# need to increase in order to reach the destination in the same amount of time?
+
+# calculates the ratio of actual distance travelled to straight-line distance
+# when tacks are made each time one nautical mile is made good to destination
+def CalculateDistanceTravelledRatio( theta )
+{
+    local n = math.sin( math.radians( theta ) ) / math.sin( math.radians( 90.0 - theta ) );
+    local x = math.sqrt( 1.0 + math.pow( n, 2 ) );
+    return x;
+}
+    
+# calculates the needed ratio of new speed to old speed for a change in course from angleOld to angleNew
+def CalculateNeededSpeedRatio( angleOld, angleNew )
+{
+    return CalculateDistanceTravelledRatio( angleNew ) / CalculateDistanceTravelledRatio( angleOld );
+}
+
+argv = os.argv();
+if( argv.length() != 3 )
+{
+    print( "usage:\nSpeedRatio <oldAngle> <newAngle>" );
+    exit( 1 );
+}
+
+print( CalculateNeededSpeedRatio( num( argv[1] ), num( argv[2] ) ) );
+exit( 0 );

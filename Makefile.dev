@@ -29,7 +29,8 @@ DEVA_SOURCES =  \
 	string_builtins.cpp \
 	module_os.cpp \
 	module_bit.cpp \
-	module_math.cpp
+	module_math.cpp \
+	module_re.cpp
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 # sources/objs for devadb executable
 DEVADB_SOURCES =  \
@@ -51,7 +52,8 @@ DEVADB_SOURCES =  \
 	string_builtins.cpp \
 	module_os.cpp \
 	module_bit.cpp \
-	module_math.cpp
+	module_math.cpp \
+	module_re.cpp
 DEVADB_OBJS=$(patsubst %.cpp, %.o, ${DEVADB_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
@@ -63,7 +65,7 @@ DEVADB_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVADB_SOURCES})
 # if you enable optimization (-O1 or greater) you have to throw
 # -fno-inline-small-functions too, or else the parser will fail to parse
 # anything (code gen bug, I assume)
-CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.3\"
+CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.4\"
 #-O2 -fno-inline-small-functions 
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
@@ -86,11 +88,12 @@ devac : ${DEVAC_OBJS}
 	#g++ ${LDFLAGS} -lboost_program_options-mt -o devac ${DEVAC_OBJS}
 
 deva : ${DEVA_OBJS}
-	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -o deva ${DEVA_OBJS}
-	#g++ ${LDFLAGS} -lboost_program_options-mt -o deva ${DEVA_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -lboost_regex -o deva ${DEVA_OBJS}
+	#g++ ${LDFLAGS} -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o deva ${DEVA_OBJS}
 
 devadb : ${DEVADB_OBJS}
-	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -o devadb ${DEVADB_OBJS}
+	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -lboost_regex -o devadb ${DEVADB_OBJS}
+	#g++ ${LDFLAGS} -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o devadb ${DEVADB_OBJS}
 
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<

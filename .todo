@@ -387,7 +387,14 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>changed look-up sequence. order of variable look-up is now: 1) see if we're in an imported module and if so check it's scope tables 2) look in the 'current' scope tables and 3) if the 'current' scope tables is the not the global table, look in the global scope (where the builtin modules are found, for instance)
 </comment></note><note done="1260309800" priority="veryhigh" time="1260149417">keywords (e.g. 'true') as part of identifiers (e.g. 'truewind') cause syntax errors
 <comment>
-</comment></note><note priority="veryhigh" time="1260165362">range( start, end, increment ) built-in
-</note><note priority="veryhigh" time="1260165377">string.format() builtin
-</note><note priority="veryhigh" time="1260167181">regex built-in module
+</comment></note><note done="1260325032" priority="veryhigh" time="1260165362">range( start, end, increment ) built-in
+<comment>
+</comment></note><note priority="veryhigh" time="1260165377">string.format() builtin
+</note><note done="1260410603" priority="veryhigh" time="1260167181">regex built-in module
+<comment>
+</comment></note><note done="1260410584" priority="veryhigh" time="1260394817">BUG: return instructions don't properly remove fcn from stack trace!
+<comment>
+</comment></note><note done="1260410594" priority="veryhigh" time="1260396020">BUG: calls in stacktrace give the line number of the enter instruction (opening '{' of fcn) instead of the call-site
+<comment>
+</comment></note><note priority="veryhigh" time="1260411442">join() builtin to turn a vector of strings into a single string (opposite of string.split( '' ) )
 </note></todo>

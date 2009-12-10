@@ -1,0 +1,29 @@
+# built-in module 're' (regular expression) tests
+regexp = re.compile( "(\w+)\W+(\w+)" );
+s = "@abc def--";
+matches = re.search( regexp, s );
+print( matches );
+i = 0;
+if( matches )
+	for( m in matches )
+	{
+		print( m.start, ":" );
+		print( m.end );
+		print( "match " + str( i ) + ": ", "" );
+		print( s[m.start:m.end] );
+		print( m.str );
+		i += 1;
+	}
+
+re.delete( regexp );
+
+card_regexp = "\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z";
+regex = re.compile( card_regexp );
+machine_format = "\\1\\2\\3\\4";
+human_format = "\\1-\\2-\\3-\\4";
+card_num = "4444-0000-1111-2222";
+human_readable_card_num = re.replace( regex, card_num, machine_format );
+print( human_readable_card_num );
+machine_readable_card_num = re.replace( regex, human_readable_card_num, human_format );
+print( machine_readable_card_num );
+
