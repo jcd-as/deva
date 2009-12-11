@@ -953,7 +953,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// number of args is size of children - 2 (for the open and close parens),
 			int num_args = i->children[arg_idx].children.size() - 2;
 			if( num_args > 0 ) 
-				reverse_walk_children( i->children.begin() + 1, is );
+				reverse_walk_children( i->children.begin() + arg_idx, is );
 			
 			// create the look up of the name in the module,
 			// the resulting name will be on the stack

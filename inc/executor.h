@@ -404,7 +404,7 @@ public:
 	// helper methods. useful for built-ins
 	////////////////////////////////////////////////////
 	// locate a symbol in the symbol table(namespace)
-	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
+	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL, bool search_all_modules = false );
 
 	// object must be evaluated already to a value (i.e. no variables)
 	bool evaluate_object_as_boolean( DevaObject & o );

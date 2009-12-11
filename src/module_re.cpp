@@ -30,8 +30,6 @@
 
 
 #include "module_re.h"
-//#include "util.h"
-//#include <cstdlib>
 #include <boost/regex.hpp>
 
 using namespace boost;

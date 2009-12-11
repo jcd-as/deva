@@ -58,7 +58,7 @@ ostream & operator << ( ostream & os, Instruction & inst )
 }
 
 // locate a symbol
-DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL*/ )
+DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL*/, bool search_all_modules /*= false*/ )
 {
 	if( !scopes )
 		scopes = current_scopes;
@@ -97,7 +97,7 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 		if( p->count( ob.name ) != 0 )
 			return p->find( ob.name )->second;
 	}
-	// finally, if this scope table isn't the 'global' scope table, 
+	// if this scope table isn't the 'global' scope table, 
 	// we need to look in the global scope too 
 	// (which is available to all scopes/modules always)
 	if( scopes != &global_scopes )
@@ -106,6 +106,29 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 		if( p->count( ob.name ) != 0 )
 			return p->find( ob.name )->second;
 	}
+
+    // finally, if we're searching all modules/namespaces, check them all
+    if( search_all_modules )
+    {
+        for( map<string, ScopeTable>::iterator it = namespaces.begin(); it != namespaces.end(); ++it )
+        {
+            // if we found the namespace
+            if( it != namespaces.end() )
+            {
+                ScopeTable* ns_scopes = &(it->second);
+                for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
+                {
+                    // get the scope object
+                    Scope* p = *i;
+
+                    // check for the symbol
+                    if( p->count( ob.name ) != 0 )
+                        return p->find( ob.name )->second;
+                }
+            }
+        }
+    }
+
 	return NULL;
 }
 
@@ -2015,7 +2038,9 @@ void Executor::Call( Instruction const & inst )
 			if( !fcn )
 				throw DevaRuntimeException( "Call made to undefined function." );
 
-			if( fcn->Type() != sym_address )
+            if( fcn->Type() == sym_class )
+                throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
+            else if( fcn->Type() != sym_address )
 				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			// check the number of args to the fcn
@@ -2046,8 +2071,10 @@ void Executor::Call( Instruction const & inst )
 				fcn = &o;
 			else if( o.Type() == sym_unknown )
 				fcn = find_symbol( o.name );
+            else if( o.Type() == sym_class )
+                throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
 			else
-				throw DevaICE( "Invalid argument (on stack) for 'call' instruction." );
+				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			if( !fcn )
 				throw DevaRuntimeException( "Unable to resolve function." );
@@ -2322,7 +2349,7 @@ void Executor::Leave( Instruction const & inst )
                 del += cls_name;
 
                 // look up the class
-                DevaObject* cls = find_symbol( DevaObject( cls_name, sym_unknown ) );
+                DevaObject* cls = find_symbol( DevaObject( cls_name, sym_unknown ), NULL, true );
                 if( !cls )
                     throw DevaICE( "Trying to destroy unknown class." );
 
@@ -2382,23 +2409,67 @@ string Executor::find_module( string mod )
 	string modpath( curdir );
 	for( vector<string>::iterator it = path.begin(); it != path.end(); ++it )
 	{
-		modpath += '/';
-		modpath += *it;
+//		modpath += '/';
+//		modpath += *it;
+        modpath = join_paths( modpath, *it );
 	}
 	// check for .dv/.dvc files on disk
 	struct stat statbuf;
-	// if we can't open the module file, error out
+	// if we can open the module file, return it
 	string dv = modpath + ".dv";
-	if( stat( dv.c_str(), &statbuf ) == -1 )
+	if( stat( dv.c_str(), &statbuf ) != -1 )
+        return modpath;
+    string dvc = modpath + ".dvc";
+    if( stat( dvc.c_str(), &statbuf ) != -1 )
+        return modpath;
+	// otherwise check the paths in the DEVA env var
+    else
 	{
-		string dvc = modpath + ".dvc";
-		if( stat( dvc.c_str(), &statbuf ) == -1 )
-			throw DevaRuntimeException( "Unable to locate module for import." );
+        // get the DEVA env var
+        string devapath( getenv( "DEVA" ) );
+        // split it into separate paths (on the ":" char in un*x)
+        // TODO: portability to MS Windows (uses ";" to separate path items)
+        const char* seps = ":";
+        vector<string> paths;
+        size_t left = devapath.find_first_not_of( seps );
+        if( left != string::npos )
+        {	
+            size_t right = devapath.find_first_of( seps );
+            size_t len = devapath.length();
+            while( left != string::npos )
+            {
+                string s( devapath, left, right - left );
+                paths.push_back( s );
+
+                left = devapath.find_first_not_of( seps, right );
+                right = devapath.find_first_of( seps, right + 1 );
+                // if 'left' is greater than 'right', then we passed an empty string 
+                // (two matching split chars in a row), enter it and move forward
+                if( left > right )
+                {
+                    paths.push_back( "" );
+                    right = devapath.find_first_of( seps, right + 1 );
+                }
+            }
+        }
+        // for each of the paths, append the mod
+        // and see if it exists
+        for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
+        {
+            modpath = join_paths( *it, mod );
+            // check for .dv/.dvc files on disk
+            struct stat statbuf;
+            // if we can't open the module file, error out
+            string dv = modpath + ".dv";
+            if( stat( dv.c_str(), &statbuf ) != -1 )
+                return modpath;
+            string dvc = modpath + ".dvc";
+            if( stat( dvc.c_str(), &statbuf ) != -1 )
+                return modpath;
+        }
 	}
-	// otherwise it's valid, return it
-	return modpath;
-	// TODO:
-	// - look in the paths on the 'DEVA_PATH' env var
+    // not found, error
+    throw DevaRuntimeException( "Unable to locate module for import." );
 }
 // 38 import module, 1 arg: module name
 void Executor::Import( Instruction const & inst )
