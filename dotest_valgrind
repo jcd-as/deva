@@ -14,6 +14,7 @@ if [ -z $DEVA ] ; then
 	exit
 fi
 
+$DEVA/devac $1 > /dev/null
 valgrind --leak-check=yes --suppressions=$DEVA/valgrind.supp $DEVA/deva $1 2> '$$$RESULTS$$$' > /dev/null
 
 if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
