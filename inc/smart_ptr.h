@@ -156,6 +156,12 @@ protected:
 		cout << "ptr: " << p.first << " -- ref-count: " << p.second << endl;
 	}
 public:
+
+    int getRefs()
+    {
+        return s_ref_count_map[ptr];
+    }
+
 	static void dumpRefCountMap()
 	{
 		for_each( s_ref_count_map.begin(), s_ref_count_map.end(), printPair );

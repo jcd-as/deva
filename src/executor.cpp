@@ -109,29 +109,6 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	return NULL;
 }
 
-// remove a symbol, by name
-void Executor::remove_symbol( const DevaObject & ob, ScopeTable* scopes /*= NULL*/ )
-{
-	if( !scopes )
-		scopes = current_scopes;
-	// check each scope on the stack
-	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i < scopes->rend(); ++i )
-	{
-		// get the scope object
-		Scope* p = *i;
-
-		// check for the symbol
-		if( p->count( ob.name ) != 0 )
-		{
-			// delete the symbol
-			delete p->find( ob.name )->second;
-
-			// remove the symbol from the scope
-			p->erase( ob.name );
-		}
-	}
-}
-
 // peek at what the next instruction is (doesn't modify ip)
 Opcode Executor::PeekInstr()
 {
@@ -2277,11 +2254,98 @@ void Executor::Enter( Instruction const & inst )
 	// fcn call or not (only the first enter can be due to the fcn call)
 	next_enter_is_from_call = -1;
 }
+
+
+// walk the base classes of an object and call destructors on them
+void Executor::destruct_base_classes( DevaObject* ob, DevaObject & instance )
+{
+	// ensure it's a class
+	if( ob->Type() != sym_class )
+		throw DevaRuntimeException( "Invalid class type for new object." );
+
+	// call the base class (no-arg) constructors
+	DOMap::iterator it = ob->map_val->find( DevaObject( "", string( "__bases__" ) ) );
+	if( it != ob->map_val->end() )
+	{
+		for( DOVector::reverse_iterator i = it->second.vec_val->rbegin(); i != it->second.vec_val->rend(); ++i )
+		{
+			// call this class' constructor first
+			string method( "delete" );
+			method += "@";
+			method += i->name;
+			if( i->Type() != sym_class )
+				// TODO: user could potentially have caused this via
+				// changing/setting the '__bases__' field
+				throw DevaICE( "A non-class was found in a base class list." );
+			if( i->map_val->find( DevaObject( "", method ) ) != i->map_val->end() )
+			{
+				// push 'self'
+				stack.push_back( instance );
+				// call the 'new' method for this class
+				ExecuteDevaFunction( method, 1 );
+				// ignore the return value from 'new'. not allowed
+				stack.pop_back();
+			}
+
+			// then walk the base classes
+			destruct_base_classes( &(*i), instance );
+		}
+	}
+}
+
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
 	if( current_scopes->size() == 0 )
 		throw DevaICE( "Invalid 'Leave' operation. No scopes to exit." );
+    
+    // call destructors on all objects that are being destroyed
+    for( map<string, DevaObject*>::iterator i = current_scopes->back()->begin(); i != current_scopes->back()->end(); ++i )
+    {
+        // is this object an instance?
+        if( i->second->Type() == sym_instance )
+        {
+            DevaObject* instance = i->second;
+            // is it going to be deleted?
+            if( instance->map_val.getRefs() == 1 )
+            {
+                // get the name of the class
+                DOMap::iterator it = instance->map_val->find( DevaObject( "", string( "__class__" ) ) );
+                if( it == instance->map_val->end() )
+                    throw DevaRuntimeException( "Class instance cannot be destroyed, it has no '__class__' member." );
+                if( it->second.Type() != sym_string )
+                    throw DevaICE( "__class__ attribute on a class instance is not of type 'string'." );
+                string cls_name = it->second.str_val;
+
+                // does it have a 'delete' method?
+                string del( "delete@" );
+                del += cls_name;
+
+                // look up the class
+                DevaObject* cls = find_symbol( DevaObject( cls_name, sym_unknown ) );
+                if( !cls )
+                    throw DevaICE( "Trying to destroy unknown class." );
+
+                // look up the fcn name
+                DevaObject* fcn = find_symbol( del );
+                if( fcn )
+                {
+                    if( fcn->Type() != sym_address )
+                        throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
+                    // push 'self'
+                    stack.push_back( *instance );
+                    // call it
+                    ExecuteDevaFunction( del, 1 );
+                    // ignore the return value
+                    stack.pop_back();
+
+                    // destroy the parent objects
+                    destruct_base_classes( cls, *instance );
+                }
+            }
+        }
+    }
+
 	// pop scope
 	current_scopes->Pop();
 	// pop frame

@@ -262,6 +262,9 @@ private:
 	// locate a module
 	string find_module( string mod );
 
+    // call destructors on base classes
+    void destruct_base_classes( DevaObject* ob, DevaObject & instance );
+
 	////////////////////////////////////////////////////
 	// individual op-code methods
 	////////////////////////////////////////////////////
@@ -402,9 +405,6 @@ public:
 	////////////////////////////////////////////////////
 	// locate a symbol in the symbol table(namespace)
 	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
-
-	// remove a symbol from the symbol table(namespace)
-	void remove_symbol( const DevaObject & ob, ScopeTable* scopes = NULL );
 
 	// object must be evaluated already to a value (i.e. no variables)
 	bool evaluate_object_as_boolean( DevaObject & o );

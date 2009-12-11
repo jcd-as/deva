@@ -45,7 +45,6 @@ void do_append( Executor *ex );
 void do_length( Executor *ex );
 void do_copy( Executor *ex );
 void do_eval( Executor *ex );
-void do_delete( Executor *ex );
 void do_open( Executor *ex );
 void do_close( Executor *ex );
 void do_flush( Executor *ex );
@@ -78,7 +77,6 @@ static const string builtin_names[] =
     string( "length" ),
     string( "copy" ),
     string( "eval" ),
-    string( "delete" ),
     string( "open" ),
     string( "close" ),
     string( "flush" ),
@@ -112,7 +110,6 @@ builtin_fcn builtin_fcns[] =
     do_length,
     do_copy,
 	do_eval,
-	do_delete,
 	do_open,
 	do_close,
 	do_flush,
@@ -442,34 +439,6 @@ void do_eval( Executor *ex )
 		throw DevaRuntimeException( "eval() builtin function called with a non-string argument." );
 
 	ex->RunText( o->str_val );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
-}
-
-void do_delete( Executor *ex )
-{
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'delete'." );
-
-	// object to delete at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'delete'." );
-	}
-	if( !o )
-		o = &obj;
-
-	ex->remove_symbol( *o );
 
 	// pop the return address
 	ex->stack.pop_back();
