@@ -1,3 +1,5 @@
+import bit;
+
 n = 0b0000;
 n = bit.and( n, 0b1111 );
 # still 0000

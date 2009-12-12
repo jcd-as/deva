@@ -40,10 +40,6 @@
 #include "compile.h"
 #include "executor.h"
 #include "util.h"
-#include "module_os.h"
-#include "module_bit.h"
-#include "module_math.h"
-#include "module_re.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -339,10 +335,7 @@ int main( int argc, char** argv )
 			ex.StartGlobalScope();
 
 			// add the built-in modules
-			AddOsModule( ex );
-			AddBitModule( ex );
-			AddMathModule( ex );
-			AddReModule( ex );
+            ex.AddAllKnownBuiltinModules();
 
 			// add the code block we just compiled
 			ex.AddCodeBlock( code );

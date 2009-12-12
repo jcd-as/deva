@@ -313,7 +313,7 @@ void do_re_delete( Executor* ex )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void AddReModule( Executor & ex )
+void AddReModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
 	fcns.insert( make_pair( string( "compile@re" ), do_re_compile ) );
@@ -321,5 +321,5 @@ void AddReModule( Executor & ex )
 	fcns.insert( make_pair( string( "search@re" ), do_re_search ) );
 	fcns.insert( make_pair( string( "replace@re" ), do_re_replace ) );
 	fcns.insert( make_pair( string( "delete@re" ), do_re_delete ) );
-	ex.AddBuiltinModule( string( "re" ), fcns );
+	ex->ImportBuiltinModuleFunctions( string( "re" ), fcns );
 }

@@ -34,6 +34,6 @@
 #include "executor.h"
 
 
-void AddOsModule( Executor & ex );
+void AddOsModule( Executor* ex );
 
 #endif // __MODULE_OS_H__

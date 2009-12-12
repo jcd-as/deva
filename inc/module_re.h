@@ -34,7 +34,7 @@
 #include "executor.h"
 
 
-void AddReModule( Executor & ex );
+void AddReModule( Executor* ex );
 
 #endif // __MODULE_RE_H__
 

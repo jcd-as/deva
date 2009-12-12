@@ -44,7 +44,10 @@
 using namespace std;
 
 class Executor;
+// typedef for pointer to built-in fcn
 typedef void (*builtin_fcn)(Executor*);
+// typedef for pointer to fcn to import a built-in (i.e. native) module
+typedef void (*import_module_fcn)(Executor*);
 
 class Executor
 {
@@ -68,7 +71,9 @@ private:
 	string function;
 	int line;
 
-	// maps for built-in module fcns
+	// data for built-in module fcns
+    // maps of module names to import fcns
+    map<string, import_module_fcn> builtin_module_names;
 	// map of module names to a list of fcn names
 	map<string, vector<string> > builtin_modules;
 	// map fcn name to fcn ptr, where fcn name is of the form 'fcn@module'
@@ -374,7 +379,16 @@ public:
 	void RunText( const char* const text );
 	void Exit( int val );
 
-	bool AddBuiltinModule( string name, map<string, builtin_fcn> & fcns );
+    // add a built-in module to the list of importable modules
+	void AddBuiltinModule( string name, import_module_fcn );
+    // import a built-in module (calls the import_module_fcn for this module)
+	bool ImportBuiltinModule( string name );
+    // import all the functions defined in a built-in module
+	bool ImportBuiltinModuleFunctions( string name, map<string, builtin_fcn> & fcns );
+
+    // add all the known built-in modules
+    // (for language embedding clients such as deva, devadb etc)
+    void AddAllKnownBuiltinModules();
 
 	// dump the stack trace to stdout
 	void DumpTrace( ostream &, bool show_all_scopes = false );

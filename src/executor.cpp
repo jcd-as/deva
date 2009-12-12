@@ -36,6 +36,10 @@
 #include "compile.h"
 #include "fileformat.h"
 #include "util.h"
+#include "module_bit.h"
+#include "module_math.h"
+#include "module_os.h"
+#include "module_re.h"
 
 
 // static data
@@ -2477,15 +2481,22 @@ void Executor::Import( Instruction const & inst )
 	// first argument has the name of the module to import
 	if( inst.args.size() < 1 )
 		throw DevaICE( "No module name given in import statement." );
+
 	string mod = inst.args[0].str_val;
-	string path = find_module( mod );
-	
+
+    // check the list of builtin modules first
+    if( ImportBuiltinModule( mod ) )
+        return;
+
 	// prevent importing the same module more than once
 	map<string, ScopeTable>::iterator it;
 	it = namespaces.find( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return;
+
+    // otherwise look for the .dv/.dvc file to import
+	string path = find_module( mod );
 
 	// for now, just run the file by short name with ".dvc" extension (i.e. in
 	// the current working directory)
@@ -3075,7 +3086,25 @@ void Executor::Exit( int val )
 	exit( val );
 }
 
-bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
+void Executor::AddBuiltinModule( string mod, import_module_fcn fcn )
+{
+    builtin_module_names.insert( make_pair( mod, fcn ) );
+}
+
+// import a built-in module (calls the import_module_fcn for this module)
+bool Executor::ImportBuiltinModule( string name )
+{
+    // find the import_module_fcn for this module
+    map<string, import_module_fcn>::iterator it;
+    it = builtin_module_names.find( name );
+    if( it == builtin_module_names.end() )
+        return false;
+    // call it
+    (it->second)( this );
+    return true;
+}
+
+bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn> & fcns )
 {
 	// prevent importing the same module more than once
 	map<string, ScopeTable>::iterator it;
@@ -3103,6 +3132,14 @@ bool Executor::AddBuiltinModule( string mod, map<string, builtin_fcn> & fcns )
 	builtin_module_fcns.insert( fcns.begin(), fcns.end() );
 
 	return true;
+}
+
+void Executor::AddAllKnownBuiltinModules()
+{
+    AddBuiltinModule( string( "os" ), AddOsModule );
+    AddBuiltinModule( string( "bit" ), AddBitModule );
+    AddBuiltinModule( string( "math" ), AddMathModule );
+    AddBuiltinModule( string( "re" ), AddReModule );
 }
 
 // dump the stack trace to stdout

@@ -34,7 +34,7 @@
 #include "executor.h"
 
 
-void AddBitModule( Executor & ex );
+void AddBitModule( Executor* ex );
 
 #endif // __MODULE_BIT_H__
 

@@ -508,7 +508,7 @@ void do_os_dirwalk( Executor* ex )
 	ex->stack.push_back( ret );
 }
 
-void AddOsModule( Executor & ex )
+void AddOsModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
 	fcns.insert( make_pair( string( "exec@os" ), do_os_exec ) );
@@ -524,5 +524,5 @@ void AddOsModule( Executor & ex )
 	fcns.insert( make_pair( string( "getenv@os" ), do_os_getenv ) );
 	fcns.insert( make_pair( string( "argv@os" ), do_os_argv ) );
 	fcns.insert( make_pair( string( "dirwalk@os" ), do_os_dirwalk ) );
-	ex.AddBuiltinModule( string( "os" ), fcns );
+	ex->ImportBuiltinModuleFunctions( string( "os" ), fcns );
 }

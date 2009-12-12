@@ -34,6 +34,6 @@
 #include "executor.h"
 
 
-void AddMathModule( Executor & ex );
+void AddMathModule( Executor* ex );
 
 #endif // __MODULE_MATH_H__

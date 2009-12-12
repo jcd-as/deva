@@ -4,6 +4,8 @@
 # should be a program or link to a program to run the actual test on an input
 # file called "input.dv" and comparing the results to the 'baseline' file
 
+import os;
+
 baseline = "baseline";
 
 # TODO: to this (machine int-size detection) correctly ??

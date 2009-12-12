@@ -326,7 +326,7 @@ void do_bit_shift_right( Executor* ex )
 	ex->stack.push_back( DevaObject( "", (double)ret ) );
 }
 
-void AddBitModule( Executor & ex )
+void AddBitModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
 	fcns.insert( make_pair( string( "and@bit" ), do_bit_and ) );
@@ -335,6 +335,6 @@ void AddBitModule( Executor & ex )
 	fcns.insert( make_pair( string( "complement@bit" ), do_bit_complement ) );
 	fcns.insert( make_pair( string( "shift_left@bit" ), do_bit_shift_left ) );
 	fcns.insert( make_pair( string( "shift_right@bit" ), do_bit_shift_right ) );
-	ex.AddBuiltinModule( string( "bit" ), fcns );
+	ex->ImportBuiltinModuleFunctions( string( "bit" ), fcns );
 }
 

@@ -1,4 +1,6 @@
 # built-in module 're' (regular expression) tests
+import re;
+
 regexp = re.compile( "(\w+)\W+(\w+)" );
 s = "@abc def--";
 matches = re.search( regexp, s );

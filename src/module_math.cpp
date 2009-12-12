@@ -788,7 +788,7 @@ void do_math_round( Executor* ex )
 	ex->stack.push_back( DevaObject( "", intpart ) );
 }
 
-void AddMathModule( Executor & ex )
+void AddMathModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
 	fcns.insert( make_pair( string( "cos@math" ), do_math_cos ) );
@@ -814,5 +814,5 @@ void AddMathModule( Executor & ex )
 	fcns.insert( make_pair( string( "radians@math" ), do_math_radians ) );
 	fcns.insert( make_pair( string( "degrees@math" ), do_math_degrees ) );
 	fcns.insert( make_pair( string( "round@math" ), do_math_round ) );
-	ex.AddBuiltinModule( string( "math" ), fcns );
+	ex->ImportBuiltinModuleFunctions( string( "math" ), fcns );
 }
