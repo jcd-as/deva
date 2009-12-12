@@ -26,6 +26,7 @@
 // created by jcs, september 9, 2009
 
 #include "symbol.h"
+#include "util.h"
 #include <cstring>
 
 
@@ -69,20 +70,6 @@ string strip_quotes( const string& src )
 	if( p1 == string::npos )
 		p1 = 0;
 	return src.substr( p1, (p2 - p1) + 1 );
-}
-
-// helper to locate instances of 'in' in the string 'src', and replace them with
-// 'out'
-void replace( string& src, const char* const in, const char* const out )
-{
-    int len = strlen( in );
-    size_t pos = src.find( in );
-    while( pos != string::npos )
-    {
-        // found 'in' at 'i'. replace with 'out'
-        src = src.replace( pos, len, out );
-        pos = src.find( in );
-    }
 }
 
 // "un-escape" a string (e.g. turn '\t' into a tab character etc)

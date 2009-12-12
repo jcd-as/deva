@@ -29,10 +29,24 @@ deva_CPPFLAGS = -I $(top_srcdir)/inc
 # configure handles this, but for the record:
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
 deva_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options -lboost_filesystem -lboost_regex
+#deva_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
-devac_SOURCES = devac.cpp symbol.cpp fileformat.cpp debug.cpp parser_ids.cpp error_report_parsers.cpp scope.cpp compile.cpp semantics.cpp instructions.cpp dobject.cpp
+devac_SOURCES = \
+	devac.cpp \
+	symbol.cpp \
+	fileformat.cpp \
+	debug.cpp \
+	parser_ids.cpp \
+	error_report_parsers.cpp \
+	scope.cpp \
+	compile.cpp \
+	semantics.cpp \
+	instructions.cpp \
+	dobject.cpp \
+	util.cpp
 devac_CPPFLAGS = -I $(top_srcdir)/inc
-devac_LDFLAGS = -g -lboost_program_options
+devac_LDFLAGS = -g -lboost_program_options -lboost_filesystem
+#devac_LDFLAGS = -g -lboost_program_options-mt -lboost_filesystem-mt
 
 devadb_SOURCES= \
 	builtins.cpp \
@@ -58,8 +72,10 @@ devadb_SOURCES= \
 devadb_CPPFLAGS = -I $(top_srcdir)/inc
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
 devadb_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options -lboost_filesystem -lboost_regex
+#devadb_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
-test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp
+test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
 test_CPPFLAGS = -I $(top_srcdir)/inc
-test_LDFLAGS = -g -lboost_program_options
+test_LDFLAGS = -g -lboost_filesystem
+#test_LDFLAGS = -g -lboost_filesystem-mt
 

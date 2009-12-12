@@ -2413,8 +2413,6 @@ string Executor::find_module( string mod )
 	string modpath( curdir );
 	for( vector<string>::iterator it = path.begin(); it != path.end(); ++it )
 	{
-//		modpath += '/';
-//		modpath += *it;
         modpath = join_paths( modpath, *it );
 	}
 	// check for .dv/.dvc files on disk
@@ -2432,30 +2430,7 @@ string Executor::find_module( string mod )
         // get the DEVA env var
         string devapath( getenv( "DEVA" ) );
         // split it into separate paths (on the ":" char in un*x)
-        // TODO: portability to MS Windows (uses ";" to separate path items)
-        const char* seps = ":";
-        vector<string> paths;
-        size_t left = devapath.find_first_not_of( seps );
-        if( left != string::npos )
-        {	
-            size_t right = devapath.find_first_of( seps );
-            size_t len = devapath.length();
-            while( left != string::npos )
-            {
-                string s( devapath, left, right - left );
-                paths.push_back( s );
-
-                left = devapath.find_first_not_of( seps, right );
-                right = devapath.find_first_of( seps, right + 1 );
-                // if 'left' is greater than 'right', then we passed an empty string 
-                // (two matching split chars in a row), enter it and move forward
-                if( left > right )
-                {
-                    paths.push_back( "" );
-                    right = devapath.find_first_of( seps, right + 1 );
-                }
-            }
-        }
+        vector<string> paths = split_env_var_paths( devapath );
         // for each of the paths, append the mod
         // and see if it exists
         for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )

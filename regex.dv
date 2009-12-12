@@ -24,7 +24,7 @@
 # defines regex class that uses construction/destruction to acquire and free the
 # native 're' built-in module objects
 
-#import re
+import re;
 
 class regex
 {
@@ -52,4 +52,28 @@ class regex
     {
         return re.replace( self.regex, input, format );
     }
+}
+
+# return a string with regex characters escaped
+def escape( str )
+{
+    # .[{()\*+?|^$
+    # what about:
+    # &#~@%-/="',<>:;
+    # ??? (python re.escape() escapes all of them)
+    ret = str.replace( ".", "\\." );
+    ret = ret.replace( "[", "\\[" );
+    ret = ret.replace( "{", "\\{" );
+    ret = ret.replace( "(", "\\(" );
+    ret = ret.replace( "]", "\\]" );
+    ret = ret.replace( "}", "\\}" );
+    ret = ret.replace( ")", "\\)" );
+    ret = ret.replace( "\\", "\\\\" );
+    ret = ret.replace( "*", "\\*" );
+    ret = ret.replace( "+", "\\+" );
+    ret = ret.replace( "?", "\\?" );
+    ret = ret.replace( "|", "\\|" );
+    ret = ret.replace( "^", "\\^" );
+    ret = ret.replace( "$", "\\$" );
+    return ret;
 }

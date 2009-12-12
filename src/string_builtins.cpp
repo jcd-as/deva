@@ -30,6 +30,7 @@
 //
 
 #include "string_builtins.h"
+#include "util.h"
 #include <algorithm>
 #include <locale>
 
@@ -1073,17 +1074,8 @@ void do_string_replace( Executor *ex )
 		rep = &val;
 
 	// do the replacement
-	string ret( str.str_val );
-	string search( s->str_val );
-	string rep_val( rep->str_val );
-	size_t pos = ret.find( search );
-	while( pos != string::npos )
-	{
-		// do the replacement
-		ret.replace( pos, search.length(), rep_val );
-		// find the search string
-		pos = ret.find( search, pos + 1 );
-	}
+    string ret( str.str_val );
+    replace( ret, s->str_val, rep->str_val );
 
 	// pop the return address
 	ex->stack.pop_back();
