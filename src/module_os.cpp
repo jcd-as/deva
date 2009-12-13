@@ -508,6 +508,72 @@ void do_os_dirwalk( Executor* ex )
 	ex->stack.push_back( ret );
 }
 
+void do_os_isdir( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'os' function 'isdir'." );
+
+	// path is on top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'path' argument in module 'os' function 'isdir'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure path is a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "'path' argument to module 'os' function 'isdir' must be a string." );
+
+	filesystem::path path( o->str_val );
+	bool ret = is_directory( path );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return value
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_os_isfile( Executor* ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to module 'os' function 'isfile'." );
+
+	// path is on top of the stack
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'path' argument in module 'os' function 'isfile'" );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure path is a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "'path' argument to module 'os' function 'isfile' must be a string." );
+
+	filesystem::path path( o->str_val );
+	bool ret = is_regular_file( path );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return value
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
 void AddOsModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
@@ -524,5 +590,7 @@ void AddOsModule( Executor* ex )
 	fcns.insert( make_pair( string( "getenv@os" ), do_os_getenv ) );
 	fcns.insert( make_pair( string( "argv@os" ), do_os_argv ) );
 	fcns.insert( make_pair( string( "dirwalk@os" ), do_os_dirwalk ) );
+	fcns.insert( make_pair( string( "isdir@os" ), do_os_isdir ) );
+	fcns.insert( make_pair( string( "isfile@os" ), do_os_isfile ) );
 	ex->ImportBuiltinModuleFunctions( string( "os" ), fcns );
 }

@@ -402,20 +402,21 @@ defarg : unknown: 'c' ;
 defarg : 
 push : null ; 
 return : 
+endf : 
 push : unknown: 'x' ; 
-jmpf : , address/sized-value = 228 ; 
+jmpf : , address/sized-value = 230 ; 
 push : unknown: 'y' ; 
-jmpf : , address/sized-value = 228 ; 
-push : , address/sized-value = 226 ; 
+jmpf : , address/sized-value = 230 ; 
+push : , address/sized-value = 228 ; 
 line_num : input.dv ; , address/sized-value = 40 ; 
 call : function_call: 'z' ; , address/sized-value = 0 ; 
 pop : 
 push : unknown: 'x' ; 
-jmpf : , address/sized-value = 310 ; 
+jmpf : , address/sized-value = 312 ; 
 enter : 
 push : unknown: 'y' ; 
-jmpf : , address/sized-value = 296 ; 
-push : , address/sized-value = 294 ; 
+jmpf : , address/sized-value = 298 ; 
+push : , address/sized-value = 296 ; 
 line_num : input.dv ; , address/sized-value = 56 ; 
 call : function_call: 'z' ; , address/sized-value = 0 ; 
 pop : 
@@ -424,8 +425,8 @@ push : unknown: 'b' ;
 store : 
 leave : 
 push : unknown: 'x' ; 
-jmpf : , address/sized-value = 331 ; 
-jmp : , address/sized-value = 331 ; 
+jmpf : , address/sized-value = 333 ; 
+jmp : , address/sized-value = 333 ; 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 

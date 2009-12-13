@@ -61,14 +61,15 @@ def escape( str )
     # what about:
     # &#~@%-/="',<>:;
     # ??? (python re.escape() escapes all of them)
-    ret = str.replace( ".", "\\." );
+	local ret = str;
+    ret = ret.replace( "\\", "\\\\" );
+    ret = ret.replace( ".", "\\." );
     ret = ret.replace( "[", "\\[" );
     ret = ret.replace( "{", "\\{" );
     ret = ret.replace( "(", "\\(" );
     ret = ret.replace( "]", "\\]" );
     ret = ret.replace( "}", "\\}" );
     ret = ret.replace( ")", "\\)" );
-    ret = ret.replace( "\\", "\\\\" );
     ret = ret.replace( "*", "\\*" );
     ret = ret.replace( "+", "\\+" );
     ret = ret.replace( "?", "\\?" );

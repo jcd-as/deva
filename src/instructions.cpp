@@ -97,6 +97,9 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 		case sym_size:
 			os << obj.name << ", address/sized-value = " << obj.sz_val;
 			break;
+		case sym_native_obj:
+			os << obj.name << ", native object = " << obj.nat_obj_val;
+			break;
 		case sym_function_call:
 			os << "function_call: '" << obj.name << "'";
 			break;
@@ -268,6 +271,9 @@ ostream & operator << ( ostream & os, Opcode & op )
 		break;
 	case op_new_instance:
 		os << "new_instance";
+		break;
+	case op_endf:
+		os << "endf";
 		break;
 	case op_illegal:
 		os << "ILLEGAL OPCODE. COMPILER ERROR";

@@ -75,6 +75,7 @@ enum Opcode
 	op_import,		// 38 import a module. 1 arg: module name
 	op_new_class,	// 39 create a new class object and push onto the stack
 	op_new_instance,// 40 create a new instance of a class and push onto the stack
+	op_endf,		// 41 end of function. nop indicating end of defun
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

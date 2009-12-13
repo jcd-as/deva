@@ -401,5 +401,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1260598966" priority="veryhigh" time="1260584988">BUG: escaping in strings is broken: any number of \'s in the code result in a single \
 <comment>
-</comment></note><note priority="veryhigh" time="1260598658">BUG: PRI 0. early returns screw up Defun execution (stops scanning forward at the first return statement, even if it's in a conditional etc
+</comment></note><note done="1260670443" priority="veryhigh" time="1260598658">BUG: PRI 0. early returns screw up Defun execution (stops scanning forward at the first return statement, even if it's in a conditional etc
+<comment>added 'endf' opcode, which is a no-op that just marks the end of a defun
+</comment></note><note priority="veryhigh" time="1260663612">when calling to a fcn in another module, the stackframe for the call gets the wrong filename (name of the module being called, not the calling module)
+</note><note priority="high" time="1260670428">BUG: can't declare a 'local' and assign it to the return value of a fcn call in the same statement
 </note></todo>

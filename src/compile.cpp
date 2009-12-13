@@ -844,6 +844,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				is.push( Instruction( op_return ) );
 			}
 		}
+		// end of defun marker
+		is.push( Instruction( op_endf ) );
 	}
 	else if( i->value.id() == parser_id( class_decl_id ) )
 	{

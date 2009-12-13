@@ -522,7 +522,7 @@ void Executor::Defun( Instruction const & inst )
 	current_scopes->AddObject( fcn );
 	// skip the function body
 	Opcode op = PeekInstr();
-	while( op != op_return )
+	while( op != op_endf )
 	{
 		NextInstr();
 		op = PeekInstr();
@@ -1446,7 +1446,10 @@ void Executor::Eq( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+	{
+		stack.push_back( DevaObject( "", false ) );
+		return;
+	}
 	int result = compare_objects( lhs, rhs );
 	if( result == 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -1483,7 +1486,10 @@ void Executor::Neq( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+	{
+		stack.push_back( DevaObject( "", true ) );
+		return;
+	}
 	int result = compare_objects( lhs, rhs );
 	if( result != 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -1520,7 +1526,7 @@ void Executor::Lt( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+		throw DevaRuntimeException( "'Less than' comparison of incompatible types." );
 	int result = compare_objects( lhs, rhs );
 	if( result < 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -1557,7 +1563,7 @@ void Executor::Lte( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+		throw DevaRuntimeException( "'Less than or equals' comparison of incompatible types." );
 	int result = compare_objects( lhs, rhs );
 	if( result <= 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -1594,7 +1600,7 @@ void Executor::Gt( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+		throw DevaRuntimeException( "'Greater than' comparison of incompatible types." );
 	int result = compare_objects( lhs, rhs );
 	if( result > 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -1631,7 +1637,7 @@ void Executor::Gte( Instruction const & inst )
 	// if they are the same type, compare them and push the (boolean) result
 	// onto the stack
 	if( lhs.Type() != rhs.Type() )
-		throw DevaRuntimeException( "Comparison of incompatible types." );
+		throw DevaRuntimeException( "'Greater than or equals' comparison of incompatible types." );
 	int result = compare_objects( lhs, rhs );
 	if( result >= 0 )
 		stack.push_back( DevaObject( "", true ) );
@@ -2729,6 +2735,7 @@ bool Executor::DoInstr( Instruction & inst )
 		Leave( inst );
 		break;
 	case op_nop:			// 36 no op
+	case op_endf:			// 41 endf, no-op marking end of defun
 		Nop( inst );
 		break;
 	case op_halt:		// 37 finish program, 0 or 1 ops (return code)

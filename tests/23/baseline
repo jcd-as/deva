@@ -803,78 +803,79 @@ leave :
 jmp : , address/sized-value = 122 ; 
 push : unknown: 'a' ; 
 return : 
+endf : 
 push : unknown: 'l' ; 
 new_vec: : 
 store : 
-push : , address/sized-value = 614 ; 
+push : , address/sized-value = 616 ; 
 push : 2 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 33 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 676 ; 
+push : , address/sized-value = 678 ; 
 push : 1 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 34 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 738 ; 
+push : , address/sized-value = 740 ; 
 push : 4 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 35 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 800 ; 
+push : , address/sized-value = 802 ; 
 push : 3 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 36 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 862 ; 
+push : , address/sized-value = 864 ; 
 push : 6 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 37 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 924 ; 
+push : , address/sized-value = 926 ; 
 push : 5 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 38 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 986 ; 
+push : , address/sized-value = 988 ; 
 push : 8 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 39 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 1048 ; 
+push : , address/sized-value = 1050 ; 
 push : 7 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 40 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 1110 ; 
+push : , address/sized-value = 1112 ; 
 push : 10 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 41 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 1172 ; 
+push : , address/sized-value = 1174 ; 
 push : 9 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 42 ; 
 call : function_call: 'append' ; , address/sized-value = 2 ; 
 pop : 
-push : , address/sized-value = 1231 ; 
+push : , address/sized-value = 1233 ; 
 push : un-sorted: ; 
 line_num : input.dv ; , address/sized-value = 45 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
-push : , address/sized-value = 1233 ; 
+push : , address/sized-value = 1235 ; 
 push : unknown: 'l' ; 
 dup : 0 ; 
-push : unknown: '.table00000001259717946.0000836613' ; 
+push : unknown: '.table00000001260671232.0000519123' ; 
 swap : 
 store : 
 call : function_call: 'length' ; , address/sized-value = 1 ; 
@@ -882,38 +883,38 @@ push : 0 ;
 dup : 1 ; 
 dup : 1 ; 
 neq : 
-jmpf : , address/sized-value = 1494 ; 
-load : unknown: '.table00000001259717946.0000836613' ; 
+jmpf : , address/sized-value = 1496 ; 
+load : unknown: '.table00000001260671232.0000519123' ; 
 dup : 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : , address/sized-value = 1470 ; 
+push : , address/sized-value = 1472 ; 
 push : unknown: 'i' ; 
 line_num : input.dv ; , address/sized-value = 47 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
 push : 1 ; 
 add : 
-jmp : , address/sized-value = 1328 ; 
+jmp : , address/sized-value = 1330 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : , address/sized-value = 1556 ; 
+push : , address/sized-value = 1558 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 54 ; 
 call : function_call: 'bubble_sort' ; , address/sized-value = 1 ; 
 store : 
-push : , address/sized-value = 1612 ; 
+push : , address/sized-value = 1614 ; 
 push : sorted: ; 
 line_num : input.dv ; , address/sized-value = 57 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
-push : , address/sized-value = 1614 ; 
+push : , address/sized-value = 1616 ; 
 push : unknown: 'n' ; 
 dup : 0 ; 
-push : unknown: '.table10000001259717946.0000836683' ; 
+push : unknown: '.table10000001260671232.0000519193' ; 
 swap : 
 store : 
 call : function_call: 'length' ; , address/sized-value = 1 ; 
@@ -921,21 +922,21 @@ push : 0 ;
 dup : 1 ; 
 dup : 1 ; 
 neq : 
-jmpf : , address/sized-value = 1875 ; 
-load : unknown: '.table10000001259717946.0000836683' ; 
+jmpf : , address/sized-value = 1877 ; 
+load : unknown: '.table10000001260671232.0000519193' ; 
 dup : 1 ; 
 tbl_load : 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : , address/sized-value = 1851 ; 
+push : , address/sized-value = 1853 ; 
 push : unknown: 'i' ; 
 line_num : input.dv ; , address/sized-value = 59 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
 push : 1 ; 
 add : 
-jmp : , address/sized-value = 1709 ; 
+jmp : , address/sized-value = 1711 ; 
 pop : 
 pop : 
 halt : 
