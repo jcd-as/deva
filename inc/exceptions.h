@@ -32,6 +32,7 @@
 #define __EXCEPTIONS_H__
 
 #include <stdexcept>
+#include <boost/format.hpp>
 
 struct DevaSemanticException : public logic_error
 {
@@ -39,6 +40,8 @@ struct DevaSemanticException : public logic_error
 
 public:
 	DevaSemanticException( const char* const s, NodeInfo ni ) : logic_error( s ), node( ni )
+	{}
+	DevaSemanticException( boost::format fmt, NodeInfo ni ) : logic_error( str( fmt ).c_str() ), node( ni )
 	{}
 	~DevaSemanticException() throw()
 	{}
@@ -49,12 +52,16 @@ class DevaRuntimeException : public runtime_error
 public:
 	DevaRuntimeException( const char* const s ) : runtime_error( s )
 	{}
+	DevaRuntimeException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
+	{}
 };
 
 class DevaStackException : public DevaRuntimeException
 {
 public:
 	DevaStackException( const char* const s ) : DevaRuntimeException( s )
+	{}
+	DevaStackException( boost::format fmt ) : DevaRuntimeException( str( fmt ).c_str() )
 	{}
 };
 
@@ -64,6 +71,8 @@ class DevaCriticalException : public runtime_error
 public:
 	DevaCriticalException( const char* const s ) : runtime_error( s )
 	{}
+	DevaCriticalException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
+	{}
 };
 
 // internal compiler error: indicates something wrong with the compiler's
@@ -72,6 +81,8 @@ class DevaICE : public DevaRuntimeException
 {
 public:
 	DevaICE( const char* const s ) : DevaRuntimeException( s )
+	{}
+	DevaICE( boost::format fmt ) : DevaRuntimeException( str( fmt ).c_str() )
 	{}
 };
 

@@ -295,7 +295,7 @@ unsigned char* Executor::LoadByteCode( const char* const filename )
 	ifstream file;
 	file.open( filename, ios::binary );
 	if( file.fail() )
-		throw DevaRuntimeException( "Unable to open input file for read." );
+		throw DevaRuntimeException( boost::format( "Unable to open input file '%1%' for read." ) % filename );
 
 	unsigned char* bytecode = NULL;
 
@@ -307,7 +307,7 @@ unsigned char* Executor::LoadByteCode( const char* const filename )
 		throw DevaRuntimeException( "Invalid .dvc file: header missing 'deva' tag." );
 	file.read( ver, 6 );
 	if( strcmp( ver, "1.0.0" ) != 0 )
-		 throw DevaRuntimeException( "Invalid .dvc version number." );
+		 throw DevaRuntimeException( boost::format( "Invalid .dvc version number: %1%." ) % ver );
 	char pad[6] = {0};
 	file.read( pad, 5 );
 	if( pad[0] != 0 || pad[1] != 0 || pad[2] != 0 || pad[3] != 0 || pad[4] != 0 )
@@ -449,7 +449,7 @@ void Executor::Load( Instruction const & inst )
 		throw DevaICE( "Invalid 'load' instruction: invalid argument type; must be a variable." );
 	DevaObject* var = find_symbol( obj );
 	if( !var )
-		throw DevaRuntimeException( "Invalid argument to 'load' instruction: variable not found." );
+		throw DevaRuntimeException( boost::format( "Invalid argument to 'load' instruction: variable '%1% not found." ) % obj.name );
 	stack.push_back( *var );
 }
 // 3 store a variable from the stack to memory
@@ -468,7 +468,7 @@ void Executor::Store( Instruction const & inst )
 	{
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
-			throw DevaRuntimeException( "Reference to unknown variable." );
+			throw DevaRuntimeException( boost::format( "Reference to unknown variable '%1%." ) % rhs.name );
 		rhs = *ob;
 	}
 	// if the rhs is an offset, it could be a function, try to get it from the
@@ -483,7 +483,7 @@ void Executor::Store( Instruction const & inst )
 
 	// verify the lhs is a variable (sym_unknown)
 	if( lhs.Type() != sym_unknown )
-		throw DevaRuntimeException( "Attempting to assign a value into a non-variable l-value." );
+		throw DevaRuntimeException( boost::format( "Attempting to assign a value into a non-variable l-value '%1%." ) % lhs.name );
 	if( inst.args.size() == 1 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
 	{
 		DevaObject* ob = new DevaObject( lhs.name, rhs );
@@ -548,9 +548,6 @@ void Executor::Defarg( Instruction const & inst )
 		else
 			return;
 	}
-	// TODO: stack *can* be empty if this is a default arg
-	if( stack.size() < 1 )
-		throw DevaRuntimeException( "Invalid 'defarg' opcode, no data on stack." );
 
 	// if there are no args left, use the default
 	DevaObject o;
@@ -564,6 +561,8 @@ void Executor::Defarg( Instruction const & inst )
 	// otherwise get it from the stack
 	else
 	{
+		if( stack.size() < 1 )
+			throw DevaRuntimeException( "Invalid 'defarg' opcode, no data on stack." );
 		// pop the top of the stack and put it in the symbol table with the name of
 		// the argument that is being defined
 		o = stack.back();
@@ -578,14 +577,14 @@ void Executor::Defarg( Instruction const & inst )
 	{
 		DevaObject *var = find_symbol( o );
 		if( !var )
-			throw DevaRuntimeException( "Undefined variable used as function argument." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as function argument." ) % o.name );
 		o = *var;
 	}
 	// check for the symbol in the immediate (current) scope and make sure
 	// we're not redef'ing the same argument (shouldn't happen, the semantic
 	// checker looks for this)
 	if( current_scopes->back()->count( inst.args[0].name ) != 0 )
-		throw DevaICE( "Argument with this name already exists." );
+		throw DevaICE( boost::format( "Argument with the name '%1%' already exists." ) % inst.args[0].name );
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
 	current_scopes->AddObject( val );
 }
@@ -644,7 +643,7 @@ void Executor::New_vec( Instruction const & inst )
 			{
 				o = find_symbol( ob );
 				if( !o )
-					throw DevaRuntimeException( "Invalid object used in vector initializer." );
+					throw DevaRuntimeException( boost::format( "Invalid object '%1%' used in vector initializer." ) % ob.name );
 				ob = *o;
 			}
 			stack.pop_back();
@@ -745,7 +744,7 @@ void Executor::Tbl_load( Instruction const & inst )
 		{
 			DevaObject* o = find_symbol( table );
 			if( !o )
-				throw DevaRuntimeException( "Invalid object for slice operation." );
+				throw DevaRuntimeException( boost::format( "Invalid object '%1%' for slice operation." ) % table.name );
 			table = *o;
 		}
 		if( table.Type() != sym_vector && table.Type() != sym_string )
@@ -846,7 +845,7 @@ void Executor::Tbl_load( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( idxkey );
 		if( !o )
-			throw DevaRuntimeException( "Invalid type for index/key." );
+			throw DevaRuntimeException( boost::format( "'%1%' Invalid type for index/key." ) % idxkey.name );
 		idxkey = *o;
 	}
 	// find the map/vector from the current symbol table (namespace)
@@ -879,7 +878,7 @@ void Executor::Tbl_load( Instruction const & inst )
 					fcn_mod += vecmap.name;
 					obj = find_symbol( DevaObject( fcn_mod, sym_unknown ), ns );
 					if( !obj )
-						throw DevaRuntimeException( "Attempt to reference undefined object in namespace." );
+						throw DevaRuntimeException( boost::format( "Attempt to reference undefined object '%1%' in namespace '%2%'." ) % fcn_mod % vecmap.name );
 				}
 				// push it onto the stack as our return value
 				DevaObject o( *obj );
@@ -927,7 +926,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				// table == map
 				// look up 'key' in the map built-ins
 				if( !is_map_builtin( key ) )
-					throw DevaRuntimeException( "Invalid method or field. No such item found." );
+					throw DevaRuntimeException( boost::format( "Invalid method or field '%1%'. No such item found." ) % idxkey.str_val );
 				// push the map as an argument
 				stack.push_back( *table );
 				// push a fcn with 'key' as its name (it's a builtin, so the offset
@@ -982,7 +981,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				// table == map
 				// look up 'key' in the map built-ins
 				if( !is_map_builtin( key ) )
-					throw DevaRuntimeException( "Invalid method or field. No such item found." );
+					throw DevaRuntimeException( boost::format( "Invalid method or field '%1%'. No such item found." ) % idxkey.str_val );
 				// push the map as an argument
 				stack.push_back( *table );
 				// push a fcn with 'key' as its name (it's a builtin, so the offset
@@ -1018,7 +1017,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			// table == vector
 			// look up 'key' in the vector built-ins
 			if( !is_vector_builtin( key ) )
-				throw DevaRuntimeException( "Not a valid method on type 'vector'." );
+				throw DevaRuntimeException( boost::format( "'%1%' is not a valid method on type 'vector'." ) % idxkey.str_val );
 			// push the vector as an argument
 			stack.push_back( *table );
 			// push a fcn with 'key' as its name (it's a builtin, so the offset
@@ -1091,7 +1090,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				// table == map
 				// look up 'key' in the map built-ins
 				if( !is_map_builtin( key ) )
-					throw DevaRuntimeException( "Invalid map key or method. No such item found." );
+					throw DevaRuntimeException( boost::format( "'%1%': invalid map key or method. No such item found." ) % idxkey.str_val );
 				// push the map as an argument
 				stack.push_back( *table );
 				// push a fcn with 'key' as its name (it's a builtin, so the offset
@@ -1118,7 +1117,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			// table == string
 			// look up 'key' in the string built-ins
 			if( !is_string_builtin( key ) )
-				throw DevaRuntimeException( "Not a valid method on type 'string'." );
+				throw DevaRuntimeException( boost::format( "'%1%' is not a valid method on type 'string'." ) % idxkey.str_val );
 			// push the string as an argument
 			stack.push_back( *table );
 			// push a fcn with 'key' as its name (it's a builtin, so the offset
@@ -1168,7 +1167,7 @@ void Executor::Tbl_store( Instruction const & inst )
 		{
 			DevaObject* o = find_symbol( val );
 			if( !o )
-				throw DevaRuntimeException( "Invalid type for operand to a vector store operation." );
+				throw DevaRuntimeException( boost::format( "'%1%': invalid operand to a vector store operation." ) % val.name );
 			val = *o;
 		}
 
@@ -1226,7 +1225,7 @@ void Executor::Tbl_store( Instruction const & inst )
 		{
 			DevaObject* o = find_symbol( table );
 			if( !o )
-				throw DevaRuntimeException( "Invalid object for slice assignment." );
+				throw DevaRuntimeException( boost::format( "Invalid object '%1%' for slice assignment." ) % table.name );
 			table = *o;
 		}
 		if( table.Type() != sym_vector )
@@ -1300,7 +1299,7 @@ void Executor::Tbl_store( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( val );
 		if( !o )
-			throw DevaRuntimeException( "Invalid type for operand to a vector store operation." );
+			throw DevaRuntimeException( boost::format( "'%1%': invalid type for operand to a vector store operation." ) % val.name );
 		val = *o;
 	}
 	// if the index/key is a variable, look it up
@@ -1308,7 +1307,7 @@ void Executor::Tbl_store( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( idxkey );
 		if( !o )
-			throw DevaRuntimeException( "Invalid type for index/key." );
+			throw DevaRuntimeException( boost::format( "'%1%': invalid type for index/key." ) % idxkey.name );
 		idxkey = *o;
 	}
 	// find the map/vector from the symbol table
@@ -1407,7 +1406,7 @@ void Executor::Jmpf( Instruction const & inst )
 	{
 		DevaObject* var = find_symbol( o );
 		if( !var )
-			throw DevaRuntimeException( "Undefined variable referenced in jmpf instruction." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' referenced in jmpf instruction." ) % o.name );
 		o = *var;
 	}
 	// if it evaluates to 'true', return
@@ -1433,14 +1432,14 @@ void Executor::Eq( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in equality comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in equality comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in equality comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1473,14 +1472,14 @@ void Executor::Neq( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in neq comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in neq comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in neq comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in neq comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1513,14 +1512,14 @@ void Executor::Lt( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in lt comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in lt comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in lt comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in lt comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1550,14 +1549,14 @@ void Executor::Lte( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in lte comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in lte comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in lte comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in lte comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1587,14 +1586,14 @@ void Executor::Gt( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in gt comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in gt comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in gt comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in gt comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1624,14 +1623,14 @@ void Executor::Gte( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in gte comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in gte comparision." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in gte comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in gte comparision." ) % rhs.name );
 		rhs = *o;
 	}
 	// if they are the same type, compare them and push the (boolean) result
@@ -1661,14 +1660,14 @@ void Executor::Or( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in 'or' instruction." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'or' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in 'or' instruction." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'or' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	// if either value is true, push 'true' onto the stack
@@ -1697,14 +1696,14 @@ void Executor::And( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in 'and' instruction." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'and' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	if( rhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as right-hand operand in 'and' instruction." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'and' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	// if both values are true, push 'true' onto the stack
@@ -1729,7 +1728,7 @@ void Executor::Neg( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( op );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as operand in 'negate' operation." ) % op.name  );
 		op = *o;
 	}
 	// if it's not a number now, error
@@ -1754,7 +1753,7 @@ void Executor::Not( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( op );
 		if( !o )
-			throw DevaRuntimeException( "Undefined variable used as left-hand operand in equality comparision." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as operand in 'not' operation." ) % op.name );
 		op = *o;
 	}
 	// push the inverse of the operand
@@ -1775,14 +1774,14 @@ void Executor::Add( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Right-hand operand for Add operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'add' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	if( lhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Left-hand operand for Add operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'add' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	// do the add
@@ -1820,14 +1819,14 @@ void Executor::Sub( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Right-hand operand for subtract operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'subtract' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	if( lhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Left-hand operand for subtract operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'subtract' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	// do the subtraction
@@ -1856,14 +1855,14 @@ void Executor::Mul( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Right-hand operand for multiply operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'multiply' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	if( lhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Left-hand operand for multiply operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'multiply' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	// do the multiplication
@@ -1892,14 +1891,14 @@ void Executor::Div( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Right-hand operand for divide operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'divide' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	if( lhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Left-hand operand for divide operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'divide' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	// do the division
@@ -1928,14 +1927,14 @@ void Executor::Mod( Instruction const & inst )
 	{
 		DevaObject* o = find_symbol( rhs );
 		if( !o )
-			throw DevaRuntimeException( "Right-hand operand for modulus operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as right-hand operand in 'modulus' instruction." ) % rhs.name );
 		rhs = *o;
 	}
 	if( lhs.Type() == sym_unknown )
 	{
 		DevaObject* o = find_symbol( lhs );
 		if( !o )
-			throw DevaRuntimeException( "Left-hand operand for modulus operation not found in symbol table." );
+			throw DevaRuntimeException( boost::format( "Undefined variable '%1%' used as left-hand operand in 'modulus' instruction." ) % lhs.name );
 		lhs = *o;
 	}
 	// do the modulus
@@ -1962,7 +1961,7 @@ void Executor::Output( Instruction const & inst )
 	{
 		o = find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found in function call." );
+			throw DevaRuntimeException( boost::format( "Symbol '%1%' not found in function call." ) % obj.name );
 	}
 	if( !o )
 		o = &obj;
@@ -2046,7 +2045,7 @@ void Executor::Call( Instruction const & inst )
 			// look up the name in the symbol table
 			fcn = find_symbol( inst.args[0] );
 			if( !fcn )
-				throw DevaRuntimeException( "Call made to undefined function." );
+				throw DevaRuntimeException( boost::format( "Call made to undefined function '%1%'." ) % inst.args[0].name );
 
             if( fcn->Type() == sym_class )
                 throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
@@ -2311,9 +2310,10 @@ void Executor::destruct_base_classes( DevaObject* ob, DevaObject & instance )
 			method += "@";
 			method += i->name;
 			if( i->Type() != sym_class )
-				// TODO: user could potentially have caused this via
-				// changing/setting the '__bases__' field
-				throw DevaICE( "A non-class was found in a base class list." );
+				// user could potentially have caused this via
+				// changing/setting the '__bases__' field, but it still causes a
+				// critical error...
+				throw DevaCriticalException( "A non-class was found in a base class list." );
 			if( i->map_val->find( DevaObject( "", method ) ) != i->map_val->end() )
 			{
 				// push 'self'
@@ -2528,7 +2528,7 @@ void Executor::New_class( Instruction const & inst )
 			throw DevaICE( "Invalid base class for class definition." );
 		ob = find_symbol( base );
 		if( !ob )
-			throw DevaRuntimeException( "Invalid base class name for class definition." );
+			throw DevaRuntimeException( boost::format( "Invalid base class name '%1%' for class definition." ) % base.name );
 		// ensure it's a class
 		if( ob->Type() != sym_class )
 			throw DevaRuntimeException( "Invalid base class type for class definition." );
@@ -2583,7 +2583,7 @@ void Executor::New_instance( Instruction const & inst )
 	{
 		ob = find_symbol( cls );
 		if( !ob )
-			throw DevaRuntimeException( "Invalid class name for new object." );
+			throw DevaRuntimeException( boost::format( "Invalid class name '%1%' for new object." ) % cls.name );
 	}
 	else
 		ob = new DevaObject( cls );
@@ -2895,7 +2895,7 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 	// look up the name in the symbol table
 	fcn = find_symbol( DevaObject( fcn_name.c_str(), sym_unknown ) );
 	if( !fcn )
-		throw DevaRuntimeException( "Call made to undefined function." );
+		throw DevaRuntimeException( boost::format( "Call made to undefined function '%1%'." ) % fcn_name );
 
 	// set the static that tracks the number of args processed
 	args_on_stack = num_args;

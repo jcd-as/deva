@@ -3,15 +3,15 @@
 # bubble sort the array 'a'
 def bubble_sort( a )
 {
-	len = length( a );
-	swap = true;
+	local len = length( a );
+	local swap = true;
 	while( swap )
 	{
 		swap = false;
-		i = len-1;
+		local i = len-1;
 		while( i >= 0 )
 		{
-			j = 1;
+			local j = 1;
 			while( j <= i )
 			{
 				if( a[j-1] > a[j] )

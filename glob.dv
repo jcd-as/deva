@@ -74,8 +74,7 @@ def glob0( dirname, filename )
 def fnmatch( names, pattern )
 {
     local result = [];
-    local res = null;
-	res = glob_to_re( pattern );
+	local res = glob_to_re( pattern );
 	local exp = null;
 	exp = new regex.regex( res );
     for( name in names )

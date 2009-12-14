@@ -34,11 +34,13 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <algorithm>
+
+#include <boost/format.hpp>
 
 #include "compile.h"
 #include "semantics.h"
 #include "fileformat.h"
-
 
 // helpers
 //////////////////////////////////////////////////////////////////////
@@ -699,6 +701,28 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	}
 }
 
+// helpers to generate no-arg constructors/destructors
+void generate_constructor( const string name, InstructionStream & is )
+{
+	is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
+	is.push( Instruction( op_enter ) );
+	is.push( Instruction( op_defarg, DevaObject( "self", sym_unknown ) ) );
+	is.push( Instruction( op_defarg ) );
+	is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+	is.push( Instruction( op_return ) );
+	is.push( Instruction( op_endf ) );
+}
+void generate_destructor( const string name, InstructionStream & is )
+{
+	is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
+	is.push( Instruction( op_enter ) );
+	is.push( Instruction( op_defarg, DevaObject( "self", sym_unknown ) ) );
+	is.push( Instruction( op_defarg ) );
+	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+	is.push( Instruction( op_return ) );
+	is.push( Instruction( op_endf ) );
+}
+
 // static for tracking parents to classes
 static vector<DevaObject> parents;
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
@@ -881,6 +905,25 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		{
 			generate_IL_for_node( i->children.begin() + c, is, i, c );
 		}
+
+		// if there is no constructor or destructor, create them
+		string constructor( "new@" );
+		constructor += class_name;
+		string destructor( "delete@" );
+		destructor += class_name;
+		vector<string>::iterator it = find( method_names.begin(), method_names.end(), constructor );
+		if( it == method_names.end() )
+		{
+			generate_constructor( constructor, is );
+			method_names.push_back( constructor );
+		}
+		it = find( method_names.begin(), method_names.end(), destructor );
+		if( it == method_names.end() )
+		{
+			generate_destructor( destructor, is );
+			method_names.push_back( destructor );
+		}
+
 		// add all the method names created to the class object
 		for( vector<string>::iterator i = method_names.begin(); i != method_names.end(); ++i )
 		{
