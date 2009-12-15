@@ -66,6 +66,7 @@ void do_string_ispunct( Executor *ex );
 void do_string_iscntrl( Executor *ex );
 void do_string_isprint( Executor *ex );
 void do_string_isxdigit( Executor *ex );
+void do_string_format( Executor *ex );
 
 // tables defining the built-in function names...
 static const string string_builtin_names[] = 
@@ -97,6 +98,7 @@ static const string string_builtin_names[] =
 	string( "string_iscntrl" ),
 	string( "string_isprint" ),
 	string( "string_isxdigit" ),
+	string( "string_format" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*string_builtin_fcn)(Executor*);
@@ -129,6 +131,7 @@ string_builtin_fcn string_builtin_fcns[] =
 	do_string_iscntrl,
 	do_string_isprint,
 	do_string_isxdigit,
+	do_string_format,
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
@@ -1473,4 +1476,64 @@ void do_string_isxdigit( Executor *ex )
 
 	// return the copy
 	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_string_format( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'format'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'format'." );
+
+	// get the format_args vector off the stack next
+	DevaObject args = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* v = NULL;
+	if( args.Type() == sym_unknown )
+	{
+		v = ex->find_symbol( args );
+		if( !v )
+			throw DevaRuntimeException( "Symbol not found for 'format_args' parameter in call to string built-in method 'format'." );
+	}
+	if( !v )
+		v = &args;
+
+	// ensure it's a vector
+	if( v->Type() != sym_vector )
+		throw DevaRuntimeException( "Vector expected for 'format_args' parameter in call to string built-in method 'format'." );
+
+	// format the string using boost's format library
+	boost::format formatter;
+	try
+	{
+		formatter = boost::format( str.str_val );
+		for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+		{
+			formatter % *i;
+		}
+	}
+	catch( boost::io::bad_format_string & e )
+	{
+		throw DevaRuntimeException( "The format of the string in string built-in method 'format' was invalid." );
+	}
+	catch( boost::io::too_many_args & e )
+	{
+		throw DevaRuntimeException( "The format of the string in string built-in method 'format' referred to fewer parameters than were passed in the parameter vector." );
+	}
+	catch( boost::io::too_few_args & e )
+	{
+		throw DevaRuntimeException( "The format of the string in string built-in method 'format' referred to more parameters than were passed in the parameter vector." );
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", boost::str( formatter ) ) );
 }

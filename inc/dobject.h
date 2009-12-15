@@ -26,23 +26,24 @@
 // created by jcs, October 03, 2009 
 
 // TODO:
-// * reference counting
-// * types for C function and UserCode (C "void*")block?
-// * type for User-Defined Types (classes) ??
+// * 
 
 #ifndef __DOBJECT_H__
 #define __DOBJECT_H__
+
+#include <vector>
+#include <iostream>
 
 #include "opcodes.h"
 #include "symbol.h"
 #include "types.h"
 #include "smart_ptr.h"
-#include <vector>
 
 // typedefs for the vector and map types that deva supports
 class DevaObject;
 typedef vector<DevaObject> DOVector;
 typedef map<DevaObject, DevaObject> DOMap;
+ostream & operator << ( ostream & os, DevaObject & obj );
 
 // the basic piece of data stored on the data stack
 struct DevaObject : public SymbolInfo
@@ -103,6 +104,14 @@ struct DevaObject : public SymbolInfo
 	DevaObject& operator = ( const DevaObject & o );
 	bool operator < ( const DevaObject & rhs ) const;
 	bool operator == ( const DevaObject & rhs ) const;
+
+	// cast operators
+	operator const double ();
+	operator const int ();
+	operator const string ();
+	operator const void* ();
+	operator const size_t ();
+	operator const bool ();
 
 	// size of the object on *disk*
 	long Size() const;

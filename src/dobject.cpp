@@ -410,6 +410,56 @@ bool DevaObject::operator == ( const DevaObject & rhs ) const
 	}
 }
 
+
+// cast operators
+DevaObject::operator const double ()
+{
+	if( type != sym_number )
+		throw DevaInvalidCast( "Object cannot be cast to double." );
+	else
+		return num_val;
+}
+
+DevaObject::operator const int ()
+{
+	if( type != sym_number )
+		throw DevaInvalidCast( "Object cannot be cast to integer." );
+	else
+		return (int)num_val;
+}
+
+DevaObject::operator const string ()
+{
+	if( type != sym_string )
+		throw DevaInvalidCast( "Object cannot be cast to string." );
+	else
+		return string( str_val );
+}
+
+DevaObject::operator const void* ()
+{
+	if( type != sym_native_obj )
+		throw DevaInvalidCast( "Object cannot be cast to native value." );
+	else
+		return nat_obj_val;
+}
+
+DevaObject::operator const size_t ()
+{
+	if( type != sym_size && type != sym_address )
+		throw DevaInvalidCast( "Object cannot be cast to size or address." );
+	else
+		return sz_val;
+}
+
+DevaObject::operator const bool ()
+{
+	if( type != sym_boolean )
+		throw DevaInvalidCast( "Object cannot be cast to boolean." );
+	else
+		return bool_val;
+}
+
 // size of the object on *disk*
 long DevaObject::Size() const
 {
@@ -441,5 +491,107 @@ long DevaObject::Size() const
 	default:
 		return sz;
 	}
+}
+
+// operator to dump an DevaObject to an iostreams stream
+ostream & operator << ( ostream & os, DevaObject & obj )
+{
+	switch( obj.Type() )
+	{
+		case sym_number:
+			os << obj.num_val;
+			break;
+		case sym_string:
+			os << obj.str_val ;
+			break;
+		case sym_boolean:
+			if( obj.bool_val )
+				os << "true";
+			else
+				os << "false";
+			break;
+		case sym_null:
+			os << "null";
+			break;
+		case sym_map:
+			{
+			// dump map contents
+			os << "{";
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
+			break;
+			}
+		case sym_vector:
+			{
+			// dump vector contents
+			os << "[";
+			smart_ptr<DOVector> vec( obj.vec_val );
+			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
+			{
+				DevaObject val = (*it);
+				os << val;
+			   	if( it+1 != vec->end() )
+				   os << ", ";
+			}
+			os << "]";
+			break;
+			}
+		case sym_address:
+		case sym_size:
+			os << obj.name << ", address/sized-value = " << obj.sz_val;
+			break;
+		case sym_native_obj:
+			os << obj.name << ", native object = " << obj.nat_obj_val;
+			break;
+		case sym_function_call:
+			os << "function_call: '" << obj.name << "'";
+			break;
+		case sym_unknown:
+			os << "unknown: '" << obj.name << "'";
+			break;
+		case sym_class:
+			os << "class: '" << obj.name << "' = {";
+			{
+			// dump map contents
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
+			break;
+			}
+		case sym_instance:
+			os << "instance: '" << obj.name << "' = {";
+			{
+			// dump map contents
+			smart_ptr<DOMap> mp( obj.map_val );
+			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
+			{
+				DevaObject key = (*it).first;
+				DevaObject val = (*it).second;
+				os << key << ":" << val;
+				if( ++it != mp->end() )
+					os << ", ";
+			}
+			os << "}";
+			break;
+			}
+		default:
+			os << "ERROR: unknown type";
+	}
+	return os;
 }
 

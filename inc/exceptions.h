@@ -61,7 +61,7 @@ class DevaStackException : public DevaRuntimeException
 public:
 	DevaStackException( const char* const s ) : DevaRuntimeException( s )
 	{}
-	DevaStackException( boost::format fmt ) : DevaRuntimeException( str( fmt ).c_str() )
+	DevaStackException( boost::format fmt ) : DevaRuntimeException( fmt )
 	{}
 };
 
@@ -82,7 +82,17 @@ class DevaICE : public DevaRuntimeException
 public:
 	DevaICE( const char* const s ) : DevaRuntimeException( s )
 	{}
-	DevaICE( boost::format fmt ) : DevaRuntimeException( str( fmt ).c_str() )
+	DevaICE( boost::format fmt ) : DevaRuntimeException( fmt )
+	{}
+};
+
+// used by DevaObjects cast operators
+class DevaInvalidCast : public DevaRuntimeException
+{
+public:
+	DevaInvalidCast( const char* const s ) : DevaRuntimeException( s )
+	{}
+	DevaInvalidCast( boost::format fmt ) : DevaRuntimeException( fmt )
 	{}
 };
 

@@ -1,0 +1,11 @@
+[]
+.*[abc]$
+.[xyz?].*\.dv.$
+\\\
+./c.tst
+./b.tst
+./a.tst
+[./c.tst, ./b.tst, ./a.tst]
+[/home/jcs/src/deva/tests/53/input.dv]
+[d/a.a, d/a.b, d/a.c]
+[/home/jcs/src/deva/tests/53/baseline]

@@ -66,6 +66,7 @@ void do_stderr( Executor *ex );
 void do_exit( Executor *ex );
 void do_num( Executor *ex );
 void do_range( Executor *ex );
+void do_format( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -98,6 +99,7 @@ static const string builtin_names[] =
 	string( "exit" ),
 	string( "num" ),
 	string( "range" ),
+	string( "format" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -131,6 +133,7 @@ builtin_fcn builtin_fcns[] =
 	do_exit,
 	do_num,
 	do_range,
+	do_format,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1529,4 +1532,78 @@ void do_range( Executor *ex )
 	ex->stack.pop_back();
 
 	ex->stack.push_back( DevaObject( "", vec ) );
+}
+
+void do_format( Executor *ex )
+{
+	if( Executor::args_on_stack != 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'format'." );
+
+	// get the format string off the stack first 
+	DevaObject obj = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* o = NULL;
+	if( obj.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( obj );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for 'format_string' argument in call to built-in function 'format'." );
+	}
+	if( !o )
+		o = &obj;
+
+	// ensure it's a string
+	if( o->Type() != sym_string )
+		throw DevaRuntimeException( "String expected for 'format_string' parameter in call to built-in function 'format'." );
+
+	// get the format_args vector off the stack next
+	DevaObject args = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* v = NULL;
+	if( args.Type() == sym_unknown )
+	{
+		v = ex->find_symbol( args );
+		if( !v )
+			throw DevaRuntimeException( "Symbol not found for 'format_args' parameter in call to built-in function 'format'." );
+	}
+	if( !v )
+		v = &args;
+
+	// ensure it's a vector
+	if( v->Type() != sym_vector )
+		throw DevaRuntimeException( "Vector expected for 'format_args' parameter in call to built-in function 'format'." );
+
+	string ret;
+
+	// format the string using boost's format library
+	boost::format formatter;
+	try
+	{
+		formatter = boost::format( o->str_val );
+		for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+		{
+			formatter % *i;
+		}
+	}
+	catch( boost::io::bad_format_string & e )
+	{
+		throw DevaRuntimeException( "The format string passed to built-in function 'format' was invalid." );
+	}
+	catch( boost::io::too_many_args & e )
+	{
+		throw DevaRuntimeException( "The format string passed to built-in function 'format' referred to fewer parameters than were passed in the parameter vector." );
+	}
+	catch( boost::io::too_few_args & e )
+	{
+		throw DevaRuntimeException( "The format string passed to built-in function 'format' referred to more parameters than were passed in the parameter vector." );
+	}
+	ret = str( formatter );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", ret ) );
 }

@@ -29,7 +29,7 @@ def glob( path )
     for( dn in dirs )
     {
         for( name in glob_in_dir( dn, filename ) )
-            ret.append( os.joinpaths( [dn, name] ) );
+            ret.append( name );
     }
     return ret;
 }
@@ -49,8 +49,8 @@ def glob1( dirname, pattern )
         dirname = os.getcwd();
     
     local names = os.dirwalk( dirname, false );
-    if( pattern[0] != '.' )
-        names = names.filter( glob1_helper );
+	# dirwalk will return values with dirname included (full paths)
+	pattern = os.joinpaths( [dirname, pattern] );
     return fnmatch( names, pattern );
 }
 

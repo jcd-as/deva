@@ -35,8 +35,6 @@
 
 using namespace std;
 
-// operator to dump an DevaObject to an iostreams stream
-ostream & operator << ( ostream & os, DevaObject & obj );
 // operator to dump an Opcode to an iostreams stream
 ostream & operator << ( ostream & os, Opcode & op );
 
