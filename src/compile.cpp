@@ -701,30 +701,74 @@ void walk_children_for_method_call( iter_t i, InstructionStream & is )
 	}
 }
 
+// static for tracking parents to classes
+static vector<DevaObject> parents;
 // helpers to generate no-arg constructors/destructors
-void generate_constructor( const string name, InstructionStream & is )
+void generate_constructor( const string name, iter_t const & i, InstructionStream & is )
 {
 	is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
 	is.push( Instruction( op_enter ) );
 	is.push( Instruction( op_defarg, DevaObject( "self", sym_unknown ) ) );
 	is.push( Instruction( op_defarg ) );
+
+	// add code to call the base-class constructors...
+	// for each parent
+	for( vector<DevaObject>::iterator it = parents.begin(); it != parents.end(); ++it )
+	{
+		// push the return address
+		int ret_addr_loc = is.size();
+		is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+		// push self
+		is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+		// force a line num for calls
+		generate_line_num( i, is, true );
+		// call the base constructor
+		string fcn( "new@" );
+		fcn += it->name;
+		is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)0, false ) ) );
+		// back-patch the return address
+		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
+		// pop the return value, 'new' can't return anything
+		is.push( Instruction( op_pop ) );
+	}
+	// return 'self'
 	is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
 	is.push( Instruction( op_return ) );
 	is.push( Instruction( op_endf ) );
 }
-void generate_destructor( const string name, InstructionStream & is )
+void generate_destructor( const string name, iter_t const & i, InstructionStream & is )
 {
 	is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
 	is.push( Instruction( op_enter ) );
 	is.push( Instruction( op_defarg, DevaObject( "self", sym_unknown ) ) );
 	is.push( Instruction( op_defarg ) );
+
+	// add code to call the base-class destructors...
+	// for each parent (in reverse order)
+	for( vector<DevaObject>::reverse_iterator it = parents.rbegin(); it != parents.rend(); ++it )
+	{
+		// push the return address
+		int ret_addr_loc = is.size();
+		is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+		// push self
+		is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+		// force a line num for calls
+		generate_line_num( i, is, true );
+		// call the base destructor
+		string fcn( "delete@" );
+		fcn += it->name;
+		is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)0, false ) ) );
+		// back-patch the return address
+		is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
+		// pop the return value, 'new' can't return anything
+		is.push( Instruction( op_pop ) );
+	}
+	// return null
 	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 	is.push( Instruction( op_return ) );
 	is.push( Instruction( op_endf ) );
 }
 
-// static for tracking parents to classes
-static vector<DevaObject> parents;
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
 {
 	///////////////////////////////////////
@@ -844,6 +888,30 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// third child is statement|compound_statement, process it
 		generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 
+		// if this is a destructor ("delete" method), add code to call the
+		// base-class destructors...
+		if( in_class_def && name == del )
+		{
+			// for each parent, in reverse order
+			for( vector<DevaObject>::reverse_iterator it = parents.rbegin(); it != parents.rend(); ++it )
+			{
+				// push the return address
+				int ret_addr_loc = is.size();
+				is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+				// push self
+				is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+				// force a line num for calls
+				generate_line_num( i, is, true );
+				// call the base destructor
+				string fcn( "delete@" );
+				fcn += it->name;
+				is.push( Instruction( op_call, DevaObject( fcn.c_str(), sym_function_call ), DevaObject( "", (size_t)0, false ) ) );
+				// back-patch the return address
+				is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
+				// pop the return value, 'new' can't return anything
+				is.push( Instruction( op_pop ) );
+			}
+		}
 		// if no return statement was generated, we need to generate one
 		bool returned = false;
 		iter_t iter = i->children.begin() + 2;
@@ -914,13 +982,13 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		vector<string>::iterator it = find( method_names.begin(), method_names.end(), constructor );
 		if( it == method_names.end() )
 		{
-			generate_constructor( constructor, is );
+			generate_constructor( constructor, i, is );
 			method_names.push_back( constructor );
 		}
 		it = find( method_names.begin(), method_names.end(), destructor );
 		if( it == method_names.end() )
 		{
-			generate_destructor( destructor, is );
+			generate_destructor( destructor, i, is );
 			method_names.push_back( destructor );
 		}
 

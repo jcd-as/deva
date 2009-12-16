@@ -2291,45 +2291,6 @@ void Executor::Enter( Instruction const & inst )
 	next_enter_is_from_call = -1;
 }
 
-
-// walk the base classes of an object and call destructors on them
-void Executor::destruct_base_classes( DevaObject* ob, DevaObject & instance )
-{
-	// ensure it's a class
-	if( ob->Type() != sym_class )
-		throw DevaRuntimeException( "Invalid class type for new object." );
-
-	// call the base class (no-arg) constructors
-	DOMap::iterator it = ob->map_val->find( DevaObject( "", string( "__bases__" ) ) );
-	if( it != ob->map_val->end() )
-	{
-		for( DOVector::reverse_iterator i = it->second.vec_val->rbegin(); i != it->second.vec_val->rend(); ++i )
-		{
-			// call this class' constructor first
-			string method( "delete" );
-			method += "@";
-			method += i->name;
-			if( i->Type() != sym_class )
-				// user could potentially have caused this via
-				// changing/setting the '__bases__' field, but it still causes a
-				// critical error...
-				throw DevaCriticalException( "A non-class was found in a base class list." );
-			if( i->map_val->find( DevaObject( "", method ) ) != i->map_val->end() )
-			{
-				// push 'self'
-				stack.push_back( instance );
-				// call the 'new' method for this class
-				ExecuteDevaFunction( method, 1 );
-				// ignore the return value from 'new'. not allowed
-				stack.pop_back();
-			}
-
-			// then walk the base classes
-			destruct_base_classes( &(*i), instance );
-		}
-	}
-}
-
 // 35 leave scope
 void Executor::Leave( Instruction const & inst )
 {
@@ -2375,9 +2336,6 @@ void Executor::Leave( Instruction const & inst )
                     ExecuteDevaFunction( del, 1 );
                     // ignore the return value
                     stack.pop_back();
-
-                    // destroy the parent objects
-                    destruct_base_classes( cls, *instance );
                 }
             }
         }
@@ -2957,8 +2915,6 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
 		if( inst.op == op_return && done )
 			break;
 	}
-
-	// TODO: anything? any validation we can do? stack checking?
 }
 
 void Executor::StartGlobalScope()
@@ -3034,8 +2990,8 @@ void Executor::RunText( const char* const text )
 		// fix-up the offsets into actual machine addresses
 		FixupOffsets( cd );
 		
-		// run the code
-		RunCode( cd );
+		// run the code, ignoring breakpoints
+		RunCode( cd, false );
 
 		if( stack.size() != stack_depth )
 			throw DevaStackException( "Evaluated code has compromised the stack. Program state is bad." );
@@ -3264,14 +3220,6 @@ int Executor::Run( bool stop_at_breakpoints /*= true*/ )
 				return -1;
 			else if( stop_at_breakpoints )
 				return line;
-		}
-
-		// check for breakpoints
-		if( inst.op == op_line_num )
-		{
-			pair<string, int> p = make_pair( string( inst.args[0].str_val ), inst.args[1].sz_val );
-			if( find( breakpoints.begin(), breakpoints.end(), p ) != breakpoints.end() )
-				return inst.args[1].sz_val;
 		}
 	}
 }
