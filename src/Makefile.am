@@ -45,7 +45,7 @@ devac_SOURCES = \
 	dobject.cpp \
 	util.cpp
 devac_CPPFLAGS = -I $(top_srcdir)/inc
-devac_LDFLAGS = -g -lboost_program_options -lboost_filesystem
+devac_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options -lboost_filesystem
 #devac_LDFLAGS = -g -lboost_program_options-mt -lboost_filesystem-mt
 
 devadb_SOURCES= \
@@ -76,6 +76,6 @@ devadb_LDFLAGS = $(MY_LDFLAGS) -g -lboost_program_options -lboost_filesystem -lb
 
 test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
 test_CPPFLAGS = -I $(top_srcdir)/inc
-test_LDFLAGS = -g -lboost_filesystem
+test_LDFLAGS = $(MY_LDFLAGS) -g -lboost_filesystem
 #test_LDFLAGS = -g -lboost_filesystem-mt
 

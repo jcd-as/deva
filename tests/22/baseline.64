@@ -162,5 +162,6 @@ call : , address/sized-value = 0 ;
 pop : 
 push : null ; 
 return : 
+endf : 
 halt : 
 compiled input.dv successfully
