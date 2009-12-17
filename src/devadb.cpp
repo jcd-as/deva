@@ -29,6 +29,7 @@
 // * function breakpoints (fcn name)
 // * enable re-start: reset all state
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
+// * command to show the data stack
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/positional_options.hpp>
@@ -154,7 +155,7 @@ const char* commands[] =
 	"breakpoint",
 	"delete breakpoint",
 	"display breakpoints",
-	"restart",
+	"run",
 	"list",
 	"eval",
 	"trace",
@@ -230,8 +231,6 @@ int main( int argc, char** argv )
 			( "help", "help message" )
 			( "version,ver", "display program version" )
 			( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
-//			( "input", po::value<string>( &input ), "input filename" )
-//			( "options", "options to pass to the deva program" )
 			( "input", po::value<string>( &input ), "input filename" )
 			( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
 			;
@@ -240,7 +239,6 @@ int main( int argc, char** argv )
 		po::variables_map vm;
 		try
 		{
-//			po::store( po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run(), vm );
 			po::parsed_options parsed = po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run();
 			po::store( parsed, vm );
 		}
@@ -326,221 +324,256 @@ int main( int argc, char** argv )
 		string filepart = get_file_part( fname );
 		ReadFile( fname.c_str(), files[filepart] );
 
-		// create our execution engine object
-		Executor ex;
-
+		Executor* ex = NULL;
+		cout << "devadb " << VERSION << endl;
 		try
 		{
-			// create a global scope
-			ex.StartGlobalScope();
+			bool running = false;
 
-			// add the built-in modules
-            ex.AddAllKnownBuiltinModules();
-
-			// add the code block we just compiled
-			ex.AddCodeBlock( code );
-
-			// run
-			cout << "devadb " << VERSION << endl;
-			cout << "starting program..." << endl;
-			while( true )
+// 'run' (restart) starts HERE
+start:
 			{
-				ex.StartExecutingCode( code );
-				string input;
-				vector<string> in;
+				// create the execution engine object
+				ex = new Executor();
+
+				// create a global scope
+				ex->StartGlobalScope();
+
+				// add the built-in modules
+				ex->AddAllKnownBuiltinModules();
+
+				// add the code block we just compiled
+				// (add a copy, so we don't delete the original if/when we
+				// restart the execution engine)
+				unsigned char* dvcode = new unsigned char[code_length];
+				memcpy( (void*)dvcode, (void*)code, code_length );
+				ex->AddCodeBlock( dvcode );
+
+				ex->StartExecutingCode( dvcode );
+
+				// run
 				char c = 0;
-				int l = 1;
-				bool done = false;
-				while( !done )
+				while( true )
 				{
-					getline( cin, input );
-					if( input.length() > 0 )
+					if( running )
+						cout << "restarting program..." << endl;
+					string input;
+					vector<string> in;
+					int l = 1;
+					bool done = false;
+					while( !done )
 					{
-						in.clear();
-						split( input, in );
-						c = get_command( in[0] );
-					}
-					if( c == 0 )
-						cout << "Unknown command" << endl;
-					else
-					{
-						// otherwise, repeat the last command
-						switch( c )
+						getline( cin, input );
+						if( input.length() > 0 )
 						{
-						// 'quit'
-						case 'q':
-						case 'r':
-							done = true;
-							break;
-						// 'next'
-						case 'n':
-							l = ex.StepOver();
-							break;
-						// 'step'
-						case 's':
-							l = ex.StepInto();
-							break;
-						// 'next instruction'
-						case 'i':
+							in.clear();
+							split( input, in );
+							c = get_command( in[0] );
+						}
+						if( c == 0 )
+							cout << "Unknown command" << endl;
+						else if( !running && c != 'r' )
+						{
+							cout << "program is not running. use the 'run' command to begin." << endl;
+						}
+						else
+						{
+							// otherwise, repeat the last command
+							switch( c )
 							{
-							// StepInst returns 0 if this wasn't a linenum op
-							Instruction inst;
-							int il = ex.StepInst( inst );
-							if( il != 0 )
-								l = il;
-							cout << inst << endl;
-							}
-							break;
-						// 'continue'
-						case 'c':
-							l = ex.Run();
-							break;
-						// 'print'
-						case 'p':
-							{
-							// verify there are sufficient args
-							if( in.size() < 2 )
-							{
-								cout << "print command requires variable name or expression." << endl;
+							// 'run' (restart)
+							case 'r':
+								// start
+								if( !running )
+								{
+									cout << "starting program..." << endl;
+									running = true;
+								}
+								// restart
+								else
+									done = true;
 								break;
-							}
-							// if not a simple variable, eval the args and try printing the result
-							DevaObject* v = ex.find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
-							if( !v )
-							{
+							// 'quit'
+							case 'q':
+								done = true;
+								break;
+							// 'next'
+							case 'n':
+								l = ex->StepOver();
+								break;
+							// 'step'
+							case 's':
+								l = ex->StepInto();
+								break;
+							// 'next instruction'
+							case 'i':
+								{
+								// StepInst returns 0 if this wasn't a linenum op
+								Instruction inst;
+								int il = ex->StepInst( inst );
+								if( il != 0 )
+									l = il;
+								cout << inst << endl;
+								}
+								break;
+							// 'continue'
+							case 'c':
+								l = ex->Run();
+								break;
+							// 'print'
+							case 'p':
+								{
+								// verify there are sufficient args
+								if( in.size() < 2 )
+								{
+									cout << "print command requires variable name or expression." << endl;
+									break;
+								}
+								// if not a simple variable, eval the args and try printing the result
+								DevaObject* v = ex->find_symbol( DevaObject( in[1].c_str(), sym_unknown ) );
+								if( !v )
+								{
+									// strip the command off the input
+									size_t idx = input.find( ' ' );
+									string code( input, idx );
+									code = string( "print( " ) + code + string( " );" );
+									int stack_depth = ex->stack.size();
+									// execute the rest as code
+									char* s = new char[code.length() + 1];
+									s[code.length()] = '\0';
+									memcpy( s, code.c_str(), code.length() );
+									try
+									{
+										ex->RunText( s );
+									}
+									catch( DevaRuntimeException & e )
+									{
+										if( typeid( e ) == typeid( DevaICE ) )
+											throw;
+										cout << "Error: " << e.what() << endl;
+										cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
+									}
+								}
+								// otherwise, it is a simple var, just print it
+								else
+									cout << *v << endl;
+								}
+								break;
+							// 'breakpoint':
+							case 'b':
+								if( in.size() < 3 )
+								{
+									cout << "add breakpoint command requires filename and line number." << endl;
+									break;
+								}
+								// verify there are sufficient args
+								ex->AddBreakpoint( in[1], atoi( in[2].c_str() ) );
+								break;
+							// 'delete breakpoint':
+							case 'd':
+								if( in.size() < 2 )
+								{
+									cout << "delete breakpoint command requires index of breakpoint to remove." << endl;
+									break;
+								}
+								ex->RemoveBreakpoint( atoi( in[1].c_str() ) );
+								break;
+							// 'display breakpoints':
+							case 'y':
+								{
+								vector<pair<string, int> > bpoints = ex->GetBreakpoints();
+								cout << "breakpoints:" << endl;
+								for( int i = 0; i < bpoints.size(); ++i )
+								{
+									cout << i << ": " << bpoints[i].first << ", line " << bpoints[i].second << endl;
+								}
+								break;
+								}
+							// 'list' code:
+							case 'l':
+								{
+								// if we're in a new file, make sure we've read it for
+								// display
+								string file = ex->GetExecutingFile();
+								if( files.find( file ) == files.end() )
+									ReadFile( file.c_str(), files[file] );
+								// display 10 lines of code around the current line
+								int start = l;
+								if( start < 5 )
+									start = 0;
+								else
+									start -= 5;
+								int end = start + 10;
+								if( end > files[file].size() )
+									end = files[file].size();
+								for( int c = start; c < end; ++c )
+									ShowLine( files[file], file, c );
+								break;
+								}
+							// 'eval'
+							case 'e':
+								{
 								// strip the command off the input
 								size_t idx = input.find( ' ' );
 								string code( input, idx );
-								code = string( "print( " ) + code + string( " );" );
-								int stack_depth = ex.stack.size();
-								// execute the rest as code
+								// execute this as code
 								char* s = new char[code.length() + 1];
 								s[code.length()] = '\0';
 								memcpy( s, code.c_str(), code.length() );
 								try
 								{
-									ex.RunText( s );
+									ex->RunText( s );
 								}
 								catch( DevaRuntimeException & e )
 								{
 									if( typeid( e ) == typeid( DevaICE ) )
 										throw;
 									cout << "Error: " << e.what() << endl;
-									cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
 								}
-							}
-							// otherwise, it is a simple var, just print it
-							else
-								cout << *v << endl;
-							}
-							break;
-						// 'breakpoint':
-						case 'b':
-							if( in.size() < 3 )
-							{
-								cout << "add breakpoint command requires filename and line number." << endl;
+								break;
+								}
+							case 't':
+								ex->DumpTrace( cout, false );
 								break;
 							}
-							// verify there are sufficient args
-							ex.AddBreakpoint( in[1], atoi( in[2].c_str() ) );
-							break;
-						// 'delete breakpoint':
-						case 'd':
-							if( in.size() < 2 )
+							if( l == -1 )
 							{
-								cout << "delete breakpoint command requires index of breakpoint to remove." << endl;
+								c = 'q';
 								break;
 							}
-							ex.RemoveBreakpoint( atoi( in[1].c_str() ) );
-							break;
-						// 'display breakpoints':
-						case 'y':
-							{
-							vector<pair<string, int> > bpoints = ex.GetBreakpoints();
-							cout << "breakpoints:" << endl;
-							for( int i = 0; i < bpoints.size(); ++i )
-							{
-								cout << i << ": " << bpoints[i].first << ", line " << bpoints[i].second << endl;
-							}
-							break;
-							}
-						// 'list' code:
-						case 'l':
-							{
+
 							// if we're in a new file, make sure we've read it for
 							// display
-							string file = ex.GetExecutingFile();
-							if( files.find( file ) == files.end() )
-								ReadFile( file.c_str(), files[file] );
-							// display 10 lines of code around the current line
-							int start = l;
-							if( start < 5 )
-								start = 0;
-							else
-								start -= 5;
-							int end = start + 10;
-							if( end > files[file].size() )
-								end = files[file].size();
-							for( int c = start; c < end; ++c )
-								ShowLine( files[file], file, c );
-							break;
-							}
-						// 'eval'
-						case 'e':
+							string file = ex->GetExecutingFile();
+							if( file.length() != 0 )
 							{
-							// strip the command off the input
-							size_t idx = input.find( ' ' );
-							string code( input, idx );
-							// execute this as code
-							char* s = new char[code.length() + 1];
-							s[code.length()] = '\0';
-							memcpy( s, code.c_str(), code.length() );
-							try
-							{
-								ex.RunText( s );
+								if( files.find( file ) == files.end() )
+									ReadFile( file.c_str(), files[file] );
+								ShowLine( files[file], file, l );
 							}
-							catch( DevaRuntimeException & e )
-							{
-								if( typeid( e ) == typeid( DevaICE ) )
-									throw;
-								cout << "Error: " << e.what() << endl;
-							}
-							break;
-							}
-						case 't':
-							ex.DumpTrace( cout, false );
-							break;
 						}
-						if( l == -1 )
-							break;
-
-						// if we're in a new file, make sure we've read it for
-						// display
-						string file = ex.GetExecutingFile();
-						if( files.find( file ) == files.end() )
-							ReadFile( file.c_str(), files[file] );
-						ShowLine( files[file], file, l );
 					}
+					if( c == 'q' || c == 'r' )
+						break;
 				}
-				if( c == 'q' )
-					break;
+
+				ex->EndGlobalScope();
+
+				delete ex;
+				ex = NULL;
+
 				if( c == 'r' )
-				{
-					// TODO: restart needs to reset the scopes tables...
-					// (i.e. free and clear memory)
-					// without that, this is fairly bogus
-					ex.StartExecutingCode( code );
-					continue;
-				}
+					goto start;
+
 				cout << "program terminated. restart? (y/n)" << endl;
 				char c2 = getchar();
-				if( c2 != 'y' )
-					break;
-				// remove the newline
-				getchar();
+				if( c2 == 'y' )
+				{
+					// remove the newline
+					getchar();
+					goto start;
+				}
 			}
-
-			ex.EndGlobalScope();
 		}
 		catch( DevaRuntimeException & e )
 		{
@@ -548,9 +581,13 @@ int main( int argc, char** argv )
 				throw;
 			cout << "Error: " << e.what() << endl;
 			// dump the stack trace
-			ex.DumpTrace( cout, false );
+			if( ex )
+				ex->DumpTrace( cout, false );
 			return -1;
 		}
+
+		// free the execution engine, if it hasn't been already
+		delete ex;
 
 		// done, free the scope tables
 		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )

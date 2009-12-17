@@ -3100,14 +3100,12 @@ void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 // start executing a file, stopping before the first instruction
 void Executor::StartExecutingCode( unsigned char* cd )
 {
-	// save the current code & ip, if any
-	unsigned char* orig_code = code;
-	size_t orig_ip = ip;
+	// make sure static data is reset
+	args_on_stack = -1;
 
 	// set the new code & ip
 	code = cd;
 	ip = (size_t)code;
-
 }
 
 // execute one line
