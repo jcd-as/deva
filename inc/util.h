@@ -40,6 +40,7 @@ using namespace std;
 static const char dirsep = '/';
 static const char extsep = '.';
 static const char* const cwdstr = ".";
+static const char* const pardirstr = "..";
 static const char* env_var_path_seps = ":";
 
 void replace( string& src, const char* const in, const char* const out );

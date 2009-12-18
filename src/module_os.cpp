@@ -574,6 +574,76 @@ void do_os_isfile( Executor* ex )
 	ex->stack.push_back( DevaObject( "", ret ) );
 }
 
+void do_os_sep( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'os' function 'environ' takes no arguments." );
+
+	string ret( 1, dirsep );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the result
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_os_extsep( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'os' function 'environ' takes no arguments." );
+
+	string ret( 1, extsep );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the result
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_os_curdir( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'os' function 'environ' takes no arguments." );
+
+	string ret( cwdstr );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the result
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_os_pardir( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'os' function 'environ' takes no arguments." );
+
+	string ret( pardirstr );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the result
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_os_pathsep( Executor* ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Module 'os' function 'environ' takes no arguments." );
+
+	string ret( env_var_path_seps );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the result
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
 void AddOsModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
@@ -592,5 +662,10 @@ void AddOsModule( Executor* ex )
 	fcns.insert( make_pair( string( "dirwalk@os" ), do_os_dirwalk ) );
 	fcns.insert( make_pair( string( "isdir@os" ), do_os_isdir ) );
 	fcns.insert( make_pair( string( "isfile@os" ), do_os_isfile ) );
+	fcns.insert( make_pair( string( "sep@os" ), do_os_sep ) );
+	fcns.insert( make_pair( string( "extsep@os" ), do_os_extsep ) );
+	fcns.insert( make_pair( string( "curdir@os" ), do_os_curdir ) );
+	fcns.insert( make_pair( string( "pardir@os" ), do_os_pardir ) );
+	fcns.insert( make_pair( string( "pathsep@os" ), do_os_pathsep ) );
 	ex->ImportBuiltinModuleFunctions( string( "os" ), fcns );
 }

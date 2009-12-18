@@ -13,7 +13,7 @@ def glob( path )
     local filename = os.getfile( path );
     # if the dir part is empty, we just have a file part
     if( !dirname )
-        return glob1( os.getcwd(), filename );
+        return glob1( os.curdir(), filename );
 
     if( has_magic( dirname ) )
         local dirs = glob( dirname );
@@ -38,10 +38,6 @@ def glob( path )
 # They return a list of basenames. `glob1` accepts a pattern while `glob0`
 # takes a literal basename (so it only has to check for its existence).
 
-def glob1_helper( x )
-{
-    return x[0] != '.';
-}
 # non-recursive glob helper, with a pattern
 def glob1( dirname, pattern )
 {
