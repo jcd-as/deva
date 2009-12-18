@@ -253,7 +253,7 @@ void check_assignment_op( iter_t const & i )
 	if( lhs.type != variable_type && 
 		i->children[0].value.id() != const_decl_id &&
 		i->children[0].value.id() != local_decl_id )
-		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value", lhs );
+		throw DevaSemanticException( "Left-hand side of assignment operation not an l-value.", lhs );
 	else if( rhs.type != number_type 
 		&& rhs.type != string_type 
 		&& rhs.type != boolean_type 
@@ -262,7 +262,7 @@ void check_assignment_op( iter_t const & i )
 		&& i->children[1].value.id() != vec_op_id
 		&& i->children[1].value.id() != map_op_id 
 		&& i->children[1].value.id() != new_decl_id )
-		throw DevaSemanticException( "Right-hand side of assignment operation not an r-value", rhs );
+		throw DevaSemanticException( "Right-hand side of assignment operation not an r-value.", rhs );
 
 	// check 'const' of lhs
 	SymbolTable* st = scopes[lhs.scope];

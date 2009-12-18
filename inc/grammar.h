@@ -338,7 +338,8 @@ public:
 			assignment_exp =
 				access_node_d[
 				const_decl >> root_node_d[assignment_op] >> (number | string)
-				| local_decl >> root_node_d[assignment_op] >> logical_exp
+				| local_decl >> root_node_d[assignment_op] >> new_decl
+				| local_decl >> *(root_node_d[assignment_op] >> logical_exp)
 				| identifier >> root_node_d[assignment_op] >> new_decl
 				| logical_exp >> +(root_node_d[add_assignment_op] >> logical_exp)
 				| logical_exp >> +(root_node_d[sub_assignment_op] >> logical_exp)

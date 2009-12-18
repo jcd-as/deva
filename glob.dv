@@ -71,8 +71,7 @@ def fnmatch( names, pattern )
 {
     local result = [];
 	local res = glob_to_re( pattern );
-	local exp = null;
-	exp = new regex.regex( res );
+	local exp = new regex.regex( res );
     for( name in names )
     {
         if( exp.match( name ) )
@@ -83,10 +82,8 @@ def fnmatch( names, pattern )
 
 def has_magic( s )
 {
-	local magic_check = null;
-    magic_check = new regex.regex( '[*?[]' );
-    local val = null;
-	val = magic_check.search( s );
+	local magic_check = new regex.regex( '[*?[]' );
+    local val = magic_check.search( s );
 	return val != null;
 }
 

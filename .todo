@@ -405,7 +405,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1260670443" priority="veryhigh" time="1260598658">BUG: PRI 0. early returns screw up Defun execution (stops scanning forward at the first return statement, even if it's in a conditional etc
 <comment>added 'endf' opcode, which is a no-op that just marks the end of a defun
 </comment></note><note priority="veryhigh" time="1260663612">when calling to a fcn in another module, the stackframe for the call gets the wrong filename (name of the module being called, not the calling module)
-</note><note priority="high" time="1260670428">BUG: 'local' statements can't declare the 'local' and assign it to the return value of a call to a fcn in another module OR to a 'new' object
-</note><note done="1260746355" priority="veryhigh" time="1260672487">add more info (such as fcn names etc) to error messages using boost::format to format strings
+</note><note done="1261103821" priority="high" time="1260670428">BUG: 'local' statements can't declare the 'local' and assign it to the return value of a call to a fcn in another module OR to a 'new' object
+<comment>
+</comment></note><note done="1260746355" priority="veryhigh" time="1260672487">add more info (such as fcn names etc) to error messages using boost::format to format strings
 <comment>
 </comment></note></todo>
