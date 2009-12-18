@@ -58,6 +58,7 @@ void do_vector_map( Executor *ex );
 void do_vector_filter( Executor *ex );
 void do_vector_reduce( Executor *ex );
 void do_vector_slice( Executor *ex );
+void do_vector_join( Executor *ex );
 
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
@@ -80,6 +81,7 @@ static const string vector_builtin_names[] =
 	string( "vector_filter" ),
 	string( "vector_reduce" ),
 	string( "vector_slice" ),
+    string( "vector_join" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*vector_builtin_fcn)(Executor*);
@@ -103,6 +105,7 @@ vector_builtin_fcn vector_builtin_fcns[] =
 	do_vector_filter,
 	do_vector_reduce,
 	do_vector_slice,
+    do_vector_join,
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
@@ -1126,4 +1129,58 @@ void do_vector_slice( Executor *ex )
 	ex->stack.pop_back();
 
 	ex->stack.push_back( ret );
+}
+
+void do_vector_join( Executor *ex )
+{
+	if( Executor::args_on_stack > 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector built-in method 'join'." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'join'." );
+
+    string sep;
+	if( Executor::args_on_stack == 1 )
+	{
+		// optional 'separator' arg
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+        DevaObject* o;
+        if( val.Type() == sym_unknown )
+        {
+            o = ex->find_symbol( val );
+            if( !o )
+                throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
+        }
+        else
+            o = &val;
+        if( o->Type() != sym_string )
+            throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
+
+        sep = o->str_val;
+    }
+    else
+        sep = "";
+
+	string ret;
+    for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+    {
+        ostringstream s;
+        if( i != vec.vec_val->begin() )
+            s << sep;
+        s << *i;
+        ret += s.str();
+    }
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", ret ) );
 }

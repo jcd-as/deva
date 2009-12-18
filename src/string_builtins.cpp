@@ -67,6 +67,7 @@ void do_string_iscntrl( Executor *ex );
 void do_string_isprint( Executor *ex );
 void do_string_isxdigit( Executor *ex );
 void do_string_format( Executor *ex );
+void do_string_join( Executor *ex );
 
 // tables defining the built-in function names...
 static const string string_builtin_names[] = 
@@ -99,6 +100,7 @@ static const string string_builtin_names[] =
 	string( "string_isprint" ),
 	string( "string_isxdigit" ),
 	string( "string_format" ),
+    string( "string_join" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*string_builtin_fcn)(Executor*);
@@ -132,6 +134,7 @@ string_builtin_fcn string_builtin_fcns[] =
 	do_string_isprint,
 	do_string_isxdigit,
 	do_string_format,
+    do_string_join,
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
@@ -1536,4 +1539,51 @@ void do_string_format( Executor *ex )
 
 	// push the string onto the stack
 	ex->stack.push_back( DevaObject( "", boost::str( formatter ) ) );
+}
+
+void do_string_join( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'join'." );
+
+	// get the string object off the top of the stack
+	DevaObject str = ex->stack.back();
+	ex->stack.pop_back();
+
+    if( str.Type() != sym_string )
+		throw DevaICE( "String expected in string built-in method 'join'." );
+
+	// get the vector of objects to join off the stack
+	DevaObject args = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* v = NULL;
+	if( args.Type() == sym_unknown )
+	{
+		v = ex->find_symbol( args );
+		if( !v )
+			throw DevaRuntimeException( "Symbol not found for 'args' parameter in call to string built-in method 'join'." );
+	}
+	if( !v )
+		v = &args;
+
+	// ensure it's a vector
+	if( v->Type() != sym_vector )
+		throw DevaRuntimeException( "Vector expected for 'args' parameter in call to string built-in method 'join'." );
+
+	string ret;
+    for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+    {
+        ostringstream s;
+        if( i != v->vec_val->begin() )
+            s << str.str_val;
+        s << *i;
+        ret += s.str();
+    }
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", ret ) );
 }

@@ -67,6 +67,7 @@ void do_exit( Executor *ex );
 void do_num( Executor *ex );
 void do_range( Executor *ex );
 void do_format( Executor *ex );
+void do_join( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -100,6 +101,7 @@ static const string builtin_names[] =
 	string( "num" ),
 	string( "range" ),
 	string( "format" ),
+    string( "join" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -134,6 +136,7 @@ builtin_fcn builtin_fcns[] =
 	do_num,
 	do_range,
 	do_format,
+    do_join,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1600,6 +1603,70 @@ void do_format( Executor *ex )
 		throw DevaRuntimeException( "The format string passed to built-in function 'format' referred to more parameters than were passed in the parameter vector." );
 	}
 	ret = str( formatter );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_join( Executor *ex )
+{
+	if( Executor::args_on_stack > 2 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'join'." );
+
+	// get the vector of objects to join off the stack
+	DevaObject args = ex->stack.back();
+	ex->stack.pop_back();
+	// if it's a variable, locate it in the symbol table
+	DevaObject* v = NULL;
+	if( args.Type() == sym_unknown )
+	{
+		v = ex->find_symbol( args );
+		if( !v )
+			throw DevaRuntimeException( "Symbol not found for 'args' parameter in call to built-in function 'join'." );
+	}
+	if( !v )
+		v = &args;
+
+	// ensure it's a vector
+	if( v->Type() != sym_vector )
+		throw DevaRuntimeException( "Vector expected for 'args' parameter in call to built-in function 'join'." );
+
+    string sep;
+	if( Executor::args_on_stack == 2 )
+	{
+		// optional 'separator' arg
+		DevaObject val = ex->stack.back();
+		ex->stack.pop_back();
+
+        DevaObject* o;
+        if( val.Type() == sym_unknown )
+        {
+            o = ex->find_symbol( val );
+            if( !o )
+                throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
+        }
+        else
+            o = &val;
+        if( o->Type() != sym_string )
+            throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
+
+        sep = o->str_val;
+    }
+    else
+        sep = "";
+
+	string ret;
+    for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+    {
+        ostringstream s;
+        if( i != v->vec_val->begin() )
+            s << sep;
+        s << *i;
+        ret += s.str();
+    }
 
 	// pop the return address
 	ex->stack.pop_back();

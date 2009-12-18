@@ -138,6 +138,12 @@ print( s.iscntrl() );
 print( s.isprint() );
 
 
+v = ["a", 'b', "c", 1, 2, 3];
+print( join( v, " " ), "x\n" );
+print( v.join( " " ), "x\n" );
+s = " ";
+print( s.join( v ), "x\n" );
+
 
 
 #for( c in s )

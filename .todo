@@ -397,8 +397,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1260410594" priority="veryhigh" time="1260396020">BUG: calls in stacktrace give the line number of the enter instruction (opening '{' of fcn) instead of the call-site
 <comment>
-</comment></note><note priority="veryhigh" time="1260411442">join() builtin to turn a vector of strings into a single string (opposite of string.split( '' ) )
-</note><note done="1260598974" priority="veryhigh" time="1260567625">import needs to search path in $DEVA env var
+</comment></note><note done="1261112009" priority="veryhigh" time="1260411442">join() builtin to turn a vector of strings into a single string (opposite of string.split( '' ) )
+<comment>
+</comment></note><note done="1260598974" priority="veryhigh" time="1260567625">import needs to search path in $DEVA env var
 <comment>
 </comment></note><note done="1260598966" priority="veryhigh" time="1260584988">BUG: escaping in strings is broken: any number of \'s in the code result in a single \
 <comment>
