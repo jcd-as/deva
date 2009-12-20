@@ -504,8 +504,12 @@ assignment_op: =
 		identifier: b
 		In eval_expression. i->value = c i->children.size() = 0
 		identifier: c
-	In eval_expression. i->value =  i->children.size() = 0
+	In eval_expression. i->value =  i->children.size() = 2
 	map_op: 
+		In eval_expression. i->value = { i->children.size() = 0
+		(open|close)_brace_op: {
+		In eval_expression. i->value = } i->children.size() = 0
+		(open|close)_brace_op: }
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================

@@ -604,19 +604,36 @@ void Executor::Dup( Instruction const & inst )
 void Executor::New_map( Instruction const & inst )
 {
 	DOMap* m = new DOMap();
-	// TODO: revisit when the grammar supports map initializers
-//	if( inst.args.size() == 1 )
-//	{
-//		if( inst.args[0].Type() != sym_size )
-//			throw DevaICE( "Invalid argument to 'op_new_map' instruction." );
-//
-//		for( int i = 0; i < inst.args[0].sz_val; ++i )
-//		{
-//			DevaObject ob = stack.back();
-//			stack.pop_back();
-//			v->push_back( ob );
-//		}
-//	}
+	if( inst.args.size() == 1 )
+	{
+		if( inst.args[0].Type() != sym_size )
+			throw DevaICE( "Invalid argument to 'op_new_map' instruction." );
+
+		for( int i = 0; i < inst.args[0].sz_val; i += 2 )
+		{
+			DevaObject key = stack.back();
+			stack.pop_back();
+			DevaObject val = stack.back();
+			stack.pop_back();
+			DevaObject *o;
+			if( key.Type() == sym_unknown )
+			{
+				o = find_symbol( key );
+				if( !o )
+					throw DevaRuntimeException( boost::format( "Invalid object '%1%' used in map initializer." ) % key.name );
+				key = *o;
+			}
+			if( val.Type() == sym_unknown )
+			{
+				o = find_symbol( val );
+				if( !o )
+					throw DevaRuntimeException( boost::format( "Invalid object '%1%' used in map initializer." ) % val.name );
+				val = *o;
+			}
+//			m->insert( make_pair( key, val ) );
+			m->operator[]( key ) = val;
+		}
+	}
 	// create a new object for the map
 	DevaObject *mp = new DevaObject( "", m );
 	// add it to the current scope so that it will be properly ref-counted
@@ -1335,8 +1352,10 @@ void Executor::Tbl_store( Instruction const & inst )
 	else if( table->Type() == sym_map )
 	{
 		// key (number/string/user-defined-type)?
-		// TODO: user-defined-type as key
-		if( idxkey.Type() != sym_number &&  idxkey.Type() != sym_string )
+		if( idxkey.Type() != sym_number &&  
+			idxkey.Type() != sym_string &&
+			idxkey.Type() != sym_class &&
+			idxkey.Type() != sym_instance )
 			throw DevaRuntimeException( "Argument to '[]' on a map MUST evaluate to a number, string or user-defined-type." );
 		// set the value in the map (whether it already exists or not)
 		smart_ptr<DOMap> mp( table->map_val) ;
@@ -3091,7 +3110,14 @@ void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 	{
 		// print the file, function, line number
 		if( show_all_scopes || (!show_all_scopes && (i->call_site != -1) ) )
-			os << "  file: " << i->file << ", line: " << (i->call_site != -1 ? i->call_site : i->line) << ", in " << i->function << endl;
+		{
+			// not a call site
+			if( i->call_site == -1 )
+				os << "  file: " << i->file << ", line: " << i->line << ", in " << i->function << endl;
+			// call site
+			else
+				os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
+		}
 		fcn = i->function;
 		idx = i->scope_idx;
 	}

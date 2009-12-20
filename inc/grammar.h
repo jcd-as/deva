@@ -27,7 +27,6 @@
 
 // TODO:
 // * missing semi-colon ends up with generic "Invalid statement" error :(
-// * prevent multiple errors on same line (e.g. 'invalid if' and 'invalid statement')
 // * more & better error reporting (try to avoid multiple reports on the same
 // 	 line/problem)
 
@@ -585,7 +584,13 @@ public:
 			// map construction op
 			map_op = 
 				access_node_d[
-				no_node_d[ch_p( "{" ) >> *space_p >> ch_p( "}" )]
+				confix_p( 
+					open_brace_op, 
+					!list_p( 
+						exp >> no_node_d[ch_p( ":" )] >> exp,
+						no_node_d[comma_op] 
+					),
+					close_brace_op )
 				][&set_node]
 				;
 

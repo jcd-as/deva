@@ -659,12 +659,14 @@ void gen_IL_in_op( iter_t const & i, InstructionStream & is )
 
 void gen_IL_map_op( iter_t const & i, InstructionStream & is )
 {
-	// TODO: when map initializers are added to the grammar, 
-	// change this to have an arg with the number of children
-	// (like vec_op immediately below)
 	// new map
 	generate_line_num( i, is );
-	is.push( Instruction( op_new_map ) );
+	// exclude the '{' and '}' from the count of children
+	int num_children = i->children.size() - 2;
+	if( num_children > 0 )
+		is.push( Instruction( op_new_map, DevaObject( "", (size_t)num_children, false ) ) );
+	else
+		is.push( Instruction( op_new_map ) );
 }
 
 void gen_IL_vec_op( iter_t const & i, InstructionStream & is )

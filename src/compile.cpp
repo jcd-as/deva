@@ -303,7 +303,7 @@ void eval_node( iter_t const & i )
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )
 	{
-		assert( i->children.size() == 0 );
+//		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_map_op( i );
 	}
@@ -403,6 +403,14 @@ void eval_node( iter_t const & i )
 		assert( i->children.size() == 0 );
 		walk_children( i );
 		check_bracket_op( i );
+	}
+	// brace ops
+	else if( i->value.id() == parser_id( open_brace_op_id ) 
+			|| i->value.id() == parser_id( close_brace_op_id ) )
+	{
+		assert( i->children.size() == 0 );
+//		walk_children( i );
+//		check_bracket_op( i );
 	}
 	// arg list exp
 	else if( i->value.id() == parser_id( arg_list_exp_id ) )
@@ -601,7 +609,7 @@ void eval_node( iter_t const & i )
 	{
 		// error, invalid node type
 		emit_error( i->value.value(), "Semantic error: Encountered unknown node type" );
-		throw DevaSemanticException( "invalid node type", i->value.value() );
+		throw DevaSemanticException( boost::format( "invalid node type '%1%'" ) % (size_t)i->value.id().to_long(), i->value.value() );
 	}
 }
 

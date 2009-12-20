@@ -190,8 +190,6 @@ void eval_expression( iter_t const& i )
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )
 	{
-        assert( i->children.size() == 0 );
-
 		dumpNode( "map_op", i, indents );
 	}
 	// vector construction op
@@ -277,6 +275,14 @@ void eval_expression( iter_t const& i )
         assert( i->children.size() == 0 );
 
 		dumpNode( "(open|close)_bracket_op", i, indents );
+	}
+	// brace ops
+	else if( i->value.id() == parser_id( open_brace_op_id ) 
+			|| i->value.id() == parser_id( close_brace_op_id ) )
+	{
+        assert( i->children.size() == 0 );
+
+		dumpNode( "(open|close)_brace_op", i, indents );
 	}
 	// comma_op
 	// nodes of this type not created

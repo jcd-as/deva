@@ -212,6 +212,19 @@ void check_in_op( iter_t const & i )
 void check_map_op( iter_t const & i )
 {
 	// TODO: anything we can do here??
+	for( int j = 0; j < i->children.size(); ++j )
+	{
+		if( i->children[j].value.id() == assignment_op_id ||
+			i->children[j].value.id() == add_assignment_op_id ||
+			i->children[j].value.id() == sub_assignment_op_id ||
+			i->children[j].value.id() == mul_assignment_op_id ||
+			i->children[j].value.id() == div_assignment_op_id ||
+			i->children[j].value.id() == mod_assignment_op_id )
+		{
+			NodeInfo ni = i->children[j].value.value();
+			throw DevaSemanticException( "Illegal assignment inside map initializer", ni );
+		}
+	}
 }
 
 void check_vec_op( iter_t const & i )
@@ -495,7 +508,7 @@ void check_add_op( iter_t const & i )
 		if( i->value.value().sym != "+" )
 			throw DevaSemanticException( "Invalid string operation", rhs );
 		else if( rhs.type != string_type && rhs.type != variable_type )
-			throw DevaSemanticException( "Mismatched operands to string concatenat operation", rhs );
+			throw DevaSemanticException( "Mismatched operands to string concatenate operation", rhs );
 
 		NodeInfo ni = ((NodeInfo)(i->value.value()));
 		ni.type = string_type;
