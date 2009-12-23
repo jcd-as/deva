@@ -62,7 +62,7 @@ bool CheckSemantics( tree_parse_info<iterator_t, factory_t> info );
 
 // generate IL bytecode
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_number );
-bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info );
+bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info, const char* const modulename = NULL );
 
 // write bytecode to disk
 bool WriteByteCode( char const* filename, unsigned char* code, size_t code_length );
@@ -77,7 +77,7 @@ unsigned char* GenerateByteCode( InstructionStream & is, size_t & length );
 bool DeCompileFile( char const* filename );
 
 // parse, check semantics, generate IL and generate (and write) bytecode for a .dv file
-bool CompileAndWriteFile( char const* filename, bool debug_info = true );
+bool CompileAndWriteFile( char const* filename, char const* const modulename = NULL, bool debug_info = true );
 
 // parse, check semantics, generate IL and generate bytecode for an input file
 // containing deva code, returns the byte code (which must be freed by the

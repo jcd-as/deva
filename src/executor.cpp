@@ -73,12 +73,12 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	string ext = get_extension( file );
 	string mod( filepart, 0, filepart.length() - ext.length() );
 	ScopeTable* ns = NULL;
-	map<string, ScopeTable>::iterator it;
+	map<string, ScopeTable*>::iterator it;
 	it = namespaces.find( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 	{
-		ScopeTable* ns_scopes = &(it->second);
+		ScopeTable* ns_scopes = it->second;
 		for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
 		{
 			// get the scope object
@@ -111,27 +111,27 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 			return p->find( ob.name )->second;
 	}
 
-    // finally, if we're searching all modules/namespaces, check them all
-    if( search_all_modules )
-    {
-        for( map<string, ScopeTable>::iterator it = namespaces.begin(); it != namespaces.end(); ++it )
-        {
-            // if we found the namespace
-            if( it != namespaces.end() )
-            {
-                ScopeTable* ns_scopes = &(it->second);
-                for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
-                {
-                    // get the scope object
-                    Scope* p = *i;
+	// finally, if we're searching all modules/namespaces, check them all
+	if( search_all_modules )
+	{
+		for( map<string, ScopeTable*>::iterator it = namespaces.begin(); it != namespaces.end(); ++it )
+		{
+			// if we found the namespace
+			if( it != namespaces.end() )
+			{
+				ScopeTable* ns_scopes = it->second;
+				for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
+				{
+					// get the scope object
+					Scope* p = *i;
 
-                    // check for the symbol
-                    if( p->count( ob.name ) != 0 )
-                        return p->find( ob.name )->second;
-                }
-            }
-        }
-    }
+					// check for the symbol
+					if( p->count( ob.name ) != 0 )
+						return p->find( ob.name )->second;
+				}
+			}
+		}
+	}
 
 	return NULL;
 }
@@ -875,12 +875,12 @@ void Executor::Tbl_load( Instruction const & inst )
 		if( !table )
 		{
 			ScopeTable* ns = NULL;
-			map<string, ScopeTable>::iterator it;
+			map<string, ScopeTable*>::iterator it;
 			it = namespaces.find( vecmap.name );
 			// if we found the namespace
 			if( it != namespaces.end() )
 			{
-				ns = &(it->second);
+				ns = it->second;
 				// look up the key in it (key should be a string)
 				if( idxkey.Type() != sym_string )
 					throw DevaICE( "Trying to look-up a non-string key in a namespace." );
@@ -2066,9 +2066,9 @@ void Executor::Call( Instruction const & inst )
 			if( !fcn )
 				throw DevaRuntimeException( boost::format( "Call made to undefined function '%1%'." ) % inst.args[0].name );
 
-            if( fcn->Type() == sym_class )
-                throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
-            else if( fcn->Type() != sym_address )
+			if( fcn->Type() == sym_class )
+				throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
+			else if( fcn->Type() != sym_address )
 				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			// check the number of args to the fcn
@@ -2099,8 +2099,8 @@ void Executor::Call( Instruction const & inst )
 				fcn = &o;
 			else if( o.Type() == sym_unknown )
 				fcn = find_symbol( o.name );
-            else if( o.Type() == sym_class )
-                throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
+			else if( o.Type() == sym_class )
+				throw DevaRuntimeException( "Trying to call a class as a function. Missing 'new' keyword?" );
 			else
 				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
@@ -2280,9 +2280,9 @@ void Executor::Break( Instruction const & inst )
 			// if we've left enough scopes to get out of the loop
 			if( enter_stack.size() == 0 )
 			{
-                // ignore debug (line-num) instructions
-                if( PeekInstr() == op_line_num )
-                    NextInstr();
+				// ignore debug (line-num) instructions
+				if( PeekInstr() == op_line_num )
+					NextInstr();
 				// need to skip the jmp back to loop start
 				if( PeekInstr() != op_jmp )
 					throw DevaICE( "Invalid loop. Final 'leave' instruction not followed by 'jmp'." );
@@ -2315,50 +2315,75 @@ void Executor::Leave( Instruction const & inst )
 {
 	if( current_scopes->size() == 0 )
 		throw DevaICE( "Invalid 'Leave' operation. No scopes to exit." );
-    
-    // call destructors on all objects that are being destroyed
-    for( map<string, DevaObject*>::iterator i = current_scopes->back()->begin(); i != current_scopes->back()->end(); ++i )
-    {
-        // is this object an instance?
-        if( i->second->Type() == sym_instance )
-        {
-            DevaObject* instance = i->second;
-            // is it going to be deleted?
-            if( instance->map_val.getRefs() == 1 )
-            {
-                // get the name of the class
-                DOMap::iterator it = instance->map_val->find( DevaObject( "", string( "__class__" ) ) );
-                if( it == instance->map_val->end() )
-                    throw DevaRuntimeException( "Class instance cannot be destroyed, it has no '__class__' member." );
-                if( it->second.Type() != sym_string )
-                    throw DevaICE( "__class__ attribute on a class instance is not of type 'string'." );
-                string cls_name = it->second.str_val;
+	
+	// call destructors on all objects that are being destroyed
+	for( map<string, DevaObject*>::iterator i = current_scopes->back()->begin(); i != current_scopes->back()->end(); ++i )
+	{
+		// is this object an instance?
+		if( i->second->Type() == sym_instance )
+		{
+			DevaObject* instance = i->second;
+			// is it going to be deleted?
+			if( instance->map_val.getRefs() == 1 )
+			{
+				// get the name of the class
+				DOMap::iterator it = instance->map_val->find( DevaObject( "", string( "__class__" ) ) );
+				if( it == instance->map_val->end() )
+					throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__class__' member." );
+				if( it->second.Type() != sym_string )
+					throw DevaICE( "__class__ attribute on a class instance is not of type 'string'." );
+				string cls_name = it->second.str_val;
 
-                // does it have a 'delete' method?
-                string del( "delete@" );
-                del += cls_name;
+				// get the name of the module
+				it = instance->map_val->find( DevaObject( "", string( "__module__" ) ) );
+				if( it == instance->map_val->end() )
+					throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__module__' member." );
+				if( it->second.Type() != sym_string )
+					throw DevaICE( "__module__ attribute on a class instance is not of type 'string'." );
+				string mod_name = it->second.str_val;
 
-                // look up the class
-                DevaObject* cls = find_symbol( DevaObject( cls_name, sym_unknown ), NULL, true );
-                if( !cls )
-                    throw DevaICE( "Trying to destroy unknown class." );
+				// does it have a 'delete' method?
+				string del( "delete@" );
+				del += cls_name;
 
-                // look up the fcn name
-                DevaObject* fcn = find_symbol( del );
-                if( fcn )
-                {
-                    if( fcn->Type() != sym_address )
-                        throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
-                    // push 'self'
-                    stack.push_back( *instance );
-                    // call it
-                    ExecuteDevaFunction( del, 1 );
-                    // ignore the return value
-                    stack.pop_back();
-                }
-            }
-        }
-    }
+				// no module... (i.e. 'main' module)
+				ScopeTable* ns = NULL;
+				// look up the namespace if we have a module
+				if( mod_name.length() != 0 )
+				{
+					map<string, ScopeTable*>::iterator iter;
+					iter = namespaces.find( mod_name );
+					// not found?
+					if( iter == namespaces.end() )
+						throw DevaCriticalException( "Trying to destroy an instance of a class in an unknown namespace." );
+					// else we found the namespace
+					else
+					{
+						ns = iter->second;
+					}
+				}
+				// look up the class
+				DevaObject* cls = NULL;
+				cls = find_symbol( DevaObject( cls_name, sym_unknown ), ns );
+				if( !cls )
+					throw DevaICE( "Trying to destroy unknown class." );
+
+				// look up the fcn name
+				DevaObject* fcn = find_symbol( del, ns );
+				if( fcn )
+				{
+					if( fcn->Type() != sym_address )
+						throw DevaCriticalException( "Object is invalid: 'delete' is not a method." );
+					// push 'self'
+					stack.push_back( *instance );
+					// call it
+					ExecuteDevaFunction( del, 1, ns );
+					// ignore the return value
+					stack.pop_back();
+				}
+			}
+		}
+	}
 
 	// pop scope
 	current_scopes->Pop();
@@ -2396,42 +2421,42 @@ string Executor::find_module( string mod )
 	string modpath( curdir );
 	for( vector<string>::iterator it = path.begin(); it != path.end(); ++it )
 	{
-        modpath = join_paths( modpath, *it );
+		modpath = join_paths( modpath, *it );
 	}
 	// check for .dv/.dvc files on disk
 	struct stat statbuf;
 	// if we can open the module file, return it
 	string dv = modpath + ".dv";
 	if( stat( dv.c_str(), &statbuf ) != -1 )
-        return modpath;
-    string dvc = modpath + ".dvc";
-    if( stat( dvc.c_str(), &statbuf ) != -1 )
-        return modpath;
+		return modpath;
+	string dvc = modpath + ".dvc";
+	if( stat( dvc.c_str(), &statbuf ) != -1 )
+		return modpath;
 	// otherwise check the paths in the DEVA env var
-    else
+	else
 	{
-        // get the DEVA env var
-        string devapath( getenv( "DEVA" ) );
-        // split it into separate paths (on the ":" char in un*x)
-        vector<string> paths = split_env_var_paths( devapath );
-        // for each of the paths, append the mod
-        // and see if it exists
-        for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
-        {
-            modpath = join_paths( *it, mod );
-            // check for .dv/.dvc files on disk
-            struct stat statbuf;
-            // if we can't open the module file, error out
-            string dv = modpath + ".dv";
-            if( stat( dv.c_str(), &statbuf ) != -1 )
-                return modpath;
-            string dvc = modpath + ".dvc";
-            if( stat( dvc.c_str(), &statbuf ) != -1 )
-                return modpath;
-        }
+		// get the DEVA env var
+		string devapath( getenv( "DEVA" ) );
+		// split it into separate paths (on the ":" char in un*x)
+		vector<string> paths = split_env_var_paths( devapath );
+		// for each of the paths, append the mod
+		// and see if it exists
+		for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
+		{
+			modpath = join_paths( *it, mod );
+			// check for .dv/.dvc files on disk
+			struct stat statbuf;
+			// if we can't open the module file, error out
+			string dv = modpath + ".dv";
+			if( stat( dv.c_str(), &statbuf ) != -1 )
+				return modpath;
+			string dvc = modpath + ".dvc";
+			if( stat( dvc.c_str(), &statbuf ) != -1 )
+				return modpath;
+		}
 	}
-    // not found, error
-    throw DevaRuntimeException( "Unable to locate module for import." );
+	// not found, error
+	throw DevaRuntimeException( "Unable to locate module for import." );
 }
 // 38 import module, 1 arg: module name
 void Executor::Import( Instruction const & inst )
@@ -2442,18 +2467,18 @@ void Executor::Import( Instruction const & inst )
 
 	string mod = inst.args[0].str_val;
 
-    // check the list of builtin modules first
-    if( ImportBuiltinModule( mod ) )
-        return;
+	// check the list of builtin modules first
+	if( ImportBuiltinModule( mod ) )
+		return;
 
 	// prevent importing the same module more than once
-	map<string, ScopeTable>::iterator it;
+	map<string, ScopeTable*>::iterator it;
 	it = namespaces.find( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return;
 
-    // otherwise look for the .dv/.dvc file to import
+	// otherwise look for the .dv/.dvc file to import
 	string path = find_module( mod );
 
 	// for now, just run the file by short name with ".dvc" extension (i.e. in
@@ -2469,12 +2494,12 @@ void Executor::Import( Instruction const & inst )
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	mod = get_file_part( mod );
-	namespaces[mod] = ScopeTable();
-	current_scopes = &namespaces[mod];
+	namespaces[mod] = new ScopeTable();
+	current_scopes = namespaces[mod];
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
 	// compile the file, if needed
-	CompileAndWriteFile( dvfile.c_str() );
+	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 	// and then run the file
 	RunFile( dvcfile.c_str() );
 	// restore the ip
@@ -2859,18 +2884,26 @@ Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file(
 
 Executor::~Executor()
 {
+	// free the code blocks
 	for( vector<unsigned char*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
 	{
 		delete [] *i;
 		*i = NULL;
 	}
+
+	// free the namespaces
+	for( map<string, ScopeTable*>::iterator i = namespaces.begin(); i != namespaces.end(); ++i )
+	{
+		delete i->second;
+		i->second = NULL;
+	}
 }
 
-void Executor::ExecuteDevaFunction( string fcn_name, int num_args )
+void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns /*= NULL*/ )
 {
 	DevaObject* fcn;
 	// look up the name in the symbol table
-	fcn = find_symbol( DevaObject( fcn_name.c_str(), sym_unknown ) );
+	fcn = find_symbol( DevaObject( fcn_name.c_str(), sym_unknown ), ns );
 	if( !fcn )
 		throw DevaRuntimeException( boost::format( "Call made to undefined function '%1%'." ) % fcn_name );
 
@@ -3045,35 +3078,35 @@ void Executor::Exit( int val )
 
 void Executor::AddBuiltinModule( string mod, import_module_fcn fcn )
 {
-    builtin_module_names.insert( make_pair( mod, fcn ) );
+	builtin_module_names.insert( make_pair( mod, fcn ) );
 }
 
 // import a built-in module (calls the import_module_fcn for this module)
 bool Executor::ImportBuiltinModule( string name )
 {
-    // find the import_module_fcn for this module
-    map<string, import_module_fcn>::iterator it;
-    it = builtin_module_names.find( name );
-    if( it == builtin_module_names.end() )
-        return false;
-    // call it
-    (it->second)( this );
-    return true;
+	// find the import_module_fcn for this module
+	map<string, import_module_fcn>::iterator it;
+	it = builtin_module_names.find( name );
+	if( it == builtin_module_names.end() )
+		return false;
+	// call it
+	(it->second)( this );
+	return true;
 }
 
 bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn> & fcns )
 {
 	// prevent importing the same module more than once
-	map<string, ScopeTable>::iterator it;
+	map<string, ScopeTable*>::iterator it;
 	it = namespaces.find( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return false;
 
 	// create a new namespace
-	namespaces[mod] = ScopeTable();
+	namespaces[mod] = new ScopeTable();
 	// add a scope
-	namespaces[mod].Push();
+	namespaces[mod]->Push();
 	// add an entry in the builtin modules map
 	builtin_modules[mod] = vector<string>();
 
@@ -3081,7 +3114,7 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 	// and to the builtin module map
 	for( map<string, builtin_fcn>::iterator i = fcns.begin(); i != fcns.end(); ++i )
 	{
-		namespaces[mod].AddObject( new DevaObject( i->first, sym_unknown ) );
+		namespaces[mod]->AddObject( new DevaObject( i->first, sym_unknown ) );
 		global_scopes.AddObject( new DevaObject( i->first, sym_unknown ) );
 		builtin_modules[mod].push_back( i->first );
 	}
@@ -3093,10 +3126,10 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 
 void Executor::AddAllKnownBuiltinModules()
 {
-    AddBuiltinModule( string( "os" ), AddOsModule );
-    AddBuiltinModule( string( "bit" ), AddBitModule );
-    AddBuiltinModule( string( "math" ), AddMathModule );
-    AddBuiltinModule( string( "re" ), AddReModule );
+	AddBuiltinModule( string( "os" ), AddOsModule );
+	AddBuiltinModule( string( "bit" ), AddBitModule );
+	AddBuiltinModule( string( "math" ), AddMathModule );
+	AddBuiltinModule( string( "re" ), AddReModule );
 }
 
 // dump the stack trace to stdout

@@ -218,7 +218,7 @@ private:
 	// private data associated with nested types:
 	////////////////////////////////////////////////////
 	ScopeTable global_scopes;
-	map<string, ScopeTable> namespaces;
+	map<string, ScopeTable*> namespaces;
 	ScopeTable *current_scopes;
 
 	CallStack trace;
@@ -370,7 +370,7 @@ public:
 	Executor( bool debug_mode = false );
 	~Executor();
 
-	void ExecuteDevaFunction( string fcn_name, int num_args );
+	void ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns = NULL );
 	void StartGlobalScope();
 	void EndGlobalScope();
 	void AddCodeBlock( unsigned char* cd );

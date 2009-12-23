@@ -614,11 +614,16 @@ void eval_node( iter_t const & i )
 }
 
 
+// static to track the module name
+static string module_name = "";
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num );
 extern bool debug_info_on;
 // generate IL stream
-bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info )
+bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info, const char* const module /*= NULL*/ )
 {
+	if( module )
+		module_name = module;
+
 	// set global flag (shared with instructions.cpp, where it is defined)
 	debug_info_on = debug_info;
 	try
@@ -718,6 +723,15 @@ void generate_constructor( const string name, iter_t const & i, InstructionStrea
 	is.push( Instruction( op_enter ) );
 	is.push( Instruction( op_defarg, DevaObject( "self", sym_unknown ) ) );
 	is.push( Instruction( op_defarg ) );
+
+	// add the '__module__' field
+	is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+	is.push( Instruction( op_push, DevaObject( "", string( "__module__" ) ) ) );
+	if( module_name.length() > 0 )
+		is.push( Instruction( op_push, DevaObject( "", module_name ) ) );
+	else
+		is.push( Instruction( op_push, DevaObject( "", string( "" ) ) ) );
+	is.push( Instruction( op_tbl_store ) );
 
 	// add code to call the base-class constructors...
 	// for each parent
@@ -866,12 +880,22 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
                 throw DevaSemanticException( "Destructors cannot take parameters.", i->value.value() );
         }
 
-		// if this is a constructor ("new" method), add code to call the
-		// base-class constructors...
+		// if this is a constructor ("new" method), add code to set needed
+		// fields and call the base-class constructors...
 		string nw( "new@" );
 		nw += class_name;
 		if( in_class_def && name == nw )
 		{
+			// add the '__module__' field:
+			is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+			is.push( Instruction( op_push, DevaObject( "", string( "__module__" ) ) ) );
+			if( module_name.length() > 0 )
+				is.push( Instruction( op_push, DevaObject( "", module_name ) ) );
+			else
+				is.push( Instruction( op_push, DevaObject( "", string( "" ) ) ) );
+			is.push( Instruction( op_tbl_store ) );
+
+			// call base-class constructors:
 			// for each parent
 			for( vector<DevaObject>::iterator it = parents.begin(); it != parents.end(); ++it )
 			{
@@ -1901,10 +1925,13 @@ bool DeCompileFile( char const* filename )
 
 
 // parse, check semantics, generate IL and generate (and write) bytecode for a .dv file:
-bool CompileAndWriteFile( const char* filename, bool debug_info /*= true*/ )
+// used for the 'import' statement, takes an optional modulename so that it can
+// propagate into classes as the '__module__' variable
+bool CompileAndWriteFile( char const* filename, const char* const modulename /*= NULL*/, bool debug_info /*= true*/ )
 {
 	// check to see if the .dvc (output) file exists, and is newer than the .dv (input ) file
 	string output( filename );
+	// TODO: use util fcn to get the file part!
 	size_t pos = output.rfind( "." );
 	if( pos != string::npos )
 	{
@@ -1955,7 +1982,7 @@ bool CompileAndWriteFile( const char* filename, bool debug_info /*= true*/ )
 
 	// generate IL
 	InstructionStream inst;
-	if( !GenerateIL( info, inst, debug_info ) )
+	if( !GenerateIL( info, inst, debug_info, modulename ) )
 		return false;
 
 	// TODO: optimize IL (???)

@@ -3,11 +3,15 @@ class AA
 	def new()
 	{
 		self.aa = 0;
-		print( "AA.new() called" );
+		print( "AA.new() called from foo.dv" );
+	}
+	def delete()
+	{
+		print( "AA.delete() called from foo.dv" );
 	}
 	def AA()
 	{
-		print( "AA.AA() called" );
+		print( "AA.AA() called from foo.dv" );
 	}
 }
 
@@ -16,11 +20,15 @@ class A
 	def new()
 	{
 		self.a = 0;
-		print( "A.new() called" );
+		print( "A.new() called from foo.dv" );
+	}
+	def delete()
+	{
+		print( "A.delete() called from foo.dv" );
 	}
 	def A()
 	{
-		print( "A.A() called" );
+		print( "A.A() called from foo.dv" );
 	}
 }
 
@@ -29,11 +37,15 @@ class B : A
 	def new()
 	{
 		self.b = 1;
-		print( "B.new() called" );
+		print( "B.new() called from foo.dv" );
+	}
+	def delete()
+	{
+		print( "B.delete() called from foo.dv" );
 	}
 	def B()
 	{
-		print( "B.B() called" );
+		print( "B.B() called from foo.dv" );
 	}
 }
 
@@ -42,18 +54,24 @@ class C : B, AA
 	def new()
 	{
 		self.c = 2;
-		print( "C.new() called" );
-		exit( 0 );
+		print( "C.new() called from foo.dv" );
+	}
+	def delete()
+	{
+		print( "C.delete() called from foo.dv" );
 	}
 	def C()
 	{
-		print( "C.C() called" );
+		print( "C.C() called from foo.dv" );
 	}
 }
 
 def Foo()
 {
-	print( "Foo() called" );
+	print( "Foo() called from foo.dv" );
+	{
+		c = new C();
+	}
 }
 
 def Bar()
@@ -76,5 +94,5 @@ def Bar()
 #}
 
 #print( fcn_b()( 1 ) );
-devadir = os.getenv( "DEVA" );
+#devadir = os.getenv( "DEVA" );
 
