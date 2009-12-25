@@ -2,13 +2,4 @@ The deva language.
 
 To be done for v1.0.0 release:
 
-- syntactic sugar for slice operations. (slice built-in methods already exist on
-  string and vector types).
 - list comprehensions: syntactic sugar for (combined) map and filter operations.
-- map initializers. currently there are vector initializers (e.g. 'v = [0, 1,
-  2];') but not map initializers (something like 'm = {"a" = a, "b" = b};')
-- 'buffer' built-in objects to handle reading binary files (embedded nulls).
-  right now the read() function will read any given number of bytes, but can 
-only return up to the first null, as it returns a string object and deva strings
- are null-terminated
-- debugging support: frames, call stack, instruction and line-level stepping.

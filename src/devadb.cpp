@@ -27,7 +27,6 @@
 
 // TODO:
 // * function breakpoints (fcn name)
-// * enable re-start: reset all state
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
 // * command to show the data stack
 
@@ -159,6 +158,7 @@ const char* commands[] =
 	"list",
 	"eval",
 	"trace",
+	"stack",
 };
 char command_shortcuts[] = 
 {
@@ -176,6 +176,7 @@ char command_shortcuts[] =
 	'l',
 	'e',
 	't',
+	'k',
 };
 
 char get_command( string & in )
@@ -532,8 +533,20 @@ start:
 								}
 								break;
 								}
+							// back trace
 							case 't':
 								ex->DumpTrace( cout, false );
+								break;
+							// stack
+							case 'k':
+								// display the last 10 items on the stack
+								cout << "Program data stack (top-of-stack first):" << endl;
+								int num_items = ex->stack.size() < 10 ? ex->stack.size() : 10;
+								for( int c = 0; c < num_items; ++c )
+								{
+									DevaObject o = ex->stack[c];
+									cout << "#" << c << ": " << o << endl;
+								}
 								break;
 							}
 							if( l == -1 )

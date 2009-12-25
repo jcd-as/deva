@@ -140,17 +140,24 @@ if __name__ == "__main__":
     try:
         todo_file = open( ".todo" )
     except:
-        # file doesn't exist? create it
-        todo_file = open( ".todo", "w" )
-        xmltxt = """<?xml version="1.0" ?> <todo version="0.1.20"> </todo>"""
-        todo_file.write( xmltxt )
-        todo_file.close()
-        try:
-            todo_file = open( ".todo" )
-        except:
-            # file *still* doesn't exist or cannot be opened? bail
-            print( "error: unable to open .todo file." )
-            exit( -1 )
+        # file doesn't exist? prompt to create it
+        print( "File .todo doesn't exist in this directory.\nCreate new .todo file? (y/n):" )
+        text = sys.stdin.readline()
+        if( len( text ) != 0 ):
+            if( text[0] != 'y' ):
+                exit( 0 )
+            todo_file = open( ".todo", "w" )
+            xmltxt = """<?xml version="1.0" ?> <todo version="0.1.20"> </todo>"""
+            todo_file.write( xmltxt )
+            todo_file.close()
+            try:
+                todo_file = open( ".todo" )
+            except:
+                # file *still* doesn't exist or cannot be opened? bail
+                print( "error: unable to open .todo file." )
+                exit( -1 )
+        else:
+            exit( 0 )
 
     # parse the XML
     todo_xml = minidom.parse( todo_file )
