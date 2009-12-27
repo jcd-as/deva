@@ -40,7 +40,7 @@
 #include "parser_ids.h"
 
 using namespace std;
-using namespace boost::spirit;
+using namespace boost::spirit::classic;
 
 // function (external) to add symbols to the symbol table(s)
 void add_symbol( iterator_t start, iterator_t end );

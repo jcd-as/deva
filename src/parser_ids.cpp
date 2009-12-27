@@ -25,8 +25,8 @@
 // define (storage for) ids for the grammar rules:
 // created by jcs, september 9, 2009 
 
-#include <boost/spirit.hpp>
-using namespace boost::spirit;
+#include <boost/spirit/include/classic.hpp>
+using namespace boost::spirit::classic;
 
 // statements
 parser_id translation_unit_id;

@@ -31,15 +31,16 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-#include <boost/spirit.hpp>
+#include <boost/spirit/include/classic.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_parse_tree.hpp>
 #include <boost/spirit/include/classic_functor_parser.hpp>
+#include <boost/spirit/include/classic_position_iterator.hpp>
 
 #include <string>
 
 using namespace std;
-using namespace boost::spirit;
+using namespace boost::spirit::classic;
 
 // types
 ////////////////////////

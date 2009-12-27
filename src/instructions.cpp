@@ -585,7 +585,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
 		// then the return value is not being used, 
 		// emit a pop instruction to discard it
-		boost::spirit::parser_id id = parent->value.id();
+		boost::spirit::classic::parser_id id = parent->value.id();
 		if( (i->children.size() == 1 || i->children[1].value.id() != arg_list_exp_id )
 			&& (id == translation_unit_id 
 			|| id == compound_statement_id 
@@ -629,7 +629,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 				// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
 				// then the return value is not being used, 
 				// emit a pop instruction to discard it
-				boost::spirit::parser_id id = parent->value.id();
+				boost::spirit::classic::parser_id id = parent->value.id();
 				if( (i->children.size() == c+1 || i->children[c+1].value.id() != arg_list_exp_id )
 					&& (id == translation_unit_id 
 					|| id == compound_statement_id 

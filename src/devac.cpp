@@ -26,17 +26,12 @@
 // created by jcs, september 8, 2009 
 
 // TODO:
-// * handle imports (parse recursively)
-// 		- break compiling a module into a separate fcn from main()
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
-// * handle stdin as input (for one, so that i can unify the test driver program
-// 	 devac compiler by spawning devac from test per code section, not entire
-// 	 file)
 
 //#define BOOST_SPIRIT_DEBUG
 
 #include "compile.h"
-#include <boost/spirit/iterator/position_iterator.hpp>
+
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/positional_options.hpp>
 #include <boost/program_options/variables_map.hpp>

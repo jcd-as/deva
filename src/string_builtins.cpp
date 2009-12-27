@@ -33,6 +33,7 @@
 #include "util.h"
 #include <algorithm>
 #include <locale>
+#include <sstream>
 
 // to add new builtins you must:
 // 1) add a new fcn to the string_builtin_names and string_builtin_fcns arrays below
