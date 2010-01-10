@@ -1,3 +1,23 @@
+release 0.9.5
+- moved to use (require) boost::spirit 1.40+
+- added 'stack' command to devadb to examine the program's data stack. updated FAQ, TODO and language doc.
+- added '__module__' field to instance objects so that they know what module they came from, and can find the correct destructor to call, added code to use this when calling destructors. this fixes a serious bug where the wrong destructor could be called when classes of the same name existed in multiple namespace/modules
+- map initializers added (finally). e.g. 'm = { "a" : 0, "b" : 1 };'. test 55 added to test them
+- added 'join()' built-in and string and vector built-in methods. modified test 33 to test them. updated the language doc to include them
+- bug fix: 'local' statements couldn't declare the 'local' and assign it to the return value of a call to a fcn in another module OR to a 'new' object
+- added 'curdir', 'pardir', 'sep', 'extsep' and 'pathsep' to the os module. fixed bug in glob where it was returning full paths instead of relative paths (and causing test 53 to not work on different machines/setups)
+- test fixes for mac os/64 bit
+- changes to devadb: 'run' (restart) command implemented, fixed to require 'run' command after startup to start debugging (ala gdb)
+- fixed code gen to generate calls to base-class constructors & destructors in user-defined and compiler-generated constructors/destructors. fixed bug where RunText() (used for eval in devadb etc) wasn't ignoring breakpoints (and was causing eval'd code to blow up if there were breakpoints set in it)
+- added 'format' built-in fcn and built-in string method, fixed bugs in glob module, added tests for globbing and formatting
+- changed code gen to create (no-arg, do nothing) constructors and destructors if the user hasn't (instead of throwing an error), updated error messages to include info on fcn name etc where possible
+- added glob module (glob.dv), added os module builtins 'isdir()' and 'isfile()', fixed bugs: comparing objects of different types was broken (for = and !=), early returns caused bad execution. (added new opcode 'endf' to mark end of fcn definitions to fix early return problem)
+- import now searches the paths set in the DEVA environment variable. fixed escaping/unescaping of escape sequences (and the replace string built-in, as they both use the 'replace' utility function)
+- made built-in modules obey the same rules as non-builtins (built-in modules must be imported, just like "regular" modules).
+- added regex module written in deva, which adds a regex class to wrap the 're' module, added DEVA env var path lookup for imports, os.dirwalk takes flag to indicate not to recurse, bug fixes: args to new methods in modules broken, error messages on omitted 'new' keyword improved, 'delete' methods in modules could not be located
+- changes to valgrind tests to exclude parsing, as spirit causes a gazillion errors (all complain an uninitialized variable is used) and i got tired of trying to constantly figure out the suppressions for them :(
+- (re) implemented destructors ("delete" methods), which are called when objects leave scope and there are no remaining references to them
+
 release 0.9.4
 - new regex builtin module, 're'
 - bug fixes: tracebacks didn't track calls properlyr; map/vector/class/instance
