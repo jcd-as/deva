@@ -115,9 +115,15 @@ translation_unit:
 		In eval_expression. i->value = b i->children.size() = 0
 		in scope 0, at line: 21
 		identifier: b
-		In eval_expression. i->value =  i->children.size() = 0
+		In eval_expression. i->value =  i->children.size() = 2
 		in scope 0, at line: 21
 		map_op: 
+			In eval_expression. i->value = { i->children.size() = 0
+			in scope 0, at line: 21
+			(open|close)_brace_op: {
+			In eval_expression. i->value = } i->children.size() = 0
+			in scope 0, at line: 21
+			(open|close)_brace_op: }
 		In eval_expression. i->value = ; i->children.size() = 0
 		in scope 0, at line: 21
 		semicolon_op: ;
@@ -432,7 +438,7 @@ pop :
 push : , address/sized-value = 426 ; 
 push : unknown: 'b' ; 
 dup : 0 ; 
-push : unknown: '.table00000001261091275.0000401876' ; 
+push : unknown: '.table00000001263934620.0000452448' ; 
 swap : 
 store : 
 call : function_call: 'length' ; , address/sized-value = 1 ; 
@@ -441,7 +447,7 @@ dup : 1 ;
 dup : 1 ; 
 neq : 
 jmpf : , address/sized-value = 832 ; 
-load : unknown: '.table00000001261091275.0000401876' ; 
+load : unknown: '.table00000001263934620.0000452448' ; 
 dup : 1 ; 
 tbl_load : true ; 
 push : unknown: 'key' ; 
