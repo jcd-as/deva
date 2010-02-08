@@ -22,7 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 // module_re.h
-// built-in module 're' for the deva language 
+// built-in module '_re' for the deva language 
 // created by jcs, december 8, 2009 
 
 // TODO:

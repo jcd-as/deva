@@ -21,36 +21,36 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# defines regex class that uses construction/destruction to acquire and free the
-# native 're' built-in module objects
+# defines 're' regular expression class that uses construction/destruction to 
+# acquire and free the native '_re' built-in module objects
 
-import re;
+import _re;
 
-class regex
+class re
 {
     def new( pattern )
     {
-        self.regex = re.compile( pattern );
+        self.regex = _re.compile( pattern );
     }
 
     def delete()
     {
-        re.delete( self.regex );
+        _re.delete( self.regex );
     }
 
     def match( input )
     {
-        return re.match( self.regex, input );
+        return _re.match( self.regex, input );
     }
 
     def search( input )
     {
-        return re.search( self.regex, input );
+        return _re.search( self.regex, input );
     }
 
     def replace( input, format )
     {
-        return re.replace( self.regex, input, format );
+        return _re.replace( self.regex, input, format );
     }
 }
 

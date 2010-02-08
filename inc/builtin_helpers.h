@@ -21,36 +21,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// util.h
-// utility functions used by deva language code
-// created by jcs, october 22, 2009 
+// builtin_helpers.h
+// helper functions for writing built-in functions/methods
+// created by jcs, january 10, 2010 
 
 // TODO:
 // * 
 
-#ifndef __UTIL_H__
-#define __UTIL_H__
+#ifndef __BUILTIN_HELPERS__
+#define __BUILTIN_HELPERS__
 
-#include <string>
-#include <vector>
+#include "executor.h"
 
-using namespace std;
+// get the 'this' object off the top of the stack
+DevaObject get_this( Executor *ex, const char* fcn, SymbolType type );
+// get a fcn argument off the top of the stack
+DevaObject get_arg( Executor *ex, const char* fcn, const char* arg );
+// get a fcn argument off the top of the stack and verify it is of the correct
+// type
+DevaObject get_arg_of_type( Executor *ex, const char* fcn, const char* arg, SymbolType type );
 
-static const char dirsep = '/';
-static const char extsep = '.';
-static const char* const cwdstr = ".";
-static const char* const pardirstr = "..";
-static const char* env_var_path_seps = ":";
-
-void replace( string& src, const char* const in, const char* const out );
-string get_cwd();
-string get_extension( string & path );
-string get_file_part( string & path );
-string get_dir_part( string & path );
-bool exists( string & path );
-vector<string> split_path( string & path );
-string join_paths( const string & base, const string & add );
-string join_paths( vector<string> & parts );
-vector<string> split_env_var_paths( string var );
-
-#endif // __UTIL_H__
+#endif // __BUILTIN_HELPERS__
