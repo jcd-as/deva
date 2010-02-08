@@ -412,4 +412,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note done="1260746355" priority="veryhigh" time="1260672487">add more info (such as fcn names etc) to error messages using boost::format to format strings
 <comment>
-</comment></note></todo>
+</comment></note><note done="1263164018" priority="veryhigh" time="1263156975">naming convention: for native built-in modules that are going to be wrapped, start the name with an underscore. rename 're' module to '_re' (and correspondingly rename the 'regex' module to 're')
+<comment>
+</comment></note><note priority="veryhigh" time="1263190689">refactor all builtin fcns and methods to use helper methods from builtin_helpers.[h|cpp]
+</note><note priority="veryhigh" time="1263361557">BUG: string.split() sometimes appends an extra empty string (repro: '\n\t&quot;a&quot; : 0' split on the ':' returns 3 items)
+</note><note priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
+</note></todo>

@@ -429,7 +429,7 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 		// vec_load, with a 'true' arg to indicate that maps should treat the value
 		// as an index (not a key)
 		is.push( Instruction( op_tbl_load, DevaObject( "", true ) ) );
-		// push the 'item' (key)
+		// push the 'item' (key/index)
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
 		is.push( Instruction( op_swap ) );
@@ -444,10 +444,9 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	}
 	else
 	{
-		// vec_load, with a 'true' arg to indicate that maps should treat the value
-		// as an index (not a key)
+		// vec_load
 		is.push( Instruction( op_tbl_load ) );
-		// push the 'item'
+		// push the 'item' (index)
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
 		is.push( Instruction( op_swap ) );

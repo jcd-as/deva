@@ -1,9 +1,9 @@
 # built-in module 're' (regular expression) tests
-import re;
+import _re;
 
-regexp = re.compile( "(\w+)\W+(\w+)" );
+regexp = _re.compile( "(\w+)\W+(\w+)" );
 s = "@abc def--";
-matches = re.search( regexp, s );
+matches = _re.search( regexp, s );
 print( matches );
 i = 0;
 if( matches )
@@ -17,24 +17,24 @@ if( matches )
 		i += 1;
 	}
 
-re.delete( regexp );
+_re.delete( regexp );
 
 card_regexp = "\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z";
-regexp = re.compile( card_regexp );
+regexp = _re.compile( card_regexp );
 machine_format = "\\1\\2\\3\\4";
 human_format = "\\1-\\2-\\3-\\4";
 card_num = "4444-0000-1111-2222";
-human_readable_card_num = re.replace( regexp, card_num, machine_format );
+human_readable_card_num = _re.replace( regexp, card_num, machine_format );
 print( human_readable_card_num );
-machine_readable_card_num = re.replace( regexp, human_readable_card_num, human_format );
+machine_readable_card_num = _re.replace( regexp, human_readable_card_num, human_format );
 print( machine_readable_card_num );
-re.delete( regexp );
+_re.delete( regexp );
 
 # test the module regex and class regex it contains
-import regex;
+import re;
 
 {
-    regexp = new regex.regex( "(\w+)\W+(\w+)" );
+    regexp = new re.re( "(\w+)\W+(\w+)" );
     s = "@abc def--";
     matches = regexp.search( s );
     print( matches );
@@ -53,7 +53,7 @@ import regex;
 
 {
     card_regexp = "\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z";
-    regexp = new regex.regex( card_regexp );
+    regexp = new re.re( card_regexp );
     machine_format = "\\1\\2\\3\\4";
     human_format = "\\1-\\2-\\3-\\4";
     card_num = "4444-0000-1111-2222";

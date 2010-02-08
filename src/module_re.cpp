@@ -22,7 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 // module_re.h
-// built-in module 're' for the deva language 
+// built-in module '_re' for the deva language 
 // created by jcs, december 8, 2009 
 
 // TODO:
@@ -38,7 +38,7 @@ using namespace boost;
 void do_re_compile( Executor* ex )
 {
 	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to module 're' function 'compile'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'compile'." );
 
 	// regex to make is on top of the stack
 	DevaObject obj = ex->stack.back();
@@ -49,14 +49,14 @@ void do_re_compile( Executor* ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module 're' function 'compile'" );
+			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module '_re' function 'compile'" );
 	}
 	if( !o )
 		o = &obj;
 
 	// ensure regex is a string
 	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "'regex' argument to module 're' function 'compile' must be a string." );
+		throw DevaRuntimeException( "'regex' argument to module '_re' function 'compile' must be a string." );
 
 	regex* r = new regex( o->str_val );
 
@@ -70,7 +70,7 @@ void do_re_compile( Executor* ex )
 void do_re_match( Executor* ex )
 {
 	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to module 're' function 'match'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'match'." );
 
 	// regex object is on top of the stack
 	DevaObject regex = ex->stack.back();
@@ -85,14 +85,14 @@ void do_re_match( Executor* ex )
 	{
 		re = ex->find_symbol( regex );
 		if( !re )
-			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module 're' function 'match'." );
+			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module '_re' function 'match'." );
 	}
 	if( !re )
 		re = &regex;
 
 	// ensure it's a native object
 	if( re->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'regex' argument to module 're' function 'match' is not of the correct type." );
+		throw DevaRuntimeException( "'regex' argument to module '_re' function 'match' is not of the correct type." );
 
 	// check the input string arg
 	DevaObject* o = NULL;
@@ -100,14 +100,14 @@ void do_re_match( Executor* ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 're' function 'match'" );
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module '_re' function 'match'" );
 	}
 	if( !o )
 		o = &obj;
 
 	// ensure input is a string
 	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "'input' argument to module 're' function 'match' must be a string." );
+		throw DevaRuntimeException( "'input' argument to module '_re' function 'match' must be a string." );
 
 	cmatch match;
 	bool found = regex_match( o->str_val, match, *((boost::regex*)(re->nat_obj_val)) );
@@ -142,7 +142,7 @@ void do_re_match( Executor* ex )
 void do_re_search( Executor* ex )
 {
 	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to module 're' function 'search'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'search'." );
 
 	// regex object is on top of the stack
 	DevaObject regex = ex->stack.back();
@@ -157,14 +157,14 @@ void do_re_search( Executor* ex )
 	{
 		re = ex->find_symbol( regex );
 		if( !re )
-			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module 're' function 'search'." );
+			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module '_re' function 'search'." );
 	}
 	if( !re )
 		re = &regex;
 
 	// ensure it's a native object
 	if( re->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'regex' argument to module 're' function 'search' is not of the correct type." );
+		throw DevaRuntimeException( "'regex' argument to module '_re' function 'search' is not of the correct type." );
 
 	// check the input string arg
 	DevaObject* o = NULL;
@@ -172,14 +172,14 @@ void do_re_search( Executor* ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 're' function 'search'" );
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module '_re' function 'search'" );
 	}
 	if( !o )
 		o = &obj;
 
 	// ensure input is a string
 	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "'input' argument to module 're' function 'search' must be a string." );
+		throw DevaRuntimeException( "'input' argument to module '_re' function 'search' must be a string." );
 
 	cmatch match;
 	bool found = regex_search( o->str_val, match, *((boost::regex*)(re->nat_obj_val)) );
@@ -214,7 +214,7 @@ void do_re_search( Executor* ex )
 void do_re_replace( Executor* ex )
 {
 	if( Executor::args_on_stack != 3 )
-		throw DevaRuntimeException( "Incorrect number of arguments to module 're' function 'replace'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'replace'." );
 
 	// regex object is on top of the stack
 	DevaObject regex = ex->stack.back();
@@ -233,14 +233,14 @@ void do_re_replace( Executor* ex )
 	{
 		re = ex->find_symbol( regex );
 		if( !re )
-			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module 're' function 'replace'." );
+			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module '_re' function 'replace'." );
 	}
 	if( !re )
 		re = &regex;
 
 	// ensure it's a native object
 	if( re->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'regex' argument to module 're' function 'replace' is not of the correct type." );
+		throw DevaRuntimeException( "'regex' argument to module '_re' function 'replace' is not of the correct type." );
 
 	// check the input string arg
 	DevaObject* s = NULL;
@@ -248,14 +248,14 @@ void do_re_replace( Executor* ex )
 	{
 		s = ex->find_symbol( input );
 		if( !s )
-			throw DevaRuntimeException( "Symbol not found for 'input' argument in module 're' function 'replace'" );
+			throw DevaRuntimeException( "Symbol not found for 'input' argument in module '_re' function 'replace'" );
 	}
 	if( !s )
 		s = &input;
 
 	// ensure input is a string
 	if( s->Type() != sym_string )
-		throw DevaRuntimeException( "'input' argument to module 're' function 'replace' must be a string." );
+		throw DevaRuntimeException( "'input' argument to module '_re' function 'replace' must be a string." );
 
 	// check the format string arg
 	DevaObject* fmt = NULL;
@@ -263,14 +263,14 @@ void do_re_replace( Executor* ex )
 	{
 		fmt = ex->find_symbol( format );
 		if( !fmt )
-			throw DevaRuntimeException( "Symbol not found for 'format' argument in module 're' function 'replace'" );
+			throw DevaRuntimeException( "Symbol not found for 'format' argument in module '_re' function 'replace'" );
 	}
 	if( !fmt )
 		fmt = &format;
 
 	// ensure format is a string
 	if( fmt->Type() != sym_string )
-		throw DevaRuntimeException( "'format' argument to module 're' function 'replace' must be a string." );
+		throw DevaRuntimeException( "'format' argument to module '_re' function 'replace' must be a string." );
 
 	string result = regex_replace( string( s->str_val ), *((boost::regex*)(re->nat_obj_val)), string( fmt->str_val ) );
 
@@ -284,7 +284,7 @@ void do_re_replace( Executor* ex )
 void do_re_delete( Executor* ex )
 {
 	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to module 're' function 'delete'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'delete'." );
 
 	// regex to make is on top of the stack
 	DevaObject obj = ex->stack.back();
@@ -295,14 +295,14 @@ void do_re_delete( Executor* ex )
 	{
 		o = ex->find_symbol( obj );
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module 're' function 'delete'" );
+			throw DevaRuntimeException( "Symbol not found for 'regex' argument in module '_re' function 'delete'" );
 	}
 	if( !o )
 		o = &obj;
 
 	// ensure regex is a string
 	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'regex' argument to module 're' function 'delete' must be a regex." );
+		throw DevaRuntimeException( "'regex' argument to module '_re' function 'delete' must be a regex." );
 
 	delete (boost::regex*)o->nat_obj_val;
 
@@ -316,10 +316,10 @@ void do_re_delete( Executor* ex )
 void AddReModule( Executor* ex )
 {
 	map<string, builtin_fcn> fcns = map<string, builtin_fcn>();
-	fcns.insert( make_pair( string( "compile@re" ), do_re_compile ) );
-	fcns.insert( make_pair( string( "match@re" ), do_re_match ) );
-	fcns.insert( make_pair( string( "search@re" ), do_re_search ) );
-	fcns.insert( make_pair( string( "replace@re" ), do_re_replace ) );
-	fcns.insert( make_pair( string( "delete@re" ), do_re_delete ) );
-	ex->ImportBuiltinModuleFunctions( string( "re" ), fcns );
+	fcns.insert( make_pair( string( "compile@_re" ), do_re_compile ) );
+	fcns.insert( make_pair( string( "match@_re" ), do_re_match ) );
+	fcns.insert( make_pair( string( "search@_re" ), do_re_search ) );
+	fcns.insert( make_pair( string( "replace@_re" ), do_re_replace ) );
+	fcns.insert( make_pair( string( "delete@_re" ), do_re_delete ) );
+	ex->ImportBuiltinModuleFunctions( string( "_re" ), fcns );
 }

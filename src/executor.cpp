@@ -779,6 +779,12 @@ void Executor::Tbl_load( Instruction const & inst )
 		else
 			sz = strlen( table.str_val );
 
+		// convert values of "-1" to an end slice
+		if( start == -1 )
+			start = sz - 1;
+		if( end == -1 )
+			end = sz;
+
 		// check the indices & step value
 		if( start >= sz || start < 0 )
 			throw DevaRuntimeException( "Invalid 'start' index slice." );
@@ -3129,7 +3135,7 @@ void Executor::AddAllKnownBuiltinModules()
 	AddBuiltinModule( string( "os" ), AddOsModule );
 	AddBuiltinModule( string( "bit" ), AddBitModule );
 	AddBuiltinModule( string( "math" ), AddMathModule );
-	AddBuiltinModule( string( "re" ), AddReModule );
+	AddBuiltinModule( string( "_re" ), AddReModule );
 }
 
 // dump the stack trace to stdout

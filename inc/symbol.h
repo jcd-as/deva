@@ -51,6 +51,23 @@ enum SymbolType
 	sym_end = 255		// end of enum and signal for end of instruction arg list
 };
 
+static const char* const SymbolTypeNames[] = 
+{
+    "null",
+    "number",
+    "string",
+	"boolean",
+    "vector",
+	"map",
+    "address",
+    "function_call",
+    "unknown",
+	"class",
+	"instance",
+	"size",
+	"native_obj",
+};
+
 class SymbolInfo
 {
 protected:

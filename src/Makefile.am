@@ -18,6 +18,7 @@ deva_SOURCES= \
 	semantics.cpp \
 	symbol.cpp \
 	util.cpp \
+	builtin_helpers.cpp \
 	vector_builtins.cpp \
 	map_builtins.cpp \
 	string_builtins.cpp \
@@ -62,6 +63,7 @@ devadb_SOURCES= \
 	semantics.cpp \
 	symbol.cpp \
 	util.cpp \
+	builtin_helpers.cpp \
 	vector_builtins.cpp \
 	map_builtins.cpp \
 	string_builtins.cpp \

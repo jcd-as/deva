@@ -1,4 +1,4 @@
-import regex;
+import re;
 import os;
 
 def glob( path )
@@ -71,7 +71,7 @@ def fnmatch( names, pattern )
 {
     local result = [];
 	local res = glob_to_re( pattern );
-	local exp = new regex.regex( res );
+	local exp = new re.re( res );
     for( name in names )
     {
         if( exp.match( name ) )
@@ -82,7 +82,7 @@ def fnmatch( names, pattern )
 
 def has_magic( s )
 {
-	local magic_check = new regex.regex( '[*?[]' );
+	local magic_check = new re.re( '[*?[]' );
     local val = magic_check.search( s );
 	return val != null;
 }
@@ -126,7 +126,7 @@ def glob_to_re( pat )
         }
         else
             # escape 'c' here for regex syntax
-            res = res + regex.escape( c );
+            res = res + re.escape( c );
     }
     return res + "$";
 }
