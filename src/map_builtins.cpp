@@ -30,6 +30,7 @@
 //
 
 #include "map_builtins.h"
+#include "builtin_helpers.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -46,6 +47,8 @@ void do_map_find( Executor *ex );
 void do_map_keys( Executor *ex );
 void do_map_values( Executor *ex );
 void do_map_merge( Executor *ex );
+void do_map_rewind( Executor *ex );
+void do_map_next( Executor *ex );
 
 // tables defining the built-in function names...
 static const string map_builtin_names[] = 
@@ -57,6 +60,8 @@ static const string map_builtin_names[] =
     string( "map_keys" ),
     string( "map_values" ),
     string( "map_merge" ),
+    string( "map_rewind" ),
+    string( "map_next" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*map_builtin_fcn)(Executor*);
@@ -69,6 +74,8 @@ map_builtin_fcn map_builtin_fcns[] =
 	do_map_keys,
 	do_map_values,
 	do_map_merge,
+	do_map_rewind,
+	do_map_next,
 };
 const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builtin_names[0] );
 
@@ -323,3 +330,81 @@ void do_map_merge( Executor *ex )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
+
+// 'enumerable interface'
+void do_map_rewind( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Map built-in method 'rewind' takes no arguments." );
+
+	// get the map object off the top of the stack
+	DevaObject map_obj = get_this( ex, "rewind", sym_map );
+
+	smart_ptr<DOMap> mp = map_obj.map_val;
+	mp->index = 0;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push a null value onto the stack
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_map_next( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Map built-in method 'next' takes no arguments." );
+
+	// get the map object off the top of the stack
+	DevaObject map_obj = get_this( ex, "next", sym_map );
+	smart_ptr<DOMap> mp = map_obj.map_val;
+
+	size_t idx = mp->index;
+	size_t size = mp->size();
+	bool last = (idx == size);
+
+	// return a map with the first item being a boolean indicating whether
+	// there are more items or not (i.e. returns false when done enumerating)
+	// and the second item is the key,value pair as a vector 
+	// (or null if we're done enumerating)
+
+	DOVector* ret = new DOVector();
+	DOVector* key_val = new DOVector();
+
+	// if we have an object, return true and the object
+	if( !last )
+	{
+		// get the value from the map
+		if( idx >= mp->size() )
+			throw DevaICE( "Index out-of-range in Map built-in method 'next'." );
+		DOMap::iterator it;
+		// this loop is equivalent of "it = mp->begin() + idx;" 
+		// (which is required because map iterators don't support the + op)
+		it = mp->begin();
+		for( int i = 0; i < idx; ++i ) ++it;
+
+		if( it == mp->end() )
+			throw DevaICE( "Index out-of-range in Map built-in method 'next'." );
+
+		pair<DevaObject, DevaObject> p = *it;
+
+		key_val->push_back( p.first );
+		key_val->push_back( p.second );
+		ret->push_back( DevaObject( "", true ) );
+		ret->push_back( DevaObject( "", key_val ) );
+	}
+	// otherwise return false and null
+	else
+	{
+		ret->push_back( DevaObject( "", false ) );
+		ret->push_back( DevaObject( "", sym_null ) );
+	}
+
+	// move to the next item
+	mp->index++;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	ex->stack.push_back( DevaObject( "", ret ) );
+}

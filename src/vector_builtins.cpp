@@ -30,6 +30,7 @@
 //
 
 #include "vector_builtins.h"
+#include "builtin_helpers.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -59,6 +60,9 @@ void do_vector_filter( Executor *ex );
 void do_vector_reduce( Executor *ex );
 void do_vector_slice( Executor *ex );
 void do_vector_join( Executor *ex );
+// 'enumerable interface'
+void do_vector_rewind( Executor *ex );
+void do_vector_next( Executor *ex );
 
 // tables defining the built-in function names...
 static const string vector_builtin_names[] = 
@@ -82,6 +86,8 @@ static const string vector_builtin_names[] =
 	string( "vector_reduce" ),
 	string( "vector_slice" ),
     string( "vector_join" ),
+	string( "vector_rewind" ),
+	string( "vector_next" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*vector_builtin_fcn)(Executor*);
@@ -106,6 +112,8 @@ vector_builtin_fcn vector_builtin_fcns[] =
 	do_vector_reduce,
 	do_vector_slice,
     do_vector_join,
+	do_vector_rewind,
+	do_vector_next,
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
@@ -714,7 +722,7 @@ void do_vector_count( Executor *ex )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// all fcns return *something*
+	// return the count
 	ex->stack.push_back( DevaObject( "", (double)num ) );
 }
 
@@ -773,7 +781,7 @@ void do_vector_reverse( Executor *ex )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the length
+	// return null
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
@@ -832,7 +840,7 @@ void do_vector_sort( Executor *ex )
 	// pop the return address
 	ex->stack.pop_back();
 
-	// return the length
+	// return null
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
@@ -1112,7 +1120,8 @@ void do_vector_slice( Executor *ex )
 	{
 		// create a new vector object that is a copy of the 'sub-vector' we're
 		// looking for
-		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
+//		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
+		DOVector* v = new DOVector( *(vec.vec_val), i_start, i_end );
 		ret = DevaObject( "", v );
 	}
 	// otherwise the vector class doesn't help us, have to do it manually
@@ -1182,5 +1191,67 @@ void do_vector_join( Executor *ex )
 	ex->stack.pop_back();
 
 	// push the string onto the stack
+	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+
+// 'enumerable interface'
+void do_vector_rewind( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Vector built-in method 'rewind' takes no arguments." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec_obj = get_this( ex, "rewind", sym_vector );
+
+	smart_ptr<DOVector> vec = vec_obj.vec_val;
+	vec->index = 0;
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push a null value onto the stack
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_vector_next( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Vector built-in method 'next' takes no arguments." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec_obj = get_this( ex, "next", sym_vector );
+	smart_ptr<DOVector> vec = vec_obj.vec_val;
+
+	size_t idx = vec->index;
+	size_t size = vec->size();
+	bool last = (idx == size);
+
+	// return a vector with the first item being a boolean indicating whether
+	// there are more items or not (i.e. returns false when done enumerating)
+	// and the second item is the object (null if we're done enumerating)
+
+	DOVector* ret = new DOVector();
+
+	// if we have an object, return true and the object
+	if( !last )
+	{
+		DevaObject out = vec->operator[]( vec->index );
+		ret->push_back( DevaObject( "", true ) );
+		ret->push_back( DevaObject( "", out ) );
+	}
+	// otherwise return false and null
+	else
+	{
+		ret->push_back( DevaObject( "", false ) );
+		ret->push_back( DevaObject( "", sym_null ) );
+	}
+
+	// move to the next item
+	vec->index++;
+
+	// pop the return address
+	ex->stack.pop_back();
+
 	ex->stack.push_back( DevaObject( "", ret ) );
 }

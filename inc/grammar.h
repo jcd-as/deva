@@ -314,7 +314,8 @@ public:
 			return_statement =
 				access_node_d[
 				lexeme_d[
-					root_node_d[str_p( "return" )] >> no_node_d[+space_p] >> !logical_exp
+					root_node_d[ str_p( "return" )] >> no_node_d[+space_p] >> !logical_exp
+					| root_node_d[str_p( "return" )] >> eps_p( ch_p( ';' ) ) 
 				]
 				][&set_node]
 				;

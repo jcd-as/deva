@@ -944,29 +944,22 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				is.push( Instruction( op_pop ) );
 			}
 		}
-		// if no return statement was generated, we need to generate one
-		bool returned = false;
+		// generate a default return statement, in case no other
+		// return statement was hit (or even exists)
 		iter_t iter = i->children.begin() + 2;
-		if( iter->value.id() == return_statement_id )
-			returned = true;
-		else
-			returned = walk_looking_for_return( iter );
-		if( !returned )
+		generate_line_num( iter, is );
+		// constructors must return 'self'
+		string basename( name, 0, 3 );
+		if( basename == "new" )
 		{
-			generate_line_num( iter, is );
-			// constructors must return 'self'
-			string basename( name, 0, 3 );
-			if( basename == "new" )
-			{
-				is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
-				is.push( Instruction( op_return ) );
-			}
-			// all fcns return *something*
-			else
-			{
-				is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
-				is.push( Instruction( op_return ) );
-			}
+			is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
+			is.push( Instruction( op_return ) );
+		}
+		// all other fcns defaul to returning null
+		else
+		{
+			is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+			is.push( Instruction( op_return ) );
 		}
 		// end of defun marker
 		is.push( Instruction( op_endf ) );

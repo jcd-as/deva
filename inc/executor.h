@@ -395,6 +395,9 @@ public:
 
 	string GetExecutingFile(){ return file; }
 
+	// get the current IP
+	size_t GetIP(){ return ip; }
+
 	// debugging methods
 	////////////////////////////////////////////////////
 	// start executing a file, stopping before the first instruction

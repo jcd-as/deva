@@ -159,6 +159,8 @@ const char* commands[] =
 	"eval",
 	"trace",
 	"stack",
+	"current execution address",
+	"help",
 };
 char command_shortcuts[] = 
 {
@@ -177,6 +179,8 @@ char command_shortcuts[] =
 	'e',
 	't',
 	'k',
+	'x',
+	'?',
 };
 
 char get_command( string & in )
@@ -214,6 +218,16 @@ char get_command( string & in )
 		return 0;
 	else
 		return command_shortcuts[match_idx];
+}
+
+void display_help()
+{
+	cout << "commands and keyboard shortcuts:" << endl;
+	for( int i = 0; i < sizeof( commands ) / sizeof( char* ); ++i )
+	{
+		cout << command_shortcuts[i] << ":\t";
+		cout << commands[i] << endl;
+	}
 }
 
 int main( int argc, char** argv )
@@ -373,7 +387,7 @@ start:
 						}
 						if( c == 0 )
 							cout << "Unknown command" << endl;
-						else if( !running && c != 'r' )
+						else if( !running && c != 'r' && c != 'q' && c != '?' )
 						{
 							cout << "program is not running. use the 'run' command to begin." << endl;
 						}
@@ -539,6 +553,7 @@ start:
 								break;
 							// stack
 							case 'k':
+								{
 								// display the last 10 items on the stack
 								cout << "Program data stack (top-of-stack first):" << endl;
 								int num_items = ex->stack.size() < 10 ? ex->stack.size() : 10;
@@ -547,6 +562,15 @@ start:
 									DevaObject o = ex->stack[c];
 									cout << "#" << c << ": " << o << endl;
 								}
+								}
+								break;
+							// executing address (ip)
+							case 'x':
+								cout << ex->GetIP() << endl;
+								break;
+							// help
+							case '?':
+								display_help();
 								break;
 							}
 							if( l == -1 )

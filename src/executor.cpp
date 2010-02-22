@@ -804,7 +804,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			{
 				// create a new vector object that is a copy of the 'sub-vector' we're
 				// looking for
-				DOVector* v = new DOVector( table.vec_val->begin() + start, table.vec_val->begin() + end );
+				DOVector* v = new DOVector( *(table.vec_val), start, end );
 				ret = DevaObject( "", v );
 			}
 			// otherwise the vector class doesn't help us, have to do it manually

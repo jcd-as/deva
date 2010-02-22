@@ -694,7 +694,7 @@ compound_statement:
 return;
 parsed successfully
 In eval_expression. i->value = return i->children.size() = 1
-identifier: return
+return_statement: return
 	In eval_expression. i->value = ; i->children.size() = 0
 	semicolon_op: ;
 ===========================================================

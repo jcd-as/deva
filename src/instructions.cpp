@@ -379,8 +379,9 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 		throw DevaICE( "Invalid 'in' statement in 'for' loop." );
 
 	generate_line_num( i, is );
-	// push the return address for the call to 'length'
-	is.push( Instruction( op_push, DevaObject( "", is.Offset(), true ) ) );
+	// push a place-holder for the return address for the call to 'rewind'
+	size_t loc = is.size();
+	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
 
 	// get the vector/map on the stack
 	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index, 0 );
@@ -404,64 +405,97 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	is.push( Instruction( op_swap ) );
 	is.push( Instruction( op_store ) );
 
-	// call 'length' builtin
-	is.push( Instruction( op_call, DevaObject( "length", sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
-	// push 0
-	is.push( Instruction( op_push, DevaObject( "", 0.0 ) ) );
+	// use the 'enumerable interface' (rewind & next) 
+	// call 'rewind'
+	is.push( Instruction( op_push, DevaObject( "", string( "rewind" ) ) ) );
+	is.push( Instruction( op_tbl_load, DevaObject( "", false ) ) );
+	is.push( Instruction( op_call, DevaObject( "", (size_t)0, false ) ) );
+	is.push( Instruction( op_pop ) );
+	// back-patch the return address for the call to 'rewind'
+	is[loc] = Instruction( op_push, DevaObject( "", is.Offset(), true ) );
+
+	// create the vector's 'iteration' object
+	is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
+	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+	is.push( Instruction( op_store, DevaObject( "", true ) ) );
+
+	// if this is a map, create the map's 'iteration value' object too
+	if( is_map )
+	{
+		is.push( Instruction( op_push, DevaObject( item_value_name, sym_unknown ) ) );
+		is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
+		is.push( Instruction( op_store, DevaObject( "", true ) ) );
+	}
+
 	// save the offset for the loop stack (of the 'start', for back-patching)
 	loop_stack.push_back( is.Offset() );
-	// dup 1
-	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
-	// dup 1
-	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
-	// neq
-	is.push( Instruction( op_neq ) );
+
+	// call 'next' on the vector and store its value into a vector
+	loc = is.size();
+	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+	is.push( Instruction( op_push, DevaObject( tbl, sym_unknown ) ) );
+	is.push( Instruction( op_push, DevaObject( "", string( "next" ) ) ) );
+	is.push( Instruction( op_tbl_load, DevaObject( "", false ) ) );
+	is.push( Instruction( op_call, DevaObject( "", (size_t)0, false ) ) );
+
+	// back-patch the return address for the call to 'next'
+	is[loc] = Instruction( op_push, DevaObject( "", is.Offset(), true ) );
+
+	// top of the stack now has the two-item vector returned from 'next'
+	is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
+	is.push( Instruction( op_push, DevaObject( "", 0.0 ) ) );
+	is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)1, false ) ) );
+	// (stack now has bool on top and vector next)
+	// if the first item is 'false', no loop - jump to end
 	// save the instruction location for back-patching
 	while_jmpf_stack.push_back( is.size() );
 	// generate a place-holder op for the jmpf (which ends looping)
 	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1, true ) ) );
-	// load the table
-	is.push( Instruction( op_load, DevaObject( tbl.c_str(), sym_unknown ) ) );
-	// dup 1
-	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// second item is the 'item_name' (or name/value pair) 'for' loop variable 
+	// (with vector now on top of stack)
+	is.push( Instruction( op_push, DevaObject( "", 1.0 ) ) );
+	is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)1, false ) ) );
+	// for loop var (or pair) is now on top of stack - assign it to 'item_name'
 	if( is_map )
 	{
-		// vec_load, with a 'true' arg to indicate that maps should treat the value
-		// as an index (not a key)
-		is.push( Instruction( op_tbl_load, DevaObject( "", true ) ) );
-		// push the 'item' (key/index)
+		// copy the pair (vector) with the key/value
+		is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
+		// push the index of the map key (0)
+		is.push( Instruction( op_push, DevaObject( "", 0.0 ) ) );
+		// load the 'key' from the pair
+		is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)1, false ) ) );
+		// push the name of the 'key' var
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
 		is.push( Instruction( op_swap ) );
-		// store
+		// store the 'key'
 		is.push( Instruction( op_store ) );
-		// push the 'value'
+		// copy of the pair is on top of the stack again
+		// push the index of the map value (1)
+		is.push( Instruction( op_push, DevaObject( "", 1.0 ) ) );
+		// load the 'value' from the pair
+		is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)1, false ) ) );
+		// push the name of the 'value' var
 		is.push( Instruction( op_push, DevaObject( item_value_name, sym_unknown ) ) );
 		// swap the top two items for the store op
 		is.push( Instruction( op_swap ) );
-		// store
+		// store the 'value'
 		is.push( Instruction( op_store ) );
 	}
 	else
 	{
-		// vec_load
-		is.push( Instruction( op_tbl_load ) );
-		// push the 'item' (index)
 		is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
 		// swap the top two items for the store op
 		is.push( Instruction( op_swap ) );
 		// store
 		is.push( Instruction( op_store ) );
 	}
+	
+	// loop body happens here...
 }
 
 void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 {
-	// push 1
-	generate_line_num( i, is );
-	is.push( Instruction( op_push, DevaObject( "", 1.0 ) ) );
-	// add
-	is.push( Instruction( op_add ) );
 	// add the jump-to-start
 	size_t loop_loc = loop_stack.back();
 	loop_stack.pop_back();
@@ -474,8 +508,7 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// write the current *file* offset, not instruction stream!
 	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset(), true ) );
 
-	// pop to remove 'index' from the stack
-	is.push( Instruction( op_pop ) );
+	// pop to remove the false result from 'next' from the stack
 	is.push( Instruction( op_pop ) );
 }
 

@@ -39,10 +39,10 @@
 #include "types.h"
 #include "smart_ptr.h"
 
-// typedefs for the vector and map types that deva supports
+// pre-decls for the vector and map types that deva supports
 class DevaObject;
-typedef vector<DevaObject> DOVector;
-typedef map<DevaObject, DevaObject> DOMap;
+class DOVector;
+class DOMap;
 ostream & operator << ( ostream & os, DevaObject & obj );
 
 // the basic piece of data stored on the data stack
@@ -117,5 +117,38 @@ struct DevaObject : public SymbolInfo
 	long Size() const;
 };
 
+class DOVector : public vector<DevaObject>
+{
+public:
+	// current index for enumerating the vector
+	size_t index;
+
+	// default constructor
+	DOVector() : vector<DevaObject>(), index( 0 )
+	{}
+
+	// copy constructor
+	DOVector( const DOVector & v ) : vector<DevaObject>( v ), index( 0 )
+	{}
+
+	// 'slice constructor'
+	DOVector( const DOVector & v, size_t start, size_t end ) : vector<DevaObject>( v.begin() + start, v.begin() + end ), index( 0 )
+	{}
+};
+
+class DOMap : public map<DevaObject, DevaObject>
+{
+public:
+	// current index for enumerating the map pairs
+	size_t index;
+
+	// default constructor
+	DOMap() : map<DevaObject, DevaObject>(), index( 0 )
+	{}
+
+	// copy constructor
+	DOMap( const DOMap & m ) : map<DevaObject, DevaObject>( m ), index( 0 )
+	{}
+};
 
 #endif // __DOBJECT_H__
