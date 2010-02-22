@@ -1,3 +1,11 @@
+release 0.9.6
+- renamed re module to match native module naming scheme 
+- moved 'for' loop code generation to use the 'enumerable interface' consisting of 'rewind' and 'next' methods. this fixes the bad code-gen bug with returns inside 'for' loops, and allows user-defined types to be used in 'for' loops
+- added builtin helpers module and used it in string builtins (should be used in all builtins eventually)k
+- fixed return bugs with functions that had conditional returns but no default return
+- fixed slice bug: slicing didn't handle -1 indices
+- NOTE: test 53 is failing on Mac OS due to a file ordering issue: glob fcns work, but return items in a different order
+
 release 0.9.5
 - moved to use (require) boost::spirit 1.40+
 - added 'stack' command to devadb to examine the program's data stack. updated FAQ, TODO and language doc.
