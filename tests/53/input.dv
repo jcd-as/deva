@@ -8,6 +8,7 @@ print( glob.glob_to_re( "?[xyz?]*.dv?" ) );
 print( "\\\\\\" );
 
 names = os.dirwalk( "." );
+names.sort();
 for( name in glob.fnmatch( names, "*.tst" ) )
 {
 	print( name );

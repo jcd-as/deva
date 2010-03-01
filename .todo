@@ -1,5 +1,4 @@
-<?xml version="1.0" ?>
-<todo version="0.1.20">
+<?xml version="1.0" ?><todo version="0.1.20">
     <note done="1252965849" priority="veryhigh" time="1252903036">
         semantic checking
         <note done="1252965684" priority="veryhigh" time="1252903146">
@@ -416,5 +415,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>
 </comment></note><note priority="veryhigh" time="1263190689">refactor all builtin fcns and methods to use helper methods from builtin_helpers.[h|cpp]
 </note><note priority="veryhigh" time="1263361557">BUG: string.split() sometimes appends an extra empty string (repro: '\n\t&quot;a&quot; : 0' split on the ':' returns 3 items)
-</note><note priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
-</note></todo>
+</note><note done="1267477231" priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
+<comment>replaced for loop code-gen with new code gen that utilizes a 'enumerable interface', enabling user-defined types to be used in for loops too. also, the parser had to be fixed for 'return' statementss
+</comment></note></todo>
