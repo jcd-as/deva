@@ -203,6 +203,17 @@ private:
 		{
 			return stack[idx];
 		}
+		// roll the stack from the given position (position is an 'index' 
+		// from the top of the stack, which is the same as a 'reverse index'
+		// from the end of the vector)
+		// (item at position is removed and pushed onto the top of the stack)
+		void roll( size_t pos )
+		{
+			//DevaObject temp = stack[stack.size() - (pos+1)];
+			DevaObject temp = *(stack.end() - (pos+1));
+			stack.erase( stack.end() - (pos+1) );
+			stack.push_back( temp );
+		}
 		// set the current size as a minimum limit
 		void SetLimit()
 		{
@@ -355,6 +366,8 @@ private:
 	void New_class( Instruction const & inst );
 	// 40 new instance
 	void New_instance( Instruction const & inst );
+	// 42 roll
+	void Roll( Instruction const & inst );
 	// illegal operation, if exists there was a compiler error/fault
 	void Illegal( Instruction const & inst );
 	///////////////////////////////////////////////////////////

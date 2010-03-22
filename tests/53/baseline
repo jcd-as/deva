@@ -2,9 +2,9 @@
 .*[abc]$
 .[xyz?].*\.dv.$
 \\\
-./c.tst
-./b.tst
 ./a.tst
+./b.tst
+./c.tst
 [./c.tst, ./b.tst, ./a.tst]
 [./input.dv]
 [d/a.a, d/a.b, d/a.c]

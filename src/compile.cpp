@@ -1259,8 +1259,14 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// either the two sides of the assignment, or the two sides and a semi-colon
 
+		// chained assignments are disallowed:
 		// if the lhs is another assignment op, ICE
-		if( i->children[0].value.id() == assignment_op_id )
+		if( i->children[0].value.id() == assignment_op_id ||
+			i->children[0].value.id() == add_assignment_op_id ||
+			i->children[0].value.id() == sub_assignment_op_id ||
+			i->children[0].value.id() == mul_assignment_op_id ||
+			i->children[0].value.id() == div_assignment_op_id ||
+			i->children[0].value.id() == mod_assignment_op_id )
 			throw DevaICE( "Chained assignment found. Semantic checking should have disallowed this." );
 			
 		// if the lhs is an identifier with a key_exp (vec/map) then generate a
@@ -1342,35 +1348,148 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			gen_IL_assignment_op( i, is );
 		}
 	}
-	// add assignment op (+=)
-	else if( i->value.id() == parser_id( add_assignment_op_id ) )
+	// add/sub/mul/div/mod assignment op (+=, -=, *=, /=, %=)
+	else if( i->value.id() == parser_id( add_assignment_op_id ) ||
+		( i->value.id() == parser_id( sub_assignment_op_id ) ) ||
+		( i->value.id() == parser_id( mul_assignment_op_id ) ) ||
+		( i->value.id() == parser_id( div_assignment_op_id ) ) ||
+		( i->value.id() == parser_id( mod_assignment_op_id ) ) )
 	{
-		walk_children( i, is );
-		gen_IL_add_assignment_op( i, is );
-	}
-	// sub assignment op (-=)
-	else if( i->value.id() == parser_id( sub_assignment_op_id ) )
-	{
-		walk_children( i, is );
-		gen_IL_sub_assignment_op( i, is );
-	}
-	// mul assignment op (*=)
-	else if( i->value.id() == parser_id( mul_assignment_op_id ) )
-	{
-		walk_children( i, is );
-		gen_IL_mul_assignment_op( i, is );
-	}
-	// div assignment op (/=)
-	else if( i->value.id() == parser_id( div_assignment_op_id ) )
-	{
-		walk_children( i, is );
-		gen_IL_div_assignment_op( i, is );
-	}
-	// mod assignment op (%=)
-	else if( i->value.id() == parser_id( mod_assignment_op_id ) )
-	{
-		walk_children( i, is );
-		gen_IL_mod_assignment_op( i, is );
+		// chained assignments are disallowed:
+		// if the lhs is another assignment op, ICE
+		if( i->children[0].value.id() == assignment_op_id ||
+			i->children[0].value.id() == add_assignment_op_id ||
+			i->children[0].value.id() == sub_assignment_op_id ||
+			i->children[0].value.id() == mul_assignment_op_id ||
+			i->children[0].value.id() == div_assignment_op_id ||
+			i->children[0].value.id() == mod_assignment_op_id )
+			throw DevaICE( "Chained assignment found. Semantic checking should have disallowed this." );
+
+		bool is_add = false;
+		bool is_sub = false;
+		bool is_mul = false;
+		bool is_div = false;
+		bool is_mod = false;
+		if( i->value.id() == parser_id( add_assignment_op_id ) )
+			is_add = true;
+		else if( i->value.id() == parser_id( sub_assignment_op_id ) )
+			is_sub = true;
+		else if ( i->value.id() == parser_id( mul_assignment_op_id ) )
+			is_mul = true;
+		else if ( i->value.id() == parser_id( div_assignment_op_id ) )
+			is_div = true;
+		else if ( i->value.id() == parser_id( mod_assignment_op_id ) )
+			is_mod = true;
+
+		// do the assignment/arithmetic op
+		// if the lhs is an identifier with a key_exp (vec/map) then generate a
+		// table store
+		if( i->children[0].value.id() == identifier_id && i->children[0].children.size() > 0 &&
+			 i->children[0].children[0].value.id() == key_exp_id )
+		{
+			// generate the add/sub/mul/div/mod op 
+			walk_children( i, is );
+			if( is_add || is_sub )
+				gen_IL_add_op( i, is );
+			else if( is_mul || is_div || is_mod )
+				gen_IL_mult_op( i, is );
+			else
+				throw DevaICE( "Unknown operand in arithmetic assignment operation" );
+
+			// push the identifier
+			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+			generate_line_num( i->children.begin(), is );
+			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+			// push the key exp
+			reverse_walk_children( i->children[0].children.begin(), is );
+			
+			// generate a 'roll 2' op to get the stack set-up
+			// properly for the tbl_store op
+			is.push( Instruction( op_roll, DevaObject( "", (size_t)2, false ) ) );
+
+			// add the tbl_store op
+			generate_line_num( i->children.begin()+1, is );
+			is.push( Instruction( op_tbl_store, DevaObject( "", (size_t)i->children[0].children[0].children.size()-2, false ) ) );
+		}
+		// a dot-op on the lhs also indicates a vector store instead of load, as
+		// long as it is not a function call.
+		else if ( i->children[0].value.id() == dot_op_id )
+		{
+			// generate the add/sub/mul/div/mod op 
+			walk_children( i, is );
+			if( is_add || is_sub )
+				gen_IL_add_op( i, is );
+			else if( is_mul || is_div || is_mod )
+				gen_IL_mult_op( i, is );
+			else
+				throw DevaICE( "Unknown operand in arithmetic assignment operation" );
+
+			// lhs of dot-op stays the same
+			if( i->children[0].children[0].value.id() == identifier_id )
+			{
+				string lhs = strip_symbol( string( i->children[0].children[0].value.begin(), i->children[0].children[0].value.end() ) );
+				generate_line_num( i->children[0].children.begin(), is );
+				is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
+			}
+			else
+			{
+				// don't pass 'self' (i) as parent, keep the parent the root for the
+				// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
+				// the parent of a)
+				generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
+			}
+
+			// turn the rhs into a string
+			string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
+			generate_line_num( i->children[0].children.begin()+1, is );
+			is.push( Instruction( op_push , DevaObject( "", rhs ) ) );
+
+			// rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
+			// if the first child is an arg_list_exp, it's a fcn call
+//			if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
+//			{
+//				// first walk the children, in reverse order
+//				reverse_walk_children( i->children[0].children.begin() + 1, is );
+//
+//				// then generate the IL for this node (back-patching the return
+//				// address etc.)
+//				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num );
+//			}
+//			// check for a table lookup (for 'a.b[0]' etc)
+//			// if the first child is a key_exp, it's a table lookup
+//			else
+			   	if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
+			{
+				// first generate the tbl_load instruction for the dot-op
+				generate_line_num( i->children.begin(), is );
+				is.push( Instruction( op_tbl_load ) );
+				// then do the key op 
+				reverse_walk_children( i->children[0].children[1].children.begin(), is );
+			}
+
+			// generate a 'roll 2' op to get the stack set-up
+			// properly for the tbl_store op
+			is.push( Instruction( op_roll, DevaObject( "", (size_t)2, false ) ) );
+
+			// add the table store op (for the assignment op)
+			generate_line_num( i->children.begin(), is );
+			is.push( Instruction( op_tbl_store ) );
+		}
+		else
+		{
+			walk_children( i, is );
+
+			if( is_add )
+				gen_IL_add_assignment_op( i, is );
+			else if( is_sub )
+				gen_IL_sub_assignment_op( i, is );
+			else if( is_mul )
+				gen_IL_mul_assignment_op( i, is );
+			else if( is_div )
+				gen_IL_div_assignment_op( i, is );
+			else if( is_mod )
+				gen_IL_mod_assignment_op( i, is );
+		}
 	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )

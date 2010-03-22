@@ -173,6 +173,9 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_endf:
 		os << "endf";
 		break;
+	case op_roll:
+		os << "roll";
+		break;
 	case op_illegal:
 		os << "ILLEGAL OPCODE. COMPILER ERROR";
 		break;
@@ -867,13 +870,13 @@ void gen_IL_mult_op( iter_t const & i, InstructionStream & is )
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	generate_line_num( i, is );
 	// multiply
-	if( s == "*" )
+	if( s == "*" || s == "*=" )
 		is.push( Instruction( op_mul ) );
 	// divide
-	else if( s == "/" )
+	else if( s == "/" || s == "/=" )
 		is.push( Instruction( op_div ) );
 	// modulus
-	else if( s == "%" )
+	else if( s == "%" || s == "%=" )
 		is.push( Instruction( op_mod ) );
 	// else?
 }
@@ -883,10 +886,10 @@ void gen_IL_add_op( iter_t const & i, InstructionStream & is )
 	string s = strip_symbol( string( i->value.begin(), i->value.end() ) );
 	generate_line_num( i, is );
 	// add 
-	if( s == "+" )
+	if( s == "+" || s == "+=" )
 		is.push( Instruction( op_add ) );
 	// subract
-	else if( s == "-" )
+	else if( s == "-" || s == "-=" )
 		is.push( Instruction( op_sub ) );
 	// else?
 }

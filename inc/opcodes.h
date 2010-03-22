@@ -76,6 +76,7 @@ enum Opcode
 	op_new_class,	// 39 create a new class object and push onto the stack
 	op_new_instance,// 40 create a new instance of a class and push onto the stack
 	op_endf,		// 41 end of function. nop indicating end of defun
+	op_roll,		// 42 roll the stack from a given position
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

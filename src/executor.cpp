@@ -2609,6 +2609,22 @@ void Executor::New_instance( Instruction const & inst )
 	// push it onto the stack
 	stack.push_back( instance );
 }
+
+// 42 roll the stack from a given position. 1 arg: the position to roll from
+void Executor::Roll( Instruction const & inst )
+{
+	// first argument has the position to roll from
+	if( inst.args.size() < 1 )
+		throw DevaICE( "No stack position given in roll instruction." );
+
+	if( inst.args[0].Type() != sym_size )
+		throw DevaICE( "Invalid stack position given in roll instruction." );
+	
+	size_t pos = inst.args[0].sz_val;
+
+	stack.roll( pos );
+}
+
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
 {
@@ -2757,6 +2773,9 @@ bool Executor::DoInstr( Instruction & inst )
 		break;
 	case op_new_instance:	// 40 new instance. 1 arg: number of args to pass to class's 'new'
 		New_instance( inst );
+		break;
+	case op_roll:
+		Roll( inst );
 		break;
 	case op_illegal:	// illegal operation, if exists there was a compiler error/fault
 	default:
