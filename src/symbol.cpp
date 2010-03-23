@@ -61,10 +61,20 @@ string strip_symbol( const string& src, const string& c )
 // variable, for instance)
 string strip_quotes( const string& src )
 {
-	string c( "\"'" );
+	string quotes( "\"'" );
 
- 	int p2 = src.find_last_not_of( c );
- 	if( p2 == string::npos ) 
+	int start = src.find_first_of( quotes );
+	if( start == string::npos )
+		return string();
+
+	char c;
+	if( src[start] == '"' )
+		c = '"';
+	else
+		c = '\'';
+
+	int p2 = src.find_last_not_of( c );
+	if( p2 == string::npos ) 
 		return string();
 	int p1 = src.find_first_not_of( c );
 	if( p1 == string::npos )

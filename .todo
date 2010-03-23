@@ -417,4 +417,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </note><note priority="veryhigh" time="1263361557">BUG: string.split() sometimes appends an extra empty string (repro: '\n\t&quot;a&quot; : 0' split on the ':' returns 3 items)
 </note><note done="1267477231" priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
 <comment>replaced for loop code-gen with new code gen that utilizes a 'enumerable interface', enabling user-defined types to be used in for loops too. also, the parser had to be fixed for 'return' statementss
+</comment></note><note priority="high" time="1269284782">BUG: cannot call a string method on the result of a string slice (e.g. foo[1:4].strip() errors)
+</note><note priority="high" time="1269294954">BUG: breakpoints in devadb require *exact* filename (as used by devadb), should accept short names
+</note><note done="1269316757" priority="veryhigh" time="1269299257">BUG: quotes not handled properly in strings. e.g. in '&quot;[\\s\\S]*&quot;' all quotes are omitted (single *and* double), whereas only the enclosing single quotes _should_ be omitted
+<comment>strip_quotes() in symbol.cpp was incorrect
 </comment></note></todo>
