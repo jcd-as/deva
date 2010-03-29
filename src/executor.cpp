@@ -2047,6 +2047,7 @@ void Executor::Output( Instruction const & inst )
 //	cout << endl;
 }
 static int next_enter_is_from_call = -1;
+static vector<int> stack_sizes;
 // 31 call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
@@ -2176,6 +2177,9 @@ void Executor::Call( Instruction const & inst )
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
 
+		// save the stack size
+		stack_sizes.push_back( stack.size() - args_on_stack );
+
 		// get the offset for the function
 		size_t offset = fcn->sz_val;
 		// jump execution to the function offset
@@ -2213,6 +2217,17 @@ void Executor::Return( Instruction const & inst )
 			throw DevaRuntimeException( "Invalid object for return value." );
 
 		ret = DevaObject( *rv );
+	}
+
+	// clear the stack of any local variables
+	int stack_size = stack_sizes.back();
+	stack_sizes.pop_back();
+	int num_locals = stack.size() - stack_size;
+	while( num_locals > 0 ) // > 1 because the return address is on there
+	{
+		DevaObject o = stack.back();
+		stack.pop_back();
+		num_locals--;
 	}
 
 	// pop the return location off the top of the stack
@@ -2953,6 +2968,9 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* n
 		args.pop_back();
 		stack.push_back( tmp );
 	}
+
+	// save the stack size
+	stack_sizes.push_back( stack.size() - args_on_stack );
 
 	size_t orig_ip = ip;
 	// get the offset for the function

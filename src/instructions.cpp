@@ -382,40 +382,25 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 		throw DevaICE( "Invalid 'in' statement in 'for' loop." );
 
 	generate_line_num( i, is );
+
+	// get the vector/map on the stack
+	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index, 0 );
 	// push a place-holder for the return address for the call to 'rewind'
 	size_t loc = is.size();
 	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
 
-	// get the vector/map on the stack
-	generate_IL_for_node( i->children[in_op_index].children.begin(), is, i->children.begin() + in_op_index, 0 );
-	// save a copy into a magic ".table" variable
-	// create a reasonably unique name for the table object by using a static
-	// counter AND the system clock (since the static alone might not be enough
-	// in cases of dynamically generated code e.g. eval() )
-	time_t tm = time( NULL );
-	string tbl( ".table" );
-	static int count = 0;
-	char s[33] = {0};
-	sprintf( s, "%d", count++ );
-	tbl += s;
-	memset( s, 0, 33 );
-	timeval tv;
-	gettimeofday( &tv, NULL );
-	sprintf( s, "%016lu.%010lu", tv.tv_sec, tv.tv_usec );
-	tbl += s;
-	is.push( Instruction( op_dup, DevaObject( "", 0.0 ) ) );
-	is.push( Instruction( op_push, DevaObject( tbl.c_str(), sym_unknown ) ) );
-	is.push( Instruction( op_swap ) );
-	is.push( Instruction( op_store ) );
+	// 'copy' the vector/map to the top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
 
 	// use the 'enumerable interface' (rewind & next) 
 	// call 'rewind'
 	is.push( Instruction( op_push, DevaObject( "", string( "rewind" ) ) ) );
 	is.push( Instruction( op_tbl_load, DevaObject( "", false ) ) );
 	is.push( Instruction( op_call, DevaObject( "", (size_t)0, false ) ) );
-	is.push( Instruction( op_pop ) );
 	// back-patch the return address for the call to 'rewind'
 	is[loc] = Instruction( op_push, DevaObject( "", is.Offset(), true ) );
+
+	is.push( Instruction( op_pop ) );
 
 	// create the vector's 'iteration' object
 	is.push( Instruction( op_push, DevaObject( item_name, sym_unknown ) ) );
@@ -436,7 +421,10 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	// call 'next' on the vector and store its value into a vector
 	loc = is.size();
 	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
-	is.push( Instruction( op_push, DevaObject( tbl, sym_unknown ) ) );
+
+	// 'copy' the vector/map to the top of the stack
+	is.push( Instruction( op_dup, DevaObject( "", 1.0 ) ) );
+	// get the 'next' method for the vector/map and call it
 	is.push( Instruction( op_push, DevaObject( "", string( "next" ) ) ) );
 	is.push( Instruction( op_tbl_load, DevaObject( "", false ) ) );
 	is.push( Instruction( op_call, DevaObject( "", (size_t)0, false ) ) );
@@ -512,6 +500,9 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset(), true ) );
 
 	// pop to remove the false result from 'next' from the stack
+	is.push( Instruction( op_pop ) );
+
+	// pop to remove the vector/map
 	is.push( Instruction( op_pop ) );
 }
 
