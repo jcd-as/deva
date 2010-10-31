@@ -286,7 +286,7 @@ void do_re_delete( Executor* ex )
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to module '_re' function 'delete'." );
 
-	// regex to make is on top of the stack
+	// regex to delete is on top of the stack
 	DevaObject obj = ex->stack.back();
 	ex->stack.pop_back();
 	

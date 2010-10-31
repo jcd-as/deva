@@ -2239,8 +2239,19 @@ void Executor::Return( Instruction const & inst )
 	// jump to the return location
 	size_t offset = ob.sz_val;
 	ip = offset;
-	// perform 'leave' instruction - pops scope, adjusts trace stack etc
+	// keep performing 'Leave's until the top Frame of the stack trace is
+	// a call site??
+	vector<Frame>::reverse_iterator i = trace.rbegin();
+	while( i != trace.rend() && i->call_site == -1 )
+	{
+		Leave( inst );
+		i = trace.rbegin();
+	}
+	// and leave the call site too
 	Leave( inst );
+	// current function is now the top of the stack trace
+	i = trace.rbegin();
+	function = i->function;
 	// reset the static that tracks the number of args processed
 	args_on_stack = -1;
 }
@@ -2977,6 +2988,12 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* n
 	size_t offset = fcn->sz_val;
 	// jump execution to the function offset
 	ip = offset;
+
+	// set function tracker
+	function = fcn->name;
+	// set the static that tracks whether an enter instruction is due to a
+	// fcn call or not
+	next_enter_is_from_call = line;
 
 	// read the instructions
 	bool done = false;
