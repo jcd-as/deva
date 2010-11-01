@@ -1227,7 +1227,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// then walk the children - key_exp will push it's children (the key) and
 			// the key-lookup op
-			reverse_walk_children( i, is );
+			walk_children( i, is );
 		}
 	}
 	// in op ('in' keyword in for loops)

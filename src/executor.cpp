@@ -1101,26 +1101,34 @@ void Executor::Tbl_load( Instruction const & inst )
 			smart_ptr<DOMap> mp( table->map_val );
 			DOMap::iterator it;
 			it = mp->find( idxkey );
+
 			// if not found, try the map built-in methods...
+			// (must be a string)
 			if( it == mp->end() )
 			{
-				// built-in method call??
-				// top of stack contains key (fcn name as string)
-				// next-to-top contains value (fcn as sym_address)
-				string key( "map_");
-				key += idxkey.str_val; 
-				// key == string
-				// table == map
-				// look up 'key' in the map built-ins
-				if( !is_map_builtin( key ) )
-					throw DevaRuntimeException( boost::format( "'%1%': invalid map key or method. No such item found." ) % idxkey.str_val );
-				// push the map as an argument
-				stack.push_back( *table );
-				// push a fcn with 'key' as its name (it's a builtin, so the offset
-				// given is irrelevant)
-				stack.push_back( DevaObject( key.c_str(), (size_t)-1, true ) );
-				return;
+				if( idxkey.Type() == sym_string )
+				{
+					// built-in method call??
+					// top of stack contains key (fcn name as string)
+					// next-to-top contains value (fcn as sym_address)
+					string key( "map_");
+					key += idxkey.str_val; 
+					// key == string
+					// table == map
+					// look up 'key' in the map built-ins
+					if( !is_map_builtin( key ) )
+						throw DevaRuntimeException( boost::format( "'%1%': invalid map key or method. No such item found." ) % idxkey.str_val );
+					// push the map as an argument
+					stack.push_back( *table );
+					// push a fcn with 'key' as its name (it's a builtin, so the offset
+					// given is irrelevant)
+					stack.push_back( DevaObject( key.c_str(), (size_t)-1, true ) );
+					return;
+				}
+				else
+					throw DevaRuntimeException( "Invalid map key or method. No such item found." );
 			}
+
 			// push it onto the stack
 			pair<DevaObject, DevaObject> p = *it;
 			stack.push_back( p.second );
