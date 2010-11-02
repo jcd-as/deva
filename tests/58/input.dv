@@ -1,0 +1,24 @@
+# test early returns against local variables and scopes
+def Foo( max )
+{
+	local sum = 0;
+	for( i in range( 0, 100 ) )
+	{
+		sum += i;
+		if( i == max )
+			return sum;
+	}
+	return sum;
+}
+
+def Bar()
+{
+	local sum = "sum";
+	n = Foo( 10 );
+	print( sum );
+}
+
+local sum = {};
+Bar();
+print( sum );
+print( a );

@@ -33,6 +33,7 @@
 
 #include "instructions.h"
 #include "executor.h"
+#include "builtin_helpers.h"
 #include <string>
 
 using namespace std;

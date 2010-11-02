@@ -2064,6 +2064,8 @@ void Executor::Call( Instruction const & inst )
 	{
 		// set the static that tracks the number of args processed
 		args_on_stack = inst.args[1].sz_val;
+		// built-ins will clear the error flag themselves (or not, in the case
+		// of the error/geterror/seterror fcns)
 		execute_builtin( this, inst );
 		// reset the static that tracks the number of args (builtins don't run
 		// the 'return' instruction)
@@ -2071,6 +2073,12 @@ void Executor::Call( Instruction const & inst )
 	}
 	else
 	{
+		// clear the global error flag before making any call to deva code
+		// (built-ins clear it themselves, so that the error/geterror/seterror
+		// built-ins can _not_ clear it, avoiding the situation where it can
+		// never actually be retrieved)
+		SetError( false );
+
 		DevaObject* fcn;
 		// if there's more than one arg, the first is the name of the fcn to call 
 		// and the second is the number of args passed to it (on the stack)
@@ -2938,7 +2946,7 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 ), current_scopes( NULL )
+Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 ), is_error( false ), error_data( NULL ), current_scopes( NULL ) 
 {}
 
 Executor::~Executor()

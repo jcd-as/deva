@@ -68,6 +68,9 @@ void do_num( Executor *ex );
 void do_range( Executor *ex );
 void do_format( Executor *ex );
 void do_join( Executor *ex );
+void do_error( Executor *ex );
+void do_seterror( Executor *ex );
+void do_geterror( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -102,6 +105,9 @@ static const string builtin_names[] =
 	string( "range" ),
 	string( "format" ),
     string( "join" ),
+	string( "error" ),
+	string( "seterror" ),
+	string( "geterror" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -137,6 +143,9 @@ builtin_fcn builtin_fcns[] =
 	do_range,
 	do_format,
     do_join,
+	do_error,
+	do_seterror,
+	do_geterror,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -163,8 +172,15 @@ void execute_builtin( Executor *ex, const Instruction & inst )
     if( idx > num_of_builtins )
 		throw DevaICE( "Out-of-array-bounds looking for built-in function." );
     else
+	{
+		// built-ins clear the error flag/data themselves, so that the 
+		// error/geterror/seterror built-ins can _not_ clear it, avoiding the 
+		// situation where it can never actually be retrieved
+		if( name != "error" && name != "seterror" && name != "geterror" )
+			ex->SetError( false );
         // call the function
         builtin_fcns[idx]( ex );
+	}
 }
 
 // convert an object to a string value
@@ -1673,4 +1689,57 @@ void do_join( Executor *ex )
 
 	// push the string onto the stack
 	ex->stack.push_back( DevaObject( "", ret ) );
+}
+
+void do_error( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
+
+	bool err = ex->Error();
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return error
+	ex->stack.push_back( DevaObject( "", err ) );
+
+}
+
+void do_seterror( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seterror'." );
+
+	// get error data arg from stack
+	DevaObject o = get_arg( ex, "seterror", "error_object" );
+
+	// set the global error flag
+	ex->SetError( true );
+	
+	// set the global error object
+	ex->SetErrorData( o );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// all fcns return *something*
+	ex->stack.push_back( DevaObject( "", sym_null ) );
+}
+
+void do_geterror( Executor *ex )
+{
+	if( Executor::args_on_stack != 0 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
+
+	DevaObject* o = ex->GetErrorData();
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// push the error object onto the stack
+	if( !o )
+		ex->stack.push_back( DevaObject( "", sym_null ) );
+	else
+		ex->stack.push_back( DevaObject( "", *o ) );
 }

@@ -85,6 +85,12 @@ private:
 	// the current bytecode (current code_block we're working in/with)
 	unsigned char *code;
 
+	// global error handling:
+	// the global error flag
+	bool is_error;
+	// the global error data
+	DevaObject* error_data;
+
 	////////////////////////////////////////////////////
 	// nested types
 	////////////////////////////////////////////////////
@@ -398,6 +404,25 @@ public:
 	bool ImportBuiltinModule( string name );
     // import all the functions defined in a built-in module
 	bool ImportBuiltinModuleFunctions( string name, map<string, builtin_fcn> & fcns );
+
+	// global error methods
+	bool Error(){ return is_error; }
+	void SetError( bool err )
+	{
+		// set the flag
+		is_error = err;
+		// if we're clearing the flag, we need to clear the data too
+		if( !is_error )
+		{
+			delete error_data;
+			error_data = NULL;
+		}
+	}
+	void SetErrorData( const DevaObject & data )
+	{
+		error_data = new DevaObject( data );
+	}
+	DevaObject* GetErrorData(){ return error_data; }
 
     // add all the known built-in modules
     // (for language embedding clients such as deva, devadb etc)

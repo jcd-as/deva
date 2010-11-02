@@ -374,8 +374,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
         constructors ('new' methods) aren't inherited, because base classes are applied when the class object is created and constructors are called when instance objects are created. so even if you call Base.new() directly in the constructor, it has no effect. possible solution is to add a 'base' keyword that the derived class can use to call through to the 'new' methods of the base classes itself.
     <comment>added a __bases__ vector to classes that contains their base classes. made the new_instance instruction call base class no-arg new() methods
 </comment></note>
-<note priority="veryhigh" time="1258926287">error handling: user-defined error handling routine..?
-</note><note done="1258959199" priority="high" time="1258957957">eval() causes memory leaks(?) (of SymbolTables)
+<note done="1288668037" priority="veryhigh" time="1258926287">error handling: user-defined error handling routine..?
+<comment>no, no reason to let users handle system errors (exceptions). added error handling builtins for user errors
+</comment></note><note done="1258959199" priority="high" time="1258957957">eval() causes memory leaks(?) (of SymbolTables)
 <comment>1) symbol tables were being freed after file compilation, but not after late (eval) compilation and 2) each call to ParseText() was adding a new 'global' symbol table at key 0, but as it is a pointer, adding a new one to the map 'lost' the old pointer.
 </comment></note><note done="1259631935" priority="high" time="1259268315">move instance construction 'new' method handling to compile-time instead of run-time, so that breakpoints can be caught during calls to 'new' (??)
 <comment>done. discovered in the process that module/namespaces really don't work properly
@@ -431,5 +432,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>not repro
 </comment></note><note done="1288497096" priority="veryhigh" time="1288323839">stack trace is not always tracked correctly: not all returns seem to remove calls off the stack trace. looks like early returns from inside blocks cause this. Break ops correctly calculate the right number of Leave's to call, but early returns don't.
 <comment>early returns weren't adjusting scopes properly
-</comment></note><note priority="veryhigh" time="1288549993">error handling: new 'error' type with string data ??
-</note></todo>
+</comment></note><note done="1288668069" priority="veryhigh" time="1288549993">error handling: new 'error' type with string data ??
+<comment>no, added builtin fcns error(), seterror() and geterror() instead. easier, simpler and less invasive
+</comment></note></todo>
