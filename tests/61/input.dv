@@ -1,0 +1,17 @@
+# test vector appends
+vec = [];
+# value types:
+val = null;
+vec.append( val );
+val = true;
+vec.append( val );
+val = "foobar";
+vec.append( val );
+val = 0;
+vec.append( val );
+# reference types
+val = [0,1];
+vec.append( val );
+val = {0:1};
+vec.append( val );
+print( vec );
