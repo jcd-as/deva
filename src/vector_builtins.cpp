@@ -168,10 +168,16 @@ void do_vector_append( Executor *ex )
 		in = ex->find_symbol( val );
 		if( !in )
 			throw DevaRuntimeException( "Unknown symbol passed to vector built-in method 'append'." );
-		// ref type?
+		// ref type?  need to create a new reference
 		if( in->Type() == sym_vector || in->Type() == sym_map || 
 			in->Type() == sym_class || in->Type() == sym_instance )
-			in = &val;
+		{
+			// this prevents errors when, for instance, adding a local in an
+			// inner scope
+			DevaObject* copy;
+			copy = new DevaObject( "", *in );
+			in = copy;
+		}
 	}
 	else
 		in = &val;
