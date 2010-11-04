@@ -663,16 +663,18 @@ void do_string_strip( Executor *ex )
 		chars = string( " \t\n" );
 
 	string in( str.str_val );
+	string ret( "" );
 	
 	// left-side strip
 	size_t left = in.find_first_not_of( chars );
-	if( left == string::npos )
-		left = 0;
-	// right-side strip
-	size_t right = in.find_last_not_of( chars );
-	if( right == string::npos )
-		right = in.length();
-	string ret = in.substr( left, right - left + 1 );
+	// if there aren't any characters that aren't in our stripped list, return
+	// an empty string
+	if( left != string::npos )
+	{
+		// right-side strip
+		size_t right = in.find_last_not_of( chars );
+		ret = in.substr( left, right - left + 1 );
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -702,16 +704,20 @@ void do_string_lstrip( Executor *ex )
 		chars = string( " \t\n" );
 
 	string in( str.str_val );
+	string ret( "" );
 	
 	// left-side strip
 	size_t left = in.find_first_not_of( chars );
-	if( left == string::npos )
-		left = 0;
-	// right-side
-	size_t right = in.length();
-	if( right == string::npos )
-		right = in.length();
-	string ret = in.substr( left, right - left + 1 );
+	// if there aren't any characters that aren't in our stripped list, return
+	// an empty string
+	if( left != string::npos )
+	{
+		// right-side
+		size_t right = in.length();
+		if( right == string::npos )
+			right = in.length();
+		ret = in.substr( left, right - left + 1 );
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -740,10 +746,16 @@ void do_string_rstrip( Executor *ex )
 		chars = string( " \t\n" );
 
 	string in( str.str_val );
+	string ret( "" );
 	
 	// right-side strip
 	size_t right = in.find_last_not_of( chars );
-	string ret = in.substr( 0, right + 1 );
+	// if there aren't any characters that aren't in our stripped list, return
+	// an empty string
+	if( right != string::npos )
+	{
+		ret = in.substr( 0, right + 1 );
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
