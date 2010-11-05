@@ -2073,11 +2073,7 @@ void Executor::Call( Instruction const & inst )
 	}
 	else
 	{
-		// clear the global error flag before making any call to deva code
-		// (built-ins clear it themselves, so that the error/geterror/seterror
-		// built-ins can _not_ clear it, avoiding the situation where it can
-		// never actually be retrieved)
-		SetError( false );
+		bool is_destructor = false;
 
 		DevaObject* fcn;
 		// if there's more than one arg, the first is the name of the fcn to call 
@@ -2105,6 +2101,9 @@ void Executor::Call( Instruction const & inst )
 				args_on_stack = inst.args[1].sz_val + 1;
 			else
 				args_on_stack = inst.args[1].sz_val;
+
+			if( fcn->name.find( "delete@" ) != string::npos )
+				is_destructor = true;
 		}
 		// if there's one arg (the num of args to the fcn), 
 		// then it's a method invokation,
@@ -2192,6 +2191,13 @@ void Executor::Call( Instruction const & inst )
 		}
 		else
 			throw DevaICE( "Invalid number of arguments to 'call' instruction." );
+
+		// clear the global error flag before making any call to deva code
+		// (built-ins clear it themselves, so that the error/geterror/seterror
+		// built-ins can _not_ clear it, avoiding the situation where it can
+		// never actually be retrieved)
+		if( !is_destructor )
+			SetError( false );
 
 		// save the stack size
 		stack_sizes.push_back( stack.size() - args_on_stack );
