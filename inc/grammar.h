@@ -27,6 +27,8 @@
 
 // TODO:
 // * missing semi-colon ends up with generic "Invalid statement" error :(
+// * 'b=a[0,1]' results in a bad compound_statement for the block which is hard
+//   to figure out
 // * more & better error reporting (try to avoid multiple reports on the same
 // 	 line/problem)
 
