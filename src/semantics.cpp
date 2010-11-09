@@ -288,7 +288,6 @@ void check_assignment_op( iter_t const & i )
 //		// TODO: only warn once per scope (this warns on every place it's a lhs
 //		// to an assignment)
 //		// warn if redef'ing a symbol
-//		SymbolTable* st = scopes[i->value.value().scope];
 //		int idx = st->parent_id;
 //		// global scope has no parent
 //		if( idx != -1 )
@@ -296,8 +295,8 @@ void check_assignment_op( iter_t const & i )
 //			SymbolTable* parent_st = scopes[st->parent_id];
 //			if( parent_st )
 //			{
-//				SymbolInfo* si = find_symbol( lhs.sym, parent_st, scopes );
-//				if( si )
+//				SymbolInfo si = find_symbol( lhs.sym, parent_st, scopes );
+//				if( si.Type() != sym_end )
 //					emit_warning( i->value.value(), string( string( "Redefining symbol. '" ) + lhs.sym + "' already defined in higher scope" ).c_str() );
 //			}
 //		}

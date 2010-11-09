@@ -1288,7 +1288,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			generate_line_num( i->children.begin()+1, is );
 			is.push( Instruction( op_tbl_store, DevaObject( "", (size_t)i->children[0].children[0].children.size()-2, false ) ) );
 		}
-		// a dot-op on the lhs also indicates a vector store instead of load, as
+		// a dot-op on the lhs also indicates a table store instead of load, as
 		// long as it is not a function call.
 		else if ( i->children[0].value.id() == dot_op_id )
 		{
@@ -1548,9 +1548,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 				generate_line_num( i->children.begin(), is );
 				is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
-				// push the key exp
+				// then do the key op 
 				reverse_walk_children( i->children[0].children.begin(), is );
-				is.push( Instruction( op_tbl_load ) );
+				gen_IL_key_exp( i->children[0].children.begin(), is );
 			}
 			// lhs stays the same
 			else

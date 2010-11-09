@@ -28,7 +28,7 @@
 // TODO:
 // * function breakpoints (fcn name)
 // * handle out-of-memory conditions (allocating text buffer, SymbolTable*s)
-// * command to show the data stack
+// * break on program error (exception) ???
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/positional_options.hpp>
@@ -341,6 +341,7 @@ int main( int argc, char** argv )
 
 		Executor* ex = NULL;
 		cout << "devadb " << VERSION << endl;
+re_start:
 		try
 		{
 			bool running = false;
@@ -620,7 +621,16 @@ start:
 			// dump the stack trace
 			if( ex )
 				ex->DumpTrace( cout, false );
-			return -1;
+			cout << "program terminated. restart? (y/n)" << endl;
+			char c2 = getchar();
+			if( c2 == 'y' )
+			{
+				// remove the newline
+				getchar();
+				goto re_start;
+			}
+			else
+				return -1;
 		}
 
 		// free the execution engine, if it hasn't been already
