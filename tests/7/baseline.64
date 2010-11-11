@@ -448,7 +448,7 @@ push : foo ;
 tbl_load : , address/sized-value = 1 ; 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
-tbl_load : 
+tbl_load : , address/sized-value = 1 ; 
 push : c ; 
 tbl_load : 
 push : , address/sized-value = 18446744073709551615 ; 
