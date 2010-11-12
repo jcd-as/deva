@@ -98,28 +98,119 @@ private:
 	// for the current state
 	struct Scope : public map<string, DevaObject*>
 	{
+		Executor* ex;
+
 		void AddObject( DevaObject* ob )
 		{
 			insert( pair<string, DevaObject*>(ob->name, ob) );
 		}
+		Scope( Executor* e ) : ex( e ){}
 		~Scope()
 		{
 			// delete all the DevaObject ptrs
+
+			// first call the destructors on instances, delete them and null
+			// them out in the collection
+			// (do this first so the classes (& methods) that they
+			// implement/inherit from aren't deleted first
 			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
 			{
+#ifdef DEBUG
+				string name = i->first;
+				DevaObject* ob = i->second;
+#endif
+				/////////////////////////////////////////////
+				// is this object an instance?
+				if( i->second->Type() == sym_instance )
+				{
+					DevaObject* instance = i->second;
+					// is it going to be deleted?
+					if( instance->map_val.getRefs() == 1 )
+					{
+						// get the name of the class
+						DOMap::iterator it = instance->map_val->find( DevaObject( "", string( "__class__" ) ) );
+						if( it == instance->map_val->end() )
+							throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__class__' member." );
+						if( it->second.Type() != sym_string )
+							throw DevaICE( "__class__ attribute on a class instance is not of type 'string'." );
+						string cls_name = it->second.str_val;
+
+						// get the name of the module
+						it = instance->map_val->find( DevaObject( "", string( "__module__" ) ) );
+						if( it == instance->map_val->end() )
+							throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__module__' member." );
+						if( it->second.Type() != sym_string )
+							throw DevaICE( "__module__ attribute on a class instance is not of type 'string'." );
+						string mod_name = it->second.str_val;
+
+						// does it have a 'delete' method?
+						string del( "delete@" );
+						del += cls_name;
+
+						// no module... (i.e. 'main' module)
+						ScopeTable* ns = NULL;
+						// look up the namespace if we have a module
+						if( mod_name.length() != 0 )
+						{
+							map<string, ScopeTable*>::iterator iter;
+							iter = ex->namespaces.find( mod_name );
+							// not found?
+							if( iter == ex->namespaces.end() )
+								throw DevaCriticalException( "Trying to destroy an instance of a class in an unknown namespace." );
+							// else we found the namespace
+							else
+							{
+								ns = iter->second;
+							}
+						}
+						// look up the class
+						DevaObject* cls = NULL;
+						cls = ex->find_symbol( DevaObject( cls_name, sym_unknown ), ns );
+						if( !cls )
+							throw DevaICE( "Trying to destroy unknown class." );
+
+						// look up the fcn name
+						DevaObject* fcn = ex->find_symbol( del, ns );
+						if( fcn )
+						{
+							if( fcn->Type() != sym_address )
+								throw DevaCriticalException( "Object is invalid: 'delete' is not a method." );
+							// push 'self'
+							ex->stack.push_back( *instance );
+							// call it
+							ex->ExecuteDevaFunction( del, 1, ns );
+							// ignore the return value
+							ex->stack.pop_back();
+						}
+					}
 				delete i->second;
+				i->second = NULL;
+				}
+			}
+			// delete all the non-instance objects
+			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
+			{
+				if( i->second == NULL )
+					continue;
+#ifdef DEBUG
+				string name = i->first;
+				DevaObject* ob = i->second;
+#endif
+				if( i->second->Type() != sym_instance )
+					delete i->second;
 			}
 		}
 	};
 	struct ScopeTable : public vector<Scope*>
 	{
+		Executor* ex;
 		void AddObject( DevaObject* ob )
 		{
 			back()->AddObject( ob );
 		}
 		void Push()
 		{
-			push_back( new Scope() );
+			push_back( new Scope( ex ) );
 		}
 		void Pop()
 		{
@@ -127,6 +218,7 @@ private:
 			delete back();
 			pop_back();
 		}
+		ScopeTable( Executor* e ) : ex( e ){}
 		~ScopeTable()
 		{
 			// it is normal for 'namespace' scope tables (i.e. all but the
@@ -137,6 +229,8 @@ private:
 				delete back();
 				pop_back();
 			}
+			if( size() > 0 )
+				throw new DevaICE( "Not all scopes removed from scope table" );
 		}
 	};
 
@@ -234,7 +328,7 @@ private:
 	////////////////////////////////////////////////////
 	// private data associated with nested types:
 	////////////////////////////////////////////////////
-	ScopeTable global_scopes;
+	ScopeTable *global_scopes;
 	map<string, ScopeTable*> namespaces;
 	ScopeTable *current_scopes;
 

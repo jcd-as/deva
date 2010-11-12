@@ -175,6 +175,7 @@ void do_vector_append( Executor *ex )
 			// this prevents errors when, for instance, adding a local in an
 			// inner scope
 			DevaObject* copy;
+			// TODO: valgrind test 46 says this is leaking
 			copy = new DevaObject( "", *in );
 			in = copy;
 		}

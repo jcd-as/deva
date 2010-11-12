@@ -104,9 +104,9 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	// if this scope table isn't the 'global' scope table, 
 	// we need to look in the global scope too 
 	// (which is available to all scopes/modules always)
-	if( scopes != &global_scopes )
+	if( scopes != global_scopes )
 	{
-		Scope* p = global_scopes[0];
+		Scope* p = (*global_scopes)[0];
 		if( p->count( ob.name ) != 0 )
 			return p->find( ob.name )->second;
 	}
@@ -486,6 +486,7 @@ void Executor::Store( Instruction const & inst )
 		throw DevaRuntimeException( boost::format( "Attempting to assign a value into a non-variable l-value '%1%." ) % lhs.name );
 	if( inst.args.size() == 1 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
 	{
+		// TODO valgrind tests 23, 24 & 26 say this is leaking:
 		DevaObject* ob = new DevaObject( lhs.name, rhs );
 		current_scopes->AddObject( ob );
 	}
@@ -2379,75 +2380,6 @@ void Executor::Leave( Instruction const & inst )
 	if( current_scopes->size() == 0 )
 		throw DevaICE( "Invalid 'Leave' operation. No scopes to exit." );
 	
-	// call destructors on all objects that are being destroyed
-	for( map<string, DevaObject*>::iterator i = current_scopes->back()->begin(); i != current_scopes->back()->end(); ++i )
-	{
-		// is this object an instance?
-		if( i->second->Type() == sym_instance )
-		{
-			DevaObject* instance = i->second;
-			// is it going to be deleted?
-			if( instance->map_val.getRefs() == 1 )
-			{
-				// get the name of the class
-				DOMap::iterator it = instance->map_val->find( DevaObject( "", string( "__class__" ) ) );
-				if( it == instance->map_val->end() )
-					throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__class__' member." );
-				if( it->second.Type() != sym_string )
-					throw DevaICE( "__class__ attribute on a class instance is not of type 'string'." );
-				string cls_name = it->second.str_val;
-
-				// get the name of the module
-				it = instance->map_val->find( DevaObject( "", string( "__module__" ) ) );
-				if( it == instance->map_val->end() )
-					throw DevaCriticalException( "Class instance cannot be destroyed, it has no '__module__' member." );
-				if( it->second.Type() != sym_string )
-					throw DevaICE( "__module__ attribute on a class instance is not of type 'string'." );
-				string mod_name = it->second.str_val;
-
-				// does it have a 'delete' method?
-				string del( "delete@" );
-				del += cls_name;
-
-				// no module... (i.e. 'main' module)
-				ScopeTable* ns = NULL;
-				// look up the namespace if we have a module
-				if( mod_name.length() != 0 )
-				{
-					map<string, ScopeTable*>::iterator iter;
-					iter = namespaces.find( mod_name );
-					// not found?
-					if( iter == namespaces.end() )
-						throw DevaCriticalException( "Trying to destroy an instance of a class in an unknown namespace." );
-					// else we found the namespace
-					else
-					{
-						ns = iter->second;
-					}
-				}
-				// look up the class
-				DevaObject* cls = NULL;
-				cls = find_symbol( DevaObject( cls_name, sym_unknown ), ns );
-				if( !cls )
-					throw DevaICE( "Trying to destroy unknown class." );
-
-				// look up the fcn name
-				DevaObject* fcn = find_symbol( del, ns );
-				if( fcn )
-				{
-					if( fcn->Type() != sym_address )
-						throw DevaCriticalException( "Object is invalid: 'delete' is not a method." );
-					// push 'self'
-					stack.push_back( *instance );
-					// call it
-					ExecuteDevaFunction( del, 1, ns );
-					// ignore the return value
-					stack.pop_back();
-				}
-			}
-		}
-	}
-
 	// pop scope
 	current_scopes->Pop();
 	// pop frame
@@ -2557,7 +2489,7 @@ void Executor::Import( Instruction const & inst )
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	mod = get_file_part( mod );
-	namespaces[mod] = new ScopeTable();
+	namespaces[mod] = new ScopeTable( this );
 	current_scopes = namespaces[mod];
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
@@ -2651,7 +2583,7 @@ void Executor::New_instance( Instruction const & inst )
 			throw DevaRuntimeException( boost::format( "Invalid class name '%1%' for new object." ) % cls.name );
 	}
 	else
-		ob = new DevaObject( cls );
+		ob = &cls;
 
 	// ensure it's a class
 	if( ob->Type() != sym_class )
@@ -2961,8 +2893,10 @@ Instruction Executor::NextInstr()
 
 // public methods
 ///////////////////////////////////////////////////////////
-Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 ), is_error( false ), error_data( NULL ), current_scopes( NULL ) 
-{}
+Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file( "" ), line( 0 ), is_error( false ), error_data( NULL ), global_scopes( NULL ), current_scopes( NULL ) 
+{
+	global_scopes = new ScopeTable( this );
+}
 
 Executor::~Executor()
 {
@@ -2979,6 +2913,9 @@ Executor::~Executor()
 		delete i->second;
 		i->second = NULL;
 	}
+
+	// free the global scopes
+	delete global_scopes;
 }
 
 void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns /*= NULL*/ )
@@ -3062,7 +2999,7 @@ void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* n
 
 void Executor::StartGlobalScope()
 {
-	current_scopes = &global_scopes;
+	current_scopes = global_scopes;
 	Enter( Instruction( op_enter ) );
 }
 
@@ -3195,7 +3132,7 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 		return false;
 
 	// create a new namespace
-	namespaces[mod] = new ScopeTable();
+	namespaces[mod] = new ScopeTable( this );
 	// add a scope
 	namespaces[mod]->Push();
 	// add an entry in the builtin modules map
@@ -3206,7 +3143,7 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 	for( map<string, builtin_fcn>::iterator i = fcns.begin(); i != fcns.end(); ++i )
 	{
 		namespaces[mod]->AddObject( new DevaObject( i->first, sym_unknown ) );
-		global_scopes.AddObject( new DevaObject( i->first, sym_unknown ) );
+		global_scopes->AddObject( new DevaObject( i->first, sym_unknown ) );
 		builtin_modules[mod].push_back( i->first );
 	}
 	// merge the fcn-name to fcn-ptr map with the execution engine's map
