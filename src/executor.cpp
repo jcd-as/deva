@@ -499,7 +499,8 @@ void Executor::Store( Instruction const & inst )
 			ob = new DevaObject( lhs.name, rhs );
 			current_scopes->AddObject( ob );
 		}
-		//  set its value to the rhs
+		// lhs variable already exists, set its value to the rhs and 'free' the
+		// original variable
 		else
 		{
 			*ob = DevaObject( lhs.name, rhs );
@@ -603,6 +604,8 @@ void Executor::Dup( Instruction const & inst )
 // 7 create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
 {
+	static int s_map_counter = 0;
+
 	DOMap* m = new DOMap();
 	if( inst.args.size() == 1 )
 	{
@@ -635,7 +638,9 @@ void Executor::New_map( Instruction const & inst )
 		}
 	}
 	// create a new object for the map
-	DevaObject *mp = new DevaObject( "", m );
+	char s[33+8] = {0};
+	sprintf( s, "new_map_%d", s_map_counter++ );
+	DevaObject *mp = new DevaObject( s, m );
 	// add it to the current scope so that it will be properly ref-counted
 	current_scopes->AddObject( mp );
 	// put it onto the stack
@@ -644,6 +649,8 @@ void Executor::New_map( Instruction const & inst )
 // 8 create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
+	static int s_vec_counter = 0;
+
 	// if there is an arg, it's a 'size' type that has the number of items on
 	// the stack to be added to the new vector
 	DOVector* v = new DOVector();
@@ -668,7 +675,9 @@ void Executor::New_vec( Instruction const & inst )
 		}
 	}
 	// create a new object for the vector
-	DevaObject *vec = new DevaObject( "", v );
+	char s[33+8] = {0};
+	sprintf( s, "new_vec_%d", s_vec_counter++ );
+	DevaObject *vec = new DevaObject( s, v );
 	// add it to the current scope so that it will be properly ref-counted
 	current_scopes->AddObject( vec );
 	// put it onto the stack

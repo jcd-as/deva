@@ -435,4 +435,7 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>early returns weren't adjusting scopes properly
 </comment></note><note done="1288668069" priority="veryhigh" time="1288549993">error handling: new 'error' type with string data ??
 <comment>no, added builtin fcns error(), seterror() and geterror() instead. easier, simpler and less invasive
-</comment></note></todo>
+</comment></note><note done="1289529054" priority="veryhigh" time="1289359127">BUG: assigning a new ref object (vector/map) to an existing one causes the first object to leak
+<comment>was actually the New_vec/map ops, which were adding objects with empty names to the scope map. as they all had the same name, each subsequent one would override the first one and thus leak.to track them &amp; give them names
+</comment></note><note priority="veryhigh" time="1289368686">program consisting of only '[];' (single line) causes a segfault
+</note></todo>

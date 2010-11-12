@@ -20,7 +20,7 @@ See the document 'deva-language-1.0.pdf' for details on the language.
 
 STATUS
 =============================================================================
-Deva is in a near-alpha state. It is basically functional (the test harness
+Deva is in a alpha state. It is basically functional (the test harness
 for the test suite is written in deva, for instance), but there are a few
 missing features and (presumably) many bugs to be found.
 

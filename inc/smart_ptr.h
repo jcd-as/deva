@@ -47,11 +47,15 @@ public:
 	{ }
 	explicit smart_ptr( T* in_ptr ) : ptr( 0 )
 	{
-		initPointer( in_ptr );
+		// no point in calling with null
+		if( in_ptr )
+			initPointer( in_ptr );
 	}
 	~smart_ptr()
 	{
-		finalizePointer();
+		// no point in calling if we're 'storing' null
+		if( ptr )
+			finalizePointer();
 	}
 
 	smart_ptr( const smart_ptr<T>& src ) : ptr( 0 )

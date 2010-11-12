@@ -1,3 +1,17 @@
+release 0.9.7
+- devadb: let user restart debuggee after it errors out
+- fixed bug with error/seterror/geterror functions: destructors called by objects going out of scope reset the error flag/data
+- fix for bug in string built-ins strip(), lstrip() and rstrip() where strings where _all_ characters should be stripped away weren't stripped to empty, but instead were returned as-is
+- added test of vector.append() bug where reference types weren't added correctly
+- fixed bug where the vector built-in method 'append' did not correctly add reference types
+- added test for new error builtins
+- added user error handling built-ins: error(), seterror() and geterror()
+- bug fix: indexers ('[]' operators) were evaluated in reverse (wrong) order
+- bug fix: early returns didn't adjust the scopes stack properly resulting in local variables not working correctly and stack traces in the debugger being incorrect in the face of early returns
+- fix for recursion and for-loops: use stack variable to store vector/map instead of 'magic' var, and clean up stack ('locals') in return statements (to remove the stack var when returning out of the middle of the for loop)
+- fixed quoting bug with strings
+- fix for the arithmetic compound assignment operators (+= etc) when the lhs is a key op ([] or . op)
+
 release 0.9.6
 - renamed re module to match native module naming scheme 
 - moved 'for' loop code generation to use the 'enumerable interface' consisting of 'rewind' and 'next' methods. this fixes the bad code-gen bug with returns inside 'for' loops, and allows user-defined types to be used in 'for' loops

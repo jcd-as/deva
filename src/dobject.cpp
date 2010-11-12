@@ -219,7 +219,9 @@ DevaObject::DevaObject( string nm, SymbolType t ) : map_val( 0 ), vec_val( 0 )
 DevaObject::~DevaObject()
 {
 	if( type == sym_string )
+	{
 		if( str_val ) delete [] str_val;
+	}
 }
 
 // factory method: class type from the given map
@@ -252,6 +254,7 @@ DevaObject & DevaObject::operator = ( const DevaObject & o )
 	name = o.name;
 	type = o.type;
 	is_const = o.is_const;
+
 	switch( type )
 	{
 	case sym_number:
