@@ -1,3 +1,14 @@
+release 0.9.8
+- all valgrind tests pass now, though test 50 fails if you run it from runtests.dv because the valgrind process aborts, not sure why yet. if you run it separately, however, it succeeds, so it doesn't appear to be a memory leak issue anyway.
+- fixed memory leaks in do_vector_append and do_map_next, caught by valgrind tests
+- fixed bug which caused leak: same 'variable re-assigned to new object leaks original object' bug but with 'local' variables. (also caught by valgrind)
+- added missing valgrind tests
+- serious issue fixed where instance variables that were assigned to a new object (e.g. 'a = new foo(); a = new bar();') would cause the initial object to be 'orphaned' and it's destructor would never get called. (the object was still deleted from memory, but it could still leak if its destructor needed to free native resources etc). fix was for the store_op handler to save the 'orphaned' objects into the current scope.
+- fix for leak in new_class op
+- fix for serious issue with instance destructors: when multiple instances pointed to the same object none of them would be destructed, because the leave_op handler was calling the destructors only when they had only one ref, _before_ popping the scope (which was where the DObject deletes, and thus the ref-count decrements, happened). moved the destructor calling code to the Scope nested class
+- fixed bug where each new_vec or new_map op caused the new vec/map to leak (doh)
+- update 64-bit baselines for tests 6, 7 and 23
+
 release 0.9.7
 - devadb: let user restart debuggee after it errors out
 - fixed bug with error/seterror/geterror functions: destructors called by objects going out of scope reset the error flag/data
