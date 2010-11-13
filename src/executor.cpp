@@ -136,6 +136,18 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	return NULL;
 }
 
+DevaObject* Executor::find_symbol_in_current_scope( const DevaObject & ob )
+{
+	// get the scope object
+	Scope* p = *(current_scopes->rbegin());
+
+	// check for the symbol
+	if( p->count( ob.name ) != 0 )
+		return p->find( ob.name )->second;
+	else
+		return NULL;
+}
+
 // peek at what the next instruction is (doesn't modify ip)
 Opcode Executor::PeekInstr()
 {
@@ -484,39 +496,39 @@ void Executor::Store( Instruction const & inst )
 	// verify the lhs is a variable (sym_unknown)
 	if( lhs.Type() != sym_unknown )
 		throw DevaRuntimeException( boost::format( "Attempting to assign a value into a non-variable l-value '%1%." ) % lhs.name );
+	// get the lhs from the symbol table
+	DevaObject* ob;
+
+	// one boolean arg (set to 'true') means this is a store into a 'local' variable
 	if( inst.args.size() == 1 && inst.args[0].Type() == sym_boolean && inst.args[0].bool_val == true )
+		// look only in this scope
+		ob = find_symbol_in_current_scope( lhs );
+	// otherwise do a normal lookup
+	else
+		ob = find_symbol( lhs );
+
+	// not found? add it to the current scope
+	if( !ob )
 	{
-		// TODO valgrind tests 23, 24 & 26 say this is leaking:
-		DevaObject* ob = new DevaObject( lhs.name, rhs );
+		ob = new DevaObject( lhs.name, rhs );
 		current_scopes->AddObject( ob );
 	}
+	// lhs variable already exists, set its value to the rhs and mark the
+	// original variable for later destruction (at scope exit)
 	else
 	{
-		// get the lhs from the symbol table
-		DevaObject* ob = find_symbol( lhs );
-		// not found? add it to the current scope
-		if( !ob )
+		// if the lhs is an instance, we need to add a new object that
+		// references it to the current scope, so that its destructor will be
+		// called when that scope exits
+		if( ob->Type() == sym_instance )
 		{
-			ob = new DevaObject( lhs.name, rhs );
-			current_scopes->AddObject( ob );
+			static int s_orphan_counter;
+			char s[33+7] = {0};
+			sprintf( s, "orphan_%d", s_orphan_counter++ );
+			DevaObject* o = new DevaObject( s, *ob );
+			current_scopes->AddObject( o );
 		}
-		// lhs variable already exists, set its value to the rhs and 'free' the
-		// original variable
-		else
-		{
-			// if the lhs is an instance, we need to add a new object that
-			// references it to the current scope, so that its destructor will be
-			// called when that scope exits
-			if( ob->Type() == sym_instance )
-			{
-				static int s_orphan_counter;
-				char s[33+7] = {0};
-				sprintf( s, "orphan_%d", s_orphan_counter++ );
-				DevaObject* o = new DevaObject( s, *ob );
-				current_scopes->AddObject( o );
-			}
-			*ob = DevaObject( lhs.name, rhs );
-		}
+		*ob = DevaObject( lhs.name, rhs );
 	}
 }
 // 4 define function. arg is location in instruction stream, named the fcn name

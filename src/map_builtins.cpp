@@ -369,12 +369,12 @@ void do_map_next( Executor *ex )
 	// (or null if we're done enumerating)
 
 	DOVector* ret = new DOVector();
-	// TODO: this vector leaks (per valgrind tests 20 & 26)
-	DOVector* key_val = new DOVector();
 
 	// if we have an object, return true and the object
 	if( !last )
 	{
+		DOVector* key_val = new DOVector();
+
 		// get the value from the map
 		if( idx >= mp->size() )
 			throw DevaICE( "Index out-of-range in Map built-in method 'next'." );

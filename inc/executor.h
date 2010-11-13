@@ -554,6 +554,8 @@ public:
 	////////////////////////////////////////////////////
 	// locate a symbol in the symbol table(namespace)
 	DevaObject* find_symbol( const DevaObject & ob, ScopeTable* scopes = NULL, bool search_all_modules = false );
+	// locate a symbol looking in the current symbol table ONLY
+	DevaObject* find_symbol_in_current_scope( const DevaObject & ob );
 
 	// object must be evaluated already to a value (i.e. no variables)
 	bool evaluate_object_as_boolean( DevaObject & o );
