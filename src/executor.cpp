@@ -504,6 +504,17 @@ void Executor::Store( Instruction const & inst )
 		// original variable
 		else
 		{
+			// if the lhs is an instance, we need to add a new object that
+			// references it to the current scope, so that its destructor will be
+			// called when that scope exits
+			if( ob->Type() == sym_instance )
+			{
+				static int s_orphan_counter;
+				char s[33+7] = {0};
+				sprintf( s, "orphan_%d", s_orphan_counter++ );
+				DevaObject* o = new DevaObject( s, *ob );
+				current_scopes->AddObject( o );
+			}
 			*ob = DevaObject( lhs.name, rhs );
 		}
 	}

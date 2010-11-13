@@ -58,7 +58,6 @@ void do_re_compile( Executor* ex )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "'regex' argument to module '_re' function 'compile' must be a string." );
 
-	// TODO: valgrind test 50 says this is leaking
 	regex* r = new regex( o->str_val );
 
 	// pop the return address
