@@ -441,4 +441,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note priority="veryhigh" time="1289368686">program consisting of only '[];' (single line) causes a segfault
 </note><note done="1289609668" priority="veryhigh" time="1289604135">BUG: if an instance variable is assigned to a new object the original objects destructor will never be called. it _will_ be deleted, but because its destructor isn't called it can still leak native objects etc
 <comment>fixed. store op changed to add orphaned instances to the current scope
+</comment></note><note done="1289942745" priority="veryhigh" time="1289940460">BUG: 'v[0].start = 1' produces bad code gen: the '0' (idx) is not pushed onto the stack
+<comment>fixed. wasn't walking the AST properly when the lhs of a dot op had an id in it
 </comment></note></todo>

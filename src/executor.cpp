@@ -2939,6 +2939,9 @@ Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file(
 
 Executor::~Executor()
 {
+	// free the global scopes object
+	delete global_scopes;
+    global_scopes = NULL;
 }
 
 void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns /*= NULL*/ )
@@ -3050,10 +3053,6 @@ void Executor::EndGlobalScope()
 	current_scopes->Pop();
 	// and its frame
 	trace.Pop();
-
-	// free the global scopes object
-	delete global_scopes;
-    global_scopes = NULL;
 
 	// free the code blocks
 	for( vector<unsigned char*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )

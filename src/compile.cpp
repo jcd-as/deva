@@ -1293,19 +1293,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		else if ( i->children[0].value.id() == dot_op_id )
 		{
 			// lhs of dot-op stays the same
-			if( i->children[0].children[0].value.id() == identifier_id )
-			{
-				string lhs = strip_symbol( string( i->children[0].children[0].value.begin(), i->children[0].children[0].value.end() ) );
-				generate_line_num( i->children[0].children.begin(), is );
-				is.push( Instruction( op_push , DevaObject( lhs, sym_unknown ) ) );
-			}
-			else
-			{
-				// don't pass 'self' (i) as parent, keep the parent the root for the
-				// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
-				// the parent of a)
-				generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
-			}
+			// don't pass 'self' (i) as parent, keep the parent the root for the
+			// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
+			// the parent of a)
+			generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
 
 			// turn the rhs into a string
 			string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
