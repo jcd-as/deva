@@ -227,6 +227,10 @@ int main( int argc, char** argv )
 			cout << "Error: " << e.what() << endl;
 			// dump the stack trace
 			ex.DumpTrace( cout, show_all_scopes );
+
+			// ensure the global scope is closed (avoid leaks)
+			ex.EndGlobalScope();
+
 			return -1;
 		}
 
