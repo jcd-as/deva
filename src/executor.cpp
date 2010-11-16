@@ -73,13 +73,13 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	string ext = get_extension( file );
 	string mod( filepart, 0, filepart.length() - ext.length() );
 	ScopeTable* ns = NULL;
-	map<string, ScopeTable*>::iterator it;
-	it = namespaces.find( mod );
+	vector< pair<string, ScopeTable*> >::iterator it;
+	it = find_namespace( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 	{
 		ScopeTable* ns_scopes = it->second;
-		for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
+		for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i != ns_scopes->rend(); ++i )
 		{
 			// get the scope object
 			Scope* p = *i;
@@ -92,7 +92,7 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 
 	// next, look in the current scopes:
 	// check each scope on the stack
-	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i < scopes->rend(); ++i )
+	for( vector<Scope*>::reverse_iterator i = scopes->rbegin(); i != scopes->rend(); ++i )
 	{
 		// get the scope object
 		Scope* p = *i;
@@ -114,21 +114,17 @@ DevaObject* Executor::find_symbol( const DevaObject & ob, ScopeTable* scopes /*=
 	// finally, if we're searching all modules/namespaces, check them all
 	if( search_all_modules )
 	{
-		for( map<string, ScopeTable*>::iterator it = namespaces.begin(); it != namespaces.end(); ++it )
+		for( vector< pair<string, ScopeTable*> >::iterator it = namespaces.begin(); it != namespaces.end(); ++it )
 		{
-			// if we found the namespace
-			if( it != namespaces.end() )
+			ScopeTable* ns_scopes = it->second;
+			for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i != ns_scopes->rend(); ++i )
 			{
-				ScopeTable* ns_scopes = it->second;
-				for( vector<Scope*>::reverse_iterator i = ns_scopes->rbegin(); i < ns_scopes->rend(); ++i )
-				{
-					// get the scope object
-					Scope* p = *i;
+				// get the scope object
+				Scope* p = *i;
 
-					// check for the symbol
-					if( p->count( ob.name ) != 0 )
-						return p->find( ob.name )->second;
-				}
+				// check for the symbol
+				if( p->count( ob.name ) != 0 )
+					return p->find( ob.name )->second;
 			}
 		}
 	}
@@ -146,6 +142,21 @@ DevaObject* Executor::find_symbol_in_current_scope( const DevaObject & ob )
 		return p->find( ob.name )->second;
 	else
 		return NULL;
+}
+
+// helper function to locate a namespace by (module) name
+// helper (functor) class
+class equal_to_first
+{
+    string value;
+public:
+    equal_to_first( string val ) : value( val ) {}
+    bool operator()(pair<string, Executor::ScopeTable*> n ) { return n.first == value; }
+};
+// find a namespace
+vector< pair<string, Executor::ScopeTable*> >::iterator Executor::find_namespace( string mod )
+{
+    return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
 
 // peek at what the next instruction is (doesn't modify ip)
@@ -914,8 +925,8 @@ void Executor::Tbl_load( Instruction const & inst )
 		if( !table )
 		{
 			ScopeTable* ns = NULL;
-			map<string, ScopeTable*>::iterator it;
-			it = namespaces.find( vecmap.name );
+			vector< pair<string, ScopeTable*> >::iterator it;
+			it = find_namespace( vecmap.name );
 			// if we found the namespace
 			if( it != namespaces.end() )
 			{
@@ -2160,7 +2171,7 @@ void Executor::Call( Instruction const & inst )
 				throw DevaRuntimeException( "Trying to call an object that is not a function or method." );
 
 			if( !fcn )
-				throw DevaRuntimeException( "Unable to resolve function." );
+				throw DevaRuntimeException( boost::format( "Unable to resolve function '%1%'." ) % o.name );
 
 			// if this is a built-in module function, execute it
 			if( builtin_module_fcns.find( fcn->name ) != builtin_module_fcns.end() )
@@ -2306,7 +2317,11 @@ void Executor::Return( Instruction const & inst )
 	Leave( inst );
 	// current function is now the top of the stack trace
 	i = trace.rbegin();
-	function = i->function;
+    if( i != trace.rend() )
+        function = i->function;
+    // (or, if we're at the end of the trace & thus in the shutdown process, 'none')
+    else
+        function = "<None>";
 	// reset the static that tracks the number of args processed
 	args_on_stack = -1;
 }
@@ -2490,8 +2505,8 @@ void Executor::Import( Instruction const & inst )
 		return;
 
 	// prevent importing the same module more than once
-	map<string, ScopeTable*>::iterator it;
-	it = namespaces.find( mod );
+	vector< pair<string, ScopeTable*> >::iterator it;
+	it = find_namespace( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return;
@@ -2512,8 +2527,9 @@ void Executor::Import( Instruction const & inst )
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	mod = get_file_part( mod );
-	namespaces[mod] = new ScopeTable( this );
-	current_scopes = namespaces[mod];
+    ScopeTable* st = new ScopeTable( this );
+    namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
+    current_scopes = st;
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
 	// compile the file, if needed
@@ -2923,22 +2939,6 @@ Executor::Executor( bool dbg ) : debug_mode( dbg ), code( NULL ), ip( 0 ), file(
 
 Executor::~Executor()
 {
-	// free the code blocks
-	for( vector<unsigned char*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
-	{
-		delete [] *i;
-		*i = NULL;
-	}
-
-	// free the namespaces
-	for( map<string, ScopeTable*>::iterator i = namespaces.begin(); i != namespaces.end(); ++i )
-	{
-		delete i->second;
-		i->second = NULL;
-	}
-
-	// free the global scopes
-	delete global_scopes;
 }
 
 void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns /*= NULL*/ )
@@ -3028,7 +3028,39 @@ void Executor::StartGlobalScope()
 
 void Executor::EndGlobalScope()
 {
-	Leave( Instruction( op_leave ) );
+	// tear down the global scope and namespaces
+
+	if( current_scopes->size() == 0 )
+		throw DevaICE( "Invalid exit from the global scope. All scopes have already exited!." );
+
+	// delete the instances in the global scope
+	current_scopes->back()->DeleteInstances();
+
+	// delete the namespaces
+	for( vector< pair<string, ScopeTable*> >::iterator i = namespaces.begin(); i != namespaces.end(); ++i )
+	{
+		delete i->second;
+		i->second = NULL;
+	}
+
+	// delete the rest of the objects in the global scope
+	current_scopes->back()->DeleteNonInstances();
+
+	// delete (pop) the global namespace scope
+	current_scopes->Pop();
+	// and its frame
+	trace.Pop();
+
+	// free the global scopes object
+	delete global_scopes;
+    global_scopes = NULL;
+
+	// free the code blocks
+	for( vector<unsigned char*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
+	{
+		delete [] *i;
+		*i = NULL;
+	}
 }
 
 // add a compiled byte-code block and fix-up its addresses
@@ -3148,16 +3180,16 @@ bool Executor::ImportBuiltinModule( string name )
 bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn> & fcns )
 {
 	// prevent importing the same module more than once
-	map<string, ScopeTable*>::iterator it;
-	it = namespaces.find( mod );
+	vector< pair<string, ScopeTable*> >::iterator it;
+	it = find_namespace( mod );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return false;
 
 	// create a new namespace
-	namespaces[mod] = new ScopeTable( this );
-	// add a scope
-	namespaces[mod]->Push();
+    ScopeTable* st = new ScopeTable( this );
+    st->Push();
+    namespaces.push_back( pair<string, ScopeTable*>( mod, st ) );
 	// add an entry in the builtin modules map
 	builtin_modules[mod] = vector<string>();
 
@@ -3165,7 +3197,7 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 	// and to the builtin module map
 	for( map<string, builtin_fcn>::iterator i = fcns.begin(); i != fcns.end(); ++i )
 	{
-		namespaces[mod]->AddObject( new DevaObject( i->first, sym_unknown ) );
+		st->AddObject( new DevaObject( i->first, sym_unknown ) );
 		global_scopes->AddObject( new DevaObject( i->first, sym_unknown ) );
 		builtin_modules[mod].push_back( i->first );
 	}

@@ -99,20 +99,21 @@ private:
 	struct Scope : public map<string, DevaObject*>
 	{
 		Executor* ex;
+		bool data_destroyed;
 
 		void AddObject( DevaObject* ob )
 		{
 			insert( pair<string, DevaObject*>(ob->name, ob) );
 		}
-		Scope( Executor* e ) : ex( e ){}
-		~Scope()
+		// generally speaking the destructor should be allowed to delete the
+		// contents of the scope, BUT in the particular case of the global
+		// scope the instances and non-instances need to be deleted separately,
+		// so these methods are provided
+		void DeleteInstances()
 		{
-			// delete all the DevaObject ptrs
+			data_destroyed = true;
 
-			// first call the destructors on instances, delete them and null
-			// them out in the collection
-			// (do this first so the classes (& methods) that they
-			// implement/inherit from aren't deleted first
+			// first call the destructors on instances
 			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
 			{
 #ifdef DEBUG
@@ -152,8 +153,8 @@ private:
 						// look up the namespace if we have a module
 						if( mod_name.length() != 0 )
 						{
-							map<string, ScopeTable*>::iterator iter;
-							iter = ex->namespaces.find( mod_name );
+							vector< pair<string, ScopeTable*> >::iterator iter;
+							iter = ex->find_namespace( mod_name );
 							// not found?
 							if( iter == ex->namespaces.end() )
 								throw DevaCriticalException( "Trying to destroy an instance of a class in an unknown namespace." );
@@ -167,7 +168,7 @@ private:
 						DevaObject* cls = NULL;
 						cls = ex->find_symbol( DevaObject( cls_name, sym_unknown ), ns );
 						if( !cls )
-							throw DevaICE( "Trying to destroy unknown class." );
+                            throw DevaICE( boost::format( "Trying to destroy unknown class '%1%'." ) % cls_name );
 
 						// look up the fcn name
 						DevaObject* fcn = ex->find_symbol( del, ns );
@@ -183,11 +184,31 @@ private:
 							ex->stack.pop_back();
 						}
 					}
-				delete i->second;
-				i->second = NULL;
 				}
 			}
-			// delete all the non-instance objects
+
+            // next, delete the instances and null them out in the collection
+			// (do this first so the classes (& methods) that they
+			// implement/inherit from aren't deleted first)
+			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
+			{
+#ifdef DEBUG
+				string name = i->first;
+				DevaObject* ob = i->second;
+#endif
+				// is this object an instance?
+				if( i->second->Type() == sym_instance )
+				{
+                    delete i->second;
+                    i->second = NULL;
+                }
+            }
+
+		}
+		void DeleteNonInstances()
+		{
+			data_destroyed = true;
+
 			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
 			{
 				if( i->second == NULL )
@@ -200,8 +221,21 @@ private:
 					delete i->second;
 			}
 		}
+		Scope( Executor* e ) : ex( e ), data_destroyed( false ){}
+		~Scope()
+		{
+			// if we're already deleted, bail
+			if( data_destroyed )
+				return;
+
+			// first call the destructors on instances
+			DeleteInstances();
+			// then delete all the non-instance objects
+			DeleteNonInstances();
+		}
 	};
-	struct ScopeTable : public vector<Scope*>
+	friend class equal_to_first;
+    struct ScopeTable : public vector<Scope*>
 	{
 		Executor* ex;
 		void AddObject( DevaObject* ob )
@@ -230,7 +264,7 @@ private:
 				pop_back();
 			}
 			if( size() > 0 )
-				throw new DevaICE( "Not all scopes removed from scope table" );
+				throw DevaICE( "Not all scopes removed from scope table" );
 		}
 	};
 
@@ -329,7 +363,7 @@ private:
 	// private data associated with nested types:
 	////////////////////////////////////////////////////
 	ScopeTable *global_scopes;
-	map<string, ScopeTable*> namespaces;
+    vector< pair<string, ScopeTable*> > namespaces;
 	ScopeTable *current_scopes;
 
 	CallStack trace;
@@ -377,6 +411,9 @@ private:
 
 	// locate a module
 	string find_module( string mod );
+
+    // find a namespace
+    vector< pair<string, ScopeTable*> >::iterator find_namespace( string mod );
 
     // call destructors on base classes
     void destruct_base_classes( DevaObject* ob, DevaObject & instance );

@@ -339,7 +339,12 @@ int main( int argc, char** argv )
 		string filepart = get_file_part( fname );
 		ReadFile( fname.c_str(), files[filepart] );
 
+        // the execution engine
 		Executor* ex = NULL;
+
+        // for saving/re-loading breakpoints between restarts
+        vector<pair<string, int> > breakpoints;
+
 		cout << "devadb " << VERSION << endl;
 re_start:
 		try
@@ -364,6 +369,12 @@ start:
 				unsigned char* dvcode = new unsigned char[code_length];
 				memcpy( (void*)dvcode, (void*)code, code_length );
 				ex->AddCodeBlock( dvcode );
+
+                // if we have saved breakpoints, re-load them
+                for( int i = 0; i < breakpoints.size(); ++i )
+                {
+                    ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
+                }
 
 				ex->StartExecutingCode( dvcode );
 
@@ -477,12 +488,12 @@ start:
 								break;
 							// 'breakpoint':
 							case 'b':
+								// verify there are sufficient args
 								if( in.size() < 3 )
 								{
 									cout << "add breakpoint command requires filename and line number." << endl;
 									break;
 								}
-								// verify there are sufficient args
 								ex->AddBreakpoint( in[1], atoi( in[2].c_str() ) );
 								break;
 							// 'delete breakpoint':
@@ -597,6 +608,10 @@ start:
 
 				ex->EndGlobalScope();
 
+                    // save breakpoints
+				breakpoints.clear();
+				vector<pair<string, int> > bpoints = ex->GetBreakpoints();
+
 				delete ex;
 				ex = NULL;
 
@@ -609,6 +624,12 @@ start:
 				{
 					// remove the newline
 					getchar();
+                // if we have saved breakpoints, re-load them
+				for( int i = 0; i < bpoints.size(); ++i )
+                {
+                    breakpoints.push_back( bpoints[i] );
+                }
+                    // restart
 					goto start;
 				}
 			}
@@ -627,6 +648,10 @@ start:
 			{
 				// remove the newline
 				getchar();
+                // save breakpoints
+                breakpoints.clear();
+                breakpoints = ex->GetBreakpoints();
+                // restart
 				goto re_start;
 			}
 			else

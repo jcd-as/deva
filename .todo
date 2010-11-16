@@ -424,12 +424,13 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </note><note done="1269316757" priority="veryhigh" time="1269299257">BUG: quotes not handled properly in strings. e.g. in '&quot;[\\s\\S]*&quot;' all quotes are omitted (single *and* double), whereas only the enclosing single quotes _should_ be omitted
 <comment>strip_quotes() in symbol.cpp was incorrect
 </comment></note><note priority="high" time="1269378943">indexing/slicing the result of a fcn call currently disallowed. (e.g. fcn()[0]). should it be allowed?
-</note><note priority="medium" time="1269379140">BUG: compiling a file with nothing but comments generates an &quot;Error compiling foo.dv&quot; message (and nothing else)
+</note><note priority="medium" time="1269379140">BUG: compiling a blank file (or one with nothing but comments) generates an &quot;Error compiling foo.dv&quot; message (and nothing else)
 </note><note priority="high" time="1269402642">BUG: a bad regular expression passed to re.new() or _re.compile causes a c++ boost::regex_error to be thrown and not caught (thus terminating)
 </note><note done="1288497045" priority="veryhigh" time="1269475563">BUG: in some circumstances (see idx var in json.dv) local vars aren't overriding more global vars. e.g. fcn A calls fcn B and both define a local 'foo', then the 'foo' in B will incorrectly change the 'foo' in A
 <comment>early returns weren't adjusting scopes properly
-</comment></note><note priority="high" time="1269552207">BUG: devadb all breakpoints are lost on restart
-</note><note done="1269562720" priority="veryhigh" time="1269552241">BUG: breakpoints set in a file that isn't yet loaded (stepped into) aren't set
+</comment></note><note done="1289886715" priority="high" time="1269552207">BUG: devadb all breakpoints are lost on restart
+<comment>fixed
+</comment></note><note done="1269562720" priority="veryhigh" time="1269552241">BUG: breakpoints set in a file that isn't yet loaded (stepped into) aren't set
 <comment>not repro
 </comment></note><note done="1288497096" priority="veryhigh" time="1288323839">stack trace is not always tracked correctly: not all returns seem to remove calls off the stack trace. looks like early returns from inside blocks cause this. Break ops correctly calculate the right number of Leave's to call, but early returns don't.
 <comment>early returns weren't adjusting scopes properly
