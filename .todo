@@ -438,8 +438,9 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>no, added builtin fcns error(), seterror() and geterror() instead. easier, simpler and less invasive
 </comment></note><note done="1289529054" priority="veryhigh" time="1289359127">BUG: assigning a new ref object (vector/map) to an existing one causes the first object to leak
 <comment>was actually the New_vec/map ops, which were adding objects with empty names to the scope map. as they all had the same name, each subsequent one would override the first one and thus leak.to track them &amp; give them names
-</comment></note><note priority="veryhigh" time="1289368686">program consisting of only '[];' (single line) causes a segfault
-</note><note done="1289609668" priority="veryhigh" time="1289604135">BUG: if an instance variable is assigned to a new object the original objects destructor will never be called. it _will_ be deleted, but because its destructor isn't called it can still leak native objects etc
+</comment></note><note done="1289957399" priority="veryhigh" time="1289368686">program consisting of only '[];' (single line) causes a segfault
+<comment>fixed. prevent solitary '[];' from compiling
+</comment></note><note done="1289609668" priority="veryhigh" time="1289604135">BUG: if an instance variable is assigned to a new object the original objects destructor will never be called. it _will_ be deleted, but because its destructor isn't called it can still leak native objects etc
 <comment>fixed. store op changed to add orphaned instances to the current scope
 </comment></note><note done="1289942745" priority="veryhigh" time="1289940460">BUG: 'v[0].start = 1' produces bad code gen: the '0' (idx) is not pushed onto the stack
 <comment>fixed. wasn't walking the AST properly when the lhs of a dot op had an id in it
