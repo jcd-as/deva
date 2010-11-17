@@ -310,18 +310,32 @@ void check_assignment_op( iter_t const & i )
 void check_op_assignment_op( iter_t const & i )
 {
 	// first child is lhs - must be an lvalue (variable or map/vector key item) 
-	// second child is rhs - must be a numerical rvalue (number or variable)
+	// second child is rhs - must be a numerical (number or variable) rvalue (or string for '+=' only)
 	// and the type of the assignment itself MUST be a variable
 	// optional third child must be semi-colon if it exists
 	NodeInfo lhs = i->children[0].value.value();
 	NodeInfo rhs = i->children[1].value.value();
 	if( lhs.type != variable_type )
 		throw DevaSemanticException( "Left-hand side of math op and assignment not an l-value", lhs );
-	else if( rhs.type != number_type 
-		&& rhs.type != variable_type 
-		&& i->children[1].value.id() != vec_op_id
-		&& i->children[1].value.id() != map_op_id )
-		throw DevaSemanticException( "Right-hand side of math op and assignment not an r-value", rhs );
+	// += op allows strings on the right
+	if( i->value.id() == parser_id( add_assignment_op_id ) )
+	{
+		if( rhs.type != number_type 
+			&& rhs.type != string_type 
+			&& rhs.type != variable_type 
+			&& i->children[1].value.id() != vec_op_id
+			&& i->children[1].value.id() != map_op_id )
+			throw DevaSemanticException( "Right-hand side of math op and assignment is not valid for operation", rhs );
+	}
+	// -=, *=, /=, %= don't
+	else
+	{
+		if( rhs.type != number_type 
+			&& rhs.type != variable_type 
+			&& i->children[1].value.id() != vec_op_id
+			&& i->children[1].value.id() != map_op_id )
+			throw DevaSemanticException( "Right-hand side of math op and assignment is not valid for operation", rhs );
+	}
 
 	// check 'const' of lhs
 	SymbolTable* st = scopes[lhs.scope];
