@@ -446,5 +446,6 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>fixed. wasn't walking the AST properly when the lhs of a dot op had an id in it
 </comment></note><note done="1289953680" priority="veryhigh" time="1289949574">BUG: compiler prevents += op on strings
 <comment>fixed
-</comment></note><note priority="high" time="1289950591">devadb: 'breakpoint' command with no args should set a bp on the current line
-</note></todo>
+</comment></note><note done="1290041046" priority="high" time="1289950591">devadb: 'breakpoint' command with no args should set a bp on the current line
+<comment>done
+</comment></note></todo>

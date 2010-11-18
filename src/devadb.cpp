@@ -489,7 +489,13 @@ start:
 							// 'breakpoint':
 							case 'b':
 								// verify there are sufficient args
-								if( in.size() < 3 )
+								if( in.size() == 1 )
+								{
+									// no args: add a breakpoint on the current file & line
+									ex->AddBreakpoint( ex->GetExecutingFile(), l );
+									break;
+								}
+								else if( in.size() < 3 )
 								{
 									cout << "add breakpoint command requires filename and line number." << endl;
 									break;

@@ -1,6 +1,9 @@
 # program to compute the true wind angle and speed from: boat speed (true) and
 # apparent wind angle and speed
 
+import os;
+import math;
+
 # function to compute the true wind angle and speed from boat speed (true) and
 # apparent wind angle and speed
 def Truewind( spd, app_angle, app_speed )

@@ -1244,7 +1244,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	}
 	// vector construction op
 	else if( i->value.id() == parser_id( vec_op_id ) )
-	{	
+	{
 		// []; all by itself? (not assigned to or indexing anything?)
 		// func_id; while_s_id; for_s_id; if_s_id; else_s_id; vec_op_id; translation_unit_id
 		if( parent->value.id() == parser_id( translation_unit_id )
