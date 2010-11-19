@@ -448,4 +448,10 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>fixed
 </comment></note><note done="1290041046" priority="high" time="1289950591">devadb: 'breakpoint' command with no args should set a bp on the current line
 <comment>done
-</comment></note></todo>
+</comment></note><note done="1290115614" priority="veryhigh" time="1290065605">BUG: built-in fcn 'range' only accepts numbers (not variables) as arguments
+<comment>fixed
+</comment></note><note done="1290127122" priority="high" time="1290114895">vector built-ins map/filter/reduce don't handle methods ('this' ptrs)
+<comment>fixed
+</comment></note><note priority="veryhigh" time="1290115640">on error inside a scope you get an ICE: &quot;Internal compiler error: Not all scopes removed from scope table&quot;
+</note><note priority="medium" time="1290127106">'[];' as the first line to a program compiles and causes a segfault. (creates new_vec op by itself)
+</note></todo>

@@ -1247,9 +1247,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// []; all by itself? (not assigned to or indexing anything?)
 		// func_id; while_s_id; for_s_id; if_s_id; else_s_id; vec_op_id; translation_unit_id
+		// TODO: this still doesn't prevent a file with ONLY '[];' in it. the _parser_ 
+		// probably ought to be preventing this...
 		if( parent->value.id() == parser_id( translation_unit_id )
 			|| parent->value.id() == parser_id( compound_statement_id )
-			|| parent->value.id() == parser_id( vec_op_id )
 			|| parent->value.id() == parser_id( func_id )
 		 	|| parent->value.id() == parser_id( while_s_id )
 		 	|| parent->value.id() == parser_id( for_s_id )
@@ -1258,7 +1259,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		{
 			throw DevaSemanticException( "Improper use of '[]' operator.", ((NodeInfo)(i->value.value())) );
 		}
-		parser_id pid = parent->value.id();
 		reverse_walk_children( i, is );
 		gen_IL_vec_op( i, is );
 	}

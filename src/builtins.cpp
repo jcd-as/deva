@@ -1500,19 +1500,43 @@ void do_range( Executor *ex )
 		// start is first on stack
 		DevaObject start = ex->stack.back();
 		ex->stack.pop_back();
+
+		// if it's a variable, locate it in the symbol table
+		DevaObject* o = NULL;
+		if( start.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( start );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for 'start' argument in call to built-in function 'range'." );
+		}
+		if( !o )
+			o = &start;
+
 		// start position
-		if( start.Type() != sym_number )
+		if( o->Type() != sym_number )
 			throw DevaRuntimeException( "Number expected in for start position argument in built-in function 'range'." );
-		i_start = start.num_val;
+		i_start = o->num_val;
 	}
 	if( Executor::args_on_stack > 1 )
 	{
 		// end of range
 		DevaObject end = ex->stack.back();
 		ex->stack.pop_back();
-		if( end.Type() != sym_number )
+
+		// if it's a variable, locate it in the symbol table
+		DevaObject* o = NULL;
+		if( end.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( end );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for 'end' argument in call to built-in function 'range'." );
+		}
+		if( !o )
+			o = &end;
+
+		if( o->Type() != sym_number )
 			throw DevaRuntimeException( "Number expected in for 'end' argument in built-in function 'range'." );
-		i_end = end.num_val;
+		i_end = o->num_val;
 	}
 	if( Executor::args_on_stack > 2 )
 	{

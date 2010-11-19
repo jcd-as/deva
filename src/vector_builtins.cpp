@@ -876,14 +876,39 @@ void do_vector_map( Executor *ex )
 	DOVector* ret = new DOVector();
 	ret->reserve( vec.vec_val->size() );
 
-	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
-	// (they need a "this" arg to be passed...)
+	// handle methods (on vectors, maps, strings and UDTs)
+	// the "@" sign in the fcn name indicates it is a method
+	// e.g. 'method@class'. BUT...we need the instance object!
+	// get the lhs and rhs of the "@" (method & object)
+	bool is_method = false;
+	string fcn, object;
+	DevaObject* ob_ptr;
+	size_t idx = o->name.find( "@" );
+	if( idx != string::npos )
+	{
+		is_method = true;
+
+		fcn.assign( o->name, 0, idx );
+		// TODO: ensure idx + 1 < o->name.length()
+		object.assign( o->name, idx + 1, o->name.length() );
+
+		// find the object in the current scope
+		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
+		if( !ob_ptr )
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+	}
 
 	// walk each item in the vector
 	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
 	{
 		// push the item
 		ex->stack.push_back( *i );
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->stack.push_back( *ob_ptr );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		ex->ExecuteDevaFunction( o->name, 1 );
@@ -940,14 +965,39 @@ void do_vector_filter( Executor *ex )
 	// no extra space reserved??
 	ret->reserve( vec.vec_val->size() );
 
-	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
-	// (they need a "this" arg to be passed...)
+	// handle methods (on vectors, maps, strings and UDTs)
+	// the "@" sign in the fcn name indicates it is a method
+	// e.g. 'method@class'. BUT...we need the instance object!
+	// get the lhs and rhs of the "@" (method & object)
+	bool is_method = false;
+	string fcn, object;
+	DevaObject* ob_ptr;
+	size_t idx = o->name.find( "@" );
+	if( idx != string::npos )
+	{
+		is_method = true;
+
+		fcn.assign( o->name, 0, idx );
+		// TODO: ensure idx + 1 < o->name.length()
+		object.assign( o->name, idx + 1, o->name.length() );
+
+		// find the object in the current scope
+		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
+		if( !ob_ptr )
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+	}
 
 	// walk each item in the vector
 	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
 	{
 		// push the item
 		ex->stack.push_back( *i );
+		// push 'self' for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->stack.push_back( *ob_ptr );
+		}
 		// call the function given (*must* be a single arg fcn to be used with filter
 		// builtin)
 		ex->ExecuteDevaFunction( o->name, 1 );
@@ -1001,13 +1051,42 @@ void do_vector_reduce( Executor *ex )
 	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
 
-	// TODO: how can we handle methods?? (on vectors, maps, strings and UDTs)
-	// (they need a "this" arg to be passed...)
+	// handle methods (on vectors, maps, strings and UDTs)
+	// the "@" sign in the fcn name indicates it is a method
+	// e.g. 'method@class'. BUT...we need the instance object!
+	// get the lhs and rhs of the "@" (method & object)
+	bool is_method = false;
+	string fcn, object;
+	DevaObject* ob_ptr;
+	size_t idx = o->name.find( "@" );
+	if( idx != string::npos )
+	{
+		is_method = true;
+
+		fcn.assign( o->name, 0, idx );
+		// TODO: ensure idx + 1 < o->name.length()
+		object.assign( o->name, idx + 1, o->name.length() );
+
+		// find the object in the current scope
+		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
+		if( !ob_ptr )
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+	}
 
 	// first iteration uses the first two items in the vector
 	ex->stack.push_back( vec.vec_val->at( 1 ) );
 	ex->stack.push_back( vec.vec_val->at( 0 ) );
-	ex->ExecuteDevaFunction( o->name, 2 );
+	// push 'self'
+	if( is_method )
+	{
+		// push the object ("self") first
+		ex->stack.push_back( *ob_ptr );
+	}
+	// call the deva function
+	if( is_method )
+		ex->ExecuteDevaFunction( o->name, 3 );
+	else
+		ex->ExecuteDevaFunction( o->name, 2 );
 	DevaObject retval = ex->stack.back();
 	ex->stack.pop_back();
 	// walk the rest of the items in the vector
@@ -1019,9 +1098,18 @@ void do_vector_reduce( Executor *ex )
 			ex->stack.push_back( *i );
 			// use the retval from the previous iteration as the first arg to the fcn
 			ex->stack.push_back( retval );
+			// push 'self'
+			if( is_method )
+			{
+				// push the object ("self") first
+				ex->stack.push_back( *ob_ptr );
+			}
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
-			ex->ExecuteDevaFunction( o->name, 2 );
+			if( is_method )
+				ex->ExecuteDevaFunction( o->name, 3 );
+			else
+				ex->ExecuteDevaFunction( o->name, 2 );
 			// get the result (return value) and push it onto our return collection
 			retval = ex->stack.back();
 			ex->stack.pop_back();
