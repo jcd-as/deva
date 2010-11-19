@@ -876,9 +876,8 @@ void do_vector_map( Executor *ex )
 	DOVector* ret = new DOVector();
 	ret->reserve( vec.vec_val->size() );
 
-	// handle methods (on vectors, maps, strings and UDTs)
+	// handle 'class methods' ('static' methods in c++ lingo)
 	// the "@" sign in the fcn name indicates it is a method
-	// e.g. 'method@class'. BUT...we need the instance object!
 	// get the lhs and rhs of the "@" (method & object)
 	bool is_method = false;
 	string fcn, object;
@@ -896,6 +895,8 @@ void do_vector_map( Executor *ex )
 		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
 		if( !ob_ptr )
 			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+		// TODO: how to ensure object is a class, not an instance??
+		// (the ob_ptr will always point to a sym_class object at this point)
 	}
 
 	// walk each item in the vector
@@ -911,7 +912,10 @@ void do_vector_map( Executor *ex )
 		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
-		ex->ExecuteDevaFunction( o->name, 1 );
+		if( is_method )
+			ex->ExecuteDevaFunction( o->name, 2 );
+		else
+			ex->ExecuteDevaFunction( o->name, 1 );
 		// get the result (return value) and push it onto our return collection
 		DevaObject retval = ex->stack.back();
 		ex->stack.pop_back();
@@ -965,9 +969,8 @@ void do_vector_filter( Executor *ex )
 	// no extra space reserved??
 	ret->reserve( vec.vec_val->size() );
 
-	// handle methods (on vectors, maps, strings and UDTs)
+	// handle 'class methods' ('static' methods in c++ lingo)
 	// the "@" sign in the fcn name indicates it is a method
-	// e.g. 'method@class'. BUT...we need the instance object!
 	// get the lhs and rhs of the "@" (method & object)
 	bool is_method = false;
 	string fcn, object;
@@ -984,7 +987,9 @@ void do_vector_filter( Executor *ex )
 		// find the object in the current scope
 		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
 		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'filter'." );
+		// TODO: how to ensure object is a class, not an instance??
+		// (the ob_ptr will always point to a sym_class object at this point)
 	}
 
 	// walk each item in the vector
@@ -1000,7 +1005,10 @@ void do_vector_filter( Executor *ex )
 		}
 		// call the function given (*must* be a single arg fcn to be used with filter
 		// builtin)
-		ex->ExecuteDevaFunction( o->name, 1 );
+		if( is_method )
+			ex->ExecuteDevaFunction( o->name, 2 );
+		else
+			ex->ExecuteDevaFunction( o->name, 1 );
 		// get the result (return value) and push it onto our return collection
 		DevaObject retval = ex->stack.back();
 		ex->stack.pop_back();
@@ -1051,7 +1059,7 @@ void do_vector_reduce( Executor *ex )
 	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
 
-	// handle methods (on vectors, maps, strings and UDTs)
+	// handle 'class methods' ('static' methods in c++ lingo)
 	// the "@" sign in the fcn name indicates it is a method
 	// e.g. 'method@class'. BUT...we need the instance object!
 	// get the lhs and rhs of the "@" (method & object)
@@ -1070,7 +1078,9 @@ void do_vector_reduce( Executor *ex )
 		// find the object in the current scope
 		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
 		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'reduce'." );
+		// TODO: how to ensure object is a class, not an instance??
+		// (the ob_ptr will always point to a sym_class object at this point)
 	}
 
 	// first iteration uses the first two items in the vector
