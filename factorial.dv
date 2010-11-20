@@ -1,0 +1,32 @@
+# factorial implementations
+def recursive_factorial( n )
+{
+	if( n == 0 ) return 1;
+	else return n * recursive_factorial( n - 1 );
+}
+
+def mul( x, y ) { return x * y; }
+def reduce_factorial( n )
+{
+	if( n == 0 ) return 1;
+	local l = range( 1, n );
+	return l.reduce( mul );
+}
+
+def iterative_factorial( n )
+{
+	local count = 1;
+	local total = 1;
+	while( count <= n )
+	{
+		total *= count;
+		count += 1;
+	}
+	return total;
+}
+
+x = 4;
+print( recursive_factorial( x ) );
+print( reduce_factorial( x ) );
+print( iterative_factorial( x ) );
+

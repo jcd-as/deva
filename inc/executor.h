@@ -263,8 +263,14 @@ private:
 				delete back();
 				pop_back();
 			}
+#ifdef DEBUG
+			// when we are destroyed because of an exception resulting from
+			// invalid code (DevaRuntimeException), this is a spurious exception
+			// because we're exiting anyway... let's only see this in debug
+			// builds
 			if( size() > 0 )
 				throw DevaICE( "Not all scopes removed from scope table" );
+#endif
 		}
 	};
 

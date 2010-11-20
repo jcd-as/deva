@@ -334,7 +334,7 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
             formatted the magic names with padding (zeros)
         </comment>
     </note>
-    <note priority="veryhigh" time="1257036976">
+    <note priority="medium" time="1257036976">
         list comprehensions: syntactic sugar for the map/filter vector builtins
     </note>
     <note done="1258857809" priority="veryhigh" time="1257539732">
@@ -452,6 +452,7 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 <comment>fixed
 </comment></note><note done="1290127122" priority="high" time="1290114895">vector built-ins map/filter/reduce don't handle methods ('this' ptrs)
 <comment>fixed
-</comment></note><note priority="veryhigh" time="1290115640">on error inside a scope you get an ICE: &quot;Internal compiler error: Not all scopes removed from scope table&quot;
-</note><note priority="medium" time="1290127106">'[];' as the first line to a program compiles and causes a segfault. (creates new_vec op by itself)
+</comment></note><note done="1290229697" priority="veryhigh" time="1290115640">on error inside a scope you get an ICE: &quot;Internal compiler error: Not all scopes removed from scope table&quot;
+<comment>done. banished this error msg/ICE to debug builds only
+</comment></note><note priority="medium" time="1290127106">'[];' as the first line to a program compiles and causes a segfault. (creates new_vec op by itself)
 </note></todo>

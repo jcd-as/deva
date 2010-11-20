@@ -188,37 +188,45 @@ int main( int argc, char** argv )
 		}
 
 		// create our execution engine object
-		Executor ex( debug );
+//		Executor ex( debug );
+		Executor *ex = NULL;
+		ex = new Executor( debug );
 
 		try
 		{
 			// create a global scope
-			ex.StartGlobalScope();
+			ex->StartGlobalScope();
 
 			// add the built-in modules
-            ex.AddAllKnownBuiltinModules();
+            ex->AddAllKnownBuiltinModules();
 
 			// execute either the .dvc file...
 			if( ext == ".dvc" )
 			{
 				// run the .dvc file 
-				ex.RunFile( fname.c_str() );
+				ex->RunFile( fname.c_str() );
 			}
 			else if( use_dvc )
 			{
 				// run the .dvc file 
 				string f = fname + "c";
-				ex.RunFile( f.c_str() );
+				ex->RunFile( f.c_str() );
 			}
 			// ...or the code block we just compiled
 			else
 			{
 				// run the code block
-				ex.AddCodeBlock( code );
-				ex.RunCode( code );
+				ex->AddCodeBlock( code );
+				ex->RunCode( code );
 			}
 
-			ex.EndGlobalScope();
+			// ensure the global scope is closed (avoid leaks)
+			ex->EndGlobalScope();
+
+			// delete the executor
+			delete ex;
+			ex = NULL;
+
 		}
 		catch( DevaRuntimeException & e )
 		{
@@ -226,10 +234,14 @@ int main( int argc, char** argv )
 				throw;
 			cout << "Error: " << e.what() << endl;
 			// dump the stack trace
-			ex.DumpTrace( cout, show_all_scopes );
+			ex->DumpTrace( cout, show_all_scopes );
 
 			// ensure the global scope is closed (avoid leaks)
-			ex.EndGlobalScope();
+			ex->EndGlobalScope();
+
+			// delete the executor
+			delete ex;
+			ex = NULL;
 
 			return -1;
 		}
