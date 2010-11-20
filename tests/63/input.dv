@@ -1,4 +1,4 @@
-# test vector map, filter, reduce with methods
+# test vector map, filter, reduce with class methods
 class C
 {
 	def new()

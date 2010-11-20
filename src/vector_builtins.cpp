@@ -58,6 +58,8 @@ void do_vector_sort( Executor *ex );
 void do_vector_map( Executor *ex );
 void do_vector_filter( Executor *ex );
 void do_vector_reduce( Executor *ex );
+void do_vector_any( Executor *ex );
+void do_vector_all( Executor *ex );
 void do_vector_slice( Executor *ex );
 void do_vector_join( Executor *ex );
 // 'enumerable interface'
@@ -84,6 +86,8 @@ static const string vector_builtin_names[] =
 	string( "vector_map" ),
 	string( "vector_filter" ),
 	string( "vector_reduce" ),
+	string( "vector_any" ),
+	string( "vector_all" ),
 	string( "vector_slice" ),
     string( "vector_join" ),
 	string( "vector_rewind" ),
@@ -110,6 +114,8 @@ vector_builtin_fcn vector_builtin_fcns[] =
 	do_vector_map,
 	do_vector_filter,
 	do_vector_reduce,
+	do_vector_any,
+	do_vector_all,
 	do_vector_slice,
     do_vector_join,
 	do_vector_rewind,
@@ -872,6 +878,8 @@ void do_vector_map( Executor *ex )
 	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'map'." );
 
+	// TODO: (a built-in will be of type sym_unknown)
+
 	// return vector
 	DOVector* ret = new DOVector();
 	ret->reserve( vec.vec_val->size() );
@@ -960,6 +968,8 @@ void do_vector_filter( Executor *ex )
 	// check fcn value
 	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'filter'." );
+
+	// TODO: (a built-in will be of type sym_unknown)
 
 	// return vector
 	DOVector* ret = new DOVector();
@@ -1059,6 +1069,8 @@ void do_vector_reduce( Executor *ex )
 	if( o->Type() != sym_address )
 		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
 
+	// TODO: (a built-in will be of type sym_unknown)
+
 	// handle 'class methods' ('static' methods in c++ lingo)
 	// the "@" sign in the fcn name indicates it is a method
 	// e.g. 'method@class'. BUT...we need the instance object!
@@ -1131,6 +1143,208 @@ void do_vector_reduce( Executor *ex )
 
 	// return the resulting value
 	ex->stack.push_back( DevaObject( "", retval ) );
+}
+
+void do_vector_any( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'any' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// function value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'any'." );
+
+	// function value
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'any'." );
+	}
+	else
+		o = &val;
+
+	// check fcn value
+	if( o->Type() != sym_address )
+		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'any'." );
+
+	// TODO: (a built-in will be of type sym_unknown)
+
+
+	// handle 'class methods' ('static' methods in c++ lingo)
+	// the "@" sign in the fcn name indicates it is a method
+	// get the lhs and rhs of the "@" (method & object)
+	bool is_method = false;
+	string fcn, object;
+	DevaObject* ob_ptr;
+	size_t idx = o->name.find( "@" );
+	if( idx != string::npos )
+	{
+		is_method = true;
+
+		fcn.assign( o->name, 0, idx );
+		// TODO: ensure idx + 1 < o->name.length()
+		object.assign( o->name, idx + 1, o->name.length() );
+
+		// find the object in the current scope
+		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
+		if( !ob_ptr )
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'any'." );
+		// TODO: how to ensure object is a class, not an instance??
+		// (the ob_ptr will always point to a sym_class object at this point)
+	}
+
+	bool any_true = false;
+
+	// walk each item in the vector
+	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	{
+		// push the item
+		ex->stack.push_back( *i );
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->stack.push_back( *ob_ptr );
+		}
+		// call the function given (*must* be a single arg fcn to be used with
+		// the 'any' builtin)
+		if( is_method )
+			ex->ExecuteDevaFunction( o->name, 2 );
+		else
+			ex->ExecuteDevaFunction( o->name, 1 );
+		// get the result (return value)
+		DevaObject retval = ex->stack.back();
+		ex->stack.pop_back();
+		// return type must be boolean
+		if( retval.Type() != sym_boolean )
+			throw DevaRuntimeException( "Function used with the vector built-in method 'any' returned a non-boolean." );
+		// if it's 'true', bail
+		if( retval.bool_val )
+		{
+			any_true = true;
+			break;
+		}
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting vector
+	if( any_true )
+		ex->stack.push_back( DevaObject( "", true ) );
+	else
+		ex->stack.push_back( DevaObject( "", false ) );
+}
+
+void do_vector_all( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to vector 'all' built-in method." );
+
+	// get the vector object off the top of the stack
+	DevaObject vec = ex->stack.back();
+	ex->stack.pop_back();
+
+	// function value is next on stack
+	DevaObject val = ex->stack.back();
+	ex->stack.pop_back();
+	
+	// vector
+	if( vec.Type() != sym_vector )
+		throw DevaICE( "Vector expected in vector built-in method 'all'." );
+
+	// function value
+	DevaObject* o;
+	if( val.Type() == sym_unknown )
+	{
+		o = ex->find_symbol( val );
+		if( !o )
+			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'all'." );
+	}
+	else
+		o = &val;
+
+	// check fcn value
+	if( o->Type() != sym_address )
+		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'all'." );
+
+	// TODO: (a built-in will be of type sym_unknown)
+
+
+	// handle 'class methods' ('static' methods in c++ lingo)
+	// the "@" sign in the fcn name indicates it is a method
+	// get the lhs and rhs of the "@" (method & object)
+	bool is_method = false;
+	string fcn, object;
+	DevaObject* ob_ptr;
+	size_t idx = o->name.find( "@" );
+	if( idx != string::npos )
+	{
+		is_method = true;
+
+		fcn.assign( o->name, 0, idx );
+		// TODO: ensure idx + 1 < o->name.length()
+		object.assign( o->name, idx + 1, o->name.length() );
+
+		// find the object in the current scope
+		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
+		if( !ob_ptr )
+			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'all'." );
+		// TODO: how to ensure object is a class, not an instance??
+		// (the ob_ptr will always point to a sym_class object at this point)
+	}
+
+	bool all_true = true;
+
+	// walk each item in the vector
+	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	{
+		// push the item
+		ex->stack.push_back( *i );
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->stack.push_back( *ob_ptr );
+		}
+		// call the function given (*must* be a single arg fcn to be used with
+		// the 'all' builtin)
+		if( is_method )
+			ex->ExecuteDevaFunction( o->name, 2 );
+		else
+			ex->ExecuteDevaFunction( o->name, 1 );
+		// get the result (return value)
+		DevaObject retval = ex->stack.back();
+		ex->stack.pop_back();
+		// return type must be boolean
+		if( retval.Type() != sym_boolean )
+			throw DevaRuntimeException( "Function used with the vector built-in method 'all' returned a non-boolean." );
+		// if it's 'false', bail
+		if( !retval.bool_val )
+		{
+			all_true = false;
+			break;
+		}
+	}
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return the resulting vector
+	if( all_true )
+		ex->stack.push_back( DevaObject( "", true ) );
+	else
+		ex->stack.push_back( DevaObject( "", false ) );
 }
 
 // helper for slicing in steps

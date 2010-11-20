@@ -88,3 +88,31 @@ b = a.filter( not_zero );
 print( b );
 sum = b.reduce( add );
 print( sum );
+
+# test 'any' and 'all'
+def test( n )
+{
+	# convert input to a boolean
+	return !(!n);
+}
+
+v = [0,1,2,3];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [0,0,false,""];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [0,0,false,"x"];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [1,2,true,"x"];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
