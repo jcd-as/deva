@@ -20,6 +20,7 @@ AX_BOOST_REGEX
 #	echo "Boost filesystem library is required. You can find Boost at www.boost.org."
 #	exit
 #fi
+PKG_CHECK_MODULES(LIBEDIT, libedit)
 AC_SUBST(MY_CXXFLAGS)
 AC_SUBST(MY_LDFLAGS)
 AX_CXX_CHECK_FLAG(-fno-inline-small-functions,,,export MY_CXXFLAGS=-fno-inline-small-functions,)

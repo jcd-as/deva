@@ -106,8 +106,8 @@ deva : ${DEVA_OBJS}
 	#g++ ${LDFLAGS} -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o deva ${DEVA_OBJS}
 
 devadb : ${DEVADB_OBJS}
-	g++ ${LDFLAGS} -lboost_program_options -lboost_filesystem -lboost_regex -o devadb ${DEVADB_OBJS}
-	#g++ ${LDFLAGS} -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o devadb ${DEVADB_OBJS}
+	g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options -lboost_filesystem -lboost_regex -ledit -o devadb ${DEVADB_OBJS}
+	#g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o devadb ${DEVADB_OBJS}
 
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<

@@ -37,6 +37,8 @@
 #include <iostream>
 #include <utility>
 
+#include <histedit.h>
+
 #include "compile.h"
 #include "executor.h"
 #include "util.h"
@@ -230,6 +232,12 @@ void display_help()
 	}
 }
 
+// prompt for the line editor
+const char* prompt( EditLine * e )
+{
+	return "(devadb) ";
+}
+
 int main( int argc, char** argv )
 {
 	_argc = argc;
@@ -339,6 +347,24 @@ int main( int argc, char** argv )
 		string filepart = get_file_part( fname );
 		ReadFile( fname.c_str(), files[filepart] );
 
+		// line editor objects
+		EditLine* el = NULL;
+		History* hist = NULL;
+		HistEvent ev;
+
+		// set-up the line editor and history
+		el = el_init( argv[0], stdin, stdout, stderr );
+		el_set( el, EL_PROMPT, &prompt );
+		el_set( el, EL_EDITOR, "emacs" );
+		hist = history_init();
+		if( hist == 0 )
+		{
+			cerr <<  "Error: Line editor history could not be initialized" << endl;
+			return 1;
+		}
+		history( hist, &ev, H_SETSIZE, 800 );
+		el_set( el, EL_HIST, history, hist );
+
         // the execution engine
 		Executor* ex = NULL;
 
@@ -385,17 +411,24 @@ start:
 					if( running )
 						cout << "restarting program..." << endl;
 					string input;
+					int chars_read;
+					const char* cstr_in;
 					vector<string> in;
 					int l = 1;
 					bool done = false;
 					while( !done )
 					{
-						getline( cin, input );
+						// get the input, sans newline
+						cstr_in = el_gets( el, &chars_read );
+						input = string( cstr_in, chars_read-1 );
 						if( input.length() > 0 )
 						{
 							in.clear();
 							split( input, in );
 							c = get_command( in[0] );
+
+							// store in history
+							history( hist, &ev, H_ENTER, input.c_str() );
 						}
 						if( c == 0 )
 							cout << "Unknown command" << endl;
@@ -666,6 +699,10 @@ start:
 
 		// free the execution engine, if it hasn't been already
 		delete ex;
+
+		// Clean up line editor/history
+		history_end( hist );
+		el_end( el );
 
 		// done, free the scope tables
 		for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )

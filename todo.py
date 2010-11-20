@@ -11,6 +11,7 @@ import time
 import datetime
 import optparse
 import color
+import readline
 
 # TODO: 
 # - pretty xml formatting: need to write new xml content with 'indent', 'addindent' and 'newl' parameters, while the existing xml needs to *not* have these (it is already formatted)...
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     except:
         # file doesn't exist? prompt to create it
         print( "File .todo doesn't exist in this directory.\nCreate new .todo file? (y/n):" )
-        text = sys.stdin.readline()
+        text = raw_input( "> " )
         if( len( text ) != 0 ):
             if( text[0] != 'y' ):
                 exit( 0 )
@@ -201,7 +202,7 @@ if __name__ == "__main__":
             i += 1
         # prompt for a comment
         print( "comment:" )
-        text = sys.stdin.readline()
+        text = raw_input( "> " )
         if( len( text ) != 0 ):
             txt_node = minidom.Text()
             txt_node.data = text
@@ -253,7 +254,7 @@ if __name__ == "__main__":
     elif options.add:
         # get the priority for the new item
         print( "item priority (1 - 5):" )
-        line = sys.stdin.readline()
+        line = raw_input( "> " )
         pri = int( line )
         if pri < 1 or pri > 5:
             print( "error: priority must be between 1 (veryhigh) and 5 (verylow)" )
@@ -266,7 +267,7 @@ if __name__ == "__main__":
 
         # get the text for the new item
         print( "item text:" )
-        text = sys.stdin.readline()
+        text = raw_input( "> " )
         txt_node = minidom.Text()
         txt_node.data = text
 
