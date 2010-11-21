@@ -491,7 +491,7 @@ void Executor::Store( Instruction const & inst )
 	{
 		DevaObject* ob = find_symbol( rhs );
 		if( !ob )
-			throw DevaRuntimeException( boost::format( "Reference to unknown variable '%1%." ) % rhs.name );
+			throw DevaRuntimeException( boost::format( "Reference to unknown variable '%1%'." ) % rhs.name );
 		rhs = *ob;
 	}
 	// if the rhs is an offset, it could be a function, try to get it from the
@@ -2212,7 +2212,7 @@ void Executor::Call( Instruction const & inst )
 				args_on_stack = -1;
 				return;
 			}
-			// if this is a vector builtin method, execute it
+			// if this is a string builtin method, execute it
 			if( is_string_builtin( fcn->name ) )
 			{
 				// set the static that tracks the number of args processed

@@ -134,10 +134,9 @@ void split( string & in, vector<string> & ret )
 			left = in.find_first_not_of( " ", right );
 			right = in.find_first_of( " ", right + 1 );
 			// if 'left' is greater than 'right', then we passed an empty string 
-			// (two matching split chars in a row), enter it and move forward
+			// (two matching split chars in a row), move forward
 			if( left > right )
 			{
-				ret.push_back( string( "" ) );
 				right = in.find_first_of( " ", right + 1 );
 			}
 		}
@@ -528,6 +527,14 @@ start:
 									ex->AddBreakpoint( ex->GetExecutingFile(), l );
 									break;
 								}
+                                else if( in.size() == 2 )
+                                {
+                                    // only one arg. is it a number? try to use
+                                    // it as a line number to set a bp in the
+                                    // current file
+                                    ex->AddBreakpoint( ex->GetExecutingFile(), atoi( in[1].c_str() ) );
+                                    break;
+                                }
 								else if( in.size() < 3 )
 								{
 									cout << "add breakpoint command requires filename and line number." << endl;
@@ -647,9 +654,10 @@ start:
 
 				ex->EndGlobalScope();
 
-                    // save breakpoints
+                // save breakpoints
 				breakpoints.clear();
-				vector<pair<string, int> > bpoints = ex->GetBreakpoints();
+				breakpoints = ex->GetBreakpoints();
+
 
 				delete ex;
 				ex = NULL;
@@ -663,11 +671,7 @@ start:
 				{
 					// remove the newline
 					getchar();
-                // if we have saved breakpoints, re-load them
-				for( int i = 0; i < bpoints.size(); ++i )
-                {
-                    breakpoints.push_back( bpoints[i] );
-                }
+
                     // restart
 					goto start;
 				}
@@ -687,9 +691,11 @@ start:
 			{
 				// remove the newline
 				getchar();
+
                 // save breakpoints
-                breakpoints.clear();
-                breakpoints = ex->GetBreakpoints();
+				breakpoints.clear();
+				breakpoints = ex->GetBreakpoints();
+
                 // restart
 				goto re_start;
 			}

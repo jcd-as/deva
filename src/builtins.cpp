@@ -225,14 +225,59 @@ void do_print( Executor *ex )
 	}
 	if( !o )
 		o = &obj;
+
+    // save the number of args on the stack
+    // (if we're printing an instance we'll call ExecuteDevaFunction() which
+    // will wipe out the static in the executor)
+    int args_on_stack = Executor::args_on_stack;
+
 	// convert to a string
-	string s = obj_to_str( o );
-	if( Executor::args_on_stack == 2 )
+    string s;
+    // if this is an instance object, see if there is a 'repr' method
+    // and use the string returned from it, if it exists
+    if( o->Type() == sym_instance )
+    {
+        // look for the '__class__' member, which holds the class name
+		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__class__" ) ) );
+		if( it == o->map_val->end() )
+            throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
+        string cls( "@" );
+        cls += it->second.str_val;
+        string repr( "repr" );
+        repr += cls;
+        // append "@class" to the method name
+		it = o->map_val->find( DevaObject( "", repr ) );
+		if( it != o->map_val->end() )
+		{
+			if( it->second.Type() == sym_address )
+            {
+                // push the object ("self")
+                ex->stack.push_back( *o );
+                // call the function (takes no args)
+                ex->ExecuteDevaFunction( repr, 1 );
+                // get the result (return value)
+                DevaObject retval = ex->stack.back();
+                ex->stack.pop_back();
+                if( retval.Type() != sym_string )
+                    throw DevaRuntimeException( "The 'repr' method on a class did not return a string value" );
+                s = retval.str_val;
+            }
+            else
+                s = obj_to_str( o );
+        }
+        else
+            s = obj_to_str( o );
+    }
+    // non-instance type, dump its contents
+    else
+        s = obj_to_str( o );
+
+	if( args_on_stack == 2 )
 		s += eol_str;
 	// print it
 	cout << s;
 	// default eol is a newline
-	if( Executor::args_on_stack == 1 )
+	if( args_on_stack == 1 )
 		cout << endl;
 
 	// pop the return address
@@ -261,7 +306,46 @@ void do_str( Executor *ex )
 	if( !o )
 		o = &obj;
 
-	string s = obj_to_str( o );
+	// convert to a string
+    string s;
+    // if this is an instance object, see if there is a 'repr' method
+    // and use the string returned from it, if it exists
+    if( o->Type() == sym_instance )
+    {
+        // look for the '__class__' member, which holds the class name
+		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__class__" ) ) );
+		if( it == o->map_val->end() )
+            throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
+        string cls( "@" );
+        cls += it->second.str_val;
+        string str( "str" );
+        str += cls;
+        // append "@class" to the method name
+		it = o->map_val->find( DevaObject( "", str ) );
+		if( it != o->map_val->end() )
+		{
+			if( it->second.Type() == sym_address )
+            {
+                // push the object ("self")
+                ex->stack.push_back( *o );
+                // call the function (takes no args)
+                ex->ExecuteDevaFunction( str, 1 );
+                // get the result (return value)
+                DevaObject retval = ex->stack.back();
+                ex->stack.pop_back();
+                if( retval.Type() != sym_string )
+                    throw DevaRuntimeException( "The 'str' method on a class did not return a string value" );
+                s = retval.str_val;
+            }
+            else
+                s = obj_to_str( o );
+        }
+        else
+            s = obj_to_str( o );
+    }
+    // non-instance type, dump its contents
+    else
+        s = obj_to_str( o );
 
 	// pop the return address
 	ex->stack.pop_back();
