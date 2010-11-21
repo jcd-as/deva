@@ -183,12 +183,15 @@ void execute_builtin( Executor *ex, const Instruction & inst )
 	}
 }
 
-// convert an object to a string value
+// convert an object to a string value, for output
 string obj_to_str( const DevaObject* const o )
 {
 	ostringstream s;
 	DevaObject obj = *o;
+	// this is for output
+	prettify_for_output = true;
 	s << obj;
+	prettify_for_output = false;
 	return s.str();
 }
 

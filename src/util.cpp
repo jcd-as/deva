@@ -117,26 +117,23 @@ vector<string> split_env_var_paths( string var )
 {
 	// split it into separate paths (on the ":" char in un*x)
 	vector<string> paths;
-	size_t left = var.find_first_not_of( env_var_path_seps );
-	if( left != string::npos )
-	{	
-		size_t right = var.find_first_of( env_var_path_seps );
-		size_t len = var.length();
-		while( left != string::npos )
-		{
-			string s( var, left, right - left );
-			paths.push_back( s );
 
-			left = var.find_first_not_of( env_var_path_seps, right );
-			right = var.find_first_of( env_var_path_seps, right + 1 );
-			// if 'left' is greater than 'right', then we passed an empty string 
-			// (two matching split chars in a row), enter it and move forward
-			if( left > right )
-			{
-				paths.push_back( "" );
-				right = var.find_first_of( env_var_path_seps, right + 1 );
-			}
-		}
+	size_t len = var.length();
+	// lhs of the first item is always the first character
+	size_t left = 0;
+	// rhs of the first item is the first splitting character
+	size_t right = var.find_first_of( env_var_path_seps );
+	if( right == string::npos )
+		right = len;
+	// while lhs is not at the end of the input string
+	while( left <= len )
+	{
+		if( left != right )
+			paths.push_back( string( var, left, right - left ) );
+		left = right + 1;
+		right = var.find_first_of( env_var_path_seps, right + 1 );
+		if( right == string::npos )
+			right = len;
 	}
 	return paths;
 }

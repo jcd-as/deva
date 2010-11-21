@@ -497,15 +497,20 @@ long DevaObject::Size() const
 }
 
 // operator to dump an DevaObject to an iostreams stream
+bool prettify_for_output = false;
 ostream & operator << ( ostream & os, DevaObject & obj )
 {
+	static bool prettify_strings = false;
 	switch( obj.Type() )
 	{
 		case sym_number:
 			os << obj.num_val;
 			break;
 		case sym_string:
-			os << obj.str_val ;
+			if( prettify_strings )
+				os << "'" << obj.str_val << "'";
+			else
+				os << obj.str_val ;
 			break;
 		case sym_boolean:
 			if( obj.bool_val )
@@ -525,7 +530,11 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
-				os << key << ":" << val;
+				prettify_strings = true;
+				os << key << ":";
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
 				if( ++it != mp->end() )
 					os << ", ";
 			}
@@ -540,9 +549,11 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
 			{
 				DevaObject val = (*it);
+				prettify_strings = true;
 				os << val;
+				prettify_strings = false;
 			   	if( it+1 != vec->end() )
-				   os << ", ";
+					os << ", ";
 			}
 			os << "]";
 			break;
@@ -569,7 +580,11 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
-				os << key << ":" << val;
+				prettify_strings = true;
+				os << key << ":";
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
 				if( ++it != mp->end() )
 					os << ", ";
 			}
@@ -585,7 +600,11 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			{
 				DevaObject key = (*it).first;
 				DevaObject val = (*it).second;
-				os << key << ":" << val;
+				prettify_strings = true;
+				os << key << ":";
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
 				if( ++it != mp->end() )
 					os << ", ";
 			}

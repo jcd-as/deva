@@ -43,6 +43,8 @@
 class DevaObject;
 class DOVector;
 class DOMap;
+// global used to have the << op on DevaObjects output a prettified version
+extern bool prettify_for_output;
 ostream & operator << ( ostream & os, DevaObject & obj );
 
 // the basic piece of data stored on the data stack

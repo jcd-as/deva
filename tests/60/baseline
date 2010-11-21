@@ -2,7 +2,7 @@ false
 null
 true
 foobar'd
-{code:14, msg:error in Foo()}
+{'code':14, 'msg':'error in Foo()'}
 false
 null
 false

@@ -1,4 +1,4 @@
-[{end:8, start:1, str:abc def}, {end:4, start:1, str:abc}, {end:8, start:5, str:def}]
+[{'end':8, 'start':1, 'str':'abc def'}, {'end':4, 'start':1, 'str':'abc'}, {'end':8, 'start':5, 'str':'def'}]
 1:8
 match 0: abc def
 abc def
@@ -10,7 +10,7 @@ match 2: def
 def
 4444000011112222
 4444-0000-1111-2222
-[{end:8, start:1, str:abc def}, {end:4, start:1, str:abc}, {end:8, start:5, str:def}]
+[{'end':8, 'start':1, 'str':'abc def'}, {'end':4, 'start':1, 'str':'abc'}, {'end':8, 'start':5, 'str':'def'}]
 1:8
 match 0: abc def
 abc def

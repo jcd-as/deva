@@ -22,8 +22,8 @@ FOOBARZYXzyx
 xxx 	
  FOOBAR
 xyzXYZFOOBAR
-[a, b,  c,  rq4fadsfaxxxa	,  fdaf;a,  d,  e,  f, , g]
-[f, o, o, b, a, r]
+['a', 'b', ' c', ' rq4fadsfaxxxa	', ' fdaf;a', ' d', ' e', ' f', '', 'g', '']
+['f', 'o', 'o', 'b', 'a', 'r']
 foojam and toast at the jam and toast eating jam and toast all day.
 FOOJAM AND TOAST AT THE JAM AND TOAST EATING JAM AND TOAST ALL DAY.
 false
@@ -51,3 +51,13 @@ true
 a b c 1 2 3x
 a b c 1 2 3x
 a b c 1 2 3x
+['a', 'b']
+['', 'a']
+['a', '']
+['a', '', 'b']
+['', 'a', 'b', 'c']
+['', '', 'a', 'b', 'c', '']
+['a', 'b', 'c', '']
+['', 'a', 'b', 'c', '']
+['', '', 'a', 'b', 'c', '', '']
+[' ', 'a', ' ', 'b', ' ', 'c', ' ']

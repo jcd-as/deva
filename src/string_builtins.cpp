@@ -797,35 +797,21 @@ void do_string_split( Executor *ex )
 	}
 	else
 	{
-		size_t left = in.find_first_not_of( chars );
-		if( left != string::npos )
-		{	
-			size_t right = in.find_first_of( chars );
-			size_t len = in.length();
-
-			// if 'left' is greater than 'right', then we passed an empty string 
-			// (two matching split chars in a row), enter it and move forward
-			if( left != string::npos && left > right )
-			{
-				ret->push_back( DevaObject( "", string( "" ) ) );
-				right = in.find_first_of( chars, right + 1 );
-			}
-
-			while( left != string::npos )
-			{
-				string s( in, left, right - left );
-				ret->push_back( DevaObject( "", s ) );
-
-				left = in.find_first_not_of( chars, right );
-				right = in.find_first_of( chars, right + 1 );
-				// if 'left' is greater than 'right', then we passed an empty string 
-				// (two matching split chars in a row), enter it and move forward
-				if( left != string::npos && left > right )
-				{
-					ret->push_back( DevaObject( "", string( "" ) ) );
-					right = in.find_first_of( chars, right + 1 );
-				}
-			}
+		size_t len = in.length();
+		// lhs of the first item is always the first character
+		size_t left = 0;
+		// rhs of the first item is the first splitting character
+		size_t right = in.find_first_of( chars );
+		if( right == string::npos )
+			right = len;
+		// while lhs is not at the end of the input string
+		while( left <= len )
+		{
+			ret->push_back( DevaObject( "", string( in, left, right - left ) ) );
+			left = right + 1;
+			right = in.find_first_of( chars, right + 1 );
+			if( right == string::npos )
+				right = len;
 		}
 	}
 

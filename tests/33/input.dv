@@ -144,12 +144,45 @@ print( v.join( " " ), "x\n" );
 s = " ";
 print( s.join( v ), "x\n" );
 
+# more comprehensive tests of 'split':
+# ['a', 'b']
+s = "a b";
+print( s.split( " " ) );
 
+# ['', 'a']
+s = " a";
+print( s.split( " " ) );
 
-#for( c in s )
-#{
-##	c = s[0];
-#	print( c );
-#}
-#s = s.concat( "bar" );
-#print( s );
+# ['a', '']
+s = "a ";
+print( s.split( " " ) );
+
+# ['a', '', 'b']
+s = "a  b";
+print( s.split( " " ) );
+
+# ['', 'a', 'b', 'c']
+s = " a b c";
+print( s.split( " " ) );
+
+# ['', '', 'a', 'b', 'c', '']
+s = "  a b c ";
+print( s.split( " " ) );
+
+# ['a', 'b', 'c', '']
+s = "a b c ";
+print( s.split( " " ) );
+
+# ['', 'a', 'b', 'c', '']
+s = " a b c ";
+print( s.split( " " ) );
+
+# ['', '', 'a', 'b', 'c', '', '']
+s = "\t a b c\n ";
+print( s.split() );
+
+# empty (zero-length) string passed to split means to split into a vector
+# containing each individual character
+# [' ', 'a', 'b', 'c', ' ']
+s = " a b c ";
+print( s.split( "" ) );
