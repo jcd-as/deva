@@ -1461,39 +1461,39 @@ void do_vector_join( Executor *ex )
 	if( vec.Type() != sym_vector )
 		throw DevaICE( "Vector expected in vector built-in method 'join'." );
 
-    string sep;
+	string sep;
 	if( Executor::args_on_stack == 1 )
 	{
 		// optional 'separator' arg
 		DevaObject val = ex->stack.back();
 		ex->stack.pop_back();
 
-        DevaObject* o;
-        if( val.Type() == sym_unknown )
-        {
-            o = ex->find_symbol( val );
-            if( !o )
-                throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
-        }
-        else
-            o = &val;
-        if( o->Type() != sym_string )
-            throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
+		DevaObject* o;
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
+		}
+		else
+			o = &val;
+		if( o->Type() != sym_string )
+			throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
 
-        sep = o->str_val;
-    }
-    else
-        sep = "";
+		sep = o->str_val;
+	}
+	else
+		sep = "";
 
 	string ret;
-    for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
-    {
-        ostringstream s;
-        if( i != vec.vec_val->begin() )
-            s << sep;
-        s << *i;
-        ret += s.str();
-    }
+	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	{
+		ostringstream s;
+		if( i != vec.vec_val->begin() )
+			s << sep;
+		s << *i;
+		ret += s.str();
+	}
 
 	// pop the return address
 	ex->stack.pop_back();

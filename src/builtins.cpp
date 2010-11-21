@@ -486,7 +486,7 @@ void do_copy( Executor *ex )
 	if( !o )
 		o = &obj;
 
-        DevaObject copy;
+		DevaObject copy;
 	if( o->Type() == sym_map )
 	{
 		// create a new map object that is a copy of the one we received,
@@ -1756,7 +1756,7 @@ void do_join( Executor *ex )
 	if( v->Type() != sym_vector )
 		throw DevaRuntimeException( "Vector expected for 'args' parameter in call to built-in function 'join'." );
 
-    string sep;
+	string sep;
 	if( Executor::args_on_stack == 2 )
 	{
 		// optional 'separator' arg

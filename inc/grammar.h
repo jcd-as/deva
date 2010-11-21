@@ -55,37 +55,37 @@ void report_error( file_position pos, char const* msg );
 ///////////////////////////////////////////////////////////////////////////////
 struct error_report_parser 
 {
-    char const* eol_msg;
-    char const* msg;
+	char const* eol_msg;
+	char const* msg;
 
-    error_report_parser( char const* eol_msg_, char const* msg_ ):
-        eol_msg( eol_msg_ ),
-        msg( msg_ )
-    { }
+	error_report_parser( char const* eol_msg_, char const* msg_ ):
+		eol_msg( eol_msg_ ),
+		msg( msg_ )
+	{ }
 
-    typedef nil_t result_t;
+	typedef nil_t result_t;
 
-    template <typename ScannerT> int operator()( ScannerT const& scan, result_t& /*result*/ ) const
-    {
-        if( scan.at_end() )
+	template <typename ScannerT> int operator()( ScannerT const& scan, result_t& /*result*/ ) const
+	{
+		if( scan.at_end() )
 		{
-            if( eol_msg )
+			if( eol_msg )
 			{
-                file_position fpos = scan.first.get_position();
+				file_position fpos = scan.first.get_position();
 				report_error( fpos, eol_msg );
-            }
-        }
+			}
+		}
 		else
 		{
-            if( msg )
+			if( msg )
 			{
-                file_position fpos = scan.first.get_position();
+				file_position fpos = scan.first.get_position();
 				report_error( fpos, msg );
-            }
-        }
+			}
+		}
 
-        return -1; // fail
-    }
+		return -1; // fail
+	}
 
 };
 typedef functor_parser<error_report_parser> error_report_p;
@@ -163,7 +163,7 @@ static inline void set_node( tree_match<iterator_t, factory_t>::node_t & n, iter
 class DevaGrammar : public grammar<DevaGrammar>
 {
 public:
-    template <typename ScannerT> class definition
+	template <typename ScannerT> class definition
 	{
 	public:
 		definition( DevaGrammar const& self )

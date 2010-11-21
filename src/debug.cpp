@@ -76,15 +76,15 @@ void eval_expression( iter_t const& i )
 	static int indents = 0;
 
 	indent( indents );
-    cout << "In eval_expression. i->value = " <<
-        strip_symbol( string(i->value.begin(), i->value.end()) ) <<
-        " i->children.size() = " << i->children.size() << endl;
+	cout << "In eval_expression. i->value = " <<
+		strip_symbol( string(i->value.begin(), i->value.end()) ) <<
+		" i->children.size() = " << i->children.size() << endl;
 
 	// number
-    if( i->value.id() == parser_id( number_id ) )
-    {
+	if( i->value.id() == parser_id( number_id ) )
+	{
 		dumpNode( "num", i, indents );
-    }
+	}
 	// string
 	else if( i->value.id() == parser_id( string_id ) )
 	{
@@ -364,21 +364,21 @@ void eval_expression( iter_t const& i )
 	{
 		dumpNode( "return_statement", i, indents );
 	}
-    else
-    {
+	else
+	{
 		// don't indent, so we stand out
 		cout << "error, unknown id: " << i->value.id().to_long() << endl;
-        string s( i->value.begin(), i->value.end() );
+		string s( i->value.begin(), i->value.end() );
 		cout << "unknown: " << strip_symbol( s ) << endl;
 		indents++;
 		for( int c = 0; c < i->children.size(); c++ )
 			eval_expression( i->children.begin() + c );
 		indents--;
-    }
+	}
 }
 
 void evaluate( tree_parse_info<iterator_t, factory_t> info )
 {
-    eval_expression( info.trees.begin() );
+	eval_expression( info.trees.begin() );
 }
 

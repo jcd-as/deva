@@ -11,7 +11,7 @@ baseline = "baseline";
 # TODO: to this (machine int-size detection) correctly ??
 hosttype = os.getenv( "HOSTTYPE" );
 if( hosttype == "x86_64" )
-    baseline_sized = "baseline.64";
+	baseline_sized = "baseline.64";
 else
 	baseline_sized = baseline;
 
@@ -26,10 +26,10 @@ valgrind = false;
 argv = os.argv();
 if( length( argv ) > 1 )
 {
-    if( argv[1] == "v" || argv[1] == "valgrind" )
+	if( argv[1] == "v" || argv[1] == "valgrind" )
 	{
-        valgrind = true;
-        dotest = "./dotest_valgrind";
+		valgrind = true;
+		dotest = "./dotest_valgrind";
 		print( "running tests under valgrind..." );
 	}
 }
@@ -40,24 +40,24 @@ tests = 0;
 files = os.dirwalk( os.joinpaths( [ os.getcwd(), "tests"] ) );
 for( file in files )
 {
-    if( os.getfile( file ) == baseline )
+	if( os.getfile( file ) == baseline )
 	{
 		if( os.exists( os.joinpaths( [os.getdir( file ), baseline_sized] ) ) )
-            bl = baseline_sized;
-        else
-            bl = baseline;
+			bl = baseline_sized;
+		else
+			bl = baseline;
 
 		root = os.getdir( file );
-        tests += 1;
-        print( "processing " + root + " ..." );
-        os.chdir( root );
+		tests += 1;
+		print( "processing " + root + " ..." );
+		os.chdir( root );
 		ret = 0;
-        if( valgrind )
-            ret = os.exec( dotest + " input.dv" );
-        else
-            ret = os.exec( dotest + " input.dv " + bl );
-        if( ret != 0 )
-            failed_tests.append( root );
+		if( valgrind )
+			ret = os.exec( dotest + " input.dv" );
+		else
+			ret = os.exec( dotest + " input.dv " + bl );
+		if( ret != 0 )
+			failed_tests.append( root );
 	}
 }
 
@@ -66,10 +66,10 @@ os.chdir( init_dir );
 # re-print failures:
 if( length( failed_tests ) != 0 )
 {
-    print( "\n" + str( length( failed_tests ) ) + " FAILED tests:" );
-    for( s in failed_tests )
+	print( "\n" + str( length( failed_tests ) ) + " FAILED tests:" );
+	for( s in failed_tests )
 	{
-        print( s );
+		print( s );
 	}
 }
 else

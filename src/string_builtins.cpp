@@ -143,26 +143,26 @@ const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( stri
 // is this name a built-in function?
 bool is_string_builtin( const string & name )
 {
-    const string* i = find( string_builtin_names, string_builtin_names + num_of_string_builtins, name );
-    if( i != string_builtin_names + num_of_string_builtins ) return true;
+	const string* i = find( string_builtin_names, string_builtin_names + num_of_string_builtins, name );
+	if( i != string_builtin_names + num_of_string_builtins ) return true;
 	else return false;
 }
 
 // execute built-in function
 void execute_string_builtin( Executor *ex, const string & name )
 {
-    const string* i = find( string_builtin_names, string_builtin_names + num_of_string_builtins, name );
-    if( i == string_builtin_names + num_of_string_builtins )
+	const string* i = find( string_builtin_names, string_builtin_names + num_of_string_builtins, name );
+	if( i == string_builtin_names + num_of_string_builtins )
 		throw DevaICE( "No such string built-in method." );
-    // compute the index of the function in the look-up table(s)
-    long l = (long)i;
-    l -= (long)&string_builtin_names;
-    int idx = l / sizeof( string );
-    if( idx > num_of_string_builtins )
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&string_builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_string_builtins )
 		throw DevaICE( "Out-of-array-bounds looking for string built-in method." );
-    else
-        // call the function
-        string_builtin_fcns[idx]( ex );
+	else
+		// call the function
+		string_builtin_fcns[idx]( ex );
 }
 
 // the built-in executor functions:
@@ -249,11 +249,11 @@ void do_string_copy( Executor *ex )
 	DevaObject str = ex->stack.back();
 	ex->stack.pop_back();
 
-    if( str.Type() != sym_string )
+	if( str.Type() != sym_string )
 		throw DevaICE( "String expected in string built-in method 'copy'." );
 
 	// create a new string object that is a copy of the one we received
-    DevaObject copy( "", string( str.str_val ) );
+	DevaObject copy( "", string( str.str_val ) );
 
 	// pop the return address
 	ex->stack.pop_back();

@@ -161,10 +161,10 @@ protected:
 	}
 public:
 
-    int getRefs()
-    {
-        return s_ref_count_map[ptr];
-    }
+	int getRefs()
+	{
+		return s_ref_count_map[ptr];
+	}
 
 	static void dumpRefCountMap()
 	{

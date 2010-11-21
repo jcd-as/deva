@@ -39,15 +39,15 @@ using namespace boost;
 // 'out'
 void replace( string& src, const char* const in, const char* const out )
 {
-    int len = strlen( in );
-    size_t pos = src.find( in );
-    int delta = strlen( out );
-    while( pos != string::npos )
-    {
-        // found 'in' at 'i'. replace with 'out'
-        src = src.replace( pos, len, out );
-        pos = src.find( in, pos + delta );
-    }
+	int len = strlen( in );
+	size_t pos = src.find( in );
+	int delta = strlen( out );
+	while( pos != string::npos )
+	{
+		// found 'in' at 'i'. replace with 'out'
+		src = src.replace( pos, len, out );
+		pos = src.find( in, pos + delta );
+	}
 }
 
 string get_cwd()
@@ -115,28 +115,28 @@ string join_paths( vector<string> & parts )
 
 vector<string> split_env_var_paths( string var )
 {
-    // split it into separate paths (on the ":" char in un*x)
-    vector<string> paths;
-    size_t left = var.find_first_not_of( env_var_path_seps );
-    if( left != string::npos )
-    {	
-        size_t right = var.find_first_of( env_var_path_seps );
-        size_t len = var.length();
-        while( left != string::npos )
-        {
-            string s( var, left, right - left );
-            paths.push_back( s );
+	// split it into separate paths (on the ":" char in un*x)
+	vector<string> paths;
+	size_t left = var.find_first_not_of( env_var_path_seps );
+	if( left != string::npos )
+	{	
+		size_t right = var.find_first_of( env_var_path_seps );
+		size_t len = var.length();
+		while( left != string::npos )
+		{
+			string s( var, left, right - left );
+			paths.push_back( s );
 
-            left = var.find_first_not_of( env_var_path_seps, right );
-            right = var.find_first_of( env_var_path_seps, right + 1 );
-            // if 'left' is greater than 'right', then we passed an empty string 
-            // (two matching split chars in a row), enter it and move forward
-            if( left > right )
-            {
-                paths.push_back( "" );
-                right = var.find_first_of( env_var_path_seps, right + 1 );
-            }
-        }
-    }
-    return paths;
+			left = var.find_first_not_of( env_var_path_seps, right );
+			right = var.find_first_of( env_var_path_seps, right + 1 );
+			// if 'left' is greater than 'right', then we passed an empty string 
+			// (two matching split chars in a row), enter it and move forward
+			if( left > right )
+			{
+				paths.push_back( "" );
+				right = var.find_first_of( env_var_path_seps, right + 1 );
+			}
+		}
+	}
+	return paths;
 }

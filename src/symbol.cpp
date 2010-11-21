@@ -85,14 +85,14 @@ string strip_quotes( const string& src )
 // "un-escape" a string (e.g. turn '\t' into a tab character etc)
 string unescape( const string& src )
 {
-    string ret( src );
-    replace( ret, "\\t", "\t" );
-    replace( ret, "\\n", "\n" );
-    replace( ret, "\\r", "\r" );
-    replace( ret, "\\\\", "\\" );
-    replace( ret, "\\\"", "\"" );
-    replace( ret, "\\'", "\'" );
-    return ret;
+	string ret( src );
+	replace( ret, "\\t", "\t" );
+	replace( ret, "\\n", "\n" );
+	replace( ret, "\\r", "\r" );
+	replace( ret, "\\\\", "\\" );
+	replace( ret, "\\\"", "\"" );
+	replace( ret, "\\'", "\'" );
+	return ret;
 }
 
 // is this identifier a keyword?
@@ -109,7 +109,7 @@ bool is_keyword( const string & s )
 		|| s == "in"
 		|| s == "import"
 		|| s == "class"
-        // 'new' IS a keyword, but acts as an identifier too
+		// 'new' IS a keyword, but acts as an identifier too
 //		|| s == "new"
 		|| s == "const"
 		|| s == "local" )

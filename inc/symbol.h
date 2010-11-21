@@ -35,15 +35,15 @@ using namespace std;
 
 enum SymbolType
 {
-    sym_null,			// 0
-    sym_number,			// 1
-    sym_string,			// 2
+	sym_null,			// 0
+	sym_number,			// 1
+	sym_string,			// 2
 	sym_boolean,		// 3
-    sym_vector,			// 4
+	sym_vector,			// 4
 	sym_map,			// 5
-    sym_address,		// 6	a size_t offset/address (fcn defs (locations), return addresses etc)
-    sym_function_call,	// 7
-    sym_unknown,		// 8	a variable (unknown type, has to be looked-up)
+	sym_address,		// 6	a size_t offset/address (fcn defs (locations), return addresses etc)
+	sym_function_call,	// 7
+	sym_unknown,		// 8	a variable (unknown type, has to be looked-up)
 	sym_class,			// 9	a class def
 	sym_instance,		// 10	a class instance (object)
 	sym_size,			// 11 	a size_t number (num of args etc)
@@ -53,15 +53,15 @@ enum SymbolType
 
 static const char* const SymbolTypeNames[] = 
 {
-    "null",
-    "number",
-    "string",
+	"null",
+	"number",
+	"string",
 	"boolean",
-    "vector",
+	"vector",
 	"map",
-    "address",
-    "function_call",
-    "unknown",
+	"address",
+	"function_call",
+	"unknown",
 	"class",
 	"instance",
 	"size",
@@ -71,16 +71,16 @@ static const char* const SymbolTypeNames[] =
 class SymbolInfo
 {
 protected:
-    SymbolType type;
+	SymbolType type;
 
 public:
-    // is this a constant?
+	// is this a constant?
 	bool is_const;
 
-    SymbolInfo() : type( sym_unknown ), is_const( false )
-    { }
-    SymbolInfo( SymbolType t ) : type( t ), is_const( false )
-    { }
+	SymbolInfo() : type( sym_unknown ), is_const( false )
+	{ }
+	SymbolInfo( SymbolType t ) : type( t ), is_const( false )
+	{ }
 
 	SymbolType Type() const { return type; }
 };

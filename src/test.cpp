@@ -96,22 +96,22 @@ void eval_expression( iter_t const& i )
 	static int indents = 0;
 
 	indent( indents );
-    cout << "In eval_expression. i->value = " <<
-        strip_symbol( string(i->value.begin(), i->value.end()) ) <<
-        " i->children.size() = " << i->children.size() << endl;
+	cout << "In eval_expression. i->value = " <<
+		strip_symbol( string(i->value.begin(), i->value.end()) ) <<
+		" i->children.size() = " << i->children.size() << endl;
 
 	// number
-    if( i->value.id() == parser_id( number_id ) )
-    {
+	if( i->value.id() == parser_id( number_id ) )
+	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "num", i, indents );
-    }
+	}
 	// string
 	else if( i->value.id() == parser_id( string_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 
 		dumpNode( "string", i, indents );
 	}
@@ -119,7 +119,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( boolean_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 
 		dumpNode( "boolean", i, indents );
 	}
@@ -127,7 +127,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( null_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 
 		dumpNode( "null", i, indents );
 	}
@@ -135,7 +135,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( constant_id ) )
 	{
 		// self and possibly semi-colon
-        assert( i->children.size() == 0 || i->children.size() == 1 );
+		assert( i->children.size() == 0 || i->children.size() == 1 );
 
 		dumpNode( "const", i, indents );
 	}
@@ -143,42 +143,42 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( func_id ) )
 	{
 		// children: id, arg_list, compound_statement | statement
-        assert( i->children.size() == 3 );
+		assert( i->children.size() == 3 );
 		dumpNode( "func", i, indents );
 	}
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
 	{
 		// self and possibly semi-colon
-//        assert( i->children.size() == 0 || i->children.size() == 1 );
+//		assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "while_s", i, indents );
 	}
 	// for_s (keyword 'for')
 	else if( i->value.id() == parser_id( for_s_id ) )
 	{
 		// self and possibly semi-colon
-//        assert( i->children.size() == 0 || i->children.size() == 1 );
+//		assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "for_s", i, indents );
 	}
 	// if_s (keyword 'if')
 	else if( i->value.id() == parser_id( if_s_id ) )
 	{
 		// self and possibly semi-colon
-//        assert( i->children.size() == 0 || i->children.size() == 1 );
+//		assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "if_s", i, indents );
 	}
 	// else_s (keyword 'else')
 	else if( i->value.id() == parser_id( else_s_id ) )
 	{
 		// self and possibly semi-colon
-//        assert( i->children.size() == 0 || i->children.size() == 1 );
+//		assert( i->children.size() == 0 || i->children.size() == 1 );
 		dumpNode( "else_s", i, indents );
 	}
 	// identifier
 	else if( i->value.id() == parser_id( identifier_id ) )
 	{
 		// can have arg_list & semi-colon
-        assert( i->children.size() < 3 );
+		assert( i->children.size() < 3 );
 
 		dumpNode( "identifier", i, indents );
 	}
@@ -200,47 +200,47 @@ void eval_expression( iter_t const& i )
 	// semicolon op
 	else if( i->value.id() == parser_id( semicolon_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 
 		dumpNode( "semicolon_op", i, indents );
 	}
 	// assignment op
 	else if( i->value.id() == parser_id( assignment_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "assignment_op", i, indents );
 	}
 	// logical op
 	else if( i->value.id() == parser_id( logical_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "logical_op", i, indents );
 	}
 	// relational op
 	else if( i->value.id() == parser_id( relational_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "relational_op", i, indents );
 	}
 	// mult_op
 	else if( i->value.id() == parser_id( mult_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "mult_op", i, indents );
 	}
 	// add_op
 	else if( i->value.id() == parser_id( add_op_id ) )
 	{
-        // either the two sides or the two sides and a semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		// either the two sides or the two sides and a semi-colon
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "add_op", i, indents );
 	}
@@ -248,7 +248,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( unary_op_id ) )
 	{
 		// operand and possibly semi-colon
-        assert( i->children.size() == 1 || i->children.size() == 2 );
+		assert( i->children.size() == 1 || i->children.size() == 2 );
 
 		dumpNode( "unary_op", i, indents );
 	}
@@ -256,7 +256,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( dot_op_id ) )
 	{
 		// operands (lhs & rhs) and possibly semi-colon
-        assert( i->children.size() == 2 || i->children.size() == 3 );
+		assert( i->children.size() == 2 || i->children.size() == 3 );
 
 		dumpNode( "dot_op", i, indents );
 	}
@@ -264,7 +264,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( open_paren_op_id )
 		  || i->value.id() == parser_id( close_paren_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 
 		dumpNode( "(open|close)_paren_op", i, indents );
 	}
@@ -272,7 +272,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( open_bracket_op_id ) 
 			|| i->value.id() == parser_id( close_bracket_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 
 		dumpNode( "(open|close)_bracket_op", i, indents );
 	}
@@ -280,7 +280,7 @@ void eval_expression( iter_t const& i )
 	else if( i->value.id() == parser_id( open_brace_op_id ) 
 			|| i->value.id() == parser_id( close_brace_op_id ) )
 	{
-        assert( i->children.size() == 0 );
+		assert( i->children.size() == 0 );
 
 		dumpNode( "(open|close)_brace_op", i, indents );
 	}
@@ -288,7 +288,7 @@ void eval_expression( iter_t const& i )
 	// nodes of this type not created
 //	else if( i->value.id() == parser_id( comma_op_id ) )
 //	{
-//        assert( i->children.size() == 0 );
+//		assert( i->children.size() == 0 );
 //
 //		dumpNode( "comma_op", i, indents );
 //	}
@@ -412,23 +412,23 @@ void eval_expression( iter_t const& i )
 	{
 		dumpNode( "return_statement", i, indents );
 	}
-    else
-    {
+	else
+	{
 		// don't indent, so we stand out
 		cout << "error, unknown id: " << i->value.id().to_long() << endl;
-        string s( i->value.begin(), i->value.end() );
+		string s( i->value.begin(), i->value.end() );
 		cout << "unknown: " << strip_symbol( s ) << endl;
-//        assert(0); // error
+//		assert(0); // error
 		indents++;
 		for( int c = 0; c < i->children.size(); c++ )
 			eval_expression( i->children.begin() + c );
 		indents--;
-    }
+	}
 }
 
 void evaluate( tree_parse_info<iterator_t, factory_t> info )
 {
-    eval_expression( info.trees.begin() );
+	eval_expression( info.trees.begin() );
 }
 
 
@@ -484,7 +484,7 @@ int main( int argc, char** argv )
 			num_tests++;
 			// parse this section of test code
 			cout << "===========================================================" << endl;
-            cout << input.c_str() << endl;
+			cout << input.c_str() << endl;
 			// create the position iterator for the parser
 			iterator_t begin( input.c_str(), input.c_str() + input.length(), input_filename );
 			iterator_t end;
@@ -499,12 +499,12 @@ int main( int argc, char** argv )
 			// reset the input
 			input = "";
 
-            // dump the symbol table
-//            cout << "symbols:" << endl;
-//            for( SymbolTable::iterator i = symTab.begin(); i != symTab.end(); ++i )
-//            {
-//                cout << i->first << endl;
-//            }
+			// dump the symbol table
+//			cout << "symbols:" << endl;
+//			for( SymbolTable::iterator i = symTab.begin(); i != symTab.end(); ++i )
+//			{
+//				cout << i->first << endl;
+//			}
 		}
 		else
 		{

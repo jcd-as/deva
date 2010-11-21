@@ -72,8 +72,8 @@ private:
 	int line;
 
 	// data for built-in module fcns
-    // maps of module names to import fcns
-    map<string, import_module_fcn> builtin_module_names;
+	// maps of module names to import fcns
+	map<string, import_module_fcn> builtin_module_names;
 	// map of module names to a list of fcn names
 	map<string, vector<string> > builtin_modules;
 	// map fcn name to fcn ptr, where fcn name is of the form 'fcn@module'
@@ -168,7 +168,7 @@ private:
 						DevaObject* cls = NULL;
 						cls = ex->find_symbol( DevaObject( cls_name, sym_unknown ), ns );
 						if( !cls )
-                            throw DevaICE( boost::format( "Trying to destroy unknown class '%1%'." ) % cls_name );
+							throw DevaICE( boost::format( "Trying to destroy unknown class '%1%'." ) % cls_name );
 
 						// look up the fcn name
 						DevaObject* fcn = ex->find_symbol( del, ns );
@@ -187,7 +187,7 @@ private:
 				}
 			}
 
-            // next, delete the instances and null them out in the collection
+			// next, delete the instances and null them out in the collection
 			// (do this first so the classes (& methods) that they
 			// implement/inherit from aren't deleted first)
 			for( map<string, DevaObject*>::iterator i = begin(); i != end(); ++i )
@@ -199,10 +199,10 @@ private:
 				// is this object an instance?
 				if( i->second->Type() == sym_instance )
 				{
-                    delete i->second;
-                    i->second = NULL;
-                }
-            }
+					delete i->second;
+					i->second = NULL;
+				}
+			}
 
 		}
 		void DeleteNonInstances()
@@ -235,7 +235,7 @@ private:
 		}
 	};
 	friend class equal_to_first;
-    struct ScopeTable : public vector<Scope*>
+	struct ScopeTable : public vector<Scope*>
 	{
 		Executor* ex;
 		void AddObject( DevaObject* ob )
@@ -369,7 +369,7 @@ private:
 	// private data associated with nested types:
 	////////////////////////////////////////////////////
 	ScopeTable *global_scopes;
-    vector< pair<string, ScopeTable*> > namespaces;
+	vector< pair<string, ScopeTable*> > namespaces;
 	ScopeTable *current_scopes;
 
 	CallStack trace;
@@ -418,11 +418,11 @@ private:
 	// locate a module
 	string find_module( string mod );
 
-    // find a namespace
-    vector< pair<string, ScopeTable*> >::iterator find_namespace( string mod );
+	// find a namespace
+	vector< pair<string, ScopeTable*> >::iterator find_namespace( string mod );
 
-    // call destructors on base classes
-    void destruct_base_classes( DevaObject* ob, DevaObject & instance );
+	// call destructors on base classes
+	void destruct_base_classes( DevaObject* ob, DevaObject & instance );
 
 	////////////////////////////////////////////////////
 	// individual op-code methods
@@ -535,11 +535,11 @@ public:
 	void RunText( const char* const text );
 	void Exit( int val );
 
-    // add a built-in module to the list of importable modules
+	// add a built-in module to the list of importable modules
 	void AddBuiltinModule( string name, import_module_fcn );
-    // import a built-in module (calls the import_module_fcn for this module)
+	// import a built-in module (calls the import_module_fcn for this module)
 	bool ImportBuiltinModule( string name );
-    // import all the functions defined in a built-in module
+	// import all the functions defined in a built-in module
 	bool ImportBuiltinModuleFunctions( string name, map<string, builtin_fcn> & fcns );
 
 	// global error methods
@@ -561,9 +561,9 @@ public:
 	}
 	DevaObject* GetErrorData(){ return error_data; }
 
-    // add all the known built-in modules
-    // (for language embedding clients such as deva, devadb etc)
-    void AddAllKnownBuiltinModules();
+	// add all the known built-in modules
+	// (for language embedding clients such as deva, devadb etc)
+	void AddAllKnownBuiltinModules();
 
 	// dump the stack trace to stdout
 	void DumpTrace( ostream &, bool show_all_scopes = false );

@@ -53,24 +53,24 @@ void do_map_next( Executor *ex );
 // tables defining the built-in function names...
 static const string map_builtin_names[] = 
 {
-    string( "map_length" ),
-    string( "map_copy" ),
-    string( "map_remove" ),
-    string( "map_find" ),
-    string( "map_keys" ),
-    string( "map_values" ),
-    string( "map_merge" ),
-    string( "map_rewind" ),
-    string( "map_next" ),
+	string( "map_length" ),
+	string( "map_copy" ),
+	string( "map_remove" ),
+	string( "map_find" ),
+	string( "map_keys" ),
+	string( "map_values" ),
+	string( "map_merge" ),
+	string( "map_rewind" ),
+	string( "map_next" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*map_builtin_fcn)(Executor*);
 map_builtin_fcn map_builtin_fcns[] = 
 {
-    do_map_length,
-    do_map_copy,
-    do_map_remove,
-    do_map_find,
+	do_map_length,
+	do_map_copy,
+	do_map_remove,
+	do_map_find,
 	do_map_keys,
 	do_map_values,
 	do_map_merge,
@@ -82,26 +82,26 @@ const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builti
 // is this name a built-in function?
 bool is_map_builtin( const string & name )
 {
-    const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
-    if( i != map_builtin_names + num_of_map_builtins ) return true;
+	const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
+	if( i != map_builtin_names + num_of_map_builtins ) return true;
 	else return false;
 }
 
 // execute built-in function
 void execute_map_builtin( Executor *ex, const string & name )
 {
-    const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
-    if( i == map_builtin_names + num_of_map_builtins )
+	const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
+	if( i == map_builtin_names + num_of_map_builtins )
 		throw DevaICE( "No such map built-in method." );
-    // compute the index of the function in the look-up table(s)
-    long l = (long)i;
-    l -= (long)&map_builtin_names;
-    int idx = l / sizeof( string );
-    if( idx > num_of_map_builtins )
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&map_builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_map_builtins )
 		throw DevaICE( "Out-of-array-bounds looking for map built-in method." );
-    else
-        // call the function
-        map_builtin_fcns[idx]( ex );
+	else
+		// call the function
+		map_builtin_fcns[idx]( ex );
 }
 
 // the built-in executor functions:
@@ -136,10 +136,10 @@ void do_map_copy( Executor *ex )
 	DevaObject mp = ex->stack.back();
 	ex->stack.pop_back();
 
-    if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
 		throw DevaICE( "Map, class or instance expected in map built-in method 'copy'." );
 
-    DevaObject copy;
+	DevaObject copy;
 	// create a new map object that is a copy of the one we received,
 	DOMap* m = new DOMap( *(mp.map_val) );
 	if( mp.Type() == sym_map )

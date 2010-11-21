@@ -446,58 +446,58 @@ void do_os_dirwalk( Executor* ex )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "'dir' argument to module 'os' function 'dirwalk' must be a string." );
 
-    // if there's a second arg, it's a boolean indicating whether to recurse or
-    // not (default being 'true')
-    bool recurse = true;
-    if( Executor::args_on_stack == 2 )
-    {
-        DevaObject recur = ex->stack.back();
-        ex->stack.pop_back();
+	// if there's a second arg, it's a boolean indicating whether to recurse or
+	// not (default being 'true')
+	bool recurse = true;
+	if( Executor::args_on_stack == 2 )
+	{
+		DevaObject recur = ex->stack.back();
+		ex->stack.pop_back();
 
-        DevaObject* r = NULL;
-        if( recur.Type() == sym_unknown )
-        {
-            r = ex->find_symbol( recur );
-            if( !r )
-                throw DevaRuntimeException( "Symbol not found for 'recur' argument in module 'os' function 'dirwalk'" );
-        }
-        if( !r )
-            r = &recur;
-        // must be a boolean
-        if( r->Type() != sym_boolean )
-            throw DevaRuntimeException( "'recur' argument to module 'os' function 'dirwalk' must be a boolean." );
-        recurse = r->bool_val;
-    }
+		DevaObject* r = NULL;
+		if( recur.Type() == sym_unknown )
+		{
+			r = ex->find_symbol( recur );
+			if( !r )
+				throw DevaRuntimeException( "Symbol not found for 'recur' argument in module 'os' function 'dirwalk'" );
+		}
+		if( !r )
+			r = &recur;
+		// must be a boolean
+		if( r->Type() != sym_boolean )
+			throw DevaRuntimeException( "'recur' argument to module 'os' function 'dirwalk' must be a boolean." );
+		recurse = r->bool_val;
+	}
 
 	DevaObject ret;
 	DOVector* dw_data = new DOVector();
 
-    // ensure dir exists and is a directory
+	// ensure dir exists and is a directory
 	filesystem::path p( o->str_val );
 	if( !filesystem::exists( p ) )
 		ret = DevaObject( "", sym_null );
-    else if( !filesystem::is_directory( p ) )
+	else if( !filesystem::is_directory( p ) )
 		ret = DevaObject( "", sym_null );
 	else
 	{
-        if( recurse )
-        {
-            filesystem::recursive_directory_iterator end;
-            for( filesystem::recursive_directory_iterator i( p ); i != end; ++i )
-            {
-                if( filesystem::is_regular_file( i->status() ) )
-                    dw_data->push_back( DevaObject( "", i->path().string() ) );
-            }
-        }
-        else
-        {
-            filesystem::directory_iterator end;
-            for( filesystem::directory_iterator i( p ); i != end; ++i )
-            {
-                if( filesystem::is_regular_file( i->status() ) )
-                    dw_data->push_back( DevaObject( "", i->path().string() ) );
-            }
-        }
+		if( recurse )
+		{
+			filesystem::recursive_directory_iterator end;
+			for( filesystem::recursive_directory_iterator i( p ); i != end; ++i )
+			{
+				if( filesystem::is_regular_file( i->status() ) )
+					dw_data->push_back( DevaObject( "", i->path().string() ) );
+			}
+		}
+		else
+		{
+			filesystem::directory_iterator end;
+			for( filesystem::directory_iterator i( p ); i != end; ++i )
+			{
+				if( filesystem::is_regular_file( i->status() ) )
+					dw_data->push_back( DevaObject( "", i->path().string() ) );
+			}
+		}
 		ret = DevaObject( "", dw_data );
 	}
 

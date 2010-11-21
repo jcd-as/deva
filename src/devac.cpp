@@ -105,8 +105,8 @@ int main( int argc, char** argv )
 		output += ".dvc";
 	}
 	bool debug_info = false;
-    if( vm.count( "debug" ) )
-        debug_info = true;
+	if( vm.count( "debug" ) )
+		debug_info = true;
 
 	// get the filename to compile
 	const char* input_filename = input.c_str();

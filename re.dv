@@ -28,53 +28,53 @@ import _re;
 
 class re
 {
-    def new( pattern )
-    {
-        self.regex = _re.compile( pattern );
-    }
+	def new( pattern )
+	{
+		self.regex = _re.compile( pattern );
+	}
 
-    def delete()
-    {
-        _re.delete( self.regex );
-    }
+	def delete()
+	{
+		_re.delete( self.regex );
+	}
 
-    def match( input )
-    {
-        return _re.match( self.regex, input );
-    }
+	def match( input )
+	{
+		return _re.match( self.regex, input );
+	}
 
-    def search( input )
-    {
-        return _re.search( self.regex, input );
-    }
+	def search( input )
+	{
+		return _re.search( self.regex, input );
+	}
 
-    def replace( input, format )
-    {
-        return _re.replace( self.regex, input, format );
-    }
+	def replace( input, format )
+	{
+		return _re.replace( self.regex, input, format );
+	}
 }
 
 # return a string with regex characters escaped
 def escape( str )
 {
-    # .[{()\*+?|^$
-    # what about:
-    # &#~@%-/="',<>:;
-    # ??? (python re.escape() escapes all of them)
+	# .[{()\*+?|^$
+	# what about:
+	# &#~@%-/="',<>:;
+	# ??? (python re.escape() escapes all of them)
 	local ret = str;
-    ret = ret.replace( "\\", "\\\\" );
-    ret = ret.replace( ".", "\\." );
-    ret = ret.replace( "[", "\\[" );
-    ret = ret.replace( "{", "\\{" );
-    ret = ret.replace( "(", "\\(" );
-    ret = ret.replace( "]", "\\]" );
-    ret = ret.replace( "}", "\\}" );
-    ret = ret.replace( ")", "\\)" );
-    ret = ret.replace( "*", "\\*" );
-    ret = ret.replace( "+", "\\+" );
-    ret = ret.replace( "?", "\\?" );
-    ret = ret.replace( "|", "\\|" );
-    ret = ret.replace( "^", "\\^" );
-    ret = ret.replace( "$", "\\$" );
-    return ret;
+	ret = ret.replace( "\\", "\\\\" );
+	ret = ret.replace( ".", "\\." );
+	ret = ret.replace( "[", "\\[" );
+	ret = ret.replace( "{", "\\{" );
+	ret = ret.replace( "(", "\\(" );
+	ret = ret.replace( "]", "\\]" );
+	ret = ret.replace( "}", "\\}" );
+	ret = ret.replace( ")", "\\)" );
+	ret = ret.replace( "*", "\\*" );
+	ret = ret.replace( "+", "\\+" );
+	ret = ret.replace( "?", "\\?" );
+	ret = ret.replace( "|", "\\|" );
+	ret = ret.replace( "^", "\\^" );
+	ret = ret.replace( "$", "\\$" );
+	return ret;
 }
