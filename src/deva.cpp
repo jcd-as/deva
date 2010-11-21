@@ -198,7 +198,7 @@ int main( int argc, char** argv )
 			ex->StartGlobalScope();
 
 			// add the built-in modules
-            ex->AddAllKnownBuiltinModules();
+			ex->AddAllKnownBuiltinModules();
 
 			// execute either the .dvc file...
 			if( ext == ".dvc" )

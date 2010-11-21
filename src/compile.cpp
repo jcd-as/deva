@@ -870,15 +870,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// second child is the arg_list, process it
 		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
-        // if this is a destructor ("delete" method), it cannot have arguments
-        string del( "delete@" );
-        del += class_name;
-        if( in_class_def && name == del )
-        {
-            // make sure there are no args
-            if( i->children[1].children.size() != 2 )
-                throw DevaSemanticException( "Destructors cannot take parameters.", i->value.value() );
-        }
+		// if this is a destructor ("delete" method), it cannot have arguments
+		string del( "delete@" );
+		del += class_name;
+		if( in_class_def && name == del )
+		{
+			// make sure there are no args
+			if( i->children[1].children.size() != 2 )
+				throw DevaSemanticException( "Destructors cannot take parameters.", i->value.value() );
+		}
 
 		// if this is a constructor ("new" method), add code to set needed
 		// fields and call the base-class constructors...

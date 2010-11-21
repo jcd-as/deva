@@ -81,11 +81,11 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, size_t offs, bool is_address );
 	// 'native object' (C void*) type
 	DevaObject( string nm, void* ptr );
-    // map type with the given map
-    DevaObject( string nm, DOMap* m );
-    // vector type with the given vector
-    DevaObject( string nm, DOVector* v );
-    // given type, empty object
+	// map type with the given map
+	DevaObject( string nm, DOMap* m );
+	// vector type with the given vector
+	DevaObject( string nm, DOVector* v );
+	// given type, empty object
 	DevaObject( string nm, SymbolType t );
 	// copy constructor needed to ensure each object has a separate copy of data
 	DevaObject( const DevaObject & o );
@@ -93,13 +93,13 @@ struct DevaObject : public SymbolInfo
 	DevaObject( string nm, const DevaObject & o );
 	~DevaObject();
 
-    // factory method: class type from the given map
-    static DevaObject ClassFromMap( string nm, DOMap* m );
-    // factory method: instance type from the given map
-    static DevaObject InstanceFromMap( string nm, DOMap* m );
+	// factory method: class type from the given map
+	static DevaObject ClassFromMap( string nm, DOMap* m );
+	// factory method: instance type from the given map
+	static DevaObject InstanceFromMap( string nm, DOMap* m );
 	// befriend the factory methods so they have access to private data
-    friend DevaObject ClassFromMap( string nm, DOMap* m );
-    friend DevaObject InstanceFromMap( string nm, DOMap* m );
+	friend DevaObject ClassFromMap( string nm, DOMap* m );
+	friend DevaObject InstanceFromMap( string nm, DOMap* m );
 
 	DevaObject& operator = ( const DevaObject & o );
 	bool operator < ( const DevaObject & rhs ) const;

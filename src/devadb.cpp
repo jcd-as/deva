@@ -364,11 +364,11 @@ int main( int argc, char** argv )
 		history( hist, &ev, H_SETSIZE, 800 );
 		el_set( el, EL_HIST, history, hist );
 
-        // the execution engine
+                // the execution engine
 		Executor* ex = NULL;
 
-        // for saving/re-loading breakpoints between restarts
-        vector<pair<string, int> > breakpoints;
+                // for saving/re-loading breakpoints between restarts
+                vector<pair<string, int> > breakpoints;
 
 		cout << "devadb " << VERSION << endl;
 re_start:
@@ -395,11 +395,11 @@ start:
 				memcpy( (void*)dvcode, (void*)code, code_length );
 				ex->AddCodeBlock( dvcode );
 
-                // if we have saved breakpoints, re-load them
-                for( int i = 0; i < breakpoints.size(); ++i )
-                {
-                    ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
-                }
+				// if we have saved breakpoints, re-load them
+				for( int i = 0; i < breakpoints.size(); ++i )
+				{
+						ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
+				}
 
 				ex->StartExecutingCode( dvcode );
 
@@ -527,14 +527,14 @@ start:
 									ex->AddBreakpoint( ex->GetExecutingFile(), l );
 									break;
 								}
-                                else if( in.size() == 2 )
-                                {
-                                    // only one arg. is it a number? try to use
-                                    // it as a line number to set a bp in the
-                                    // current file
-                                    ex->AddBreakpoint( ex->GetExecutingFile(), atoi( in[1].c_str() ) );
-                                    break;
-                                }
+								else if( in.size() == 2 )
+								{
+									// only one arg. is it a number? try to use
+									// it as a line number to set a bp in the
+									// current file
+									ex->AddBreakpoint( ex->GetExecutingFile(), atoi( in[1].c_str() ) );
+									break;
+								}
 								else if( in.size() < 3 )
 								{
 									cout << "add breakpoint command requires filename and line number." << endl;
@@ -654,7 +654,7 @@ start:
 
 				ex->EndGlobalScope();
 
-                // save breakpoints
+				// save breakpoints
 				breakpoints.clear();
 				breakpoints = ex->GetBreakpoints();
 
@@ -672,7 +672,7 @@ start:
 					// remove the newline
 					getchar();
 
-                    // restart
+					// restart
 					goto start;
 				}
 			}
@@ -692,11 +692,11 @@ start:
 				// remove the newline
 				getchar();
 
-                // save breakpoints
+				// save breakpoints
 				breakpoints.clear();
 				breakpoints = ex->GetBreakpoints();
 
-                // restart
+				// restart
 				goto re_start;
 			}
 			else

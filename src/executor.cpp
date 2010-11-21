@@ -148,15 +148,15 @@ DevaObject* Executor::find_symbol_in_current_scope( const DevaObject & ob )
 // helper (functor) class
 class equal_to_first
 {
-    string value;
+	string value;
 public:
-    equal_to_first( string val ) : value( val ) {}
-    bool operator()(pair<string, Executor::ScopeTable*> n ) { return n.first == value; }
+	equal_to_first( string val ) : value( val ) {}
+	bool operator()(pair<string, Executor::ScopeTable*> n ) { return n.first == value; }
 };
 // find a namespace
 vector< pair<string, Executor::ScopeTable*> >::iterator Executor::find_namespace( string mod )
 {
-    return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
+	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
 
 // peek at what the next instruction is (doesn't modify ip)
@@ -2317,11 +2317,11 @@ void Executor::Return( Instruction const & inst )
 	Leave( inst );
 	// current function is now the top of the stack trace
 	i = trace.rbegin();
-    if( i != trace.rend() )
-        function = i->function;
-    // (or, if we're at the end of the trace & thus in the shutdown process, 'none')
-    else
-        function = "<None>";
+	if( i != trace.rend() )
+		function = i->function;
+	// (or, if we're at the end of the trace & thus in the shutdown process, 'none')
+	else
+		function = "<None>";
 	// reset the static that tracks the number of args processed
 	args_on_stack = -1;
 }
@@ -2527,9 +2527,9 @@ void Executor::Import( Instruction const & inst )
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	mod = get_file_part( mod );
-    ScopeTable* st = new ScopeTable( this );
-    namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
-    current_scopes = st;
+	ScopeTable* st = new ScopeTable( this );
+	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
+	current_scopes = st;
 	// create a 'file/module' level scope for the namespace
 	current_scopes->Push();
 	// compile the file, if needed
@@ -2941,7 +2941,7 @@ Executor::~Executor()
 {
 	// free the global scopes object
 	delete global_scopes;
-    global_scopes = NULL;
+	global_scopes = NULL;
 }
 
 void Executor::ExecuteDevaFunction( string fcn_name, int num_args, ScopeTable* ns /*= NULL*/ )
@@ -3186,9 +3186,9 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 		return false;
 
 	// create a new namespace
-    ScopeTable* st = new ScopeTable( this );
-    st->Push();
-    namespaces.push_back( pair<string, ScopeTable*>( mod, st ) );
+	ScopeTable* st = new ScopeTable( this );
+	st->Push();
+	namespaces.push_back( pair<string, ScopeTable*>( mod, st ) );
 	// add an entry in the builtin modules map
 	builtin_modules[mod] = vector<string>();
 

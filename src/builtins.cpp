@@ -76,25 +76,25 @@ void do_geterror( Executor *ex );
 static const string builtin_names[] = 
 {
 	string( "print" ),
-    string( "str" ),
-    string( "chr" ),
-    string( "append" ),
-    string( "length" ),
-    string( "copy" ),
-    string( "eval" ),
-    string( "open" ),
-    string( "close" ),
-    string( "flush" ),
-    string( "read" ),
-    string( "readstring" ),
-    string( "readline" ),
-    string( "readlines" ),
-    string( "write" ),
-    string( "writestring" ),
-    string( "writeline" ),
-    string( "writelines" ),
-    string( "seek" ),
-    string( "tell" ),
+	string( "str" ),
+	string( "chr" ),
+	string( "append" ),
+	string( "length" ),
+	string( "copy" ),
+	string( "eval" ),
+	string( "open" ),
+	string( "close" ),
+	string( "flush" ),
+	string( "read" ),
+	string( "readstring" ),
+	string( "readline" ),
+	string( "readlines" ),
+	string( "write" ),
+	string( "writestring" ),
+	string( "writeline" ),
+	string( "writelines" ),
+	string( "seek" ),
+	string( "tell" ),
 	string( "name" ),
 	string( "type" ),
 	string( "stdin" ),
@@ -104,7 +104,7 @@ static const string builtin_names[] =
 	string( "num" ),
 	string( "range" ),
 	string( "format" ),
-    string( "join" ),
+	string( "join" ),
 	string( "error" ),
 	string( "seterror" ),
 	string( "geterror" ),
@@ -113,12 +113,12 @@ static const string builtin_names[] =
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
 builtin_fcn builtin_fcns[] = 
 {
-    do_print,
-    do_str,
-    do_chr,
-    do_append,
-    do_length,
-    do_copy,
+	do_print,
+	do_str,
+	do_chr,
+	do_append,
+	do_length,
+	do_copy,
 	do_eval,
 	do_open,
 	do_close,
@@ -142,7 +142,7 @@ builtin_fcn builtin_fcns[] =
 	do_num,
 	do_range,
 	do_format,
-    do_join,
+	do_join,
 	do_error,
 	do_seterror,
 	do_geterror,
@@ -152,34 +152,34 @@ const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] )
 // is this name a built-in function?
 bool is_builtin( const string & name )
 {
-    const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
-    if( i != builtin_names + num_of_builtins ) return true;
-	else return false;
+	const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+	if( i != builtin_names + num_of_builtins ) return true;
+		else return false;
 }
 
 // execute built-in function
 void execute_builtin( Executor *ex, const Instruction & inst )
 {
-    // find the name of the fcn
+	// find the name of the fcn
 	string name = inst.args[0].name;
-    const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
-    if( i == builtin_names + num_of_builtins )
+	const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+	if( i == builtin_names + num_of_builtins )
 		throw DevaICE( "No such built-in function." );
-    // compute the index of the function in the look-up table(s)
-    long l = (long)i;
-    l -= (long)&builtin_names;
-    int idx = l / sizeof( string );
-    if( idx > num_of_builtins )
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_builtins )
 		throw DevaICE( "Out-of-array-bounds looking for built-in function." );
-    else
+	else
 	{
 		// built-ins clear the error flag/data themselves, so that the 
 		// error/geterror/seterror built-ins can _not_ clear it, avoiding the 
 		// situation where it can never actually be retrieved
 		if( name != "error" && name != "seterror" && name != "geterror" )
 			ex->SetError( false );
-        // call the function
-        builtin_fcns[idx]( ex );
+		// call the function
+		builtin_fcns[idx]( ex );
 	}
 }
 
@@ -226,51 +226,51 @@ void do_print( Executor *ex )
 	if( !o )
 		o = &obj;
 
-    // save the number of args on the stack
-    // (if we're printing an instance we'll call ExecuteDevaFunction() which
-    // will wipe out the static in the executor)
-    int args_on_stack = Executor::args_on_stack;
+	// save the number of args on the stack
+	// (if we're printing an instance we'll call ExecuteDevaFunction() which
+	// will wipe out the static in the executor)
+	int args_on_stack = Executor::args_on_stack;
 
 	// convert to a string
-    string s;
-    // if this is an instance object, see if there is a 'repr' method
-    // and use the string returned from it, if it exists
-    if( o->Type() == sym_instance )
-    {
-        // look for the '__class__' member, which holds the class name
+	string s;
+	// if this is an instance object, see if there is a 'repr' method
+	// and use the string returned from it, if it exists
+	if( o->Type() == sym_instance )
+	{
+		// look for the '__class__' member, which holds the class name
 		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__class__" ) ) );
 		if( it == o->map_val->end() )
-            throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
-        string cls( "@" );
-        cls += it->second.str_val;
-        string repr( "repr" );
-        repr += cls;
-        // append "@class" to the method name
+			throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
+		string cls( "@" );
+		cls += it->second.str_val;
+		string repr( "repr" );
+		repr += cls;
+		// append "@class" to the method name
 		it = o->map_val->find( DevaObject( "", repr ) );
 		if( it != o->map_val->end() )
 		{
 			if( it->second.Type() == sym_address )
-            {
-                // push the object ("self")
-                ex->stack.push_back( *o );
-                // call the function (takes no args)
-                ex->ExecuteDevaFunction( repr, 1 );
-                // get the result (return value)
-                DevaObject retval = ex->stack.back();
-                ex->stack.pop_back();
-                if( retval.Type() != sym_string )
-                    throw DevaRuntimeException( "The 'repr' method on a class did not return a string value" );
-                s = retval.str_val;
-            }
-            else
-                s = obj_to_str( o );
-        }
-        else
-            s = obj_to_str( o );
-    }
-    // non-instance type, dump its contents
-    else
-        s = obj_to_str( o );
+			{
+				// push the object ("self")
+				ex->stack.push_back( *o );
+				// call the function (takes no args)
+				ex->ExecuteDevaFunction( repr, 1 );
+				// get the result (return value)
+				DevaObject retval = ex->stack.back();
+				ex->stack.pop_back();
+				if( retval.Type() != sym_string )
+					throw DevaRuntimeException( "The 'repr' method on a class did not return a string value" );
+				s = retval.str_val;
+			}
+			else
+				s = obj_to_str( o );
+		}
+		else
+			s = obj_to_str( o );
+	}
+	// non-instance type, dump its contents
+	else
+		s = obj_to_str( o );
 
 	if( args_on_stack == 2 )
 		s += eol_str;
@@ -307,45 +307,45 @@ void do_str( Executor *ex )
 		o = &obj;
 
 	// convert to a string
-    string s;
-    // if this is an instance object, see if there is a 'repr' method
-    // and use the string returned from it, if it exists
-    if( o->Type() == sym_instance )
-    {
-        // look for the '__class__' member, which holds the class name
+	string s;
+	// if this is an instance object, see if there is a 'repr' method
+	// and use the string returned from it, if it exists
+	if( o->Type() == sym_instance )
+	{
+		// look for the '__class__' member, which holds the class name
 		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__class__" ) ) );
 		if( it == o->map_val->end() )
-            throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
-        string cls( "@" );
-        cls += it->second.str_val;
-        string str( "str" );
-        str += cls;
-        // append "@class" to the method name
+			throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
+		string cls( "@" );
+		cls += it->second.str_val;
+		string str( "str" );
+		str += cls;
+		// append "@class" to the method name
 		it = o->map_val->find( DevaObject( "", str ) );
 		if( it != o->map_val->end() )
 		{
 			if( it->second.Type() == sym_address )
-            {
-                // push the object ("self")
-                ex->stack.push_back( *o );
-                // call the function (takes no args)
-                ex->ExecuteDevaFunction( str, 1 );
-                // get the result (return value)
-                DevaObject retval = ex->stack.back();
-                ex->stack.pop_back();
-                if( retval.Type() != sym_string )
-                    throw DevaRuntimeException( "The 'str' method on a class did not return a string value" );
-                s = retval.str_val;
-            }
-            else
-                s = obj_to_str( o );
-        }
-        else
-            s = obj_to_str( o );
-    }
-    // non-instance type, dump its contents
-    else
-        s = obj_to_str( o );
+			{
+				// push the object ("self")
+				ex->stack.push_back( *o );
+				// call the function (takes no args)
+				ex->ExecuteDevaFunction( str, 1 );
+				// get the result (return value)
+				DevaObject retval = ex->stack.back();
+				ex->stack.pop_back();
+				if( retval.Type() != sym_string )
+					throw DevaRuntimeException( "The 'str' method on a class did not return a string value" );
+				s = retval.str_val;
+			}
+			else
+				s = obj_to_str( o );
+		}
+		else
+			s = obj_to_str( o );
+	}
+	// non-instance type, dump its contents
+	else
+		s = obj_to_str( o );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -486,32 +486,32 @@ void do_copy( Executor *ex )
 	if( !o )
 		o = &obj;
 
-    DevaObject copy;
+        DevaObject copy;
 	if( o->Type() == sym_map )
 	{
-        // create a new map object that is a copy of the one we received,
-        DOMap* m = new DOMap( *(o->map_val) );
-        copy = DevaObject( "", m );
+		// create a new map object that is a copy of the one we received,
+		DOMap* m = new DOMap( *(o->map_val) );
+		copy = DevaObject( "", m );
 	}
 	else if( o->Type() == sym_class )
 	{
-        DOMap* m = new DOMap( *(o->map_val) );
+		DOMap* m = new DOMap( *(o->map_val) );
 		copy = DevaObject::ClassFromMap( "", m );
 	}
 	else if( o->Type() == sym_instance )
 	{
-        DOMap* m = new DOMap( *(o->map_val) );
+		DOMap* m = new DOMap( *(o->map_val) );
 		copy = DevaObject::InstanceFromMap( "", m );
 	}
-    else if( o->Type() == sym_vector )
-    {
-        // create a new vector object that is a copy of the one we received,
-        DOVector* v = new DOVector( *(o->vec_val) );
-        copy = DevaObject( "", v );
-    }
+	else if( o->Type() == sym_vector )
+	{
+		// create a new vector object that is a copy of the one we received,
+		DOVector* v = new DOVector( *(o->vec_val) );
+		copy = DevaObject( "", v );
+	}
 	else
 	{
-        throw DevaRuntimeException( "Object for built-in function 'copy' is not a map or vector." );
+		throw DevaRuntimeException( "Object for built-in function 'copy' is not a map or vector." );
 	}
 
 	// pop the return address
@@ -1019,7 +1019,6 @@ void do_write( Executor *ex )
 	else
 		source = &src;
 
-//	size_t len = num_bytes > source->vec_val->size() ? num_bytes : source->vec_val->size();
 	size_t len = num_bytes < source->vec_val->size() ? num_bytes : source->vec_val->size();
 	unsigned char* data = new unsigned char[len];
 	// create a native array of unsigned chars to write out
@@ -1099,7 +1098,6 @@ void do_writestring( Executor *ex )
 		source = &src;
 
 	size_t slen = strlen( source->str_val );
-//	size_t len = num_bytes > slen ? num_bytes : slen;
 	size_t len = num_bytes < slen ? num_bytes : slen;
 	size_t bytes_written = fwrite( (void*)(source->str_val), 1, len, (FILE*)(o->sz_val) );
 
@@ -1765,32 +1763,32 @@ void do_join( Executor *ex )
 		DevaObject val = ex->stack.back();
 		ex->stack.pop_back();
 
-        DevaObject* o;
-        if( val.Type() == sym_unknown )
-        {
-            o = ex->find_symbol( val );
-            if( !o )
-                throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
-        }
-        else
-            o = &val;
-        if( o->Type() != sym_string )
-            throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
+		DevaObject* o;
+		if( val.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( val );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
+		}
+		else
+				o = &val;
+		if( o->Type() != sym_string )
+				throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
 
-        sep = o->str_val;
-    }
-    else
-        sep = "";
+		sep = o->str_val;
+	}
+	else
+		sep = "";
 
 	string ret;
-    for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
-    {
-        ostringstream s;
-        if( i != v->vec_val->begin() )
-            s << sep;
-        s << *i;
-        ret += s.str();
-    }
+	for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+	{
+		ostringstream s;
+		if( i != v->vec_val->begin() )
+			s << sep;
+		s << *i;
+		ret += s.str();
+	}
 
 	// pop the return address
 	ex->stack.pop_back();

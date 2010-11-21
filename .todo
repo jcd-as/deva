@@ -415,8 +415,8 @@ need ref-count and add-ref/release-ref operations on DevaObject class.
 </comment></note><note done="1263164018" priority="veryhigh" time="1263156975">naming convention: for native built-in modules that are going to be wrapped, start the name with an underscore. rename 're' module to '_re' (and correspondingly rename the 'regex' module to 're')
 <comment>
 </comment></note><note priority="veryhigh" time="1263190689">refactor all builtin fcns and methods to use helper methods from builtin_helpers.[h|cpp]
-</note><note priority="veryhigh" time="1263361557">BUG: string.split() sometimes appends an extra empty string (repro: '\n\t&quot;a&quot; : 0' split on the ':' returns 3 items. NOTE: can't repro this 10/24/10)
-</note><note done="1267477231" priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
+</note><note done="1290315317" priority="veryhigh" time="1263361557">BUG: string.split() sometimes appends an extra empty string (repro: '\n\t&quot;a&quot; : 0' split on the ':' returns 3 items. NOTE: can't repro this 10/24/10)
+<comment>fixed (i think). the repro i found was where there was a leading/trailing space</comment></note><note done="1267477231" priority="veryhigh" time="1263366583">BUG: codegen: returning a value from inside a for() loop causes bad code gen (&quot;ICE: Invalid return destination on stack when executing return instruction&quot;). a return without a return value works correctly
 <comment>replaced for loop code-gen with new code gen that utilizes a 'enumerable interface', enabling user-defined types to be used in for loops too. also, the parser had to be fixed for 'return' statementss
 </comment></note><note done="1289279154" priority="high" time="1269284782">BUG: cannot call a string method on the result of a string slice (e.g. foo[1:4].strip() errors)
 <comment>code gen bug. fixed

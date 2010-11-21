@@ -89,7 +89,7 @@ static const string vector_builtin_names[] =
 	string( "vector_any" ),
 	string( "vector_all" ),
 	string( "vector_slice" ),
-    string( "vector_join" ),
+	string( "vector_join" ),
 	string( "vector_rewind" ),
 	string( "vector_next" ),
 };
@@ -117,7 +117,7 @@ vector_builtin_fcn vector_builtin_fcns[] =
 	do_vector_any,
 	do_vector_all,
 	do_vector_slice,
-    do_vector_join,
+	do_vector_join,
 	do_vector_rewind,
 	do_vector_next,
 };

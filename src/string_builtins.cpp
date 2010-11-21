@@ -74,23 +74,23 @@ void do_string_join( Executor *ex );
 // tables defining the built-in function names...
 static const string string_builtin_names[] = 
 {
-    string( "string_concat" ),
-    string( "string_length" ),
-    string( "string_copy" ),
-    string( "string_insert" ),
-    string( "string_remove" ),
-    string( "string_find" ),
-    string( "string_rfind" ),
-    string( "string_reverse" ),
-    string( "string_sort" ),
-    string( "string_slice" ),
-    string( "string_strip" ),
-    string( "string_lstrip" ),
-    string( "string_rstrip" ),
-    string( "string_split" ),
-    string( "string_replace" ),
-    string( "string_upper" ),
-    string( "string_lower" ),
+	string( "string_concat" ),
+	string( "string_length" ),
+	string( "string_copy" ),
+	string( "string_insert" ),
+	string( "string_remove" ),
+	string( "string_find" ),
+	string( "string_rfind" ),
+	string( "string_reverse" ),
+	string( "string_sort" ),
+	string( "string_slice" ),
+	string( "string_strip" ),
+	string( "string_lstrip" ),
+	string( "string_rstrip" ),
+	string( "string_split" ),
+	string( "string_replace" ),
+	string( "string_upper" ),
+	string( "string_lower" ),
 	string( "string_isalphanum" ),
 	string( "string_isalpha" ),
 	string( "string_isdigit" ),
@@ -102,29 +102,29 @@ static const string string_builtin_names[] =
 	string( "string_isprint" ),
 	string( "string_isxdigit" ),
 	string( "string_format" ),
-    string( "string_join" ),
+	string( "string_join" ),
 };
 // ...and function pointers to the executor functions for them
 typedef void (*string_builtin_fcn)(Executor*);
 string_builtin_fcn string_builtin_fcns[] = 
 {
-    do_string_concat,
-    do_string_length,
-    do_string_copy,
-    do_string_insert,
-    do_string_remove,
-    do_string_find,
-    do_string_rfind,
-    do_string_reverse,
-    do_string_sort,
-    do_string_slice,
-    do_string_strip,
-    do_string_lstrip,
-    do_string_rstrip,
-    do_string_split,
-    do_string_replace,
-    do_string_upper,
-    do_string_lower,
+	do_string_concat,
+	do_string_length,
+	do_string_copy,
+	do_string_insert,
+	do_string_remove,
+	do_string_find,
+	do_string_rfind,
+	do_string_reverse,
+	do_string_sort,
+	do_string_slice,
+	do_string_strip,
+	do_string_lstrip,
+	do_string_rstrip,
+	do_string_split,
+	do_string_replace,
+	do_string_upper,
+	do_string_lower,
 	do_string_isalphanum,
 	do_string_isalpha,
 	do_string_isdigit,
@@ -136,7 +136,7 @@ string_builtin_fcn string_builtin_fcns[] =
 	do_string_isprint,
 	do_string_isxdigit,
 	do_string_format,
-    do_string_join,
+	do_string_join,
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
@@ -802,6 +802,15 @@ void do_string_split( Executor *ex )
 		{	
 			size_t right = in.find_first_of( chars );
 			size_t len = in.length();
+
+			// if 'left' is greater than 'right', then we passed an empty string 
+			// (two matching split chars in a row), enter it and move forward
+			if( left != string::npos && left > right )
+			{
+				ret->push_back( DevaObject( "", string( "" ) ) );
+				right = in.find_first_of( chars, right + 1 );
+			}
+
 			while( left != string::npos )
 			{
 				string s( in, left, right - left );
@@ -842,8 +851,8 @@ void do_string_replace( Executor *ex )
 	DevaObject val = get_arg_of_type( ex, "string.replace", "replacement_value", sym_string );
 	
 	// do the replacement
-    string ret( str.str_val );
-    replace( ret, srch.str_val, val.str_val );
+	string ret( str.str_val );
+	replace( ret, srch.str_val, val.str_val );
 
 	// pop the return address
 	ex->stack.pop_back();
@@ -1236,14 +1245,14 @@ void do_string_join( Executor *ex )
 	DevaObject args = get_arg_of_type( ex, "string.join", "args", sym_vector );
 
 	string ret;
-    for( DOVector::iterator i = args.vec_val->begin(); i != args.vec_val->end(); ++i )
-    {
-        ostringstream s;
-        if( i != args.vec_val->begin() )
-            s << str.str_val;
-        s << *i;
-        ret += s.str();
-    }
+	for( DOVector::iterator i = args.vec_val->begin(); i != args.vec_val->end(); ++i )
+	{
+		ostringstream s;
+		if( i != args.vec_val->begin() )
+			s << str.str_val;
+		s << *i;
+		ret += s.str();
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
