@@ -1,5 +1,5 @@
 #!/bin/bash
-# do test using valgrind on deva (deva executor) to compile and execute the program
+# do test using valgrind on deva (deva executor) to execute the program
 # ONLY ensures the code is valgrind clean, doesn't ensure the test ran 
 # correctly otherwise (use the normal dotest_exec script for that)
 
@@ -13,8 +13,7 @@ if [ -z $DEVA ] ; then
 	exit
 fi
 
-# execute, but do not compile, the test code under valgrind
-$DEVA/devac $1 > /dev/null
+# (try to) compile and execute the test code under valgrind
 valgrind --leak-check=yes --suppressions=$DEVA/valgrind.supp $DEVA/deva $1 2> '$$$RESULTS$$$' > /dev/null
 
 if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then

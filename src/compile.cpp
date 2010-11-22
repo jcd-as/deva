@@ -974,16 +974,19 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 		// next come parent classes
 		int c = 1;
-		parser_id type = i->children[c].value.id();
 		parents.clear();
-		while( type == identifier_id )
+		if( i->children.size() > 1 )
 		{
-			string parent = strip_symbol( string( i->children[c].value.begin(), i->children[c].value.end() ) );
-			// add to list of parents
-			parents.push_back( DevaObject( parent, sym_unknown ) );
-			// next
-			++c;
-			type = i->children[c].value.id();
+			parser_id type = i->children[c].value.id();
+			while( type == identifier_id )
+			{
+				string parent = strip_symbol( string( i->children[c].value.begin(), i->children[c].value.end() ) );
+				// add to list of parents
+				parents.push_back( DevaObject( parent, sym_unknown ) );
+				// next
+				++c;
+				type = i->children[c].value.id();
+			}
 		}
 
 		// create a new class object and store it in the given name

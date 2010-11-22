@@ -172,6 +172,12 @@ int main( int argc, char** argv )
 				if( !code )
 				{
 					cout << "Error compiling " << fname << endl;
+
+					// done, free the scope tables
+					for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
+					{
+						delete i->second;
+					}
 					return -1;
 				}
 				// unless we're not writing .dvc files
@@ -181,6 +187,12 @@ int main( int argc, char** argv )
 					if( !WriteByteCode( out_fname.c_str(), code, code_length ) )
 					{
 						cout << "Error writing bytecode to " << out_fname << endl;
+
+						// done, free the scope tables
+						for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
+						{
+							delete i->second;
+						}
 						return -1;
 					}
 				}
@@ -188,7 +200,6 @@ int main( int argc, char** argv )
 		}
 
 		// create our execution engine object
-//		Executor ex( debug );
 		Executor *ex = NULL;
 		ex = new Executor( debug );
 
@@ -243,6 +254,12 @@ int main( int argc, char** argv )
 			delete ex;
 			ex = NULL;
 
+			// done, free the scope tables
+			for( Scopes::iterator i = scopes.begin(); i != scopes.end(); ++i )
+			{
+				delete i->second;
+			}
+
 			return -1;
 		}
 
@@ -269,13 +286,6 @@ int main( int argc, char** argv )
 	catch( DevaCriticalException & e )
 	{
 		cout << "Unrecoverable error: " << e.what() << endl;
-		return -1;
-	}
-	// runtime exceptions really should only stem from the Executor,
-	// but just in case...
-	catch( DevaRuntimeException & e )
-	{
-		cout << "Error: " << e.what() << endl;
 		return -1;
 	}
 	catch( logic_error & e )
