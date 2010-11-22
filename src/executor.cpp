@@ -2712,8 +2712,13 @@ bool Executor::DoInstr( Instruction & inst )
 		Line_num( inst );
 		// check for breakpoints
 		{
+			// try full paths
 			pair<string, int> p = make_pair( file, line );
 			if( find( breakpoints.begin(), breakpoints.end(), p ) != breakpoints.end() )
+				return false;
+			// then file names
+			pair<string, int> p2 = make_pair( get_file_part( file ), line );
+			if( find( breakpoints.begin(), breakpoints.end(), p2 ) != breakpoints.end() )
 				return false;
 		}
 		break;

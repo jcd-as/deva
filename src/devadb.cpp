@@ -515,7 +515,12 @@ start:
 								}
 								// otherwise, it is a simple var, just print it
 								else
-									cout << *v << endl;
+								{
+									if( v->Type() == sym_string )
+										cout << "'" << *v << "'" << endl;
+									else
+										cout << *v << endl;
+								}
 								}
 								break;
 							// 'breakpoint':

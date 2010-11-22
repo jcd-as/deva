@@ -58,7 +58,15 @@ void do_re_compile( Executor* ex )
 	if( o->Type() != sym_string )
 		throw DevaRuntimeException( "'regex' argument to module '_re' function 'compile' must be a string." );
 
-	regex* r = new regex( o->str_val );
+	regex* r;
+	try
+	{
+		r = new regex( o->str_val );
+	}
+	catch( boost::regex_error & e )
+	{
+		throw DevaRuntimeException( boost::format( "Invalid regular expression: %1%" ) % e.what() );
+	}
 
 	// pop the return address
 	ex->stack.pop_back();
