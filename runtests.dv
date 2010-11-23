@@ -44,6 +44,7 @@ def path_greater( a, b )
 
 # TODO: to this (machine int-size detection) correctly ??
 hosttype = os.getenv( "HOSTTYPE" );
+baseline_sized = null;
 if( hosttype == "x86_64" )
 	baseline_sized = "baseline.64";
 else
@@ -86,6 +87,7 @@ for( file in files )
 {
 	if( os.getfile( file ) == baseline )
 	{
+		bl = null;
 		if( os.exists( os.joinpaths( [os.getdir( file ), baseline_sized] ) ) )
 			bl = baseline_sized;
 		else

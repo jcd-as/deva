@@ -126,8 +126,9 @@ Scope 3, parent = 2
 Instructions:
 line_num : input.dv ; , address/sized-value = 0 ; 
 push : true ; 
-jmpf : , address/sized-value = 115 ; 
-push : , address/sized-value = 105 ; 
+jmpf : , address/sized-value = 119 ; 
+enter : 
+push : , address/sized-value = 107 ; 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 
@@ -138,8 +139,9 @@ tbl_load : false ;
 line_num : input.dv ; , address/sized-value = 3 ; 
 call : , address/sized-value = 0 ; 
 pop : 
+leave : 
 jmp : , address/sized-value = 19 ; 
-push : , address/sized-value = 177 ; 
+push : , address/sized-value = 181 ; 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 
@@ -148,10 +150,10 @@ tbl_load : false ;
 line_num : input.dv ; , address/sized-value = 6 ; 
 call : , address/sized-value = 0 ; 
 pop : 
-defun : x, address/sized-value = 179 ; 
+defun : x, address/sized-value = 183 ; 
 enter : 
 defarg : 
-push : , address/sized-value = 254 ; 
+push : , address/sized-value = 258 ; 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 

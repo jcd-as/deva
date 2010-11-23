@@ -15,15 +15,17 @@ def glob( path )
     if( !dirname )
         return glob1( os.curdir(), filename );
 
+	local dirs = null;
     if( has_magic( dirname ) )
-        local dirs = glob( dirname );
+        dirs = glob( dirname );
     else
-        local dirs = [dirname];
+        dirs = [dirname];
 
+	local glob_in_dir = null;
     if( has_magic( filename ) )
-        local glob_in_dir = glob1;
+        glob_in_dir = glob1;
     else
-        local glob_in_dir = glob0;
+        glob_in_dir = glob0;
 
     local ret = [];
     for( dn in dirs )

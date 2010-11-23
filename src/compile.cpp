@@ -964,6 +964,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// end of defun marker
 		is.push( Instruction( op_endf ) );
 	}
+	// class decl
 	else if( i->value.id() == parser_id( class_decl_id ) )
 	{
 		// first child is the identifier (class name)
@@ -1037,6 +1038,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		method_names.clear();
 		in_class_def = false;
 	}
+	// new
 	else if( i->value.id() == parser_id( new_decl_id ) )
 	{
 		int arg_idx;
@@ -1122,7 +1124,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			is[ret_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 		}
 	}
-
 	// while_s (keyword 'while')
 	else if( i->value.id() == parser_id( while_s_id ) )
 	{
@@ -1133,7 +1134,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// gen_IL adds the placeholder for the jmpf
 		gen_IL_while_s( i, is );
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+		// if it's _not_ a compound statement, manually add enter/leave ops
+		if( ((iter_t const&)(i->children.begin() + 1))->value.id() != compound_statement_id )
+		{
+			is.push( Instruction( op_enter ) );
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+			is.push( Instruction( op_leave ) );
+		}
+		else
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 		// post-gen-IL will to the back-patching and add the jump to start
 		post_gen_IL_while_s( i, is );
 	}
@@ -1145,15 +1154,37 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// first child (and second if this is a map walk) have variables
 		// second or third child has the 'in' operator
 		// third or fourth child has the statement|compound_statement, walk it
+		bool is_single_statement = false;
 		if( i->children.size() == 3 )
-			generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
+		{
+			// if it's _not_ a compound statement, manually add enter/leave ops
+			parser_id id = ((iter_t const&)(i->children.begin() + 2))->value.id();
+			if( id != compound_statement_id )
+			{
+				is.push( Instruction( op_enter ) );
+				generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
+				is_single_statement = true;
+			}
+			else
+				generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
+		}
 		else if( i->children.size() == 4 )
-			generate_IL_for_node( i->children.begin() + 3, is, i, 3 );
+		{
+			// if it's _not_ a compound statement, manually add enter/leave ops
+			if( ((iter_t const&)(i->children.begin() + 3))->value.id() != compound_statement_id )
+			{
+				is.push( Instruction( op_enter ) );
+				generate_IL_for_node( i->children.begin() + 3, is, i, 3 );
+				is_single_statement = true;
+			}
+			else
+				generate_IL_for_node( i->children.begin() + 3, is, i, 3 );
+		}
 		else
 			throw DevaSemanticException( "invalid for loop", i->value.value() );
 
 		// gen_IL adds the placeholder for the jmpf
-		gen_IL_for_s( i, is );
+		gen_IL_for_s( i, is, is_single_statement );
 	}
 	// if_s (keyword 'if')
 	else if( i->value.id() == parser_id( if_s_id ) )
@@ -1162,8 +1193,17 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		generate_IL_for_node( i->children.begin(), is, i, 0 );
 		// generate the jump-placeholder
 		pre_gen_IL_if_s( i, is );
+
 		// second child has the statement|compound_statement, walk it
-		generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+		parser_id id = ((iter_t const&)(i->children.begin() + 1))->value.id();
+		if( id != compound_statement_id )
+		{
+			pre_gen_IL_compound_statement( i->children.begin() + 1, is, i );
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
+			gen_IL_compound_statement( i->children.begin() + 1, is, i );
+		}
+		else
+			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
 
 		// if there's no 'else' clause
 		// (third child, if any, has the else clause)
@@ -1183,7 +1223,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			gen_IL_if_s( i, is );
 
 			// ...then walk the children (statement|compound_statement)
-			generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
+			parser_id id = ((iter_t const&)(i->children.begin() + 2))->value.id();
+			if( id != compound_statement_id )
+			{
+				pre_gen_IL_compound_statement( i->children.begin() + 2, is, i );
+				generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
+				gen_IL_compound_statement( i->children.begin() + 2, is, i );
+			}
+			else
+				generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 
 			// ...and then back-patch the 'else' jump to jump to here
 			gen_IL_else_s( i, is );

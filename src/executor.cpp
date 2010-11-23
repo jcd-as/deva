@@ -2362,7 +2362,7 @@ void Executor::Break( Instruction const & inst )
 	}
 	// now, back at the original position,
 	// scan forward, looking for, and executing, enter/leave instructions
-	// until we leave the current scope (1 move leave op than enter ops)
+	// until we leave the current scope (1 more leave op than enter ops)
 	while( true )
 	{
 		switch( PeekInstr() )
@@ -2389,6 +2389,17 @@ void Executor::Break( Instruction const & inst )
 				if( PeekInstr() != op_jmp )
 					throw DevaICE( "Invalid loop. Final 'leave' instruction not followed by 'jmp'." );
 				NextInstr();
+				// a while loop will have a jmp that needs to be skipped, but
+				// a for loop will have a jmp and a two pops (ONE of which needs
+				// to be run to clean the stack up for the 'for' loop var)
+				if( PeekInstr() == op_pop )
+				{
+					NextInstr();
+					if( PeekInstr() != op_pop )
+						throw DevaICE( "Invalid 'for' loop. Final 'leave' instruction not followed by two 'pop' instructions." );
+					Instruction inst = NextInstr();
+					DoInstr( inst );
+				}
 				return;
 			}
 			break;

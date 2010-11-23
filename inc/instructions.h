@@ -113,7 +113,7 @@ void gen_IL_while_s( iter_t const & i, InstructionStream & is );
 void post_gen_IL_while_s( iter_t const & i, InstructionStream & is );
 
 void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is );
-void gen_IL_for_s( iter_t const & i, InstructionStream & is );
+void gen_IL_for_s( iter_t const & i, InstructionStream & is, bool needs_leave );
 
 void pre_gen_IL_if_s( iter_t const & i, InstructionStream & is );
 void gen_IL_if_s( iter_t const & i, InstructionStream & is );

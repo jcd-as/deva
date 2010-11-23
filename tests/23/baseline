@@ -892,33 +892,35 @@ call : , address/sized-value = 0 ;
 dup : 0 ; 
 push : 0 ; 
 tbl_load : , address/sized-value = 1 ; 
-jmpf : , address/sized-value = 1491 ; 
+jmpf : , address/sized-value = 1495 ; 
 push : 1 ; 
 tbl_load : , address/sized-value = 1 ; 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : , address/sized-value = 1481 ; 
+enter : 
+push : , address/sized-value = 1483 ; 
 push : unknown: 'i' ; 
 line_num : input.dv ; , address/sized-value = 47 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
+leave : 
 jmp : , address/sized-value = 1320 ; 
 pop : 
 pop : 
 push : unknown: 'n' ; 
-push : , address/sized-value = 1553 ; 
+push : , address/sized-value = 1557 ; 
 push : unknown: 'l' ; 
 line_num : input.dv ; , address/sized-value = 54 ; 
 call : function_call: 'bubble_sort' ; , address/sized-value = 1 ; 
 store : 
-push : , address/sized-value = 1609 ; 
+push : , address/sized-value = 1613 ; 
 push : sorted: ; 
 line_num : input.dv ; , address/sized-value = 57 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
 push : unknown: 'n' ; 
-push : , address/sized-value = 1663 ; 
+push : , address/sized-value = 1667 ; 
 dup : 1 ; 
 push : rewind ; 
 tbl_load : false ; 
@@ -927,7 +929,7 @@ pop :
 push : unknown: 'i' ; 
 push : null ; 
 store : true ; 
-push : , address/sized-value = 1731 ; 
+push : , address/sized-value = 1735 ; 
 dup : 1 ; 
 push : next ; 
 tbl_load : false ; 
@@ -935,18 +937,20 @@ call : , address/sized-value = 0 ;
 dup : 0 ; 
 push : 0 ; 
 tbl_load : , address/sized-value = 1 ; 
-jmpf : , address/sized-value = 1857 ; 
+jmpf : , address/sized-value = 1865 ; 
 push : 1 ; 
 tbl_load : , address/sized-value = 1 ; 
 push : unknown: 'i' ; 
 swap : 
 store : 
-push : , address/sized-value = 1847 ; 
+enter : 
+push : , address/sized-value = 1853 ; 
 push : unknown: 'i' ; 
 line_num : input.dv ; , address/sized-value = 59 ; 
 call : function_call: 'print' ; , address/sized-value = 1 ; 
 pop : 
-jmp : , address/sized-value = 1686 ; 
+leave : 
+jmp : , address/sized-value = 1690 ; 
 pop : 
 pop : 
 halt : 
