@@ -1633,7 +1633,7 @@ void do_range( Executor *ex )
 		i_step = step.num_val;
 	}
 
-	// default length is the entire search string
+	// default length is the entire thing
 	if( i_end == -1 )
 	{
 		i_end = i_start;
@@ -1651,7 +1651,7 @@ void do_range( Executor *ex )
 	// convert to a vector of numbers
 	DOVector* vec = new DOVector();
 	vec->reserve( (int)((i_end - i_start) / i_step) );
-	for( double c = i_start; c <= i_end; c += i_step )
+	for( double c = i_start; c < i_end; c += i_step )
 	{
 		vec->push_back( DevaObject( "", c ) );
 	}

@@ -15,10 +15,10 @@ def Bar()
 {
 	local sum = "sum";
 	n = Foo( 10 );
-	print( sum );
+	print( sum + ' = ' + str( n ) );
 }
 
 local sum = {};
 Bar();
 print( sum );
-print( a );
+print( n );

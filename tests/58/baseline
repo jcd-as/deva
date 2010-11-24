@@ -1,4 +1,4 @@
-sum
+sum = 55
 {}
 Error: Symbol not found in call to built-in function 'print'.
 Traceback (most recent first):

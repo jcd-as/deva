@@ -1,23 +1,43 @@
 # 'break' tests
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
-	for( j in range( 2, 3 ) )
+	while( true )
+	{
+		print( i );
+		if( i == 0 )
+			break;
+	}
+	break;
+}
+
+for( i in range( 0, 2 ) )
+{
+	while( true )
+	{
+		if( true )
+			break;
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	for( j in range( 2, 4 ) )
 	{
 		break;
 	}
 }
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	print( i );
-	for( j in range( 2, 3 ) )
+	for( j in range( 2, 4 ) )
 	{
 		print( j );
 		break;
 	}
 }
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	local v = 1;
 	while( true )
@@ -32,7 +52,7 @@ for( i in range( 0, 1 ) )
 	}
 }
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	local v = 1;
 	print( i );
@@ -50,7 +70,7 @@ for( i in range( 0, 1 ) )
 
 while( true )
 {
-	for( i in range( 0, 1 ) )
+	for( i in range( 0, 2 ) )
 	{
 		if( false )
 		{
@@ -66,7 +86,7 @@ while( true )
 
 while( true )
 {
-	for( i in range( 0, 1 ) )
+	for( i in range( 0, 2 ) )
 	{
 		print( i );
 		if( false )
@@ -110,15 +130,15 @@ while( true )
 	break;
 }
 
-for( i in range( 0, 1 ) )
-	for( j in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
+	for( j in range( 0, 2 ) )
 		if( true )
 			break;
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	print( i );
-	for( j in range( 0, 1 ) )
+	for( j in range( 0, 2 ) )
 	{
 		print( j );
 		if( true )
@@ -126,12 +146,12 @@ for( i in range( 0, 1 ) )
 	}
 }
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	print( i );
 	while( true )
 	{
-		for( j in range( 0, 1 ) )
+		for( j in range( 0, 2 ) )
 		{ 
 			if( true )
 			{
@@ -145,12 +165,12 @@ for( i in range( 0, 1 ) )
 	}
 }
 
-for( i in range( 0, 1 ) )
+for( i in range( 0, 2 ) )
 {
 	print( i );
 	while( true )
 	{
-		for( j in range( 0, 1 ) )
+		for( j in range( 0, 2 ) )
 		{ 
 			print( j );
 			if( true )
@@ -182,7 +202,7 @@ while( true )
 # simple insertion sort routine
 def isort( v, compare )
 {
-    for( i in range( 1, length(v)-1 ) )
+    for( i in range( 1, length(v) ) )
 	{
         local value = v[i];
         local j = i - 1;

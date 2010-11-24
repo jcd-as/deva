@@ -3230,7 +3230,7 @@ void Executor::AddAllKnownBuiltinModules()
 	AddBuiltinModule( string( "_re" ), AddReModule );
 }
 
-// dump the stack trace to stdout
+// dump the stack trace to a output stream
 void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 {
 	os << "Traceback (most recent first):" << endl;
@@ -3251,6 +3251,17 @@ void Executor::DumpTrace( ostream & os, bool show_all_scopes /*= false*/ )
 		}
 		fcn = i->function;
 		idx = i->scope_idx;
+	}
+}
+
+// dump (at most the top ten items from) the data stack to stdout
+void Executor::PrintDataStack()
+{
+	int num_items = stack.size() < 10 ? stack.size() : 10;
+	for( int c = 0; c < num_items; ++c )
+	{
+		DevaObject o = stack[c];
+		cout << "#" << c << ": " << o << endl;
 	}
 }
 

@@ -619,12 +619,7 @@ start:
 								{
 								// display the last 10 items on the stack
 								cout << "Program data stack (top-of-stack first):" << endl;
-								int num_items = ex->stack.size() < 10 ? ex->stack.size() : 10;
-								for( int c = 0; c < num_items; ++c )
-								{
-									DevaObject o = ex->stack[c];
-									cout << "#" << c << ": " << o << endl;
-								}
+								ex->PrintDataStack();
 								}
 								break;
 							// executing address (ip)

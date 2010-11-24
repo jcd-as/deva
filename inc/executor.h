@@ -565,8 +565,11 @@ public:
 	// (for language embedding clients such as deva, devadb etc)
 	void AddAllKnownBuiltinModules();
 
-	// dump the stack trace to stdout
+	// dump the stack trace to an output stream
 	void DumpTrace( ostream &, bool show_all_scopes = false );
+
+	// dump (at most the top ten items from the) data stack to stdout
+	void PrintDataStack();
 
 	string GetExecutingFile(){ return file; }
 
