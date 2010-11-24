@@ -1137,9 +1137,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if it's _not_ a compound statement, manually add enter/leave ops
 		if( ((iter_t const&)(i->children.begin() + 1))->value.id() != compound_statement_id )
 		{
-			is.push( Instruction( op_enter ) );
+			gen_IL_enter_scope( is );
 			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
-			is.push( Instruction( op_leave ) );
+			gen_IL_leave_scope( is );
 		}
 		else
 			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
@@ -1161,7 +1161,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			parser_id id = ((iter_t const&)(i->children.begin() + 2))->value.id();
 			if( id != compound_statement_id )
 			{
-				is.push( Instruction( op_enter ) );
+				gen_IL_enter_scope( is );
 				generate_IL_for_node( i->children.begin() + 2, is, i, 2 );
 				is_single_statement = true;
 			}
@@ -1173,7 +1173,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// if it's _not_ a compound statement, manually add enter/leave ops
 			if( ((iter_t const&)(i->children.begin() + 3))->value.id() != compound_statement_id )
 			{
-				is.push( Instruction( op_enter ) );
+				gen_IL_enter_scope( is );
 				generate_IL_for_node( i->children.begin() + 3, is, i, 3 );
 				is_single_statement = true;
 			}

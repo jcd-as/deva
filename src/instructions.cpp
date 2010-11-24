@@ -325,12 +325,19 @@ void pre_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 	loop_scope_stack.push_back( 0 );
 }
 
+// stack for tracking the end of loop addresses, for back-patching
 static vector<size_t> while_jmpf_stack;
+// stack of (list of) break statement addresses, for back-patching
+static vector< vector<size_t>* > loop_break_locations;
 void gen_IL_while_s( iter_t const & i, InstructionStream & is )
 {
 	generate_line_num( i, is );
+
 	// save the location for back-patching
 	while_jmpf_stack.push_back( is.size() );
+	// start a new loop context for back-patching 'break' statements
+	loop_break_locations.push_back( new vector<size_t>() );
+
 	// generate a place-holder op for the condition's jmpf
 	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1, true ) ) );
 }
@@ -348,12 +355,25 @@ void post_gen_IL_while_s( iter_t const & i, InstructionStream & is )
 
 	generate_line_num( i, is );
 	is.push( Instruction( op_jmp, DevaObject( "", loop_loc, true ) ) );
+
 	// back-patch the jmpf
 	// pop the last 'loop' location off the 'loop stack'
 	int jmpf_loc = while_jmpf_stack.back();
 	while_jmpf_stack.pop_back();
 	// write the current *file* offset, not instruction stream!
 	is[jmpf_loc] = Instruction( op_jmpf, DevaObject( "", is.Offset(), true ) );
+
+	// back-patch any 'break' statements
+	// pop the loop from the loop stack
+	vector<size_t>* breaks = loop_break_locations.back();
+	loop_break_locations.pop_back();
+	for( vector<size_t>::iterator it = breaks->begin(); it != breaks->end(); ++it )
+	{
+		// back-patch the instruction at the break to point to the current
+		// location in the instruction stream (end of this loop)
+		is[*it] = Instruction( op_jmp, DevaObject( "", is.Offset(), true ) );
+	}
+	delete breaks;
 }
 
 void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
@@ -447,8 +467,12 @@ void pre_gen_IL_for_s( iter_t const & i, InstructionStream & is )
 	is.push( Instruction( op_tbl_load, DevaObject( "", (size_t)1, false ) ) );
 	// (stack now has bool on top and vector next)
 	// if the first item is 'false', no loop - jump to end
+
 	// save the instruction location for back-patching
 	while_jmpf_stack.push_back( is.size() );
+	// start a new loop context for back-patching 'break' statements
+	loop_break_locations.push_back( new vector<size_t>() );
+
 	// generate a place-holder op for the jmpf (which ends looping)
 	is.push( Instruction( op_jmpf, DevaObject( "", (size_t)-1, true ) ) );
 	// second item is the 'item_name' (or name/value pair) 'for' loop variable 
@@ -499,7 +523,7 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is, bool needs_leave )
 	// if we need to add a leave op (because the loop body was a single
 	// statement and not a compound statement)
 	if( needs_leave )
-		is.push( Instruction( op_leave ) );
+		gen_IL_compound_statement( i->children.begin() + 1, is, i );
 
 	// add the jump-to-start
 	size_t loop_loc = loop_stack.back();
@@ -520,6 +544,18 @@ void gen_IL_for_s( iter_t const & i, InstructionStream & is, bool needs_leave )
 
 	// pop to remove the false result from 'next' from the stack
 	is.push( Instruction( op_pop ) );
+
+	// back-patch any 'break' statements
+	// pop the loop from the loop stack
+	vector<size_t>* breaks = loop_break_locations.back();
+	loop_break_locations.pop_back();
+	for( vector<size_t>::iterator it = breaks->begin(); it != breaks->end(); ++it )
+	{
+		// back-patch the instruction at the break to point to the current
+		// location in the instruction stream (end of this loop)
+		is[*it] = Instruction( op_jmp, DevaObject( "", is.Offset(), true ) );
+	}
+	delete breaks;
 
 	// pop to remove the vector/map
 	is.push( Instruction( op_pop ) );
@@ -1035,16 +1071,7 @@ void pre_gen_IL_compound_statement( iter_t const & i, InstructionStream & is, it
 	{
 		// generate enter
 		generate_line_num( i, is );
-
-		if( loop_scope_stack.size() > 0 )
-		{
-			int loop_scopes = loop_scope_stack.back();
-			loop_scope_stack.pop_back();
-			loop_scopes++;
-			loop_scope_stack.push_back( loop_scopes );
-		}
-
-		is.push( Instruction( op_enter ) );
+		gen_IL_enter_scope( is );
 	}
 }
 
@@ -1054,40 +1081,42 @@ void gen_IL_compound_statement( iter_t const & i, InstructionStream & is, iter_t
 	// statement accomplishes the same thing
 	if( parent->value.id() != func_id )
 	{
-		generate_line_num( i, is );
 		// generate leave
-
-		if( loop_scope_stack.size() > 0 )
-		{
-			int loop_scopes = loop_scope_stack.back();
-			loop_scope_stack.pop_back();
-			loop_scopes--;
-			loop_scope_stack.push_back( loop_scopes );
-		}
-
-		is.push( Instruction( op_leave ) );
+		generate_line_num( i, is );
+		gen_IL_leave_scope( is );
 	}
 }
 
 void gen_IL_break_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate break op with a reference to the start of the loop
-	size_t loop_loc = loop_stack.back();
-	/////////////////////
 	int loop_scopes = loop_scope_stack.back();
-	/////////////////////
+
 	generate_line_num( i, is );
-	is.push( Instruction( op_break, DevaObject( "", loop_loc, true ) ) );
+	// generate appropriate number of leave ops
+	for( int i = 0; i < loop_scopes; ++i )
+		is.push( Instruction( op_leave ) );
+	// save the location for back-patching
+	// (to be double-safe, check to ensure we're in a loop...)
+	if( loop_break_locations.size() == 0 )
+		throw DevaICE( "Invalid break statement: Not inside a loop. Parser shouldn't have allowed this." );
+	loop_break_locations.back()->push_back( is.size() );
+	// generate a place-holder op for the jmp (which ends looping)
+	is.push( Instruction( op_jmp, DevaObject( "", (size_t)-1, true ) ) );
 }
 
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is )
 {
 	// generate jump to beginning of loop
 	size_t loop_loc = loop_stack.back();
-	/////////////////////
 	int loop_scopes = loop_scope_stack.back();
-	/////////////////////
+
 	generate_line_num( i, is );
+	// generate appropriate number of leave ops
+	// (number of scopes from if/else conditions plus one for the loop we're
+	// breaking out of)
+	for( int i = 0; i < loop_scopes; ++i )
+		is.push( Instruction( op_leave ) );
 	// write the current *file* offset, not instruction stream!
 	is.push( Instruction( op_jmp, DevaObject( "", (size_t)loop_loc, true ) ) );
 }
@@ -1107,4 +1136,37 @@ void gen_IL_return_statement( iter_t const & i, InstructionStream & is )
 	// else?
 }
 
+// used to set-up scope tracking for conditionals (i.e. if/else)
+// (needed for break/continue code gen)
+void gen_IL_enter_scope( InstructionStream & is )
+{
+	// gen an enter instruction
+	is.push( Instruction( op_enter ) );
+
+	// track the scope
+	if( loop_scope_stack.size() > 0 )
+	{
+		int loop_scopes = loop_scope_stack.back();
+		loop_scope_stack.pop_back();
+		loop_scopes++;
+		loop_scope_stack.push_back( loop_scopes );
+	}
+}
+
+// used to set-up scope tracking for conditionals (i.e. if/else)
+// (needed for break/continue code gen)
+void gen_IL_leave_scope( InstructionStream & is )
+{
+	// gen a leave instruction
+	is.push( Instruction( op_leave ) );
+
+	// track the scope
+	if( loop_scope_stack.size() > 0 )
+	{
+		int loop_scopes = loop_scope_stack.back();
+		loop_scope_stack.pop_back();
+		loop_scopes--;
+		loop_scope_stack.push_back( loop_scopes );
+	}
+}
 

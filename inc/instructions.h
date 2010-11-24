@@ -161,6 +161,9 @@ void gen_IL_break_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_continue_statement( iter_t const & i, InstructionStream & is );
 void gen_IL_return_statement( iter_t const & i, InstructionStream & is );
 
+void gen_IL_enter_scope( InstructionStream & is );
+void gen_IL_leave_scope( InstructionStream & is );
+
 
 #endif // __INSTRUCTIONS_H__
 

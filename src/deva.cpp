@@ -283,6 +283,13 @@ int main( int argc, char** argv )
 		cout << "Internal compiler error: " << e.what() << endl;
 		return -1;
 	}
+	// runtime exceptions can occur here from, for example, failing to load the
+	// input file
+	catch( DevaRuntimeException & e )
+	{
+		cout << "Error: " << e.what() << endl;
+		return -1;
+	}
 	catch( DevaCriticalException & e )
 	{
 		cout << "Unrecoverable error: " << e.what() << endl;
