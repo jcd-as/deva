@@ -447,21 +447,21 @@ void Executor::FixupOffsets( unsigned char* cd /*= 0*/ )
 // Op-code functions
 ///////////////////////////////////////////////////////////
 
-// 0 pop top item off stack
+// pop top item off stack
 void Executor::Pop( Instruction const & inst )
 {
 	if( stack.size() == 0 )
 		throw DevaRuntimeException( "Pop operation executed on empty stack." );
 	stack.pop_back();
 }
-// 1 push item onto top of stack
+// push item onto top of stack
 void Executor::Push( Instruction const & inst )
 {
 	if( inst.args.size() > 1 )
 		throw DevaRuntimeException( "Push instruction contains too many arguments." );
 	stack.push_back( inst.args[0] );
 }
-// 2 load a variable from memory to the stack
+// load a variable from memory to the stack
 void Executor::Load( Instruction const & inst )
 {
 	if( inst.args.size() < 1 )
@@ -475,7 +475,7 @@ void Executor::Load( Instruction const & inst )
 		throw DevaRuntimeException( boost::format( "Invalid argument to 'load' instruction: variable '%1% not found." ) % obj.name );
 	stack.push_back( *var );
 }
-// 3 store a variable from the stack to memory
+// store a variable from the stack to memory
 // if there is a boolean arg with the value 'true', this is a store into a local
 // variable, so a new variable should always be added
 void Executor::Store( Instruction const & inst )
@@ -542,7 +542,7 @@ void Executor::Store( Instruction const & inst )
 		*ob = DevaObject( lhs.name, rhs );
 	}
 }
-// 4 define function. arg is location in instruction stream, named the fcn name
+// define function. arg is location in instruction stream, named the fcn name
 void Executor::Defun( Instruction const & inst )
 {
 	// ensure 1st arg to instruction is a function object
@@ -565,7 +565,7 @@ void Executor::Defun( Instruction const & inst )
 	}
 	NextInstr();
 }
-// 5 define an argument to a fcn. argument (to opcode) is arg name
+// define an argument to a fcn. argument (to opcode) is arg name
 void Executor::Defarg( Instruction const & inst )
 {
 	// only called as the start of a fcn *call*, not definition (defun)
@@ -624,7 +624,7 @@ void Executor::Defarg( Instruction const & inst )
 	DevaObject* val = new DevaObject( inst.args[0].name, o );
 	current_scopes->AddObject( val );
 }
-// 6 dup a stack item from 'arg' position to the top of the stack
+// dup a stack item from 'arg' position to the top of the stack
 // (e.g. 'dup 0' duplicates the item on top of the stack)
 void Executor::Dup( Instruction const & inst )
 {
@@ -636,7 +636,7 @@ void Executor::Dup( Instruction const & inst )
 	DevaObject o = stack[stack.size() - (arg.num_val+1)];
 	stack.push_back( o );
 }
-// 7 create a new map object and push onto stack
+// create a new map object and push onto stack
 void Executor::New_map( Instruction const & inst )
 {
 	static int s_map_counter = 0;
@@ -681,7 +681,7 @@ void Executor::New_map( Instruction const & inst )
 	// put it onto the stack
 	stack.push_back( *mp );
 }
-// 8 create a new vector object and push onto stack
+// create a new vector object and push onto stack
 void Executor::New_vec( Instruction const & inst )
 {
 	static int s_vec_counter = 0;
@@ -1217,7 +1217,7 @@ void Executor::Tbl_load( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
 }
-// 10 set item in vector or map. args: index, value
+// set item in vector or map. args: index, value
 void Executor::Tbl_store( Instruction const & inst )
 {
 	// enough data on stack?
@@ -1434,7 +1434,7 @@ void Executor::Tbl_store( Instruction const & inst )
 		throw DevaRuntimeException( "Object to which '[]' operator is applied must be map or a vector." );
 
 }
-// 11 swap top two items on stack
+// swap top two items on stack
 void Executor::Swap( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -1447,13 +1447,13 @@ void Executor::Swap( Instruction const & inst )
 	stack.push_back( one );
 	stack.push_back( two );
 }
-// 12 line number
+// line number
 void Executor::Line_num( Instruction const & inst )
 {
 	file = inst.args[0].str_val;
 	line = inst.args[1].sz_val;
 }
-// 13 unconditional jump to the address on top of the stack
+// unconditional jump to the address on top of the stack
 void Executor::Jmp( Instruction const & inst )
 {
 	// one arg: the offset to jump to (as a 'function'/offset/address type)
@@ -1465,7 +1465,7 @@ void Executor::Jmp( Instruction const & inst )
 	// jump execution to the function offset
 	ip = dest.sz_val;
 }
-// 14 jump on top of stack evaluating to false 
+// jump on top of stack evaluating to false 
 void Executor::Jmpf( Instruction const & inst )
 {
 	// one arg: the offset to jump to (as a 'function'/offset/address type)
@@ -1492,7 +1492,7 @@ void Executor::Jmpf( Instruction const & inst )
 	// else jump to the offset in the argument
 	ip = dest.sz_val;
 }
-// 15 == compare top two values on stack
+// == compare top two values on stack
 void Executor::Eq( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1532,7 +1532,7 @@ void Executor::Eq( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 16 != compare top two values on stack
+// != compare top two values on stack
 void Executor::Neq( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1572,7 +1572,7 @@ void Executor::Neq( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 17 < compare top two values on stack
+// < compare top two values on stack
 void Executor::Lt( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1609,7 +1609,7 @@ void Executor::Lt( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 18 <= compare top two values on stack
+// <= compare top two values on stack
 void Executor::Lte( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1646,7 +1646,7 @@ void Executor::Lte( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 19 > compare top two values on stack
+// > compare top two values on stack
 void Executor::Gt( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1683,7 +1683,7 @@ void Executor::Gt( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 20 >= compare top two values on stack
+// >= compare top two values on stack
 void Executor::Gte( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1720,7 +1720,7 @@ void Executor::Gte( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 21 || the top two values
+// || the top two values
 void Executor::Or( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1756,7 +1756,7 @@ void Executor::Or( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 22 && the top two values
+// && the top two values
 void Executor::And( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1790,7 +1790,7 @@ void Executor::And( Instruction const & inst )
 	else
 		stack.push_back( DevaObject( "", false ) );
 }
-// 23 negate the top value ('-' operator)
+// negate the top value ('-' operator)
 void Executor::Neg( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1815,7 +1815,7 @@ void Executor::Neg( Instruction const & inst )
 	op.num_val = -(op.num_val);
 	stack.push_back( op );
 }
-// 24 boolean not the top value ('!' operator)
+// boolean not the top value ('!' operator)
 void Executor::Not( Instruction const & inst )
 {
 	if( inst.args.size() != 0 )
@@ -1836,7 +1836,7 @@ void Executor::Not( Instruction const & inst )
 	// push the inverse of the operand
 	stack.push_back( DevaObject( "", !evaluate_object_as_boolean( op ) ) );
 }
-// 25 add top two values on stack
+// add top two values on stack
 void Executor::Add( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -1881,7 +1881,7 @@ void Executor::Add( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Invalid argument types for Add operation." );
 }
-// 26 subtract top two values on stack
+// subtract top two values on stack
 void Executor::Sub( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -1917,7 +1917,7 @@ void Executor::Sub( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Invalid argument types for subtract operation." );
 }
-// 27 multiply top two values on stack
+// multiply top two values on stack
 void Executor::Mul( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -1953,7 +1953,7 @@ void Executor::Mul( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Invalid argument types for multiply operation." );
 }
-// 28 divide top two values on stack
+// divide top two values on stack
 void Executor::Div( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -1989,7 +1989,7 @@ void Executor::Div( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Invalid argument types for divide operation." );
 }
-// 29 modulus top two values on stack
+// modulus top two values on stack
 void Executor::Mod( Instruction const & inst )
 {
 	if( stack.size() < 2 )
@@ -2026,7 +2026,7 @@ void Executor::Mod( Instruction const & inst )
 	else
 		throw DevaRuntimeException( "Invalid argument types for modulus operation." );
 }
-// 30 dump top of stack to stdout
+// dump top of stack to stdout
 void Executor::Output( Instruction const & inst )
 {
 	// get the argument off the stack
@@ -2100,7 +2100,7 @@ void Executor::Output( Instruction const & inst )
 }
 static int next_enter_is_from_call = -1;
 static vector<int> stack_sizes;
-// 31 call a function. arguments on stack
+// call a function. arguments on stack
 void Executor::Call( Instruction const & inst )
 {
 	// check for built-in function first
@@ -2257,7 +2257,7 @@ void Executor::Call( Instruction const & inst )
 		next_enter_is_from_call = line;
 	}
 }
-// 32 stack holds return value and then (at top) return address
+// stack holds return value and then (at top) return address
 void Executor::Return( Instruction const & inst )
 {
 	// if the args_on_stack variable wasn't decremented to 0, then too many args
@@ -2325,12 +2325,12 @@ void Executor::Return( Instruction const & inst )
 	// reset the static that tracks the number of args processed
 	args_on_stack = -1;
 }
-// 33 break out of loop, respecting scope (enter/leave)
+// break out of loop, respecting scope (enter/leave)
 void Executor::Break( Instruction const & inst )
 {
 	throw DevaICE( "Invalid instruction: 'break' op is deprecated." );
 }
-// 34 enter new scope
+// enter new scope
 void Executor::Enter( Instruction const & inst )
 {
 	// add scope
@@ -2341,8 +2341,7 @@ void Executor::Enter( Instruction const & inst )
 	// fcn call or not (only the first enter can be due to the fcn call)
 	next_enter_is_from_call = -1;
 }
-
-// 35 leave scope
+// leave scope
 void Executor::Leave( Instruction const & inst )
 {
 	if( current_scopes->size() == 0 )
@@ -2353,12 +2352,12 @@ void Executor::Leave( Instruction const & inst )
 	// pop frame
 	trace.Pop();
 }
-// 36 no op
+// no op
 void Executor::Nop( Instruction const & inst )
 {
 	// do nothing
 }
-// 37 finish program, 0 or 1 ops (return code)
+// finish program, 0 or 1 ops (return code)
 void Executor::Halt( Instruction const & inst )
 {
 	// do nothing, execution engine will stop on stepping to this instruction
@@ -2421,57 +2420,7 @@ string Executor::find_module( string mod )
 	// not found, error
 	throw DevaRuntimeException( "Unable to locate module for import." );
 }
-// 38 import module, 1 arg: module name
-void Executor::Import( Instruction const & inst )
-{
-	// first argument has the name of the module to import
-	if( inst.args.size() < 1 )
-		throw DevaICE( "No module name given in import statement." );
-
-	string mod = inst.args[0].str_val;
-
-	// check the list of builtin modules first
-	if( ImportBuiltinModule( mod ) )
-		return;
-
-	// prevent importing the same module more than once
-	vector< pair<string, ScopeTable*> >::iterator it;
-	it = find_namespace( mod );
-	// if we found the namespace
-	if( it != namespaces.end() )
-		return;
-
-	// otherwise look for the .dv/.dvc file to import
-	string path = find_module( mod );
-
-	// for now, just run the file by short name with ".dvc" extension (i.e. in
-	// the current working directory)
-	string dvfile( path + ".dv" );
-	string dvcfile( path + ".dvc" );
-	// save the ip
-	size_t orig_ip = ip;
-	// save the current scope table
-	ScopeTable* orig_scopes = current_scopes;
-	// create a new namespace and set it at the current scope
-	// TODO: currently this only adds the "short" name of the module as a
-	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
-	// foo-bar? foo/bar?
-	mod = get_file_part( mod );
-	ScopeTable* st = new ScopeTable( this );
-	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
-	current_scopes = st;
-	// create a 'file/module' level scope for the namespace
-	current_scopes->Push();
-	// compile the file, if needed
-	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
-	// and then run the file
-	RunFile( dvcfile.c_str() );
-	// restore the ip
-	ip = orig_ip;
-	// restore the current scope table
-	current_scopes = orig_scopes;
-}
-// 39 create a new class object and push onto stack
+// create a new class object and push onto stack
 void Executor::New_class( Instruction const & inst )
 {
 	// top of the stack has the name of the class
@@ -2531,8 +2480,7 @@ void Executor::New_class( Instruction const & inst )
 	// overriding what it inherited)
 	stack.push_back( cls );
 }
-
-// 40 create a new class instance object and push onto stack
+// create a new class instance object and push onto stack
 void Executor::New_instance( Instruction const & inst )
 {
 	// 1 arg: an offset containing the number of arguments to 'new'
@@ -2567,8 +2515,7 @@ void Executor::New_instance( Instruction const & inst )
 	// push it onto the stack
 	stack.push_back( instance );
 }
-
-// 42 roll the stack from a given position. 1 arg: the position to roll from
+// roll the stack from a given position. 1 arg: the position to roll from
 void Executor::Roll( Instruction const & inst )
 {
 	// first argument has the position to roll from
@@ -2582,7 +2529,6 @@ void Executor::Roll( Instruction const & inst )
 
 	stack.roll( pos );
 }
-
 // illegal operation, if exists there was a compiler error/fault
 void Executor::Illegal( Instruction const & inst )
 {
@@ -2703,17 +2649,11 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_mod:			// 29 modulus top two values on stack
 		Mod( inst );
 		break;
-	case op_output:		// 30 dump top of stack to stdout
-		Output( inst );
-		break;
 	case op_call:		// 31 call a function. arguments on stack
 		Call( inst );
 		break;
 	case op_return:		// 32 pop the return address and unconditionally jump to it
 		Return( inst );
-		break;
-	case op_break:		// 33 break out of loop, respecting scope (enter/leave)
-		Break( inst );
 		break;
 	case op_enter:		// 34 enter new scope
 		Enter( inst );
@@ -2728,9 +2668,6 @@ bool Executor::DoInstr( Instruction & inst )
 	case op_halt:		// 37 finish program, 0 or 1 ops (return code)
 		Halt( inst );
 		return false;
-	case op_import:
-		Import( inst );
-		break;
 	case op_new_class:	// 39 new class
 		New_class( inst );
 		break;
@@ -3096,6 +3033,52 @@ void Executor::Exit( int val )
 void Executor::AddBuiltinModule( string mod, import_module_fcn fcn )
 {
 	builtin_module_names.insert( make_pair( mod, fcn ) );
+}
+
+bool Executor::Import( string mod )
+{
+	// check the list of builtin modules first
+	if( ImportBuiltinModule( mod ) )
+		return true;
+
+	// prevent importing the same module more than once
+	vector< pair<string, ScopeTable*> >::iterator it;
+	it = find_namespace( mod );
+	// if we found the namespace
+	if( it != namespaces.end() )
+		return true;
+
+	// otherwise look for the .dv/.dvc file to import
+	string path = find_module( mod );
+
+	// for now, just run the file by short name with ".dvc" extension (i.e. in
+	// the current working directory)
+	string dvfile( path + ".dv" );
+	string dvcfile( path + ".dvc" );
+	// save the ip
+	size_t orig_ip = ip;
+	// save the current scope table
+	ScopeTable* orig_scopes = current_scopes;
+	// create a new namespace and set it at the current scope
+	// TODO: currently this only adds the "short" name of the module as a
+	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
+	// foo-bar? foo/bar?
+	mod = get_file_part( mod );
+	ScopeTable* st = new ScopeTable( this );
+	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
+	current_scopes = st;
+	// create a 'file/module' level scope for the namespace
+	current_scopes->Push();
+	// compile the file, if needed
+	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
+	// and then run the file
+	RunFile( dvcfile.c_str() );
+	// restore the ip
+	ip = orig_ip;
+	// restore the current scope table
+	current_scopes = orig_scopes;
+
+	return true;
 }
 
 // import a built-in module (calls the import_module_fcn for this module)

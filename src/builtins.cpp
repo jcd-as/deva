@@ -71,6 +71,7 @@ void do_join( Executor *ex );
 void do_error( Executor *ex );
 void do_seterror( Executor *ex );
 void do_geterror( Executor *ex );
+void do_import( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -108,6 +109,7 @@ static const string builtin_names[] =
 	string( "error" ),
 	string( "seterror" ),
 	string( "geterror" ),
+	string( "import" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -146,6 +148,7 @@ builtin_fcn builtin_fcns[] =
 	do_error,
 	do_seterror,
 	do_geterror,
+	do_import,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1852,3 +1855,23 @@ void do_geterror( Executor *ex )
 	else
 		ex->stack.push_back( DevaObject( "", *o ) );
 }
+
+void do_import( Executor *ex )
+{
+	if( Executor::args_on_stack != 1 )
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'import'." );
+
+	// get error data arg from stack
+	DevaObject o = get_arg_of_type( ex, "import", "module_name", sym_string );
+
+	// import the module
+	bool success = ex->Import( o.str_val );
+
+	// pop the return address
+	ex->stack.pop_back();
+
+	// return value
+	ex->stack.push_back( DevaObject( "", success ) );
+}
+
+

@@ -137,17 +137,11 @@ ostream & operator << ( ostream & os, Opcode & op )
 	case op_mod:			// modulus top two values on stack
 		os << "mod";
 		break;
-	case op_output:			// dump top of stack to stdout
-		os << "output";
-		break;
 	case op_call:			// call a function. arguments on stack
 		os << "call";
 		break;
 	case op_return:			// pop the return address and unconditionally jump to it
 		os << "return";
-		break;
-	case op_break:			// break out of loop, respecting scope (enter/leave)
-		os << "break";
 		break;
 	case op_enter:
 		os << "enter";
@@ -160,9 +154,6 @@ ostream & operator << ( ostream & os, Opcode & op )
 		break;
 	case op_halt:
 		os << "halt";
-		break;
-	case op_import:
-		os << "import";
 		break;
 	case op_new_class:
 		os << "new_class";
@@ -627,9 +618,18 @@ void gen_IL_else_s( iter_t const & i, InstructionStream & is )
 
 void gen_IL_import( iter_t const & i, InstructionStream & is )
 {
+	// generate a call to the built-in fcn 'import'
 	string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 	generate_line_num( i, is );
-	is.push( Instruction( op_import, DevaObject( "", name ) ) );
+	// push return address place-holder
+	size_t return_addr_loc = is.size();
+	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
+	is.push( Instruction( op_push, DevaObject( "", name ) ) );
+	is.push( Instruction( op_call, DevaObject( string( "import" ), sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
+	// back-patch return address
+	is[return_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
+	// pop the return value of 'import'
+	is.push( Instruction( op_pop ) );
 }
 
 // stack of fcn returns for back-patching return addresses in

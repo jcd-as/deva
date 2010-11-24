@@ -64,19 +64,16 @@ enum Opcode
 	op_mul,			// 27 multiply top two values on stack
 	op_div,			// 28 divide top two values on stack
 	op_mod,			// 29 modulus top two values on stack
-	op_output,		// 30 dump top of stack to stdout
-	op_call,		// 31 call a function. arguments on stack. fcn to call either in arg *or* on stack (if no args)
-	op_return,		// 32 pop the return address and unconditionally jump to it, stack holds return value
-	op_break,		// 33 break out of loop, respecting scope (enter/leave)
-	op_enter,		// 34 enter new scope
-	op_leave,		// 35 leave scope
-	op_nop,			// 36 no op
-	op_halt,		// 37 finish program, 0 or 1 ops (return code)
-	op_import,		// 38 import a module. 1 arg: module name
-	op_new_class,	// 39 create a new class object and push onto the stack
-	op_new_instance,// 40 create a new instance of a class and push onto the stack
-	op_endf,		// 41 end of function. nop indicating end of defun
-	op_roll,		// 42 roll the stack from a given position
+	op_call,		// 30 call a function. arguments on stack. fcn to call either in arg *or* on stack (if no args)
+	op_return,		// 31 pop the return address and unconditionally jump to it, stack holds return value
+	op_enter,		// 32 enter new scope
+	op_leave,		// 33 leave scope
+	op_nop,			// 34 no op
+	op_halt,		// 35 finish program, 0 or 1 ops (return code)
+	op_new_class,	// 36 create a new class object and push onto the stack
+	op_new_instance,// 37 create a new instance of a class and push onto the stack
+	op_endf,		// 38 end of function. nop indicating end of defun
+	op_roll,		// 39 roll the stack from a given position
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 

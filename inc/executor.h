@@ -427,89 +427,87 @@ private:
 	////////////////////////////////////////////////////
 	// individual op-code methods
 	////////////////////////////////////////////////////
-	// 0 pop top item off stack
+	// pop top item off stack
 	void Pop( Instruction const & inst );
-	// 1 push item onto top of stack
+	// push item onto top of stack
 	void Push( Instruction const & inst );
-	// 2 load a variable from memory to the stack
+	// load a variable from memory to the stack
 	void Load( Instruction const & inst );
-	// 3 store a variable from the stack to memory
+	// store a variable from the stack to memory
 	void Store( Instruction const & inst );
-	// 4 define function. arg is location in instruction stream, named the fcn name
+	// define function. arg is location in instruction stream, named the fcn name
 	void Defun( Instruction const & inst );
-	// 5 define an argument to a fcn. argument (to opcode) is arg name
+	// define an argument to a fcn. argument (to opcode) is arg name
 	void Defarg( Instruction const & inst );
-	// 6 dup a stack item from 'arg' position to the top of the stack
+	// dup a stack item from 'arg' position to the top of the stack
 	void Dup( Instruction const & inst );
-	// 7 create a new map object and push onto stack
+	// create a new map object and push onto stack
 	void New_map( Instruction const & inst );
-	// 8 create a new vector object and push onto stack
+	// create a new vector object and push onto stack
 	void New_vec( Instruction const & inst );
-	// 9 get item from vector or map
+	// get item from vector or map
 	void Tbl_load( Instruction const & inst );
-	// 10 set item in vector or map. args: index, value
+	// set item in vector or map. args: index, value
 	void Tbl_store( Instruction const & inst );
-	// 11 swap top two items on stack. no args
+	// swap top two items on stack. no args
 	void Swap( Instruction const & inst );
-	// 12 line number (file name and line number in args)
+	// line number (file name and line number in args)
 	void Line_num( Instruction const & inst );
-	// 13 unconditional jump to the address on top of the stack
+	// unconditional jump to the address on top of the stack
 	void Jmp( Instruction const & inst );
-	// 14 jump on top of stack evaluating to false 
+	// jump on top of stack evaluating to false 
 	void Jmpf( Instruction const & inst );
-	// 15 == compare top two values on stack
+	// == compare top two values on stack
 	void Eq( Instruction const & inst );
-	// 16 != compare top two values on stack
+	// != compare top two values on stack
 	void Neq( Instruction const & inst );
-	// 17 < compare top two values on stack
+	// < compare top two values on stack
 	void Lt( Instruction const & inst );
-	// 18 <= compare top two values on stack
+	// <= compare top two values on stack
 	void Lte( Instruction const & inst );
-	// 19 > compare top two values on stack
+	// > compare top two values on stack
 	void Gt( Instruction const & inst );
-	// 20 >= compare top two values on stack
+	// >= compare top two values on stack
 	void Gte( Instruction const & inst );
-	// 21 || the top two values
+	// || the top two values
 	void Or( Instruction const & inst );
-	// 22 && the top two values
+	// && the top two values
 	void And( Instruction const & inst );
-	// 23 negate the top value ('-' operator)
+	// negate the top value ('-' operator)
 	void Neg( Instruction const & inst );
-	// 24 boolean not the top value ('!' operator)
+	// boolean not the top value ('!' operator)
 	void Not( Instruction const & inst );
-	// 25 add top two values on stack
+	// add top two values on stack
 	void Add( Instruction const & inst );
-	// 26 subtract top two values on stack
+	// subtract top two values on stack
 	void Sub( Instruction const & inst );
-	// 27 multiply top two values on stack
+	// multiply top two values on stack
 	void Mul( Instruction const & inst );
-	// 28 divide top two values on stack
+	// divide top two values on stack
 	void Div( Instruction const & inst );
-	// 29 modulus top two values on stack
+	// modulus top two values on stack
 	void Mod( Instruction const & inst );
-	// 30 dump top of stack to stdout
+	// dump top of stack to stdout
 	void Output( Instruction const & inst );
-	// 31 call a function. arguments on stack
+	// call a function. arguments on stack
 	void Call( Instruction const & inst );
-	// 32 pop the return address and unconditionally jump to it
+	// pop the return address and unconditionally jump to it
 	void Return( Instruction const & inst );
-	// 33 break out of loop, respecting scope (enter/leave)
+	// break out of loop, respecting scope (enter/leave)
 	void Break( Instruction const & inst );
-	// 34 enter new scope
+	// enter new scope
 	void Enter( Instruction const & inst );
-	// 35 leave scope
+	// leave scope
 	void Leave( Instruction const & inst );
-	// 36 no op
+	// no op
 	void Nop( Instruction const & inst );
-	// 37 finish program, 0 or 1 ops (return code)
+	// finish program, 0 or 1 ops (return code)
 	void Halt( Instruction const & inst );
-	// 38 import a module, 1 arg: module name
-	void Import( Instruction const & inst );
-	// 39 new class
+	// new class
 	void New_class( Instruction const & inst );
-	// 40 new instance
+	// new instance
 	void New_instance( Instruction const & inst );
-	// 42 roll
+	// roll
 	void Roll( Instruction const & inst );
 	// illegal operation, if exists there was a compiler error/fault
 	void Illegal( Instruction const & inst );
@@ -534,6 +532,8 @@ public:
 	void RunFile( const char* const filename );
 	void RunText( const char* const text );
 	void Exit( int val );
+
+	bool Import( string module );
 
 	// add a built-in module to the list of importable modules
 	void AddBuiltinModule( string name, import_module_fcn );

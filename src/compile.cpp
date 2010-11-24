@@ -274,6 +274,7 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_else_s( i );
 	}
+	// import
 	else if( i->value.id() == parser_id( import_statement_id ) )
 	{
 		walk_children( i );
