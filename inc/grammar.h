@@ -31,6 +31,8 @@
 //   to figure out
 // * more & better error reporting (try to avoid multiple reports on the same
 // 	 line/problem)
+// * line consisting solely of: '[];' compiles (generates new_vec, which crashes at runtime)
+// * compiling a blank file (or nothing but comments) generates "Error compiling <file>.dv"
 
 #ifndef __GRAMMAR_H__
 #define __GRAMMAR_H__
@@ -197,6 +199,7 @@ public:
 				| import_statement
 				| root_node_d[jump_statement] >> semicolon_op >> !end_p
 				| exp_statement
+				| func_decl
 				][&set_node]
 				;
 

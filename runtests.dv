@@ -11,7 +11,7 @@ baseline = "baseline";
 # simple insertion sort routine, used for running the tests in order
 def isort( v, greater )
 {
-    for( i in range( 1, length(v)-1 ) )
+    for( i in range( 1, length(v) ) )
 	{
         local value = v[i];
         local j = i - 1;

@@ -557,11 +557,18 @@ void Executor::Defun( Instruction const & inst )
 	DevaObject* fcn = new DevaObject( inst.args[0].name, offset, true );
 	current_scopes->AddObject( fcn );
 	// skip the function body
-	Opcode op = PeekInstr();
-	while( op != op_endf )
+	int fcn_stack = 1;
+	Opcode op;
+	while( true )
 	{
-		NextInstr();
 		op = PeekInstr();
+		if( op == op_defun )
+			fcn_stack++;
+		else if( op == op_endf )
+			fcn_stack--;
+		if( fcn_stack == 0 )
+			break;
+		NextInstr();
 	}
 	NextInstr();
 }
@@ -729,7 +736,7 @@ bool tbl_load_slice_if_step( DevaObject )
 	else
 		return true;
 }
-// 9 get item from vector or map
+// get item from vector or map
 // (can't tell at compile time what it will be)
 // if there is an arg that is the boolean 'true', then we need to look up items in
 // maps as if the key was a numeric index (i.e. m[0] means the 0'th item in the

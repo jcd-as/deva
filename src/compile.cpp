@@ -799,9 +799,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	///////////////////////////////////////
 	// statics used for building classes
 	// flag to indicate if we're inside a class def or not
-	// (so we know whether to generate methods or classes. i.e. is there a
+	// (so we know whether to generate methods or functions. i.e. is there a
 	// 'this' param or not?)
 	static bool in_class_def = false;
+	// flag to indicate if we're inside a fcn def or not
+	// (so we know whether to generate methods or nested functions)
+	static int fcn_nesting = 0;
 	// static to hold the name of the class we're adding methods to
 	static string class_name;
 	// static to track the list of methods that were added
@@ -841,15 +844,20 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// children: id, arg_list, compound_statement | statement
 
+		// function nesting tracking
+		fcn_nesting++;
+
 		// create a function at this loc
 		string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 		// write the current *file* offset, not instruction stream!
 		generate_line_num( i, is );
 		// if this is a method we need to append "@<classname>" to the function
 		// name and add the method name to the list of names added to this class
-		if( in_class_def )
+		// (notice that functions nested in methods are functions, _not_ methods)
+		if( in_class_def && fcn_nesting == 1 )
 		{
 			name += "@" + class_name;
+			// don't push nested methods, they aren't publicly visible
 			method_names.push_back( name );
 		}
 		is.push( Instruction( op_defun, DevaObject( name, is.Offset(), true ) ) );
@@ -863,7 +871,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 		// if this is a method we need to add the 'self' arg
 		// (eq. of the 'this' pointer in c++) 
-		if( in_class_def )
+		// (notice that functions nested in methods are functions, _not_ methods)
+		if( in_class_def && fcn_nesting == 1 )
 		{
 			is.push( Instruction( op_defarg, DevaObject( string( "self" ), sym_unknown ) ) );
 		}
@@ -874,7 +883,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// if this is a destructor ("delete" method), it cannot have arguments
 		string del( "delete@" );
 		del += class_name;
-		if( in_class_def && name == del )
+		if( in_class_def && fcn_nesting == 1 && name == del )
 		{
 			// make sure there are no args
 			if( i->children[1].children.size() != 2 )
@@ -885,7 +894,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		// fields and call the base-class constructors...
 		string nw( "new@" );
 		nw += class_name;
-		if( in_class_def && name == nw )
+		if( in_class_def && fcn_nesting == 1 && name == nw )
 		{
 			// add the '__module__' field:
 			is.push( Instruction( op_push, DevaObject( "self", sym_unknown ) ) );
@@ -923,7 +932,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 		// if this is a destructor ("delete" method), add code to call the
 		// base-class destructors...
-		if( in_class_def && name == del )
+		if( in_class_def && fcn_nesting == 1 && name == del )
 		{
 			// for each parent, in reverse order
 			for( vector<DevaObject>::reverse_iterator it = parents.rbegin(); it != parents.rend(); ++it )
@@ -964,6 +973,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 		// end of defun marker
 		is.push( Instruction( op_endf ) );
+
+		// function nesting tracking
+		fcn_nesting--;
 	}
 	// class decl
 	else if( i->value.id() == parser_id( class_decl_id ) )

@@ -364,11 +364,11 @@ int main( int argc, char** argv )
 		history( hist, &ev, H_SETSIZE, 800 );
 		el_set( el, EL_HIST, history, hist );
 
-				// the execution engine
+		// the execution engine
 		Executor* ex = NULL;
 
-				// for saving/re-loading breakpoints between restarts
-				vector<pair<string, int> > breakpoints;
+		// for saving/re-loading breakpoints between restarts
+		vector<pair<string, int> > breakpoints;
 
 		cout << "devadb " << VERSION << endl;
 re_start:
@@ -726,8 +726,7 @@ start:
 		cout << "Unrecoverable error: " << e.what() << endl;
 		return -1;
 	}
-	// runtime exceptions really should only stem from the Executor,
-	// but just in case...
+	// errors from compiling/parsing will end up here
 	catch( DevaRuntimeException & e )
 	{
 		cout << "Error: " << e.what() << endl;
