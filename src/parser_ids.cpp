@@ -89,6 +89,7 @@ parser_id mod_assignment_op_id;
 parser_id map_op_id;
 parser_id vec_op_id;
 parser_id in_op_id;
+parser_id end_op_id;
 // constants
 parser_id string_id;
 parser_id number_id;

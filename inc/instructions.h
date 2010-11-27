@@ -125,6 +125,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 
 void gen_IL_import( iter_t const & i, InstructionStream & is );
 void gen_IL_in_op( iter_t const & i, InstructionStream & is );
+void gen_IL_end_op( iter_t const & i, InstructionStream & is );
 void gen_IL_map_op( iter_t const & i, InstructionStream & is );
 void gen_IL_vec_op( iter_t const & i, InstructionStream & is );
 void gen_IL_semicolon_op( iter_t const & i, InstructionStream & is );

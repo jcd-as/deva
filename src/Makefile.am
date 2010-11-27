@@ -3,7 +3,7 @@ bindir=$(top_srcdir)
 # gcc 4.3+ requires the -fno-inline-small-functions flag to disable this opt
 # but gcc 4.2 does't have this flag
 AM_CXXFLAGS=$(MY_CXXFLAGS)
-bin_PROGRAMS = deva devac devadb test
+bin_PROGRAMS = deva devac devadb devash test
 deva_SOURCES= \
 	builtins.cpp \
 	compile.cpp \
@@ -76,6 +76,33 @@ devadb_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
 devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
 #devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
+
+devash_SOURCES= \
+	builtins.cpp \
+	compile.cpp \
+	devash.cpp \
+	dobject.cpp \
+	error_report_parsers.cpp \
+	executor.cpp \
+	fileformat.cpp \
+	instructions.cpp \
+	parser_ids.cpp \
+	scope.cpp \
+	semantics.cpp \
+	symbol.cpp \
+	util.cpp \
+	builtin_helpers.cpp \
+	vector_builtins.cpp \
+	map_builtins.cpp \
+	string_builtins.cpp \
+	module_os.cpp \
+	module_bit.cpp \
+	module_math.cpp \
+	module_re.cpp
+devash_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
+# -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
+devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
+#devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
 test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
 test_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)

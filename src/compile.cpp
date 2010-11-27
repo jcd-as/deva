@@ -301,6 +301,12 @@ void eval_node( iter_t const & i )
 		walk_children( i );
 		check_in_op( i );
 	}
+	// end op ('$' operator in slices)
+	else if( i->value.id() == parser_id( end_op_id ) )
+	{
+		walk_children( i );
+		// nothing to check
+	}
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )
 	{
@@ -1299,6 +1305,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		walk_children( i, is );
 		gen_IL_in_op( i, is );
+	}
+	// end op ('$' op in slices)
+	else if( i->value.id() == parser_id( end_op_id ) )
+	{
+		// no children possible
+		gen_IL_end_op( i, is );
 	}
 	// map construction op
 	else if( i->value.id() == parser_id( map_op_id ) )

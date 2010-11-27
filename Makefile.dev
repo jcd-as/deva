@@ -68,11 +68,36 @@ DEVADB_SOURCES =  \
 	module_math.cpp \
 	module_re.cpp
 DEVADB_OBJS=$(patsubst %.cpp, %.o, ${DEVADB_SOURCES})
+# sources/objs for devash executable
+DEVASH_SOURCES =  \
+	builtins.cpp \
+	compile.cpp \
+	devash.cpp \
+	dobject.cpp \
+	error_report_parsers.cpp \
+	executor.cpp \
+	fileformat.cpp \
+	instructions.cpp \
+	parser_ids.cpp \
+	scope.cpp \
+	semantics.cpp \
+	symbol.cpp \
+	util.cpp \
+	builtin_helpers.cpp \
+	vector_builtins.cpp \
+	map_builtins.cpp \
+	string_builtins.cpp \
+	module_os.cpp \
+	module_bit.cpp \
+	module_math.cpp \
+	module_re.cpp
+DEVASH_OBJS=$(patsubst %.cpp, %.o, ${DEVASH_SOURCES})
 # dependency files (header dependencies)
 TEST_DEP_FILES=$(patsubst %.cpp, %.dep, ${TEST_SOURCES})
 DEVAC_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVAC_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 DEVADB_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVADB_SOURCES})
+DEVASH_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVASH_SOURCES})
 
 # on gcc 4.3+:
 # if you enable optimization (-O1 or greater) you have to throw
@@ -85,12 +110,12 @@ CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.8\" -DDEBUG
 LDFLAGS = -g
 #LDFLAGS = -g -undefined dynamic_lookup
 
-all : tags ID test devac deva devadb
+all : tags ID test devac deva devadb devash
 
-tags : devac deva devadb
+tags : devac deva devadb devash
 	ctags -R 
 
-ID : devac deva devadb
+ID : devac deva devadb devash
 	mkid -i "C++"
 
 test : ${TEST_OBJS}
@@ -109,6 +134,9 @@ devadb : ${DEVADB_OBJS}
 	g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options -lboost_filesystem -lboost_regex -ledit -o devadb ${DEVADB_OBJS}
 	#g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o devadb ${DEVADB_OBJS}
 
+devash : ${DEVASH_OBJS}
+	g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options -lboost_filesystem -lboost_regex -ledit -o devash ${DEVASH_OBJS}
+	#g++ ${LDFLAGS} -ledit -lcurses -lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt -o devash ${DEVASH_OBJS}
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<
 
@@ -124,6 +152,7 @@ include ${TEST_DEP_FILES}
 include ${DEVAC_DEP_FILES}
 include ${DEVA_DEP_FILES}
 include ${DEVADB_DEP_FILES}
+include ${DEVASH_DEP_FILES}
 
 %.dep : %.cpp
 	@set -e; rm -f $@; \

@@ -90,6 +90,7 @@ extern parser_id mod_assignment_op_id;
 extern parser_id map_op_id;
 extern parser_id vec_op_id;
 extern parser_id in_op_id;
+extern parser_id end_op_id;
 // constants
 extern parser_id string_id;
 extern parser_id number_id;

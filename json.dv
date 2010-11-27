@@ -153,7 +153,7 @@ def find_string( input )
 # return the end index of the next item, given a starting index
 def get_next_item( input, start = 0 )
 {
-	local text = input[start:-1];
+	local text = input[start:$];
 	# search ahead for the first comma that is NOT inside a [] or {} pair or a
 	# string (including nesting)
 	local regex = new re.re( '[,"\[\{]' );
@@ -180,7 +180,7 @@ def get_next_item( input, start = 0 )
 				while( count > 0 )
 				{
 					# scan forward for brackets 
-					local text = text[idx:-1];
+					local text = text[idx:$];
 					local found = re_bracket.search( text );
 					if( found )
 					{
@@ -208,7 +208,7 @@ def get_next_item( input, start = 0 )
 				while( count > 0 )
 				{
 					# scan forward for braces 
-					local text = text[idx:-1];
+					local text = text[idx:$];
 					local found = re_brace.search( text );
 					if( found )
 					{
@@ -230,7 +230,7 @@ def get_next_item( input, start = 0 )
 			}
 			else if( c == '"' )
 			{
-				local text = text[idx:-1];
+				local text = text[idx:$];
 				local loc = find_string( text );
 				# let errors propagate
 				if( error() )
@@ -249,7 +249,7 @@ def get_next_item( input, start = 0 )
 #		print( idx );
 		if( idx >= text.length() )
 			return start + text.length();
-		match = regex.search( text[idx:-1] );
+		match = regex.search( text[idx:$] );
 		# no match? must be the last item
 		if( match == null )
 		{
@@ -285,7 +285,7 @@ def decode_pair( input )
 		seterror( "Invalid JSON object: no separating colon." );
 		return;
 	}
-	local rhs = input[end + 1 : -1];
+	local rhs = input[end + 1 : $];
 	rhs = decode_value( rhs.strip() );
 	# error decoding the value?	
 	if( error() )

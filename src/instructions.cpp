@@ -625,7 +625,7 @@ void gen_IL_import( iter_t const & i, InstructionStream & is )
 	size_t return_addr_loc = is.size();
 	is.push( Instruction( op_push, DevaObject( "", (size_t)-1, true ) ) );
 	is.push( Instruction( op_push, DevaObject( "", name ) ) );
-	is.push( Instruction( op_call, DevaObject( string( "import" ), sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
+	is.push( Instruction( op_call, DevaObject( string( "importmodule" ), sym_function_call ), DevaObject( "", (size_t)1, false ) ) );
 	// back-patch return address
 	is[return_addr_loc] = Instruction( op_push, DevaObject( "", (size_t)is.Offset(), true ) );
 	// pop the return value of 'import'
@@ -736,6 +736,12 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 void gen_IL_in_op( iter_t const & i, InstructionStream & is )
 {
 	// no op
+}
+
+// '$' op in slices
+void gen_IL_end_op( iter_t const & i, InstructionStream & is )
+{
+	is.push( Instruction( op_push, DevaObject( "", sym_null ) ) );
 }
 
 void gen_IL_map_op( iter_t const & i, InstructionStream & is )

@@ -71,7 +71,7 @@ void do_join( Executor *ex );
 void do_error( Executor *ex );
 void do_seterror( Executor *ex );
 void do_geterror( Executor *ex );
-void do_import( Executor *ex );
+void do_importmodule( Executor *ex );
 
 // tables defining the built-in function names...
 static const string builtin_names[] = 
@@ -109,7 +109,7 @@ static const string builtin_names[] =
 	string( "error" ),
 	string( "seterror" ),
 	string( "geterror" ),
-	string( "import" ),
+	string( "importmodule" ),
 };
 // ...and function pointers to the executor functions for them
 //typedef void (*builtin_fcn)(Executor*, const Instruction&);
@@ -148,7 +148,7 @@ builtin_fcn builtin_fcns[] =
 	do_error,
 	do_seterror,
 	do_geterror,
-	do_import,
+	do_importmodule,
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1483,28 +1483,35 @@ void do_stderr( Executor *ex )
 
 void do_exit( Executor *ex )
 {
-	if( Executor::args_on_stack != 1 )
+	if( Executor::args_on_stack > 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments in built-in function 'exit'." );
 
-	// number is on top of the stack
-	DevaObject num = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( num.Type() == sym_unknown )
+	int exit_val = 0;
+
+	if( Executor::args_on_stack == 1 )
 	{
-		o = ex->find_symbol( num );
+		// number is on top of the stack
+		DevaObject num = ex->stack.back();
+		ex->stack.pop_back();
+	
+		DevaObject* o = NULL;
+		if( num.Type() == sym_unknown )
+		{
+			o = ex->find_symbol( num );
+			if( !o )
+				throw DevaRuntimeException( "Symbol not found for 'return_value' argument built-function 'exit'" );
+		}
 		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'return_value' argument built-function 'exit'" );
+			o = &num;
+
+		// check type
+		if( o->Type() != sym_number )
+			throw DevaRuntimeException( "'return_value' argument to built-in function 'exit' must be a number." );
+
+		exit_val = (int)o->num_val;
 	}
-	if( !o )
-		o = &num;
 
-	// check type
-	if( o->Type() != sym_number )
-		throw DevaRuntimeException( "'return_value' argument to built-in function 'exit' must be a number." );
-
-	ex->Exit( (int)o->num_val );
+	ex->Exit( exit_val );
 
 	// nothing from here on will actually ever happen, but whatever, let's
 	// pretend to be a good citizen for the sake for uniformity
@@ -1856,13 +1863,13 @@ void do_geterror( Executor *ex )
 		ex->stack.push_back( DevaObject( "", *o ) );
 }
 
-void do_import( Executor *ex )
+void do_importmodule( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'import'." );
+		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'importmodule'." );
 
 	// get error data arg from stack
-	DevaObject o = get_arg_of_type( ex, "import", "module_name", sym_string );
+	DevaObject o = get_arg_of_type( ex, "importmodule", "module_name", sym_string );
 
 	// import the module
 	bool success = ex->Import( o.str_val );

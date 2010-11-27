@@ -692,7 +692,8 @@ void check_key_exp( iter_t const & i )
 	for( int c = 1; c < num_children-1; ++c )
 	{
 		NodeInfo operand = i->children[c].value.value();
-		if( operand.type != number_type 
+		if( operand.sym != "$"
+			&& operand.type != number_type 
 			&& operand.type != string_type
 			&& operand.type != variable_type )
 			throw DevaSemanticException( "Index or slice component must be a numeric, string or variable value", operand );

@@ -778,7 +778,7 @@ void Executor::Tbl_load( Instruction const & inst )
 			table = stack.back();
 			stack.pop_back();
 		}
-		// ensure the args are numeric
+		// ensure the args are numeric or null for start & end (indicating 'end-of-list')
 		if( start_idx.Type() == sym_unknown )
 		{
 			DevaObject* o = find_symbol( start_idx );
@@ -786,7 +786,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				throw DevaRuntimeException( "Invalid object used in slice 'start' index." );
 			start_idx = *o;
 		}
-		if( start_idx.Type() != sym_number )
+		if( start_idx.Type() != sym_number && start_idx.Type() != sym_null )
 			throw DevaRuntimeException( "Invalid type for slice 'start' index: must be numeric." );
 		if( end_idx.Type() == sym_unknown )
 		{
@@ -795,7 +795,7 @@ void Executor::Tbl_load( Instruction const & inst )
 				throw DevaRuntimeException( "Invalid object used in slice 'end' index." );
 			end_idx = *o;
 		}
-		if( end_idx.Type() != sym_number )
+		if( end_idx.Type() != sym_number && end_idx.Type() != sym_null )
 			throw DevaRuntimeException( "Invalid type for slice 'end' index: must be numeric." );
 		if( step_val.Type() == sym_unknown )
 		{
@@ -820,29 +820,34 @@ void Executor::Tbl_load( Instruction const & inst )
 
 		// convert to integer values
 		// TODO: error on non-integer numbers
-		size_t start = (size_t)start_idx.num_val;
-		size_t end = (size_t)end_idx.num_val;
-		size_t step = (size_t)step_val.num_val;
-
 		size_t sz;
 		if( table.Type() == sym_vector )
 			sz = table.vec_val->size();
 		else
 			sz = strlen( table.str_val );
 
-		// convert values of "-1" to an end slice
-		if( start == -1 )
-			start = sz - 1;
-		if( end == -1 )
-			end = sz;
+		int start = (int)(start_idx.Type() == sym_null ? sz : start_idx.num_val);
+		int end = (int)(end_idx.Type() == sym_null ? sz : end_idx.num_val);
+		int step = (int)step_val.num_val;
 
-		// check the indices & step value
-		if( start >= sz || start < 0 )
-			throw DevaRuntimeException( "Invalid 'start' index slice." );
-		if( end > sz || end < 0 )
-			throw DevaRuntimeException( "Invalid 'end' index in slice." );
+		// handle negative values
+		if( start < 0 )
+			start = sz + start;
+		if( end < 0 )
+			end = sz + end;
+
+		// check the indices & step value and convert to sane values, if
+		// necessary
+		if( start > sz )
+			start = sz;
+		if( start < 0 )
+			start = 0;
+		if( end > sz )
+			end = sz;
+		if( end < 0 )
+			end = 0;
 		if( end < start )
-			throw DevaRuntimeException( "Invalid slice indices in slice: 'start' is greater than 'end'." );
+			end = start;
 		if( step < 1 )
 			throw DevaRuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
 
@@ -1273,7 +1278,7 @@ void Executor::Tbl_store( Instruction const & inst )
 			table = stack.back();
 			stack.pop_back();
 		}
-		// ensure the args are numeric
+		// ensure the args are numeric or null for start & end (indicating 'end-of-list')
 		if( start_idx.Type() == sym_unknown )
 		{
 			DevaObject* o = find_symbol( start_idx );
@@ -1281,7 +1286,7 @@ void Executor::Tbl_store( Instruction const & inst )
 				throw DevaRuntimeException( "Invalid object used in slice 'start' index." );
 			start_idx = *o;
 		}
-		if( start_idx.Type() != sym_number )
+		if( start_idx.Type() != sym_number && start_idx.Type() != sym_null )
 			throw DevaRuntimeException( "Invalid type for slice 'start' index: must be numeric." );
 		if( end_idx.Type() == sym_unknown )
 		{
@@ -1290,7 +1295,7 @@ void Executor::Tbl_store( Instruction const & inst )
 				throw DevaRuntimeException( "Invalid object used in slice 'end' index." );
 			end_idx = *o;
 		}
-		if( end_idx.Type() != sym_number )
+		if( end_idx.Type() != sym_number && end_idx.Type() != sym_null )
 			throw DevaRuntimeException( "Invalid type for slice 'end' index: must be numeric." );
 		if( step_val.Type() == sym_unknown )
 		{
@@ -1315,19 +1320,29 @@ void Executor::Tbl_store( Instruction const & inst )
 
 		// convert to integer values
 		// TODO: error on non-integer numbers
-		size_t start = (size_t)start_idx.num_val;
-		size_t end = (size_t)end_idx.num_val;
-		size_t step = (size_t)step_val.num_val;
-
 		size_t sz = table.vec_val->size();
 
+		int start = (int)(start_idx.Type() == sym_null ? sz : start_idx.num_val);
+		int end = (int)(end_idx.Type() == sym_null ? sz : end_idx.num_val);
+		int step = (int)step_val.num_val;
+
+		// handle negative values
+		if( start < 0 )
+			start = sz + start;
+		if( end < 0 )
+			end = sz + end;
+
 		// check the indices & step value
-		if( start >= sz || start < 0 )
-			throw DevaRuntimeException( "Invalid 'start' index slice." );
-		if( end > sz || end < 0 )
-			throw DevaRuntimeException( "Invalid 'end' index in slice." );
+		if( start > sz )
+			start = sz;
+		if( start < 0 )
+			start = 0;
+		if( end > sz )
+			end = sz;
+		if( end < 0 )
+			end = 0;
 		if( end < start )
-			throw DevaRuntimeException( "Invalid slice indices in slice: 'start' is greater than 'end'." );
+			end = start;
 		if( step < 1 )
 			throw DevaRuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
 
@@ -1341,7 +1356,8 @@ void Executor::Tbl_store( Instruction const & inst )
 			if( val.Type() == sym_vector )
 				table.vec_val->insert( table.vec_val->begin() + start, val.vec_val->begin(), val.vec_val->end() );
 			// otherwise insert whatever the object is
-			table.vec_val->insert( table.vec_val->begin() + start, val );
+			else
+				table.vec_val->insert( table.vec_val->begin() + start, val );
 		}
 		// other steps are separate deletions and insertions
 		else
@@ -1350,7 +1366,9 @@ void Executor::Tbl_store( Instruction const & inst )
 			if( val.Type() != sym_vector )
 				throw DevaRuntimeException( "Source in slice assignment must be a vector." );
 			// then ensure the destination and source lengths are identical
-			if( val.vec_val->size() != (int)((end - start + 1)/step) )
+			size_t val_sz = val.vec_val->size();
+			size_t tbl_sz = (size_t)ceil(((double)end - (double)start)/(double)step);
+			if( val_sz != tbl_sz )
 				throw DevaRuntimeException( "Source in slice assignment must be the same size as the destination." );
 			int j = 0;
 			for( int i = 0; i < end - start; ++i )
@@ -2407,7 +2425,8 @@ string Executor::find_module( string mod )
 		// get the DEVA env var
 		string devapath( getenv( "DEVA" ) );
 		// split it into separate paths (on the ":" char in un*x)
-		vector<string> paths = split_env_var_paths( devapath );
+		vector<string> paths;
+		split_env_var_paths( devapath, paths );
 		// for each of the paths, append the mod
 		// and see if it exists
 		for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )

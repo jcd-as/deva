@@ -43,6 +43,7 @@ static const char* const pardirstr = "..";
 static const char* env_var_path_seps = ":";
 
 void replace( string& src, const char* const in, const char* const out );
+void split( const string& in, const char* const splitchars, vector<string> & out );
 string get_cwd();
 string get_extension( string & path );
 string get_file_part( string & path );
@@ -51,6 +52,6 @@ bool exists( string & path );
 vector<string> split_path( string & path );
 string join_paths( const string & base, const string & add );
 string join_paths( vector<string> & parts );
-vector<string> split_env_var_paths( string var );
+void split_env_var_paths( const string & var, vector<string> &  paths );
 
 #endif // __UTIL_H__

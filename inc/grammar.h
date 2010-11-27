@@ -456,7 +456,7 @@ public:
 			key_exp = 
 				confix_p( 
 						open_bracket_op, 
-						add_exp >> !(( no_node_d[ch_p(':')] >> add_exp) >> !( no_node_d[ch_p(':')] >> add_exp)), 
+						(add_exp || end_op) >> !(( no_node_d[ch_p(':')] >> (add_exp || end_op)) >> !( no_node_d[ch_p(':')] >> add_exp)), 
 						close_bracket_op 
 						)
 				;
@@ -630,6 +630,12 @@ public:
 				][&set_node]
 				;
 
+			end_op = 
+				access_node_d[
+				ch_p( "$" )
+				][&set_node]
+				;
+
 			// constants & variables
 			////////////////////////////////////////
 			string = 
@@ -779,6 +785,7 @@ public:
 			BOOST_SPIRIT_DEBUG_RULE( map_op );
 			BOOST_SPIRIT_DEBUG_RULE( vec_op );
 			BOOST_SPIRIT_DEBUG_RULE( in_op );
+			BOOST_SPIRIT_DEBUG_RULE( end_op );
 			// constants
 			BOOST_SPIRIT_DEBUG_RULE( string );
 			BOOST_SPIRIT_DEBUG_RULE( number );
@@ -856,6 +863,7 @@ public:
 			map_op_id = map_op.id();
 			vec_op_id = vec_op.id();
 			in_op_id = in_op.id();
+			end_op_id = end_op.id();
 			// constants
 			string_id = string.id(); 
 			number_id = number.id(); 
@@ -991,32 +999,34 @@ public:
 			vec_op;
 		rule<parser_tag<57>, ScannerT> 
 			in_op;
+		rule<parser_tag<58>, ScannerT>
+			end_op;
 		// constants
-		rule<parser_tag<58>, ScannerT> 
-			string; 
 		rule<parser_tag<59>, ScannerT> 
-			number; 
+			string; 
 		rule<parser_tag<60>, ScannerT> 
-			boolean;
+			number; 
 		rule<parser_tag<61>, ScannerT> 
-			null;
+			boolean;
 		rule<parser_tag<62>, ScannerT> 
-			constant;
+			null;
 		rule<parser_tag<63>, ScannerT> 
-			local;
+			constant;
 		rule<parser_tag<64>, ScannerT> 
-			func;
+			local;
 		rule<parser_tag<65>, ScannerT> 
-			while_s;
+			func;
 		rule<parser_tag<66>, ScannerT> 
-			for_s;
+			while_s;
 		rule<parser_tag<67>, ScannerT> 
-			if_s;
+			for_s;
 		rule<parser_tag<68>, ScannerT> 
-			else_s;
+			if_s;
 		rule<parser_tag<69>, ScannerT> 
-			identifier;
+			else_s;
 		rule<parser_tag<70>, ScannerT> 
+			identifier;
+		rule<parser_tag<71>, ScannerT> 
 			module_name;
 
 		rule<ScannerT> const& start() const { return translation_unit; }

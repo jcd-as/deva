@@ -119,30 +119,6 @@ void ShowLine( vector<string> & lines, string file, int line )
 	cout << "[" << file << ":" << line << "] " << lines[line-1];
 }
 
-void split( string & in, vector<string> & ret )
-{
-	size_t left = in.find_first_not_of( " " );
-	if( left != string::npos )
-	{	
-		size_t right = in.find_first_of( " " );
-		size_t len = in.length();
-		while( left != string::npos )
-		{
-			string s( in, left, right - left );
-			ret.push_back( s );
-
-			left = in.find_first_not_of( " ", right );
-			right = in.find_first_of( " ", right + 1 );
-			// if 'left' is greater than 'right', then we passed an empty string 
-			// (two matching split chars in a row), move forward
-			if( left > right )
-			{
-				right = in.find_first_of( " ", right + 1 );
-			}
-		}
-	}
-}
-
 const char* commands[] = 
 {
 	"next",
@@ -398,7 +374,7 @@ start:
 				// if we have saved breakpoints, re-load them
 				for( int i = 0; i < breakpoints.size(); ++i )
 				{
-						ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
+					ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
 				}
 
 				ex->StartExecutingCode( dvcode );
@@ -423,7 +399,7 @@ start:
 						if( input.length() > 0 )
 						{
 							in.clear();
-							split( input, in );
+							split( input, " ", in );
 							c = get_command( in[0] );
 
 							// store in history
@@ -726,7 +702,7 @@ start:
 		cout << "Unrecoverable error: " << e.what() << endl;
 		return -1;
 	}
-	// errors from compiling/parsing will end up here
+	// runtime exceptions really should only stem from the Executor,
 	catch( DevaRuntimeException & e )
 	{
 		cout << "Error: " << e.what() << endl;

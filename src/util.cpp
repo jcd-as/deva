@@ -50,6 +50,27 @@ void replace( string& src, const char* const in, const char* const out )
 	}
 }
 
+void split( const string & in, const char* const splitchars, vector<string> & ret )
+{
+	size_t len = in.length();
+	// lhs of the first item is always the first character
+	size_t left = 0;
+	// rhs of the first item is the first splitting character
+	size_t right = in.find_first_of( splitchars );
+	if( right == string::npos )
+		right = len;
+	// while lhs is not at the end of the input string
+	while( left <= len )
+	{
+		if( left != right )
+			ret.push_back( string( in, left, right - left ) );
+		left = right + 1;
+		right = in.find_first_of( splitchars, right + 1 );
+		if( right == string::npos )
+			right = len;
+	}
+}
+
 string get_cwd()
 {
 	filesystem::path p = filesystem::current_path();
@@ -113,27 +134,8 @@ string join_paths( vector<string> & parts )
 	return retpath.string();
 }
 
-vector<string> split_env_var_paths( string var )
+void split_env_var_paths( const string & var, vector<string> & paths )
 {
 	// split it into separate paths (on the ":" char in un*x)
-	vector<string> paths;
-
-	size_t len = var.length();
-	// lhs of the first item is always the first character
-	size_t left = 0;
-	// rhs of the first item is the first splitting character
-	size_t right = var.find_first_of( env_var_path_seps );
-	if( right == string::npos )
-		right = len;
-	// while lhs is not at the end of the input string
-	while( left <= len )
-	{
-		if( left != right )
-			paths.push_back( string( var, left, right - left ) );
-		left = right + 1;
-		right = var.find_first_of( env_var_path_seps, right + 1 );
-		if( right == string::npos )
-			right = len;
-	}
-	return paths;
+	split( var, env_var_path_seps, paths );
 }
