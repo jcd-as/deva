@@ -34,7 +34,7 @@
 #include "executor.h"
 
 // get the 'this' object off the top of the stack
-DevaObject get_this( Executor *ex, const char* fcn, SymbolType type );
+DevaObject get_this( Executor *ex, const char* fcn, SymbolType type, bool accept_class_or_instance = false );
 // get a fcn argument off the top of the stack
 DevaObject get_arg( Executor *ex, const char* fcn, const char* arg );
 // get a fcn argument off the top of the stack and verify it is of the correct

@@ -338,7 +338,7 @@ void do_map_rewind( Executor *ex )
 		throw DevaRuntimeException( "Map built-in method 'rewind' takes no arguments." );
 
 	// get the map object off the top of the stack
-	DevaObject map_obj = get_this( ex, "rewind", sym_map );
+	DevaObject map_obj = get_this( ex, "rewind", sym_map, true );
 
 	smart_ptr<DOMap> mp = map_obj.map_val;
 	mp->index = 0;
@@ -356,7 +356,7 @@ void do_map_next( Executor *ex )
 		throw DevaRuntimeException( "Map built-in method 'next' takes no arguments." );
 
 	// get the map object off the top of the stack
-	DevaObject map_obj = get_this( ex, "next", sym_map );
+	DevaObject map_obj = get_this( ex, "next", sym_map, true );
 	smart_ptr<DOMap> mp = map_obj.map_val;
 
 	size_t idx = mp->index;

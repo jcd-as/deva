@@ -555,7 +555,28 @@ void Executor::Defun( Instruction const & inst )
 	size_t offset = ip;
 	// also the same as: long offset = inst.args[0].sz_val + inst.args[0].Size() + 2;
 	DevaObject* fcn = new DevaObject( inst.args[0].name, offset, true );
-	current_scopes->AddObject( fcn );
+	// if there is an existing fcn/method of this name, we need to orphan
+	// it so it will be deleted, and force this fcn into the scope...
+	DevaObject *ob = find_symbol( *fcn );
+	if( !ob )
+		current_scopes->AddObject( fcn );
+	else
+	{
+		// if the we found a fcn, we need to add a new object that
+		// references it to the current scope, so that its destructor will be
+		// called when that scope exits
+		if( ob->Type() == sym_address )
+		{
+			static int s_orphan_fcn_counter;
+			char s[33+12] = {0};
+			sprintf( s, "orphan_fcn_%d", s_orphan_fcn_counter++ );
+			DevaObject* o = new DevaObject( s, *ob );
+			current_scopes->AddObject( o );
+		}
+		*ob = *fcn;
+		// free up the temp fcn object
+		delete fcn;
+	}
 	// skip the function body
 	int fcn_stack = 1;
 	Opcode op;
