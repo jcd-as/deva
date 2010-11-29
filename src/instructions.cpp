@@ -672,7 +672,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			|| id == compound_statement_id 
 			// oddly, if the dot-op expression is at the global scope, there may
 			// not be a translation_unit as its parent...
-			|| id == dot_op_id
+			|| (id == dot_op_id && parent->children.begin() != i)
 			// and, if this is from code that is being run dynamically, an
 			// identifier may itself be the parent
 			|| id == identifier_id
@@ -717,7 +717,7 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 					|| id == compound_statement_id 
 					// oddly, if the dot-op expression is at the global scope, there may
 					// not be a translation_unit as its parent...
-					|| id == dot_op_id
+					|| (id == dot_op_id && parent->children.begin() != i)
 					// and, if this is from code that is being run dynamically, an
 					// identifier may itself be the parent
 					|| id == identifier_id

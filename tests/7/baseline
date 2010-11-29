@@ -463,8 +463,10 @@ push : unknown: 'b' ;
 tbl_load : , address/sized-value = 1 ; 
 push : c ; 
 tbl_load : 
-push : , address/sized-value = 4294967295 ; 
+push : , address/sized-value = 510 ; 
 push : unknown: 'a' ; 
+line_num : input.dv ; , address/sized-value = 94 ; 
+call : , address/sized-value = 0 ; 
 push : b ; 
 tbl_load : 
 push : foo ; 

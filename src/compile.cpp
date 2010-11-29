@@ -725,25 +725,34 @@ bool walk_looking_for_return( iter_t const & iter )
 	return false;
 }
 
-// helper to walk a dot_op branch of the AST to see if it is ultimately a method
-// call (has an arg_list_exp) and generate the ops for the args if it is
+// helper to walk the lhs and rhs of a dot_op a method call 
+// (has an arg_list_exp) and generate the ops for the args if it is
 void walk_children_for_method_call( iter_t i, InstructionStream & is )
 {
-	// if this is an identifier with a child that is an arg list
-	if( i->value.id() == identifier_id && i->children.size() > 0 && i->children[0].value.id() == arg_list_exp_id )
+	// either the lhs (child 1) or rhs (child 2) of the dot-op are a call...
+	if( i->children.size() > 0
+		&& i->children[0].value.id() == identifier_id 
+		&& i->children[0].children.size() > 0 
+		&& i->children[0].children[0].value.id() == arg_list_exp_id )
 	{
 		// generate the ret-val placeholder (op_push 'sym_address')
-		pre_gen_IL_arg_list_exp( i, is );
+		pre_gen_IL_arg_list_exp( i->children.begin(), is );
 
 		// generate the code for the arg list
-		reverse_walk_children( i->children.begin(), is );
-		gen_IL_arg_list_exp( i->children.begin(), is );
-
-		return;
+		reverse_walk_children( i->children[0].children.begin(), is );
+		gen_IL_arg_list_exp( i->children[0].children.begin(), is );
 	}
-	for( int j = 0; j < i->children.size(); ++j )
+	else if( i->children.size() > 1
+		&& i->children[1].value.id() == identifier_id 
+		&& i->children[1].children.size() > 0 
+		&& i->children[1].children[0].value.id() == arg_list_exp_id )
 	{
-		walk_children_for_method_call( i->children.begin() + j, is );
+		// generate the ret-val placeholder (op_push 'sym_address')
+		pre_gen_IL_arg_list_exp( i->children.begin() + 1, is );
+
+		// generate the code for the arg list
+		reverse_walk_children( i->children[1].children.begin(), is );
+		gen_IL_arg_list_exp( i->children[1].children.begin(), is );
 	}
 }
 
@@ -1427,18 +1436,18 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// rhs of dot-op: check for fcn call here too (for 'a.b()' etc)!!
 			// if the first child is an arg_list_exp, it's a fcn call
-			if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
-			{
-				// first walk the children, in reverse order
-				reverse_walk_children( i->children[0].children.begin() + 1, is );
-
-				// then generate the IL for this node (back-patching the return
-				// address etc.)
-				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num, on_lhs_of_assign );
-			}
+//			if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == arg_list_exp_id )
+//			{
+//				// first walk the children, in reverse order
+//				reverse_walk_children( i->children[0].children.begin() + 1, is );
+//
+//				// then generate the IL for this node (back-patching the return
+//				// address etc.)
+//				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num, on_lhs_of_assign );
+//			}
 			// check for a table lookup (for 'a.b[0]' etc)
 			// if the first child is a key_exp, it's a table lookup
-			else 
+//			else 
 				if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
 			{
 				// first generate the tbl_load instruction for the dot-op
@@ -1458,7 +1467,6 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 		else
 		{
-//			walk_children( i, is );
 			// walk children
 			for( int c = 0; c < i->children.size(); c++ )
 			{
@@ -1663,10 +1671,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	{
 		// operands (lhs & rhs) and possibly semi-colon
 		
-		// if this is ultimately a fcn (method) call, we need to push the
-		// arguments to the call onto the stack FIRST. so, we need to walk the
-		// AST all the way down until we find the arg_list_exp, generate code
-		// for it, and then start over and walk down generating the code for the
+		// if lhs or rhs is a fcn (method) call, we need to push the
+		// arguments to the call onto the stack FIRST
+		// and then start over and walk down generating the code for the
 		// dot_ops (vector_loads)...
 		walk_children_for_method_call( i, is );
 
@@ -1684,7 +1691,18 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				reverse_walk_children( i->children[0].children.begin(), is );
 				gen_IL_key_exp( i->children[0].children.begin(), is );
 			}
-			// lhs stays the same
+			// check for a call on the lhs ('a().b' etc)
+			else if( i->children[0].children.size() > 0 && i->children[0].children[0].value.id() == arg_list_exp_id )
+			{
+				// push the identifier (back-patching the return address etc.)
+				string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
+				is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
+
+				// do the call op
+				reverse_walk_children( i->children[0].children.begin(), is );
+				gen_IL_identifier( i->children.begin(), is, i, true, child_num, on_lhs_of_assign );
+			}
+			// plain identifier: lhs stays the same
 			else
 			{
 				string lhs = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
