@@ -3161,6 +3161,8 @@ bool Executor::ImportBuiltinModuleFunctions( string mod, map<string, builtin_fcn
 	// and to the builtin module map
 	for( map<string, builtin_fcn>::iterator i = fcns.begin(); i != fcns.end(); ++i )
 	{
+		// don't need to check for existing objects to orphan, as builtin
+		// modules should always be set-up prior to user code being executed
 		st->AddObject( new DevaObject( i->first, sym_unknown ) );
 		global_scopes->AddObject( new DevaObject( i->first, sym_unknown ) );
 		builtin_modules[mod].push_back( i->first );

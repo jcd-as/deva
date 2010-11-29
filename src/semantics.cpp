@@ -302,6 +302,10 @@ void check_assignment_op( iter_t const & i )
 //		}
 //	}
 
+	// ensure the most leaf-node of the lhs is NOT a fcn/method call:
+	if( is_lhs_a_call( i ) )
+		throw DevaSemanticException( "Cannot assign a value to a function call.", lhs );
+
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;
 	i->value.value( ni );
@@ -342,6 +346,10 @@ void check_op_assignment_op( iter_t const & i )
 	SymbolInfo si = find_symbol( lhs.sym, st, scopes );
 	if( si.Type() != sym_end && si.is_const )
 		throw DevaSemanticException( "Cannot assign to a const variable.", lhs );
+
+	// ensure the most leaf-node of the lhs is NOT a fcn/method call:
+	if( is_lhs_a_call( i ) )
+		throw DevaSemanticException( "Cannot assign a value to a function call.", lhs );
 
 	NodeInfo ni = ((NodeInfo)(i->value.value()));
 	ni.type = variable_type;

@@ -194,6 +194,32 @@ void walk_children( iter_t const & i )
 	}
 }
 
+// helper to walk a branch of the AST to see if it is ultimately a method
+// call (has an arg_list_exp) - used by assignment ops to prevent calls on lhs
+bool is_lhs_a_call( iter_t const & i )
+{
+	// the rhs of the lhs of an assignment op holds the relevant node
+	// if it is a call, 
+
+	if( i->children[0].children.size() < 2 )
+		return false;
+
+	iter_t n = (iter_t)(i->children[0].children.begin() + 1);
+
+	parser_id nid = n->value.id();
+	int num_children = n->children.size();
+	if( num_children < 1 )
+		return false;
+	parser_id cid = n->children[0].value.id();
+	// if this is an identifier with a child that is an arg list
+	// AND it is a leaf-node (has no children)
+	if( n->value.id() == identifier_id && n->children.size() > 0 
+		&& n->children[0].value.id() == arg_list_exp_id )
+		return true;
+	else
+		return false;
+}
+
 void eval_node( iter_t const & i )
 {
 	// set the symbol text for the node
@@ -815,6 +841,8 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 	static string class_name;
 	// static to track the list of methods that were added
 	static vector<string> method_names;
+	// static to track whether we're on the lhs of an assignment operation
+	static bool on_lhs_of_assign = false;
 	///////////////////////////////////////
 
 	// number
@@ -1286,7 +1314,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 			// then generate the IL for this node (back-patching the return
 			// address etc.)
-			gen_IL_identifier( i, is, parent, false, child_num );
+			gen_IL_identifier( i, is, parent, false, child_num, on_lhs_of_assign );
 		}
 		// if the id is followed by []'s it is either a vector or map look-up
 		else if( i->children[0].value.id() == key_exp_id )
@@ -1368,8 +1396,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			string name = strip_symbol( string( i->children[0].value.begin(), i->children[0].value.end() ) );
 			generate_line_num( i->children.begin(), is );
 			is.push( Instruction( op_push , DevaObject( name, sym_unknown ) ) );
-			// push the key exp
+			// push the key exp (walk lhs)
+			on_lhs_of_assign = true;
 			reverse_walk_children( i->children[0].children.begin(), is );
+			on_lhs_of_assign = false;
 			
 			// walk the rhs
 			generate_IL_for_node( i->children.begin() + 1, is, i, 1 );
@@ -1386,7 +1416,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// don't pass 'self' (i) as parent, keep the parent the root for the
 			// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
 			// the parent of a)
+			on_lhs_of_assign = true;
 			generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
+			on_lhs_of_assign = false;
 
 			// turn the rhs into a string
 			string rhs = strip_symbol( string( i->children[0].children[1].value.begin(), i->children[0].children[1].value.end() ) );
@@ -1402,11 +1434,12 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 
 				// then generate the IL for this node (back-patching the return
 				// address etc.)
-				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num );
+				gen_IL_identifier( i->children[0].children.begin() + 1, is, parent, true, child_num, on_lhs_of_assign );
 			}
 			// check for a table lookup (for 'a.b[0]' etc)
 			// if the first child is a key_exp, it's a table lookup
-			else if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
+			else 
+				if( i->children[0].children[1].children.size() > 0 && i->children[0].children[1].children[0].value.id() == key_exp_id )
 			{
 				// first generate the tbl_load instruction for the dot-op
 				generate_line_num( i->children.begin(), is );
@@ -1425,7 +1458,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 		else
 		{
-			walk_children( i, is );
+//			walk_children( i, is );
+			// walk children
+			for( int c = 0; c < i->children.size(); c++ )
+			{
+				if( c == 0 )
+					on_lhs_of_assign = true;
+				generate_IL_for_node( i->children.begin() + c, is, i, c );
+				on_lhs_of_assign = false;
+			}
 			gen_IL_assignment_op( i, is );
 		}
 	}
@@ -1517,7 +1558,9 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 				// don't pass 'self' (i) as parent, keep the parent the root for the
 				// whole 'dot-op chain' (e.g. in 'a.b.c.d()', the parent stays as
 				// the parent of a)
+				on_lhs_of_assign = true;
 				generate_IL_for_node( i->children[0].children.begin(), is, parent, 0 );
+				on_lhs_of_assign = false;
 			}
 
 			// turn the rhs into a string
@@ -1558,7 +1601,15 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 		}
 		else
 		{
-			walk_children( i, is );
+//			walk_children( i, is );
+			// walk children
+			for( int c = 0; c < i->children.size(); c++ )
+			{
+				if( c == 0 )
+					on_lhs_of_assign = true;
+				generate_IL_for_node( i->children.begin() + c, is, i, c );
+				on_lhs_of_assign = false;
+			}
 
 			if( is_add )
 				gen_IL_add_assignment_op( i, is );
@@ -1664,7 +1715,7 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			// the jump...
 			// so just generate the IL for this node, which will back-patch the
 			// jump placeholder
-			gen_IL_identifier( i->children.begin() + 1, is, parent, true, child_num );
+			gen_IL_identifier( i->children.begin() + 1, is, parent, true, child_num, on_lhs_of_assign );
 		}
 		// check for a table lookup (for 'a.b[0]' etc)
 		// if the first child is a key_exp, it's a table lookup

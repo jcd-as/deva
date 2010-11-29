@@ -634,7 +634,7 @@ void gen_IL_import( iter_t const & i, InstructionStream & is )
 
 // stack of fcn returns for back-patching return addresses in
 static vector<size_t> fcn_call_stack;
-void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack, int child_num )
+void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const & parent, bool get_fcn_from_stack, int child_num, bool on_lhs_of_assign )
 {
 	// simple variable and map/vector lookups handled by caller,
 	// only need to handle function calls here
@@ -682,7 +682,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 			|| (id == for_s_id && child_num != 0)
 			|| (id == if_s_id  && child_num != 0) ) )
 		{
-			is.push( Instruction( op_pop ) );
+			if( !on_lhs_of_assign )
+				is.push( Instruction( op_pop ) );
 		}
 
 		// generate the calls, back patches and (if needed)
@@ -726,7 +727,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 					|| (id == for_s_id && child_num != 0)
 					|| (id == if_s_id  && child_num != 0) ) )
 				{
-					is.push( Instruction( op_pop ) );
+					if( !on_lhs_of_assign )
+						is.push( Instruction( op_pop ) );
 				}
 			}
 		}

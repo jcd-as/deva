@@ -56,6 +56,10 @@ void emit_warning( DevaSemanticException & e );
 tree_parse_info<iterator_t, factory_t> ParseFile( string filename, istream & file );
 tree_parse_info<iterator_t, factory_t> ParseText( string filename, const char* const input, long input_len );
 
+// helper for semantic check to see if the leaf node of a branch is a fcn/method
+// call (for preventing assignment to calls)
+bool is_lhs_a_call( iter_t const & i );
+
 // check the semantics of a parsed AST
 // semantic errors output to stdout
 bool CheckSemantics( tree_parse_info<iterator_t, factory_t> info );
