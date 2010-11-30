@@ -1,4 +1,4 @@
-In eval_expression. i->value =  i->children.size() = 15
+In eval_expression. i->value =  i->children.size() = 14
 in scope 0, at line: -1
 translation_unit: 
 	In eval_expression. i->value = while i->children.size() = 2
@@ -170,181 +170,223 @@ translation_unit:
 				in scope 10, at line: 80
 				semicolon_op: ;
 	In eval_expression. i->value = . i->children.size() = 3
-	in scope 0, at line: 90
+	in scope 0, at line: 98
 	dot_op: .
 		In eval_expression. i->value = a i->children.size() = 0
-		in scope 0, at line: 90
+		in scope 0, at line: 98
 		identifier: a
-		In eval_expression. i->value = b i->children.size() = 0
-		in scope 0, at line: 90
+		In eval_expression. i->value = b i->children.size() = 1
+		in scope 0, at line: 98
 		identifier: b
-		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 90
-		semicolon_op: ;
-	In eval_expression. i->value = . i->children.size() = 3
-	in scope 0, at line: 91
-	dot_op: .
-		In eval_expression. i->value = . i->children.size() = 2
-		in scope 0, at line: 91
-		dot_op: .
-			In eval_expression. i->value = . i->children.size() = 2
-			in scope 0, at line: 91
-			dot_op: .
-				In eval_expression. i->value = a i->children.size() = 0
-				in scope 0, at line: 91
-				identifier: a
-				In eval_expression. i->value = b i->children.size() = 0
-				in scope 0, at line: 91
-				identifier: b
-			In eval_expression. i->value = c i->children.size() = 0
-			in scope 0, at line: 91
-			identifier: c
-		In eval_expression. i->value = d i->children.size() = 0
-		in scope 0, at line: 91
-		identifier: d
-		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 91
-		semicolon_op: ;
-	In eval_expression. i->value = . i->children.size() = 3
-	in scope 0, at line: 92
-	dot_op: .
-		In eval_expression. i->value = . i->children.size() = 2
-		in scope 0, at line: 92
-		dot_op: .
-			In eval_expression. i->value = . i->children.size() = 2
-			in scope 0, at line: 92
-			dot_op: .
-				In eval_expression. i->value = a i->children.size() = 0
-				in scope 0, at line: 92
-				identifier: a
-				In eval_expression. i->value = b i->children.size() = 0
-				in scope 0, at line: 92
-				identifier: b
-			In eval_expression. i->value = c i->children.size() = 0
-			in scope 0, at line: 92
-			identifier: c
-		In eval_expression. i->value = d i->children.size() = 1
-		in scope 0, at line: 92
-		identifier: d
-			In eval_expression. i->value =  i->children.size() = 3
-			in scope 0, at line: 92
-			key_exp: 
-				In eval_expression. i->value = [ i->children.size() = 0
-				in scope 0, at line: 92
-				(open|close)_bracket_op: [
-				In eval_expression. i->value = "foo" i->children.size() = 0
-				in scope 0, at line: 92
-				string: "foo"
-				In eval_expression. i->value = ] i->children.size() = 0
-				in scope 0, at line: 92
-				(open|close)_bracket_op: ]
-		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 92
-		semicolon_op: ;
-	In eval_expression. i->value = . i->children.size() = 3
-	in scope 0, at line: 93
-	dot_op: .
-		In eval_expression. i->value = a i->children.size() = 1
-		in scope 0, at line: 93
-		identifier: a
-			In eval_expression. i->value =  i->children.size() = 3
-			in scope 0, at line: 93
-			key_exp: 
-				In eval_expression. i->value = [ i->children.size() = 0
-				in scope 0, at line: 93
-				(open|close)_bracket_op: [
-				In eval_expression. i->value = b i->children.size() = 0
-				in scope 0, at line: 93
-				identifier: b
-				In eval_expression. i->value = ] i->children.size() = 0
-				in scope 0, at line: 93
-				(open|close)_bracket_op: ]
-		In eval_expression. i->value = c i->children.size() = 0
-		in scope 0, at line: 93
-		identifier: c
-		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 93
-		semicolon_op: ;
-	In eval_expression. i->value = . i->children.size() = 3
-	in scope 0, at line: 94
-	dot_op: .
-		In eval_expression. i->value = a i->children.size() = 1
-		in scope 0, at line: 94
-		identifier: a
 			In eval_expression. i->value =  i->children.size() = 2
-			in scope 0, at line: 94
+			in scope 0, at line: 98
 			arg_list_exp: 
 				In eval_expression. i->value = ( i->children.size() = 0
-				in scope 0, at line: 94
+				in scope 0, at line: 98
 				(open|close)_paren_op: (
 				In eval_expression. i->value = ) i->children.size() = 0
-				in scope 0, at line: 94
+				in scope 0, at line: 98
 				(open|close)_paren_op: )
-		In eval_expression. i->value = b i->children.size() = 0
-		in scope 0, at line: 94
-		identifier: b
 		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 94
-		semicolon_op: ;
-	In eval_expression. i->value = "foo" i->children.size() = 1
-	in scope 0, at line: 96
-	string: "foo"
-		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 96
+		in scope 0, at line: 98
 		semicolon_op: ;
 	In eval_expression. i->value = = i->children.size() = 3
-	in scope 0, at line: 97
+	in scope 0, at line: 99
 	assignment_op: =
-		In eval_expression. i->value = a i->children.size() = 0
-		in scope 0, at line: 97
-		identifier: a
+		In eval_expression. i->value = . i->children.size() = 2
+		in scope 0, at line: 99
+		dot_op: .
+			In eval_expression. i->value = . i->children.size() = 2
+			in scope 0, at line: 99
+			dot_op: .
+				In eval_expression. i->value = . i->children.size() = 2
+				in scope 0, at line: 99
+				dot_op: .
+					In eval_expression. i->value = a i->children.size() = 0
+					in scope 0, at line: 99
+					identifier: a
+					In eval_expression. i->value = b i->children.size() = 0
+					in scope 0, at line: 99
+					identifier: b
+				In eval_expression. i->value = c i->children.size() = 0
+				in scope 0, at line: 99
+				identifier: c
+			In eval_expression. i->value = d i->children.size() = 0
+			in scope 0, at line: 99
+			identifier: d
+		In eval_expression. i->value = 0 i->children.size() = 0
+		in scope 0, at line: 99
+		num: 0
+		In eval_expression. i->value = ; i->children.size() = 0
+		in scope 0, at line: 99
+		semicolon_op: ;
+	In eval_expression. i->value = = i->children.size() = 3
+	in scope 0, at line: 100
+	assignment_op: =
+		In eval_expression. i->value = . i->children.size() = 2
+		in scope 0, at line: 100
+		dot_op: .
+			In eval_expression. i->value = . i->children.size() = 2
+			in scope 0, at line: 100
+			dot_op: .
+				In eval_expression. i->value = . i->children.size() = 2
+				in scope 0, at line: 100
+				dot_op: .
+					In eval_expression. i->value = a i->children.size() = 0
+					in scope 0, at line: 100
+					identifier: a
+					In eval_expression. i->value = b i->children.size() = 0
+					in scope 0, at line: 100
+					identifier: b
+				In eval_expression. i->value = c i->children.size() = 0
+				in scope 0, at line: 100
+				identifier: c
+			In eval_expression. i->value = d i->children.size() = 1
+			in scope 0, at line: 100
+			identifier: d
+				In eval_expression. i->value =  i->children.size() = 3
+				in scope 0, at line: 100
+				key_exp: 
+					In eval_expression. i->value = [ i->children.size() = 0
+					in scope 0, at line: 100
+					(open|close)_bracket_op: [
+					In eval_expression. i->value = "foo" i->children.size() = 0
+					in scope 0, at line: 100
+					string: "foo"
+					In eval_expression. i->value = ] i->children.size() = 0
+					in scope 0, at line: 100
+					(open|close)_bracket_op: ]
 		In eval_expression. i->value = 1 i->children.size() = 0
-		in scope 0, at line: 97
+		in scope 0, at line: 100
 		num: 1
 		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 97
+		in scope 0, at line: 100
 		semicolon_op: ;
-	In eval_expression. i->value = / i->children.size() = 3
-	in scope 0, at line: 99
-	mult_op: /
-		In eval_expression. i->value = + i->children.size() = 2
-		in scope 0, at line: 99
-		add_op: +
-			In eval_expression. i->value = 5 i->children.size() = 0
-			in scope 0, at line: 99
-			num: 5
-			In eval_expression. i->value = 5 i->children.size() = 0
-			in scope 0, at line: 99
-			num: 5
+	In eval_expression. i->value = . i->children.size() = 3
+	in scope 0, at line: 101
+	dot_op: .
+		In eval_expression. i->value = a i->children.size() = 1
+		in scope 0, at line: 101
+		identifier: a
+			In eval_expression. i->value =  i->children.size() = 3
+			in scope 0, at line: 101
+			key_exp: 
+				In eval_expression. i->value = [ i->children.size() = 0
+				in scope 0, at line: 101
+				(open|close)_bracket_op: [
+				In eval_expression. i->value = b i->children.size() = 0
+				in scope 0, at line: 101
+				identifier: b
+				In eval_expression. i->value = ] i->children.size() = 0
+				in scope 0, at line: 101
+				(open|close)_bracket_op: ]
+		In eval_expression. i->value = c i->children.size() = 1
+		in scope 0, at line: 101
+		identifier: c
+			In eval_expression. i->value =  i->children.size() = 2
+			in scope 0, at line: 101
+			arg_list_exp: 
+				In eval_expression. i->value = ( i->children.size() = 0
+				in scope 0, at line: 101
+				(open|close)_paren_op: (
+				In eval_expression. i->value = ) i->children.size() = 0
+				in scope 0, at line: 101
+				(open|close)_paren_op: )
+		In eval_expression. i->value = ; i->children.size() = 0
+		in scope 0, at line: 101
+		semicolon_op: ;
+	In eval_expression. i->value = = i->children.size() = 3
+	in scope 0, at line: 102
+	assignment_op: =
+		In eval_expression. i->value = . i->children.size() = 2
+		in scope 0, at line: 102
+		dot_op: .
+			In eval_expression. i->value = a i->children.size() = 1
+			in scope 0, at line: 102
+			identifier: a
+				In eval_expression. i->value =  i->children.size() = 2
+				in scope 0, at line: 102
+				arg_list_exp: 
+					In eval_expression. i->value = ( i->children.size() = 0
+					in scope 0, at line: 102
+					(open|close)_paren_op: (
+					In eval_expression. i->value = ) i->children.size() = 0
+					in scope 0, at line: 102
+					(open|close)_paren_op: )
+			In eval_expression. i->value = b i->children.size() = 0
+			in scope 0, at line: 102
+			identifier: b
 		In eval_expression. i->value = 2 i->children.size() = 0
-		in scope 0, at line: 99
+		in scope 0, at line: 102
 		num: 2
 		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 99
+		in scope 0, at line: 102
 		semicolon_op: ;
-	In eval_expression. i->value = + i->children.size() = 3
-	in scope 0, at line: 101
-	add_op: +
-		In eval_expression. i->value = % i->children.size() = 2
-		in scope 0, at line: 101
-		mult_op: %
-			In eval_expression. i->value = * i->children.size() = 2
-			in scope 0, at line: 101
-			mult_op: *
-				In eval_expression. i->value = 2 i->children.size() = 0
-				in scope 0, at line: 101
-				num: 2
-				In eval_expression. i->value = 2 i->children.size() = 0
-				in scope 0, at line: 101
-				num: 2
-			In eval_expression. i->value = 3 i->children.size() = 0
-			in scope 0, at line: 101
-			num: 3
+	In eval_expression. i->value = = i->children.size() = 3
+	in scope 0, at line: 107
+	assignment_op: =
+		In eval_expression. i->value = a i->children.size() = 0
+		in scope 0, at line: 107
+		identifier: a
 		In eval_expression. i->value = 1 i->children.size() = 0
-		in scope 0, at line: 101
+		in scope 0, at line: 107
 		num: 1
 		In eval_expression. i->value = ; i->children.size() = 0
-		in scope 0, at line: 101
+		in scope 0, at line: 107
+		semicolon_op: ;
+	In eval_expression. i->value = = i->children.size() = 3
+	in scope 0, at line: 112
+	assignment_op: =
+		In eval_expression. i->value = n i->children.size() = 0
+		in scope 0, at line: 112
+		identifier: n
+		In eval_expression. i->value = / i->children.size() = 2
+		in scope 0, at line: 112
+		mult_op: /
+			In eval_expression. i->value = + i->children.size() = 2
+			in scope 0, at line: 112
+			add_op: +
+				In eval_expression. i->value = 5 i->children.size() = 0
+				in scope 0, at line: 112
+				num: 5
+				In eval_expression. i->value = 5 i->children.size() = 0
+				in scope 0, at line: 112
+				num: 5
+			In eval_expression. i->value = 2 i->children.size() = 0
+			in scope 0, at line: 112
+			num: 2
+		In eval_expression. i->value = ; i->children.size() = 0
+		in scope 0, at line: 112
+		semicolon_op: ;
+	In eval_expression. i->value = = i->children.size() = 3
+	in scope 0, at line: 117
+	assignment_op: =
+		In eval_expression. i->value = n i->children.size() = 0
+		in scope 0, at line: 117
+		identifier: n
+		In eval_expression. i->value = + i->children.size() = 2
+		in scope 0, at line: 117
+		add_op: +
+			In eval_expression. i->value = % i->children.size() = 2
+			in scope 0, at line: 117
+			mult_op: %
+				In eval_expression. i->value = * i->children.size() = 2
+				in scope 0, at line: 117
+				mult_op: *
+					In eval_expression. i->value = 2 i->children.size() = 0
+					in scope 0, at line: 117
+					num: 2
+					In eval_expression. i->value = 2 i->children.size() = 0
+					in scope 0, at line: 117
+					num: 2
+				In eval_expression. i->value = 3 i->children.size() = 0
+				in scope 0, at line: 117
+				num: 3
+			In eval_expression. i->value = 1 i->children.size() = 0
+			in scope 0, at line: 117
+			num: 1
+		In eval_expression. i->value = ; i->children.size() = 0
+		in scope 0, at line: 117
 		semicolon_op: ;
 Symbols:
 Scope 0, parent = -1
@@ -353,6 +395,7 @@ Scope 0, parent = -1
 	c
 	d
 	foo
+	n
 	x
 Scope 1, parent = 0
 	b
@@ -439,16 +482,21 @@ leave :
 jmp : , address/sized-value = 357 ; 
 enter : 
 leave : 
+push : , address/sized-value = 411 ; 
 push : unknown: 'a' ; 
 push : b ; 
-tbl_load : 
+tbl_load : false ; 
+line_num : input.dv ; , address/sized-value = 98 ; 
+call : , address/sized-value = 0 ; 
+pop : 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 
 push : c ; 
 tbl_load : 
 push : d ; 
-tbl_load : 
+push : 0 ; 
+tbl_store : 
 push : unknown: 'a' ; 
 push : b ; 
 tbl_load : 
@@ -457,27 +505,34 @@ tbl_load :
 push : d ; 
 tbl_load : 
 push : foo ; 
-tbl_load : , address/sized-value = 1 ; 
+push : 1 ; 
+tbl_store : 
+push : , address/sized-value = 572 ; 
 push : unknown: 'a' ; 
 push : unknown: 'b' ; 
 tbl_load : , address/sized-value = 1 ; 
 push : c ; 
-tbl_load : 
-push : , address/sized-value = 510 ; 
-push : unknown: 'a' ; 
-line_num : input.dv ; , address/sized-value = 94 ; 
+tbl_load : false ; 
+line_num : input.dv ; , address/sized-value = 101 ; 
 call : , address/sized-value = 0 ; 
+pop : 
+push : , address/sized-value = 612 ; 
+line_num : input.dv ; , address/sized-value = 102 ; 
+call : function_call: 'a' ; , address/sized-value = 0 ; 
 push : b ; 
-tbl_load : 
-push : foo ; 
+push : 2 ; 
+tbl_store : 
 push : unknown: 'a' ; 
 push : 1 ; 
 store : 
+push : unknown: 'n' ; 
 push : 5 ; 
 push : 5 ; 
 add : 
 push : 2 ; 
 div : 
+store : 
+push : unknown: 'n' ; 
 push : 2 ; 
 push : 2 ; 
 mul : 
@@ -485,5 +540,6 @@ push : 3 ;
 mod : 
 push : 1 ; 
 add : 
+store : 
 halt : 
 compiled input.dv successfully

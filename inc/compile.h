@@ -64,6 +64,9 @@ bool is_lhs_a_call( iter_t const & i );
 // semantic errors output to stdout
 bool CheckSemantics( tree_parse_info<iterator_t, factory_t> info );
 
+// helper to discard the top of stack if the result of a statement isn't used
+bool discard_if_unused( iter_t const & i, iter_t const & parent, bool on_lhs_of_assign, int child_num, int child = 0 );
+
 // generate IL bytecode
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_number );
 bool GenerateIL( tree_parse_info<iterator_t, factory_t> info, InstructionStream & is, bool debug_info, const char* const modulename = NULL );

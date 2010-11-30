@@ -24,12 +24,10 @@
 
 #importing foo;
 
-# somewhat odd, perhaps, but these produce no error and no code,
-# as the compiler just sees them as unused identifiers...
-foobar;
-breakdance;
-continueon;
-returned;
+foobar = 0;
+breakdance=1;
+continueon=2;
+returned=3;
 
 formation = 0;
 print( formation );

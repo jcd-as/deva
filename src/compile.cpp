@@ -833,6 +833,29 @@ void generate_destructor( const string name, iter_t const & i, InstructionStream
 	is.push( Instruction( op_endf ) );
 }
 
+bool discard_if_unused( iter_t const & i, iter_t const & parent, bool on_lhs_of_assign, int child_num, int child /*= 0*/ )
+{
+	boost::spirit::classic::parser_id pid = parent->value.id();
+	if( (i->children.size() == child+1 
+			|| i->children[child+1].value.id() != arg_list_exp_id )
+		&& (pid == translation_unit_id 
+		|| pid == compound_statement_id 
+		|| (pid == dot_op_id && parent->children.begin() != i)
+		// and, if this is from code that is being run dynamically, an
+		// identifier may itself be the parent
+		|| pid == identifier_id
+		|| pid == func_id 
+		|| pid == else_s_id
+		|| (pid == while_s_id && child_num != 0)
+		|| (pid == for_s_id && child_num != 0)
+		|| (pid == if_s_id  && child_num != 0) ) )
+	{
+		if( !on_lhs_of_assign )
+			return true;
+	}
+	return false;
+}
+
 void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t const & parent, int child_num )
 {
 	///////////////////////////////////////
@@ -1746,8 +1769,10 @@ void generate_IL_for_node( iter_t const & i, InstructionStream & is, iter_t cons
 			gen_IL_key_exp( i->children[1].children.begin(), is );
 		}
 		else
+		{
 			// this generates a tbl_load instruction
 			gen_IL_dot_op( i, is );
+		}
 	}
 	// paren ops
 	else if( i->value.id() == parser_id( open_paren_op_id )

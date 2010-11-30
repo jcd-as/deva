@@ -802,12 +802,67 @@ void check_local( iter_t const & i )
 	// 0 children
 }
 
+bool is_valid_statement( iter_t const & i )
+{
+	// check each child for semantically valid statement:
+	// 	- compound statement
+	// 	- if, else
+	// 	- for, while
+	// 	- fcn def
+	// 	- assignment, op-assignment (e.g. +=)
+	// 	- fcn call (id w/ arg_exp, or dot-op chain w/ arg_exp at end of rhs of first dot-op)
+	// 	- break, continue, return
+	// 	- class def
+	// 	- import 
+	parser_id id = i->value.id();
+	if( id == compound_statement_id 
+		|| id == if_s_id
+		|| id == else_s_id
+		|| id == for_s_id
+		|| id == while_s_id
+		|| id == func_id
+		|| id == assignment_op_id
+		|| id == add_assignment_op_id
+		|| id == sub_assignment_op_id
+		|| id == mul_assignment_op_id
+		|| id == div_assignment_op_id
+		|| id == mod_assignment_op_id
+		|| id == break_statement_id
+		|| id == continue_statement_id
+		|| id == return_statement_id
+		|| id == class_decl_id
+		|| id == import_statement_id )
+		return true;
+	else if( (id == identifier_id && i->children.size() > 0 && i->children[0].value.id() == arg_list_exp_id)
+		|| (id == dot_op_id 
+			&& i->children[1].value.id() == identifier_id 
+			&& i->children[1].children.size() > 0
+			&& i->children[1].children[0].value.id() == arg_list_exp_id ) )
+		return true;
+	else 
+		return false;
+}
+
 void check_translation_unit( iter_t const & i )
 {
+	// check each child for valid statement
+	for( int c = 0; c < i->children.size(); c++ )
+	{
+		iter_t const & it = i->children.begin() + c;
+		if( !is_valid_statement( it ) )
+			throw DevaSemanticException( "Invalid statement. Produces no meaningful results.", it->value.value() );
+	}
 }
 
 void check_compound_statement( iter_t const & i )
 {
+	// check each child for valid statement
+	for( int c = 0; c < i->children.size(); c++ )
+	{
+		iter_t const & it = i->children.begin() + c;
+		if( !is_valid_statement( it ) )
+			throw DevaSemanticException( "Invalid statement. Produces no meaningful results.", it->value.value() );
+	}
 }
 
 void check_break_statement( iter_t const & i )

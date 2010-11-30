@@ -666,25 +666,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 		// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
 		// then the return value is not being used, 
 		// emit a pop instruction to discard it
-		boost::spirit::classic::parser_id id = parent->value.id();
-		if( (i->children.size() == 1 || i->children[1].value.id() != arg_list_exp_id )
-			&& (id == translation_unit_id 
-			|| id == compound_statement_id 
-			// oddly, if the dot-op expression is at the global scope, there may
-			// not be a translation_unit as its parent...
-			|| (id == dot_op_id && parent->children.begin() != i)
-			// and, if this is from code that is being run dynamically, an
-			// identifier may itself be the parent
-			|| id == identifier_id
-			|| id == func_id 
-			|| id == else_s_id
-			|| (id == while_s_id && child_num != 0)
-			|| (id == for_s_id && child_num != 0)
-			|| (id == if_s_id  && child_num != 0) ) )
-		{
-			if( !on_lhs_of_assign )
-				is.push( Instruction( op_pop ) );
-		}
+		if( discard_if_unused( i, parent, on_lhs_of_assign, child_num ) )
+			is.push( Instruction( op_pop ) );
 
 		// generate the calls, back patches and (if needed)
 		// return-value-pops for any chained arg lists
@@ -711,25 +694,8 @@ void gen_IL_identifier( iter_t const & i, InstructionStream & is, iter_t const &
 				// *OR* if the parent is a loop, a condition (if) *AND* this is the conditional,
 				// then the return value is not being used, 
 				// emit a pop instruction to discard it
-				boost::spirit::classic::parser_id id = parent->value.id();
-				if( (i->children.size() == c+1 || i->children[c+1].value.id() != arg_list_exp_id )
-					&& (id == translation_unit_id 
-					|| id == compound_statement_id 
-					// oddly, if the dot-op expression is at the global scope, there may
-					// not be a translation_unit as its parent...
-					|| (id == dot_op_id && parent->children.begin() != i)
-					// and, if this is from code that is being run dynamically, an
-					// identifier may itself be the parent
-					|| id == identifier_id
-					|| id == func_id 
-					|| id == else_s_id
-					|| (id == while_s_id && child_num != 0)
-					|| (id == for_s_id && child_num != 0)
-					|| (id == if_s_id  && child_num != 0) ) )
-				{
-					if( !on_lhs_of_assign )
-						is.push( Instruction( op_pop ) );
-				}
+				if( discard_if_unused( i, parent, on_lhs_of_assign, child_num, c ) )
+					is.push( Instruction( op_pop ) );
 			}
 		}
 	}

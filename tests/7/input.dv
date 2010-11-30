@@ -87,18 +87,34 @@ else
 # [missing: z]
 # 3: halt
 
-a.b;
-a.b.c.d;
-a.b.c.d["foo"];
-a[b].c;
-a().b;
+# as of fixes in 11/10 the semantic checker will now flag this as invalid, as
+# they produce no results:
+#a.b;
+#a.b.c.d;
+#a.b.c.d["foo"];
+#a[b].c;
+#a().b;
+# these work instead, though:
+a.b();
+a.b.c.d = 0;
+a.b.c.d["foo"] = 1;
+a[b].c();
+a().b = 2;
+
 # test opcodes
-"foo";
+# now an error (produces no result):
+#"foo";
 a = 1;
 # 5
-(5 + 5) / 2;
+# now an error (produces no result):
+#(5 + 5) / 2;
+# but this works instead:
+n = (5 + 5) / 2;
 # 2
-(2 * 2) % 3 + 1;
+# now an error (produces no result):
+#(2 * 2) % 3 + 1;
+# but this works instead:
+ n = (2 * 2) % 3 + 1;
 
 # equivalent of
 # a.b => a["b"]
