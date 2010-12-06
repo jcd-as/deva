@@ -31,6 +31,9 @@ statement
 	|	compound_statement
 	|	while_statement
 	|	for_statement
+	|	if_statement
+	|	import_statement
+	|	jump_statement
 	|	func_decl
 	;
 
@@ -50,9 +53,7 @@ class_decl
 	;
 
 assign_stat
-	: exp -> exp
-	| ID '=' exp -> ^('=' ID exp)
-	| ID '=' vec_init -> ^('=' vec_init)
+	: ID '=' exp -> ^('=' ID exp)
 	;
 
 while_statement 
@@ -60,29 +61,47 @@ while_statement
 	;
 
 for_statement 
-	:	'for' '(' exp (',' exp)? in_exp ')' statement
+	:	'for' '(' in_exp ')' statement
 	;
 
+if_statement 
+	:	'if' '(' exp ')' statement else_statement?
+	;
 
+else_statement 
+	:	'else' statement
+	;
 
+import_statement 
+	:	'import' MODULE_NAME ';'
+	;
+	
+jump_statement 
+	:	break_statement
+	|	continue_statement
+	|	return_statement
+	;
+
+break_statement 
+	:	'break' ';'
+	;
+
+continue_statement 
+	:	'continue' ';'
+	;
+
+return_statement 
+	:	'return' logical_exp ';'
+	|	'return' ';'
+	;
 
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
 	
 exp
-// 	:	add_exp
  	:	logical_exp
  	;
- 		
-vec_init 
-	: '[' vec_element  (',' vec_element)* ']' -> ^( Vec_Init vec_element+)
-	;
-
-vec_element
-	: atom
-	| vec_init
-	;
 
 arg_list_decl
 	: '(' (arg (',' arg)*)? ')'
@@ -93,12 +112,24 @@ arg
 	;
 
 in_exp 
-	:	'in' exp
+	:	exp (',' exp)? 'in' exp
+	;
+
+const_decl 
+	:	'const' ID
+	;
+
+local_decl
+	:	'local' ID
+	;
+
+new_decl 
+	:	'new' (ID ('.' ID)*)+
 	;
 
 logical_exp 
 	:	relational_exp (LOGICAL_OP relational_exp)*
-//	| (map_op | vec_op)
+	|	(map_op | vec_op)
 	;
 
 relational_exp 
@@ -111,7 +142,7 @@ add_exp
 	;
 	
 mul_exp
-	:	unary_exp (MUL_OP unary_exp)* 	//atom (MUL_OP^ atom)*
+	:	unary_exp (MUL_OP unary_exp)*
 	;
 	
 unary_exp 
@@ -121,11 +152,11 @@ unary_exp
 
 postfix_exp 
 	:	postfix_only_exp ('.' postfix_only_exp)*
-	|	primary_exp
 	;
 	
 postfix_only_exp 
 	:	ID (arg_list_exp | key_exp)?
+	|	atom
 	;
 
 // argument list use, not declaration ('()'s & contents)
@@ -140,21 +171,27 @@ key_exp
 	:	'[' ('$' | add_exp) (( ':' ('$' | add_exp) (':' add_exp)? ))? ']' 
 	;
 
+// map construction op
+map_op 
+	:	'{' (exp ':' exp)? (',' exp ':' exp)* '}'
+	;
+
+// vector construction op
+vec_op 
+	:	'[' (exp (',' exp)*)? ']' -> ^( Vec_Init exp+)
+	;
+
 primary_exp 
-	:	BOOL
-	| 	NULL
+	:	atom
 	| 	ID
-	| 	NUMBER
-	| 	STRING
-	|	'(' exp ')'
 	;
 
 atom
-	:
-	NUMBER
-	| ID
-	| STRING
-	| '('! exp ')'!
+	:	BOOL
+	|	NULL
+	|	NUMBER
+	| 	STRING
+	| 	'('! exp ')'!
 	;
 
 /////////////////////////////////////////////////////////////////////////////
