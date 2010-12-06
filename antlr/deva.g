@@ -8,7 +8,19 @@ options
 
 tokens
 {
-	Vec_Init;	// "imaginary" token for vector initialization
+	// "imaginary" tokens for AST
+	Vec_init;
+	Map_init;
+	Base_classes;
+	Arg_list_decl;
+	Arg_list;
+	Def_arg;
+	Const_assign;
+	Local_assign;
+	Key;
+	Condition;
+	Block;
+	
 	NULL = 'null';
 }
 
@@ -17,7 +29,7 @@ tokens
 /////////////////////////////////////////////////////////////////////////////
 
 translation_unit
-	: top_level_statement* {System.out.println( $top_level_statement.tree == null ? "null" : $top_level_statement.tree.toStringTree() ); }
+	: top_level_statement*
 	EOF
 	;
 
@@ -38,42 +50,48 @@ statement
 	;
 
 compound_statement 
-	:	'{'! statement* '}'!
+	:	'{' statement* '}'								-> ^(Block statement*)
 	;
 
 func_decl 
-	:	'def' ID arg_list_decl compound_statement
+	:	'def' ID arg_list_decl compound_statement		-> ^('def' ID arg_list_decl compound_statement)
 	;
 
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)?
-	'{'
-	func_decl*
-	'}'
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' -> ^('class' ID ^(Base_classes ID+) func_decl*)
 	;
 
+// TODO: prevent new_decl's from parsing with +=, -= etc ?
 assign_stat
-	: ID '=' exp -> ^('=' ID exp)
+	: 	const_decl '=' value							-> ^(const_decl value)
+	| 	local_decl '=' new_decl							-> ^(local_decl new_decl)
+	| 	local_decl '=' logical_exp						-> ^(local_decl logical_exp)
+	|	postfix_exp assignment_op assign_or_new			-> ^(assignment_op postfix_exp assign_or_new)
+	;
+
+assign_or_new 
+	:	new_decl										-> new_decl
+	|	logical_exp										-> logical_exp
 	;
 
 while_statement 
-	:	'while' '(' exp ')' statement
+	:	'while' '(' exp ')' statement					-> ^('while' ^(Condition exp) statement)
 	;
 
 for_statement 
-	:	'for' '(' in_exp ')' statement
+	:	'for' '(' in_exp ')' statement					-> ^('for' in_exp statement)
 	;
 
-if_statement 
-	:	'if' '(' exp ')' statement else_statement?
+if_statement
+	:	'if' '(' exp ')' statement else_statement?		-> ^('if' ^(Condition exp) statement)
 	;
 
 else_statement 
-	:	'else' statement
+	:	'else' statement								-> ^('else' statement)
 	;
 
 import_statement 
-	:	'import' MODULE_NAME ';'
+	:	'import' MODULE_NAME ';'						-> ^('import' MODULE_NAME)
 	;
 	
 jump_statement 
@@ -83,16 +101,16 @@ jump_statement
 	;
 
 break_statement 
-	:	'break' ';'
+	:	'break' ';'!
 	;
 
 continue_statement 
-	:	'continue' ';'
+	:	'continue' ';'!
 	;
 
 return_statement 
-	:	'return' logical_exp ';'
-	|	'return' ';'
+	:	'return' logical_exp ';'						-> ^('return' logical_exp)
+	|	'return' ';'!
 	;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -104,27 +122,35 @@ exp
  	;
 
 arg_list_decl
-	: '(' (arg (',' arg)*)? ')'
+	: '(' (arg (',' arg)*)? ')'							-> ^(Arg_list_decl arg*)
 	;
 
 arg 
-	:	ID ('=' (BOOL | NULL | ID | NUMBER | STRING))?
+	:	ID ('=' default_arg_val)?						-> ^(Def_arg ID default_arg_val?)
 	;
 
 in_exp 
-	:	exp (',' exp)? 'in' exp
+	:	exp (',' exp)? 'in' exp							-> ^('in' exp+)
 	;
 
 const_decl 
-	:	'const' ID
+	:	'const' ID										-> ^('const' ID)
 	;
 
 local_decl
-	:	'local' ID
+	:	'local' ID										-> ^('local' ID)
 	;
 
 new_decl 
-	:	'new' (ID ('.' ID)*)+
+	:	'new' dotted_name								-> ^('new' dotted_name)
+	;
+
+dotted_name 
+	:	ID dotted_name_continuation* arg_list_exp		->ID dotted_name_continuation arg_list_exp
+	;
+	
+dotted_name_continuation 
+	:	('.' ID)										-> ^('.' ID)*
 	;
 
 logical_exp 
@@ -147,50 +173,71 @@ mul_exp
 	
 unary_exp 
 	:	postfix_exp
-	|	(UNARY_OP postfix_exp)
+	|	(UNARY_OP postfix_exp)							-> ^(UNARY_OP postfix_exp)
 	;
 
 postfix_exp 
-	:	postfix_only_exp ('.' postfix_only_exp)*
+	:	postfix_only_exp postfix_exp_continuation*
+	;
+	
+postfix_exp_continuation 
+	:	('.' postfix_only_exp)							-> ^('.' postfix_only_exp)
 	;
 	
 postfix_only_exp 
-	:	ID (arg_list_exp | key_exp)?
+	:	ID (arg_list_exp | key_exp)?					-> ID arg_list_exp? key_exp?
 	|	atom
 	;
 
 // argument list use, not declaration ('()'s & contents)
 arg_list_exp 
 	:	
-	'(' (exp (',' exp)*)? ')'
+	'(' (exp (',' exp)*)? ')'							-> ^(Arg_list exp*)
 	;
 
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 
 // not general expressions
 key_exp 
-	:	'[' ('$' | add_exp) (( ':' ('$' | add_exp) (':' add_exp)? ))? ']' 
+	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key $start $end? add_exp?)
+	;
+
+index 
+	:	('$' | add_exp)
 	;
 
 // map construction op
 map_op 
-	:	'{' (exp ':' exp)? (',' exp ':' exp)* '}'
+	:	'{' map_item? (',' map_item)* '}'						-> ^(Map_init map_item*)
+	;
+
+map_item 
+	:	(key=exp ':' val=exp)									-> ^($key $val)
 	;
 
 // vector construction op
 vec_op 
-	:	'[' (exp (',' exp)*)? ']' -> ^( Vec_Init exp+)
+	:	'[' (exp (',' exp)*)? ']' 						-> ^( Vec_init exp*)
 	;
+
+assignment_op 
+	:	'=' | MATH_ASSIGNMENT_OP
+	;	
 
 primary_exp 
 	:	atom
 	| 	ID
 	;
 
+value
+	:	BOOL | NULL | NUMBER | STRING
+	;
+
+default_arg_val
+	:	value | ID
+	;
+	
 atom
-	:	BOOL
-	|	NULL
-	|	NUMBER
-	| 	STRING
+	:	value
 	| 	'('! exp ')'!
 	;
 
@@ -214,11 +261,15 @@ BOOL
 	;
 
 ADD_OP 
-	:	'+' | '-'
+	:	('+' | '-')
 	;
 	
 UNARY_OP 
 	:	'-' | '!'
+	;
+
+MATH_ASSIGNMENT_OP 
+	:	('+=' | '-=' | '*=' | '/=' | '%=')
 	;
 
 RELATIONAL_OP 
