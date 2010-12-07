@@ -13,11 +13,11 @@ tokens
 	Map_init;
 	Base_classes;
 	Arg_list_decl;
-	Arg_list;
+	Call;
 	Def_arg;
 	Const_assign;
 	Local_assign;
-	Key;
+	Key;				// index or slice with one, two or three args
 	Condition;
 	Block;
 	
@@ -39,14 +39,14 @@ top_level_statement
 	;
 
 statement 
-	:	assign_stat ';'!
-	|	compound_statement
+	:	compound_statement
 	|	while_statement
 	|	for_statement
 	|	if_statement
 	|	import_statement
 	|	jump_statement
 	|	func_decl
+	|	assign_statement
 	;
 
 compound_statement 
@@ -56,22 +56,9 @@ compound_statement
 func_decl 
 	:	'def' ID arg_list_decl compound_statement		-> ^('def' ID arg_list_decl compound_statement)
 	;
-
+	
 class_decl 
 	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' -> ^('class' ID ^(Base_classes ID+) func_decl*)
-	;
-
-// TODO: prevent new_decl's from parsing with +=, -= etc ?
-assign_stat
-	: 	const_decl '=' value							-> ^(const_decl value)
-	| 	local_decl '=' new_decl							-> ^(local_decl new_decl)
-	| 	local_decl '=' logical_exp						-> ^(local_decl logical_exp)
-	|	postfix_exp assignment_op assign_or_new			-> ^(assignment_op postfix_exp assign_or_new)
-	;
-
-assign_or_new 
-	:	new_decl										-> new_decl
-	|	logical_exp										-> logical_exp
 	;
 
 while_statement 
@@ -91,7 +78,7 @@ else_statement
 	;
 
 import_statement 
-	:	'import' MODULE_NAME ';'						-> ^('import' MODULE_NAME)
+	:	'import' module_name ';'						-> ^('import' module_name)
 	;
 	
 jump_statement 
@@ -112,6 +99,23 @@ return_statement
 	:	'return' logical_exp ';'						-> ^('return' logical_exp)
 	|	'return' ';'!
 	;
+		
+// TODO: 
+// - prevent new_decl's from parsing with +=, -= etc ?
+// - prevent 'a[0];' (for instance) from being parsed as a statement
+assign_statement
+	: 	const_decl '=' value ';'						-> ^(const_decl value)
+	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
+	| 	local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	|	(primary_exp ';')=> primary_exp ';'!
+	|	primary_exp assignment_op assign_or_new ';'		-> ^(assignment_op primary_exp assign_or_new)
+	;
+	
+assign_or_new
+	:	new_decl										-> new_decl
+	|	logical_exp										-> logical_exp
+	;
+
 
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
@@ -142,63 +146,55 @@ local_decl
 	;
 
 new_decl 
-	:	'new' dotted_name								-> ^('new' dotted_name)
-	;
-
-dotted_name 
-	:	ID dotted_name_continuation* arg_list_exp		->ID dotted_name_continuation arg_list_exp
-	;
-	
-dotted_name_continuation 
-	:	('.' ID)										-> ^('.' ID)*
+	:	'new' primary_exp
 	;
 
 logical_exp 
-	:	relational_exp (LOGICAL_OP relational_exp)*
+	:	relational_exp (logical_op relational_exp)*
 	|	(map_op | vec_op)
 	;
 
 relational_exp 
-	:	add_exp (RELATIONAL_OP add_exp)*
+	:	add_exp (relational_op add_exp)*
 	;
 
 add_exp
 	:
-	mul_exp (ADD_OP mul_exp)*
+	mul_exp (add_op^ mul_exp)*
 	;
 	
 mul_exp
-	:	unary_exp (MUL_OP unary_exp)*
-	;
-	
-unary_exp 
-	:	postfix_exp
-	|	(UNARY_OP postfix_exp)							-> ^(UNARY_OP postfix_exp)
+	:	unary_exp (mul_op^ unary_exp)*
 	;
 
-postfix_exp 
-	:	postfix_only_exp postfix_exp_continuation*
-	;
-	
-postfix_exp_continuation 
-	:	('.' postfix_only_exp)							-> ^('.' postfix_only_exp)
-	;
-	
-postfix_only_exp 
-	:	ID (arg_list_exp | key_exp)?					-> ID arg_list_exp? key_exp?
+unary_exp 
+	:	primary_exp
+	|	unary_op primary_exp
+	;	
+
+primary_exp 
+	:	(atom ('('|'['|'.'))=> atom! (trailer[$atom.tree])+
 	|	atom
 	;
 
+trailer[CommonTree lhs]
+	:	arg_list_exp									-> ^(Call {$lhs} arg_list_exp)
+	|	key_exp											-> ^(Key {$lhs} key_exp)
+	|	'.' ID											-> ^('.' {$lhs} ID)
+	;
+
+id 	:	ID;
+
 // argument list use, not declaration ('()'s & contents)
-arg_list_exp 
+arg_list_exp//[CommonTree lhs]
 	:	
-	'(' (exp (',' exp)*)? ')'							-> ^(Arg_list exp*)
+	'(' (exp (',' exp)*)? ')'							-> ^(Call /*{$lhs}*/ exp*)
 	;
 
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 
 // not general expressions
-key_exp 
-	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key $start $end? add_exp?)
+key_exp//[CommonTree lhs] 
+	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key /*{$lhs}*/ $start $end? add_exp?)
 	;
 
 index 
@@ -207,11 +203,11 @@ index
 
 // map construction op
 map_op 
-	:	'{' map_item? (',' map_item)* '}'						-> ^(Map_init map_item*)
+	:	'{' map_item? (',' map_item)* '}'				-> ^(Map_init map_item*)
 	;
 
 map_item 
-	:	(key=exp ':' val=exp)									-> ^($key $val)
+	:	(key=exp ':' val=exp)							-> ^($key $val)
 	;
 
 // vector construction op
@@ -220,12 +216,11 @@ vec_op
 	;
 
 assignment_op 
-	:	'=' | MATH_ASSIGNMENT_OP
+	:	'=' | math_assignment_op
 	;	
 
-primary_exp 
-	:	atom
-	| 	ID
+module_name 
+	:	ID ('/' ID)*
 	;
 
 value
@@ -238,8 +233,34 @@ default_arg_val
 	
 atom
 	:	value
+	|	ID
 	| 	'('! exp ')'!
 	;
+
+add_op 
+	:	('+' | '-')
+	;
+	
+unary_op 
+	:	'-' | '!'
+	;
+
+math_assignment_op 
+	:	('+=' | '-=' | '*=' | '/=' | '%=')
+	;
+
+relational_op 
+	:	'>=' | '<=' | '>' | '<' | '==' | '!='
+	;
+
+logical_op 
+	:	'&&' | '||'
+	;
+
+mul_op 
+	:	'*' | '/' | '%'
+	;
+
 
 /////////////////////////////////////////////////////////////////////////////
 // TOKENS
@@ -260,36 +281,8 @@ BOOL
 	:	'true' | 'false'
 	;
 
-ADD_OP 
-	:	('+' | '-')
-	;
-	
-UNARY_OP 
-	:	'-' | '!'
-	;
-
-MATH_ASSIGNMENT_OP 
-	:	('+=' | '-=' | '*=' | '/=' | '%=')
-	;
-
-RELATIONAL_OP 
-	:	'>=' | '<=' | '>' | '<' | '==' | '!='
-	;
-
-LOGICAL_OP 
-	:	'&&' | '||'
-	;
-
-MUL_OP 
-	:	'*' | '/' | '%'
-	;
-
 ID  :	(ALPHA | '_') (ALNUM | '_')*
     ;
-
-MODULE_NAME 
-	:	ID ('/' ID)*
-	;
 
 WS  :   ( ' '
         | '\t'
