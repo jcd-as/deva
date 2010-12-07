@@ -102,18 +102,18 @@ return_statement
 		
 // TODO: 
 // - prevent new_decl's from parsing with +=, -= etc ?
-// - prevent 'a[0];' (for instance) from being parsed as a statement
+// - prevent 'a[0];' (for instance) from being parsed as a statement ?
 assign_statement
 	: 	const_decl '=' value ';'						-> ^(const_decl value)
 	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
-	| 	local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	| 	local_decl '=' logical_exp ';'					-> ^(local_decl logical_exp)
 	|	(primary_exp ';')=> primary_exp ';'!
 	|	primary_exp assignment_op assign_or_new ';'		-> ^(assignment_op primary_exp assign_or_new)
 	;
 	
 assign_or_new
-	:	new_decl										-> new_decl
-	|	logical_exp										-> logical_exp
+	:	new_decl
+	|	logical_exp
 	;
 
 
@@ -150,12 +150,12 @@ new_decl
 	;
 
 logical_exp 
-	:	relational_exp (logical_op relational_exp)*
+	:	relational_exp (logical_op^ relational_exp)*
 	|	(map_op | vec_op)
 	;
 
 relational_exp 
-	:	add_exp (relational_op add_exp)*
+	:	add_exp (relational_op^ add_exp)*
 	;
 
 add_exp
@@ -169,32 +169,30 @@ mul_exp
 
 unary_exp 
 	:	primary_exp
-	|	unary_op primary_exp
+	|	unary_op^ primary_exp
 	;	
 
 primary_exp 
-	:	(atom ('('|'['|'.'))=> atom! (trailer[$atom.tree])+
-	|	atom
+//	:	(atom ('('|'['|'.'))=> atom (trailer^)*
+	:	atom (trailer^)*
 	;
 
-trailer[CommonTree lhs]
-	:	arg_list_exp									-> ^(Call {$lhs} arg_list_exp)
-	|	key_exp											-> ^(Key {$lhs} key_exp)
-	|	'.' ID											-> ^('.' {$lhs} ID)
+trailer
+	:	arg_list_exp
+	|	key_exp
+	|	'.' ID											-> ^('.' ID)
 	;
-
-id 	:	ID;
 
 // argument list use, not declaration ('()'s & contents)
-arg_list_exp//[CommonTree lhs]
+arg_list_exp
 	:	
-	'(' (exp (',' exp)*)? ')'							-> ^(Call /*{$lhs}*/ exp*)
+	'(' (exp (',' exp)*)? ')'							-> ^(Call exp*)
 	;
 
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 
 // not general expressions
-key_exp//[CommonTree lhs] 
-	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key /*{$lhs}*/ $start $end? add_exp?)
+key_exp
+	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key $start $end? add_exp?)
 	;
 
 index 
@@ -274,7 +272,9 @@ NUMBER
 	|	INT
 	;
 
-STRING :  '"' ( ESC_SEQ | ~('\\'|'"') )* '"'
+STRING 
+	:	'"' ( ESC_SEQ | ~('\\'|'"') )* '"'
+	|	'\'' ( ESC_SEQ | ~('\\'|'\'') )* '\''
     ;
 
 BOOL 
@@ -322,17 +322,24 @@ fragment FLOAT
 	:	INT '.' DEC_DIGIT+
 	;
 
-fragment INT :	('+'|'-')? DEC_DIGIT+
+fragment INT 
+	:	DEC_DIGIT+
     ;
 
 fragment
-DEC_DIGIT :	 ('0'..'9') ;
+DEC_DIGIT 
+	:	('0'..'9')
+	;
 
 fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+HEX_DIGIT
+	:	('0'..'9'|'a'..'f'|'A'..'F')
+	;
 
 fragment
-OCT_DIGIT : ('0'..'7');	
+OCT_DIGIT
+	:	('0'..'7')
+	;
 
 fragment
 ALNUM 
@@ -348,11 +355,12 @@ ESC_SEQ
 
 fragment
 OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
+    :	'\\' ('0'..'3') ('0'..'7') ('0'..'7')
+    |	'\\' ('0'..'7') ('0'..'7')
+    |	'\\' ('0'..'7')
     ;
 
 fragment
-UNICODE_ESC :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+UNICODE_ESC
+	:	'\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
