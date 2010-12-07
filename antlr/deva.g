@@ -74,7 +74,7 @@ for_statement
 	;
 
 if_statement
-	:	'if' '(' exp ')' statement else_statement?		-> ^('if' ^(Condition exp) statement)
+	:	'if' '(' exp ')' statement else_statement?		-> ^('if' ^(Condition exp) statement else_statement?)
 	;
 
 else_statement 
@@ -230,6 +230,7 @@ value
 
 default_arg_val
 	:	value | ID
+	|	'-'^ (value | ID)
 		;
 	
 atom
@@ -276,8 +277,8 @@ NUMBER
 	;
 
 STRING 
-	:	'"' ( ESC_SEQ | ~('\\'|'"') )* '"'
-	|	'\'' ( ESC_SEQ | ~('\\'|'\'') )* '\''
+    :	'"' (ESC_SEQ | ~('\\'|'\n'|'"'))* '"'
+    |	'\'' (ESC_SEQ | ~('\\'|'\n'|'\''))* '\''
     ;
 
 BOOL 
@@ -349,21 +350,6 @@ ALNUM
 	:	ALPHA | DEC_DIGIT
 	;
 
-fragment
-ESC_SEQ 
-    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-
-fragment
-OCTAL_ESC
-    :	'\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |	'\\' ('0'..'7') ('0'..'7')
-    |	'\\' ('0'..'7')
-    ;
-
-fragment
-UNICODE_ESC
-	:	'\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-    ;
+ESC_SEQ
+	: '\\' .
+	;

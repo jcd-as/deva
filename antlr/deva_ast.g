@@ -53,7 +53,7 @@ for_statement
 	;
 
 if_statement
-	:	^('if' ^(Condition exp) statement)
+	:	^('if' ^(Condition exp) statement else_statement?)
 	;
 
 else_statement 
@@ -182,7 +182,9 @@ value
 	;
 
 default_arg_val
+//	:	(('-')?)^ value | ID
 	:	value | ID
+	|	^('-' (value | ID))
 	;
 
 math_assignment_op 
