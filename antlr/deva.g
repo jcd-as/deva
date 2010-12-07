@@ -1,4 +1,8 @@
 grammar deva;
+
+// TBD:
+// - line change nodes/hook for debug info ?
+
 options 
 {
 //	language = C;
@@ -15,11 +19,10 @@ tokens
 	Arg_list_decl;
 	Call;
 	Def_arg;
-	Const_assign;
-	Local_assign;
 	Key;				// index or slice with one, two or three args
 	Condition;
 	Block;
+	Negate;				// unary '-' operator, to reduce confusion with binary '-'
 	
 	NULL = 'null';
 }
@@ -50,15 +53,16 @@ statement
 	;
 
 compound_statement 
-	:	'{' statement* '}'								-> ^(Block statement*)
+	:	lc='{' statement* '}'								-> ^(Block[$lc, "Block"] statement*)
 	;
 
 func_decl 
 	:	'def' ID arg_list_decl compound_statement		-> ^('def' ID arg_list_decl compound_statement)
+	|	'def' 'new' arg_list_decl compound_statement		-> ^('def' 'new' arg_list_decl compound_statement)
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' -> ^('class' ID ^(Base_classes ID+) func_decl*)
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' -> ^('class' ID ^(Base_classes ID+)? func_decl*)
 	;
 
 while_statement 
@@ -169,30 +173,29 @@ mul_exp
 
 unary_exp 
 	:	primary_exp
-	|	unary_op^ primary_exp
+	|	'!'^ primary_exp
+	|	'-' primary_exp									-> ^(Negate primary_exp)
 	;	
 
-primary_exp 
-//	:	(atom ('('|'['|'.'))=> atom (trailer^)*
-	:	atom (trailer^)*
-	;
-
-trailer
-	:	arg_list_exp
-	|	key_exp
-	|	'.' ID											-> ^('.' ID)
-	;
-
 // argument list use, not declaration ('()'s & contents)
+primary_exp 
+	:	(atom->atom)
+		(
+			args=arg_list_exp							-> ^(Call $primary_exp $args?)
+		|	indices=key_exp								-> ^(Key $primary_exp $indices	)
+		|	'.' id=ID									-> ^('.' $primary_exp $id)
+		)*
+	;
+
 arg_list_exp
 	:	
-	'(' (exp (',' exp)*)? ')'							-> ^(Call exp*)
+	'('! (exp (','! exp)*)? ')'!
 	;
 
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 
 // not general expressions
 key_exp
-	:	'[' start=index (( ':' end=index (':' add_exp)? ))? ']' 	->^(Key $start $end? add_exp?)
+	:	'['! index (( ':'! index (':'! add_exp)? ))? ']'!
 	;
 
 index 
@@ -227,7 +230,7 @@ value
 
 default_arg_val
 	:	value | ID
-	;
+		;
 	
 atom
 	:	value

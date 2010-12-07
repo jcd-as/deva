@@ -25,6 +25,19 @@ public class Test
 
 		// dump it to stdout
 		System.out.println( t.toStringTree() ); 
+
+		///////////////////////////
+		// Walk resulting tree; create treenode stream first
+		CommonTreeNodeStream nodes = new CommonTreeNodeStream( t );
+
+		// AST nodes have payloads that point into token stream
+		nodes.setTokenStream( tokens );
+
+		// Create a tree Walker attached to the nodes stream
+		deva_ast walker = new deva_ast( nodes );
+
+		// Invoke the start symbol, rule program
+		walker.translation_unit();
 	}
 }
 
