@@ -27,6 +27,31 @@ tokens
 	NULL = 'null';
 }
 
+// prevent antlr from trying to recover from syntax errors:
+@members 
+{
+protected void mismatch( IntStream input, int ttype, BitSet follow )
+throws RecognitionException
+{
+	throw new MismatchedTokenException( ttype, input );
+}
+public Object recoverFromMismatchedSet(IntStream input, RecognitionException e, BitSet follow )
+throws RecognitionException
+{
+	throw e;
+}
+}
+// Alter code generation so catch-clauses get replace with
+// this action.
+@rulecatch
+{
+catch (RecognitionException e)
+{
+	reportError( e );
+	throw e;
+}
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // STATEMENTS
 /////////////////////////////////////////////////////////////////////////////
@@ -277,8 +302,8 @@ NUMBER
 	;
 
 STRING 
-    :	'"' (ESC_SEQ | ~('\\'|'\n'|'"'))* '"'
-    |	'\'' (ESC_SEQ | ~('\\'|'\n'|'\''))* '\''
+    :	'"' (ESC_SEQ | ~('\\'|'"'))* '"'
+    |	'\'' (ESC_SEQ | ~('\\'|'\''))* '\''
     ;
 
 BOOL 

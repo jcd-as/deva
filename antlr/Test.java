@@ -3,8 +3,10 @@ import org.antlr.runtime.tree.*;
 
 public class Test
 {
-	public static void main(String[] args) throws Exception
+	public static void main( String[] args ) throws Exception
 	{
+			System.out.println( args );
+
 		// Create an input character stream from standard in
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 
@@ -23,21 +25,25 @@ public class Test
 		// get the tree
 		Tree t = (Tree)result.getTree();
 
-		// dump it to stdout
-		System.out.println( t.toStringTree() ); 
+		// if '-tree' arg was given
+		if ( args.length>0 && args[0].equals( "-tree" ) )
+		{
+			// dump it to stdout
+			System.out.println( t.toStringTree() ); 
 
-		///////////////////////////
-		// Walk resulting tree; create treenode stream first
-		CommonTreeNodeStream nodes = new CommonTreeNodeStream( t );
+			///////////////////////////
+			// Walk resulting tree; create treenode stream first
+			CommonTreeNodeStream nodes = new CommonTreeNodeStream( t );
 
-		// AST nodes have payloads that point into token stream
-		nodes.setTokenStream( tokens );
+			// AST nodes have payloads that point into token stream
+			nodes.setTokenStream( tokens );
 
-		// Create a tree Walker attached to the nodes stream
-		deva_ast walker = new deva_ast( nodes );
+			// Create a tree Walker attached to the nodes stream
+			deva_ast walker = new deva_ast( nodes );
 
-		// Invoke the start symbol, rule program
-		walker.translation_unit();
+			// Invoke the start symbol, rule program
+			walker.translation_unit();
+		}
 	}
 }
 
