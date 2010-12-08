@@ -21,7 +21,7 @@ top_level_statement
 	;
 
 statement 
-	:	compound_statement
+	:	block
 	|	while_statement
 	|	for_statement
 	|	if_statement
@@ -31,33 +31,33 @@ statement
 	|	assign_statement
 	;
 
-compound_statement 
+block 
 	:	^(Block statement*)
 	;
 
 func_decl 
-	:	^('def' ID arg_list_decl compound_statement)
-	|	^('def' 'new' arg_list_decl compound_statement)
+	:	^('def' ID arg_list_decl block)
+	|	^('def' 'new' arg_list_decl block)
 	;
 	
 class_decl 
-	:	^('class' ID (^(Base_classes ID+))? func_decl*)
+	:	^('class' ID (^(Base_classes ID+))? block)
 	;
 
 while_statement 
-	:	^('while' ^(Condition exp) statement)
+	:	^('while' ^(Condition exp) block)
 	;
 
 for_statement 
-	:	^('for' in_exp statement)
+	:	^('for' in_exp block)
 	;
 
 if_statement
-	:	^('if' ^(Condition exp) statement else_statement?)
+	:	^('if' ^(Condition exp) block else_statement?)
 	;
 
 else_statement 
-	:	^('else' statement)
+	:	^('else' block)
 	;
 
 import_statement 
@@ -85,18 +85,19 @@ return_statement
 		
 assign_statement
 	: 	^('const' exp value)
-	|	^('local' exp 'new'? exp?)
-//	|	^(assignment_op exp assign_or_new)
-	|	^(assignment_op exp 'new'? exp)
+	|	^('local' exp 'new'? exp)
+	|	^('extern' exp exp)
+	|	^('=' exp 'new'? (exp|assign_rhs))
+	|	^(math_assignment_op exp exp)
 	|	exp
+	;
+
+
+assign_rhs 
+	:	^('=' exp (assign_rhs|exp))
 	;
 	
-assign_or_new
-	:	new_decl
-	|	exp
-	;
-
-
+	
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
@@ -153,6 +154,10 @@ local_decl
 	:	^('local' ID)
 	;
 
+external_decl
+	:	^('external' ID)
+	;
+
 new_decl 
 	:	'new' exp
 	;
@@ -162,7 +167,7 @@ map_op
 	;
 
 map_item 
-	:	^(exp exp)
+	:	^(Pair exp exp)
 	;
 
 vec_op 
@@ -182,7 +187,6 @@ value
 	;
 
 default_arg_val
-//	:	(('-')?)^ value | ID
 	:	value | ID
 	|	^('-' (value | ID))
 	;

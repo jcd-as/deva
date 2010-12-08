@@ -1,7 +1,7 @@
 grammar deva;
 
 // TBD:
-// - line change nodes/hook for debug info ?
+// -
 
 options 
 {
@@ -13,15 +13,16 @@ options
 tokens
 {
 	// "imaginary" tokens for AST
-	Vec_init;
-	Map_init;
-	Base_classes;
-	Arg_list_decl;
-	Call;
-	Def_arg;
+	Vec_init;			// vector initializer
+	Map_init;			// map initializer
+	Pair;				// pair (map item)
+	Base_classes;		// base class list
+	Arg_list_decl;		// argument list declaration
+	Call;				// function call
+	Def_arg;			// define function argument 
 	Key;				// index or slice with one, two or three args
-	Condition;
-	Block;
+	Condition;			// if condition
+	Block;				// code block (body of if,else,while,for,function def)
 	Negate;				// unary '-' operator, to reduce confusion with binary '-'
 	
 	NULL = 'null';
@@ -77,6 +78,11 @@ statement
 	|	assign_statement
 	;
 
+block 
+	:	compound_statement
+	|	statement											-> ^(Block statement)
+	;
+
 compound_statement 
 	:	lc='{' statement* '}'								-> ^(Block[$lc, "Block"] statement*)
 	;
@@ -87,27 +93,27 @@ func_decl
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' -> ^('class' ID ^(Base_classes ID+)? func_decl*)
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^('class' ID ^(Base_classes ID+)? ^(Block func_decl*))
 	;
 
 while_statement 
-	:	'while' '(' exp ')' statement					-> ^('while' ^(Condition exp) statement)
-	;
+	:	'while' '(' exp ')' block							-> ^('while' ^(Condition exp) block)
+	;	
 
 for_statement 
-	:	'for' '(' in_exp ')' statement					-> ^('for' in_exp statement)
+	:	'for' '(' in_exp ')' block							-> ^('for' in_exp block)
 	;
 
 if_statement
-	:	'if' '(' exp ')' statement else_statement?		-> ^('if' ^(Condition exp) statement else_statement?)
+	:	'if' '(' exp ')' block else_statement?				-> ^('if' ^(Condition exp) block else_statement?)
 	;
 
 else_statement 
-	:	'else' statement								-> ^('else' statement)
+	:	'else' block										-> ^('else' block)
 	;
 
 import_statement 
-	:	'import' module_name ';'						-> ^('import' module_name)
+	:	'import' module_name ';'							-> ^('import' module_name)
 	;
 	
 jump_statement 
@@ -125,26 +131,24 @@ continue_statement
 	;
 
 return_statement 
-	:	'return' logical_exp ';'						-> ^('return' logical_exp)
+	:	'return' logical_exp ';'							-> ^('return' logical_exp)
 	|	'return' ';'!
 	;
 		
-// TODO: 
-// - prevent new_decl's from parsing with +=, -= etc ?
-// - prevent 'a[0];' (for instance) from being parsed as a statement ?
 assign_statement
-	: 	const_decl '=' value ';'						-> ^(const_decl value)
+	: 	const_decl '=' value ';'							-> ^(const_decl value)
 	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
-	| 	local_decl '=' logical_exp ';'					-> ^(local_decl logical_exp)
+	| 	local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	| 	external_decl '=' new_decl ';'						-> ^(external_decl new_decl)
 	|	(primary_exp ';')=> primary_exp ';'!
-	|	primary_exp assignment_op assign_or_new ';'		-> ^(assignment_op primary_exp assign_or_new)
-	;
-	
-assign_or_new
-	:	new_decl
-	|	logical_exp
+	|	(primary_exp '=' 'new')=> primary_exp '=' new_decl ';'	-> ^('=' primary_exp new_decl)
+	|	(primary_exp '=')=> primary_exp '='^ assign_rhs ';'!
+	|	primary_exp math_assignment_op logical_exp ';'		-> ^(math_assignment_op primary_exp logical_exp)
 	;
 
+assign_rhs
+	:	exp	('='^ assign_rhs)?
+	;
 
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
@@ -155,23 +159,27 @@ exp
  	;
 
 arg_list_decl
-	: '(' (arg (',' arg)*)? ')'							-> ^(Arg_list_decl arg*)
+	: '(' (arg (',' arg)*)? ')'								-> ^(Arg_list_decl arg*)
 	;
 
 arg 
-	:	ID ('=' default_arg_val)?						-> ^(Def_arg ID default_arg_val?)
+	:	ID ('=' default_arg_val)?							-> ^(Def_arg ID default_arg_val?)
 	;
 
 in_exp 
-	:	exp (',' exp)? 'in' exp							-> ^('in' exp+)
+	:	exp (',' exp)? 'in' exp								-> ^('in' exp+)
 	;
 
 const_decl 
-	:	'const' ID										-> ^('const' ID)
+	:	'const' ID											-> ^('const' ID)
 	;
 
 local_decl
-	:	'local' ID										-> ^('local' ID)
+	:	'local' ID											-> ^('local' ID)
+	;
+
+external_decl
+	:	'extern' ID											-> ^('extern' ID)
 	;
 
 new_decl 
@@ -199,16 +207,16 @@ mul_exp
 unary_exp 
 	:	primary_exp
 	|	'!'^ primary_exp
-	|	'-' primary_exp									-> ^(Negate primary_exp)
+	|	'-' primary_exp										-> ^(Negate primary_exp)
 	;	
 
 // argument list use, not declaration ('()'s & contents)
 primary_exp 
 	:	(atom->atom)
 		(
-			args=arg_list_exp							-> ^(Call $primary_exp $args?)
-		|	indices=key_exp								-> ^(Key $primary_exp $indices	)
-		|	'.' id=ID									-> ^('.' $primary_exp $id)
+			args=arg_list_exp								-> ^(Call $primary_exp $args?)
+		|	indices=key_exp									-> ^(Key $primary_exp $indices	)
+		|	'.' id=ID										-> ^('.' $primary_exp $id)
 		)*
 	;
 
@@ -229,16 +237,16 @@ index
 
 // map construction op
 map_op 
-	:	'{' map_item? (',' map_item)* '}'				-> ^(Map_init map_item*)
+	:	'{' map_item? (',' map_item)* '}'					-> ^(Map_init map_item*)
 	;
 
 map_item 
-	:	(key=exp ':' val=exp)							-> ^($key $val)
+	:	(key=exp ':' val=exp)								-> ^(Pair $key $val)
 	;
 
 // vector construction op
 vec_op 
-	:	'[' (exp (',' exp)*)? ']' 						-> ^( Vec_init exp*)
+	:	'[' (exp (',' exp)*)? ']' 							-> ^( Vec_init exp*)
 	;
 
 assignment_op 
