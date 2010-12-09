@@ -2,8 +2,12 @@ tree grammar deva_ast;
 
 options
 {
+//	language = Java;
+//	ASTLabelType=CommonTree;
+	language = C;
+	ASTLabelType=pANTLR3_BASE_TREE;
+
 	tokenVocab=deva;
-	ASTLabelType=CommonTree;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -127,10 +131,10 @@ exp
 	;
 
 key_exp
-	:	index (index (exp)? )? 
+	:	idx (idx (exp)? )? 
 	;
 
-index 
+idx 
 	:	('$' | exp)
 	;
 
@@ -183,7 +187,7 @@ module_name
 	;
 
 value
-	:	BOOL | NULL | NUMBER | STRING
+	:	BOOL | NULLVAL | NUMBER | STRING
 	;
 
 default_arg_val

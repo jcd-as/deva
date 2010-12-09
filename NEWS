@@ -1,3 +1,69 @@
+release 0.9.9
+NOTE: THIS IS LIKELY THE FINAL DEVA V.1 SERIES RELEASE. I have started work on deva 2, which is a (nearly) complete re-write. All the deva v1 sources will be moved into a sub-directory and the main directory will become the deva 2 tree.
+Deva v1 was a mostly successful experiment, but was written in a somewhat ad-hoc manner and as I expanded my use of it as a language it became apparent that there are several areas in need of improvement: 1) the parser is even slower than expected. the old boost spirit parser simply creates too much overhead, 2)there are several language issues that I would like to fix, but are difficult with the current parser, 3) the execution engine is not a 'real' VM and the bytecode format falls somewhere between a tree-driven interpreter and 'real' bytecode (meaning that execution is SLOW as well), 4) etc etc. Deva 2 is my attempt to address these a produce a more "real-world-ready" small language.
+
+- fixes to prevent compilation of statements that have no effect (other than possible side effects) such as 'a;' or 'a.b[0];' and changes to tests to make them work with this fix
+- fixed misc bugs around dot ops, calls and key ops ('[]') on both sides of assignments
+- added test 69 to exercise these fixes
+- updated test 7 baseline to current state (though the updated part is still broken: 'a().b' works now, but leaves the result on the stack)
+- prevent assignment into function calls (and math-op assignments e.g. +=)
+- fix for some assignment sequences (e.g. 'a.b.c[0].d().e = 0')
+- bug fix: map methods 'rewind' and 'next' wouldn't work on classes and instances, meaning you couldn't iterate their contents in a 'for' loop
+- bug fix: new fcns/methods with the same name as existing fcns/methods _didn't_ override the existing ones. (defun was calling 'Scope::AddObject' without orphaning any existing object of the same name)
+- added rudimentary 'devash' deva shell
+- renamed 'import' builtin to 'importmodule' so that it doesn't conflict with the keyword (duh)
+- fixed slices: enabled negative indices to work properly, added '$' as a symbol meaning 'end-of-list' (rather than empty indices, like python uses), fixed some bugs and updated test code (json.dv)
+- added a slice test (test 68) which includes euler's sieve among other things
+- changed exit() builtin to have a default value of 0 for the arg
+- updated the language doc
+- enable nested functions!! this was *almost* just a matter of letting the grammar accept them, with a couple of very minor tweaks in the compiler and execution engine to handle them correctly
+- added test 67 to test nested functions and updated the language doc
+- created an 'import' built-in and changed the code-gen for the 'import' statement to call it
+- removed un-needed/used instructions/op-codes: break, output and import
+- fixes 'continue' so that it corrects for scopes it jumps out of
+- changed the code-gen for 'break' statements to generate 'leave' ops and a 'jmp' (like continue) and deprecated the 'break' instruction (to be removed completely before a 1.0 release)
+- added test 66 to test 'continue' more thoroughly (and 'break' too)
+- fixed bug in range() built-in: range generated was [start, ..., end] when it should have been [start, ... end-1]
+- added Executor::PrintDataStack() method for use in devadb stack printing and viewing the deva stack from gdb
+- fixed serious problems with 'break'. this involved making sure that scopes are created for all flow control and loop construct bodies and fixing 'for' loop code-gen to work with breaks. (i would like to move more of the break handling from the execution engine into code-gen, but these fixes enable break to work properly).
+- fixed runtests.dv and glob.dv which were improperly defining variables inside 'if' and 'else' bodies and then using them outside the bodies (which worked before, though it shouldn't have, because no scope was generated for single-line if/else bodies)
+- added test 65 which more thoroughly tests break statements
+- changed test harness to be able to run valgrind against deva in execution-only or compile-and-execute modes. (compile-and-execute takes a LONG time to complete all tests, so you only want to run it when necessary)
+- made two fixes to make compilation valgrind clean
+- removed all valgrind suppressions, which aren't needed with gcc 4.4.3 and valgrind 3.6.0 (and boost 1.4.1)
+- fixed bug in _re module where trying to compile an invalid regular expression resulted in an (un-caught) boost exception instead of a deva error
+- added support for breakpoints using short filenames. for guaranteed match a full path would still be preferred (for all except the main/entry file, which is always a short-name)
+- fixed the devadb 'print' command to print strings inside single quotes
+- rewrote string.split properly and added a bunch of test cases for it (to test 33)
+- also fixed utility fcn split_env_var_paths to use the same algorithm
+- changed printing output for vectors and maps (incl classes and instances) to print string values inside single quotes. improves readability
+- updated many test baselines for this new output
+- fixed files that had mixed tabs & spaces for indentation
+- fixed bug in string.split() which would result in bogus items
+- added support for special methods 'str' and 'repr' on user-defined classes (which are called by built-ins str() and print(), respectively)
+- added test for 'str' and 'repr' special methods
+- updated language doc
+- fixed breakpoint command in devadb to work if only a line number is given (sets bp in current file at that line)
+- added editline (BSD licensed readline) support to devadb
+- added readline support to 'todo.py'
+- moved ICE when all scopes are not clear at ScopeTable deletion into a debug only block
+- fixed the baseline for test 31
+- added factorial.dv illustrating recursive, iterative and 'lispish' (using reduce()) factorial implementations in deva
+- added vector built-ins 'any' and 'all', incl documentation and updated vector built-ins test
+- fix for calling vector map/filter/reduce on class methods
+- test case for vector map/filter/reduce on class methods
+- updated language spec
+- bug fix: range() built-in didn't accept variables as arguments, only numbers
+- vector built-ins map, reduce and filter did not accept methods (needed to pass 'self')
+- fixed breaking change on vec_op compiling which caused test failures. (doh!)
+- devadb: made 'breakpoint' command with no args add a breakpoint at the current file and line
+- fixed bug where '+=' op wouldn't compile if the rhs was a string
+- added simple JSON module (json.dv) and test for it
+- fix for code gen bug where assignments like 'v[0].start = 1' generated bad code. (the index for the key expression for v[0] was never pushed onto the stack).
+- small fix to previous checkin - ensure global scope mem is freed on exit due to error (exception). fixes valgrind tests
+- fixed problem with the order of object deletion at exit from the global scope that could cause destructors not to get called on exit from the global scope (and even segfaults)
+- in devadb breakpoints are now saved between runs of the debugee (within the same devadb session)
+
 release 0.9.8
 - all valgrind tests pass now, though test 50 fails if you run it from runtests.dv because the valgrind process aborts, not sure why yet. if you run it separately, however, it succeeds, so it doesn't appear to be a memory leak issue anyway.
 - fixed memory leaks in do_vector_append and do_map_next, caught by valgrind tests

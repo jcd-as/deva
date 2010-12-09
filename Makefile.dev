@@ -103,7 +103,7 @@ DEVASH_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVASH_SOURCES})
 # if you enable optimization (-O1 or greater) you have to throw
 # -fno-inline-small-functions too, or else the parser will fail to parse
 # anything (code gen bug, I assume)
-CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.8\" -DDEBUG
+CXXFLAGS = -c -g -I inc -DVERSION=\"0.9.9\" -DDEBUG
 #-O2 -fno-inline-small-functions 
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...

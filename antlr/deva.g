@@ -5,9 +5,12 @@ grammar deva;
 
 options 
 {
-//	language = C;
+//	language = Java;
+//	ASTLabelType=CommonTree;
+	language = C;
+	ASTLabelType=pANTLR3_BASE_TREE;
+
 	output = AST;
-	ASTLabelType=CommonTree;
 }
 
 tokens
@@ -25,11 +28,24 @@ tokens
 	Block;				// code block (body of if,else,while,for,function def)
 	Negate;				// unary '-' operator, to reduce confusion with binary '-'
 	
-	NULL = 'null';
+	NULLVAL = 'null';
 }
 
+@parser::includes
+{
+#include "test.h"
+}
+
+@parser::apifuncs 
+{
+	RECOGNIZER->displayRecognitionError = devaDisplayRecognitionError;
+	//RECOGNIZER->recoverFromMismatchedToken = devaNoRecovery;
+	//RECOGNIZER->mismatch = devaNoRecovery;
+	//RECOGNIZER->mismatchRecover = RECOGNIZER->mismatch;
+	//RECOGNIZER->reportError = devaReportError;
+}
 // prevent antlr from trying to recover from syntax errors:
-@members 
+/*@members 
 {
 protected void mismatch( IntStream input, int ttype, BitSet follow )
 throws RecognitionException
@@ -52,6 +68,7 @@ catch (RecognitionException e)
 	throw e;
 }
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////////
 // STATEMENTS
@@ -167,7 +184,7 @@ arg
 	;
 
 in_exp 
-	:	exp (',' exp)? 'in' exp								-> ^('in' exp+)
+	:	ID (',' ID)? 'in' primary_exp						-> ^('in' ID+ primary_exp)
 	;
 
 const_decl 
@@ -228,10 +245,10 @@ arg_list_exp
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 
 // not general expressions
 key_exp
-	:	'['! index (( ':'! index (':'! add_exp)? ))? ']'!
+	:	'['! idx (( ':'! idx (':'! add_exp)? ))? ']'!
 	;
 
-index 
+idx 
 	:	('$' | add_exp)
 	;
 
@@ -258,7 +275,7 @@ module_name
 	;
 
 value
-	:	BOOL | NULL | NUMBER | STRING
+	:	BOOL | NULLVAL | NUMBER | STRING
 	;
 
 default_arg_val
