@@ -1,18 +1,15 @@
-tree grammar deva_ast;
+tree grammar semantic_walker;
 
 options
 {
-//	language = Java;
-//	ASTLabelType=CommonTree;
 	language = C;
 	ASTLabelType=pANTLR3_BASE_TREE;
-
 	tokenVocab=deva;
 }
 
 @includes
 {
-#include "test.h"
+#include "inc/semantics.h"
 }
 
 
@@ -42,15 +39,15 @@ statement
 	;
 
 block 
-@init { devaPushScope( deva_function_name ); deva_in_function--; deva_arg_names.clear(); }
+@init { devaPushScope( semantics->deva_function_name ); semantics->deva_in_function--; semantics->deva_arg_names.clear(); }
 @after { devaPopScope(); }
 	:	^(Block statement*)
 	;
 
 func_decl
-@init { deva_in_function++; }
-	:	^('def' ID arg_list_decl block) { deva_function_name = (char*)$ID.text->chars; }
-	|	^('def' 'new' arg_list_decl block) { deva_function_name = "new"; }
+@init { semantics->deva_in_function++; }
+	:	^('def' ID arg_list_decl block) { semantics->deva_function_name = (char*)$ID.text->chars; }
+	|	^('def' 'new' arg_list_decl block) { semantics->deva_function_name = "new"; }
 	;
 	
 class_decl 
