@@ -10,6 +10,12 @@ options
 	tokenVocab=deva;
 }
 
+@includes
+{
+#include "test.h"
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // STATEMENTS
 /////////////////////////////////////////////////////////////////////////////
@@ -36,12 +42,15 @@ statement
 	;
 
 block 
+@init { devaPushScope( deva_function_name ); { deva_in_function--; } }
+@after { devaPopScope(); }
 	:	^(Block statement*)
 	;
 
-func_decl 
-	:	^('def' ID arg_list_decl block)
-	|	^('def' 'new' arg_list_decl block)
+func_decl
+@init { deva_in_function++; }
+	:	^('def' ID arg_list_decl block) { deva_function_name = (char*)$ID.text->chars; }
+	|	^('def' 'new' arg_list_decl block) { deva_function_name = "new"; }
 	;
 	
 class_decl 
@@ -86,12 +95,14 @@ return_statement
 	:	^('return' exp)
 	|	'return'
 	;
-		
+
+// TODO: none of this code is properly placed
+// (all if it only works when the lhs exp's are IDs ONLY)
 assign_statement
-	: 	^('const' exp value)
-	|	^('local' exp 'new'? exp)
-	|	^('extern' exp exp)
-	|	^('=' exp 'new'? (exp|assign_rhs))
+	: 	^('const' id=exp value) { devaDefineVar( (char*)$id.text->chars, $id.start->getLine($id.start), mod_constant ); }
+	|	^('local' id=exp 'new'? exp) { devaDefineVar( (char*)$id.text->chars, $id.start->getLine($id.start), mod_local ); }
+	|	^('extern' id=exp 'new'? exp) { devaDefineVar( (char*)$id.text->chars, $id.start->getLine($id.start), mod_external ); }
+	|	^('=' exp 'new'? (exp|assign_rhs)) { devaCheckVarForAssign( (char*)$id.text->chars, $id.start->getLine($id.start) ); }
 	|	^(math_assignment_op exp exp)
 	|	exp
 	;
@@ -150,22 +161,6 @@ in_exp
 	:	^('in' exp+)
 	;
 
-const_decl 
-	:	^('const' ID)
-	;
-
-local_decl
-	:	^('local' ID)
-	;
-
-external_decl
-	:	^('external' ID)
-	;
-
-new_decl 
-	:	'new' exp
-	;
-
 map_op 
 	:	^(Map_init map_item*)
 	;
@@ -198,3 +193,5 @@ default_arg_val
 math_assignment_op 
 	:	('+=' | '-=' | '*=' | '/=' | '%=')
 	;
+
+ 
