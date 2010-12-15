@@ -27,6 +27,21 @@ tokens
 	Condition;			// if condition
 	Block;				// code block (body of if,else,while,for,function def)
 	Negate;				// unary '-' operator, to reduce confusion with binary '-'
+	Def;				// 'def' fcn
+	Break;				// 'break'
+	Continue;			// 'continue'
+	Return;				// 'return'
+	Const;				// 'const'
+	Local;				// 'local'
+	Extern;				// 'extern'
+	Class;				// 'class'
+	If;					// 'if'
+	Else;				// 'else'
+	While;				// 'while'
+	For;				// 'for'
+	In;					// 'in'
+	Import;				// 'import'
+	New;				// 'new'
 	
 	NULLVAL = 'null';
 }
@@ -35,11 +50,18 @@ tokens
 {
 #include "inc/semantics.h"
 }
-
+@lexer::includes
+{
+#include "inc/semantics.h"
+}
 @parser::apifuncs 
 {
 	RECOGNIZER->displayRecognitionError = devaDisplayRecognitionError;
 	//RECOGNIZER->reportError = devaReportError;
+}
+@lexer::apifuncs
+{
+	RECOGNIZER->displayRecognitionError = devaDisplayRecognitionError;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -77,32 +99,32 @@ compound_statement
 	;
 
 func_decl 
-	:	'def' ID arg_list_decl compound_statement		-> ^('def' ID arg_list_decl compound_statement)
-	|	'def' 'new' arg_list_decl compound_statement		-> ^('def' 'new' arg_list_decl compound_statement)
+	:	'def' ID arg_list_decl compound_statement		-> ^(Def ID arg_list_decl compound_statement)
+	|	'def' 'new' arg_list_decl compound_statement		-> ^(Def 'new' arg_list_decl compound_statement)
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^('class' ID ^(Base_classes ID+)? ^(Block func_decl*))
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? ^(Block func_decl*))
 	;
 
 while_statement 
-	:	'while' '(' exp ')' block							-> ^('while' ^(Condition exp) block)
+	:	'while' '(' exp ')' block							-> ^(While ^(Condition exp) block)
 	;	
 
 for_statement 
-	:	'for' '(' in_exp ')' block							-> ^('for' in_exp block)
+	:	'for' '(' in_exp ')' block							-> ^(For in_exp block)
 	;
 
 if_statement
-	:	'if' '(' exp ')' block else_statement?				-> ^('if' ^(Condition exp) block else_statement?)
+	:	'if' '(' exp ')' block else_statement?				-> ^(If ^(Condition exp) block else_statement?)
 	;
 
 else_statement 
-	:	'else' block										-> ^('else' block)
+	:	'else' block										-> ^(Else block)
 	;
 
 import_statement 
-	:	'import' module_name ';'							-> ^('import' module_name)
+	:	'import' module_name ';'							-> ^(Import module_name)
 	;
 	
 jump_statement 
@@ -112,22 +134,23 @@ jump_statement
 	;
 
 break_statement 
-	:	'break' ';'!
+	:	'break' ';'											-> Break
 	;
 
 continue_statement 
-	:	'continue' ';'!
+	:	'continue' ';'										->Continue
 	;
 
 return_statement 
-	:	'return' logical_exp ';'							-> ^('return' logical_exp)
-	|	'return' ';'!
+	:	'return' logical_exp ';'							-> ^(Return logical_exp)
+	|	'return' ';'										-> Return
 	;
 		
 assign_statement
 	: 	const_decl '=' value ';'							-> ^(const_decl value)
 	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
 	| 	local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	| 	(external_decl ';')=> external_decl ';'!
 	| 	(external_decl '=' 'new')=> external_decl '=' new_decl ';'	-> ^(external_decl new_decl)
 	| 	external_decl '=' logical_exp ';'					-> ^(external_decl logical_exp)
 	|	(primary_exp ';')=> primary_exp ';'!
@@ -157,23 +180,23 @@ arg
 	;
 
 in_exp 
-	:	ID (',' ID)? 'in' primary_exp						-> ^('in' ID+ primary_exp)
+	:	ID (',' ID)? 'in' primary_exp						-> ^(In ID+ primary_exp)
 	;
 
 const_decl 
-	:	'const' ID											-> ^('const' ID)
+	:	'const' ID											-> ^(Const ID)
 	;
 
 local_decl
-	:	'local' ID											-> ^('local' ID)
+	:	'local' ID											-> ^(Local ID)
 	;
 
 external_decl
-	:	'extern' ID											-> ^('extern' ID)
+	:	'extern' ID											-> ^(Extern ID)
 	;
 
 new_decl 
-	:	'new' primary_exp
+	:	'new' primary_exp									-> ^(New primary_exp)
 	;
 
 logical_exp 
@@ -196,7 +219,7 @@ mul_exp
 
 unary_exp 
 	:	primary_exp
-	|	'!'^ primary_exp
+	|	'!' primary_exp										-> ^(NOT_OP primary_exp)
 	|	'-' primary_exp										-> ^(Negate primary_exp)
 	;	
 
@@ -206,8 +229,9 @@ primary_exp
 		(
 			args=arg_list_exp								-> ^(Call $primary_exp $args?)
 		|	indices=key_exp									-> ^(Key $primary_exp $indices	)
-		|	'.' id=ID										-> ^('.' $primary_exp $id)
+		|	'.' id=ID										-> ^(DOT_OP $primary_exp $id)
 		)*
+		|	value
 	;
 
 arg_list_exp
@@ -222,7 +246,7 @@ key_exp
 	;
 
 idx 
-	:	('$' | add_exp)
+	:	(END_OP | add_exp)
 	;
 
 // map construction op
@@ -239,10 +263,6 @@ vec_op
 	:	'[' (exp (',' exp)*)? ']' 							-> ^( Vec_init exp*)
 	;
 
-assignment_op 
-	:	'=' | math_assignment_op
-	;	
-
 module_name 
 	:	ID ('/' ID)*
 	;
@@ -253,37 +273,36 @@ value
 
 default_arg_val
 	:	value | ID
-	|	'-'^ (value | ID)
+	|	'-' (value | ID)									->^(Negate value? ID?)
 		;
 	
 atom
-	:	value
-	|	ID
+	:	ID
 	| 	'('! exp ')'!
 	;
 
 add_op 
-	:	('+' | '-')
+	:	(ADD_OP | SUB_OP)
 	;
 	
 unary_op 
-	:	'-' | '!'
+	:	'-' | NOT_OP
 	;
 
 math_assignment_op 
-	:	('+=' | '-=' | '*=' | '/=' | '%=')
+	:	(ADD_EQ_OP | SUB_EQ_OP | MUL_EQ_OP | DIV_EQ_OP | MOD_EQ_OP )
 	;
 
 relational_op 
-	:	'>=' | '<=' | '>' | '<' | '==' | '!='
+	:	GT_EQ_OP | LT_EQ_OP | GT_OP | LT_OP | EQ_OP | NOT_EQ_OP 
 	;
 
 logical_op 
-	:	'&&' | '||'
+	:	AND_OP | OR_OP 
 	;
 
 mul_op 
-	:	'*' | '/' | '%'
+	:	MUL_OP | DIV_OP | MOD_OP 
 	;
 
 
@@ -374,5 +393,92 @@ ALNUM
 	;
 
 ESC_SEQ
-	: '\\' .
+	:	'\\' .
+	;
+
+ASSIGN_OP
+	:	'='
+	;
+
+DOT_OP
+	:	'.'
+	;
+
+MUL_OP
+	:	'*'
+	;
+
+DIV_OP
+	:	'/'
+	;
+
+MOD_OP
+	:	'%'
+	;
+
+ADD_OP
+	:	'+'
+	;
+
+SUB_OP
+	:	'-'
+	;
+
+AND_OP
+	:	'&&'
+	;
+
+OR_OP
+	:	'||'
+	;
+
+MUL_EQ_OP
+	:	'*='
+	;
+
+DIV_EQ_OP
+	:	'/='
+	;
+
+MOD_EQ_OP
+	:	'%='
+	;
+
+ADD_EQ_OP
+	:	'+='
+	;
+
+SUB_EQ_OP
+	:	'-='
+	;
+
+END_OP
+	:	'$'
+	;
+
+NOT_OP
+	:	'!'
+	;
+
+GT_EQ_OP
+	:	'>=' 
+	;
+LT_EQ_OP
+	:	'<=' 
+	;
+
+GT_OP
+	:	'>'
+	;
+
+LT_OP
+	:	'<'
+	;
+
+EQ_OP
+	:	'=='
+	;
+
+NOT_EQ_OP
+	:	'!='
 	;

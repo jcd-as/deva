@@ -54,7 +54,7 @@ bool LocalScope::Define( const Symbol* const s )
 	return true;
 }
 
-const Symbol* const LocalScope::Resolve( const string & n ) const
+const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) const
 {
 	// external vars can't be actually resolved until runtime, all we can do is
 	// verify that they have been declared
@@ -64,7 +64,7 @@ const Symbol* const LocalScope::Resolve( const string & n ) const
 		return data.find( n )->second;
 	// check parent scopes
 	if( parent )
-		return parent->Resolve( n );
+		return parent->Resolve( n, type );
 	return NULL;
 }
 
@@ -77,7 +77,8 @@ void LocalScope::Print()
 		if( i->second->IsConst() ) mod = "const";
 		else if( i->second->IsLocal() ) mod = "local";
 		else if( i->second->IsExtern() ) mod = "extern";
-		else mod = "";
+		else if( i->second->Type() == sym_function ) mod = "function";
+		else mod = ""; // ???
 		cout << mod << " " << i->first << "; ";
 	}
 	cout << endl;
@@ -97,7 +98,7 @@ LocalScope::~LocalScope()
 // FunctionScope class methods:
 /////////////////////////////////////////////////////////////////////////////
 
-const Symbol* const FunctionScope::Resolve( const string & n ) const
+const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) const
 {
 	// external vars can't be actually resolved until runtime, all we can do is
 	// verify that they have been declared
@@ -105,7 +106,19 @@ const Symbol* const FunctionScope::Resolve( const string & n ) const
 	// check this scope
 	if( data.count( n ) != 0 )
 		return data.find( n )->second;
-	// function scope, DO NOT check parent scopes
+	// function scope, only look for functions and classes in parent scopes
+	if( type == sym_function || type == sym_class || type == sym_end )
+	{
+		// check parent scopes
+		if( parent )
+		{
+			const Symbol* s = parent->Resolve( n, sym_function );
+			if( (s && type == sym_end) && (s->Type() == sym_function || s->Type() == sym_class) )
+				return s;
+			else
+				return s;
+		}
+	}
 	return NULL;
 }
 

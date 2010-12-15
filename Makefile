@@ -4,18 +4,18 @@
 VPATH = src
 
 # sources/objs for test executable
-DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp
+DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp
 DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 DEVA_C_OBJS=$(patsubst %.cpp, %.o, ${DEVA_C_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 DEVA_DEP_C_FILES=$(patsubst %.c, %.dep, ${DEVA_C_SOURCES})
 
-CXXFLAGS = -c -g -I inc -I "." -I /usr/local/include -DVERSION=\"0.0.1\" -DDEBUG
+CXXFLAGS = -c -g -I inc -I "." -I /usr/local/include -DDEVA_VERSION=\"0.0.1\" -DDEBUG
 #-O2
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-LDFLAGS = -g -L /usr/local/lib -lantlr3c 
+LDFLAGS = -g -L /usr/local/lib -lantlr3c -lboost_program_options -lboost_filesystem 
 #LDFLAGS = -g -undefined dynamic_lookup
 
 all : tags ID deva
@@ -31,10 +31,10 @@ deva : ${DEVA_OBJS} ${DEVA_C_OBJS}
 	#g++ ${LDFLAGS} -lboost_filesystem-mt -o deva ${DEVA_OBJS} ${DEVA_C_OBJS}
 
 devaParser.c devaLexer.c devaLexer.h devaParser.h deva.tokens : deva.g
-	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool deva.g
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu deva.g
 
 semantic_walker.c semantic_walker.h semantic_walker.tokens : semantic_walker.g deva.tokens
-	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool semantic_walker.g
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu semantic_walker.g
 
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<

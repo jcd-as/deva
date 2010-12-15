@@ -1,3 +1,30 @@
+// Copyright (c) 2010 Joshua C. Shepard
+// 
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
+// deva.cpp
+// deva language executor, main program
+// created by jcs, december 09 , 2010 
+
 #include <antlr3.h>
 #include "devaLexer.h"
 #include "devaParser.h"
@@ -5,317 +32,141 @@
 
 #include "semantics.h"
 #include "exceptions.h"
+#include "util.h"
+#include "error.h"
 
 #include <iostream>
 #include <vector>
 #include <boost/format.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
 
 using namespace std;
+namespace po = boost::program_options;
 
 /////////////////////////////////////////////////////////////////////////////
 // globals
 /////////////////////////////////////////////////////////////////////////////
-//Scope* current_scope = NULL;
-//int deva_in_function = 0;
-//char* deva_function_name = NULL;
+// global object to track current filename
+const char* current_file;
+
+int _argc;
+char** _argv;
 
 /////////////////////////////////////////////////////////////////////////////
 // functions
 /////////////////////////////////////////////////////////////////////////////
 
-// TODO: move this to an error/output handling file
-// error display function
-void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UINT8 * tokenNames)
-{
-	// error format sample:
-	// devaParser.c:47: error: ‘tokenNames’ was not declared in this scope
-
-	pANTLR3_PARSER			parser;
-	pANTLR3_TREE_PARSER	    tparser;
-	pANTLR3_INT_STREAM	    is;
-	pANTLR3_STRING			ttext;
-	pANTLR3_STRING			ftext;
-	pANTLR3_EXCEPTION	    ex;
-	pANTLR3_COMMON_TOKEN    theToken;
-	pANTLR3_BASE_TREE	    theBaseTree;
-	pANTLR3_COMMON_TREE	    theCommonTree;
-
-	// Retrieve some info for easy reading.
-	ex = recognizer->state->exception;
-	ttext =	NULL;
-
-	// See if there is a 'filename' we can use
-	if( ex->streamName == NULL )
-	{
-		if( ((pANTLR3_COMMON_TOKEN)(ex->token))->type == ANTLR3_TOKEN_EOF )
-		{
-			ANTLR3_FPRINTF( stderr, "-end of input-:" );
-		}
-		else
-		{
-			ANTLR3_FPRINTF( stderr, "-unknown source-:" );
-		}
-	}
-	else
-	{
-		ftext = ex->streamName->to8( ex->streamName );
-		ANTLR3_FPRINTF( stderr, "%s:", ftext->chars );
-	}
-
-	// Next comes the line number
-	ANTLR3_FPRINTF( stderr, "%d: ", recognizer->state->exception->line );
-//	ANTLR3_FPRINTF(stderr, " : error %d : %s", recognizer->state->exception->type,
-	ANTLR3_FPRINTF( stderr, "error: %s", (pANTLR3_UINT8)	(recognizer->state->exception->message) );
-
-	// How we determine the next piece is dependent on which thing raised the error.
-	switch( recognizer->type )
-	{
-	case ANTLR3_TYPE_PARSER:
-		// Prepare the knowledge we know we have
-		parser	    = (pANTLR3_PARSER) (recognizer->super);
-		tparser	    = NULL;
-		is			= parser->tstream->istream;
-		theToken    = (pANTLR3_COMMON_TOKEN)(recognizer->state->exception->token);
-		ttext	    = theToken->toString( theToken );
-
-		ANTLR3_FPRINTF( stderr, ", at offset %d: ", recognizer->state->exception->charPositionInLine );
-
-		// need newline with the rest of this commented out:
-//		ANTLR3_FPRINTF( stderr, "\n" );
-		//////
-
-//		if  (theToken != NULL)
-//		{
-//			if (theToken->type == ANTLR3_TOKEN_EOF)
-//			{
-//				ANTLR3_FPRINTF(stderr, ", at <EOF>");
-//			}
-//			else
-//			{
-//				// Guard against null text in a token
-//				ANTLR3_FPRINTF(stderr, "\n    near %s\n    ", ttext == NULL ? (pANTLR3_UINT8)"<no text for the token>" : ttext->chars);
-//			}
-//		}
-		break;
-
-	case ANTLR3_TYPE_TREE_PARSER:
-		// developer only error messages
-		tparser		= (pANTLR3_TREE_PARSER) (recognizer->super);
-		parser		= NULL;
-		is			= tparser->ctnstream->tnstream->istream;
-		theBaseTree	= (pANTLR3_BASE_TREE)(recognizer->state->exception->token);
-		ttext		= theBaseTree->toStringTree( theBaseTree );
-
-		if( theBaseTree != NULL )
-		{
-			theCommonTree = (pANTLR3_COMMON_TREE)theBaseTree->super;
-
-			if( theCommonTree != NULL )
-			{
-				theToken = (pANTLR3_COMMON_TOKEN)theBaseTree->getToken( theBaseTree );
-			}
-			ANTLR3_FPRINTF( stderr, ", at offset %d: ", theBaseTree->getCharPositionInLine(theBaseTree) );
-			ANTLR3_FPRINTF( stderr, ", near %s: ", ttext->chars );
-		}
-		break;
-
-	default:
-//		ANTLR3_FPRINTF(stderr, "Base recognizer function displayRecognitionError called by unknown parser type - provide override for this function\n");
-		return;
-		break;
-	}
-
-	// Although this function should generally be provided by the implementation, this one
-	// should be as helpful as possible for grammar developers and serve as an example
-	// of what you can do with each exception type. In general, when you make up your
-	// 'real' handler, you should debug the routine with all possible errors you expect
-	// which will then let you be as specific as possible about all circumstances.
-	//
-	// Note that in the general case, errors thrown by tree parsers indicate a problem
-	// with the output of the parser or with the tree grammar itself. The job of the parser
-	// is to produce a perfect (in traversal terms) syntactically correct tree, so errors
-	// at that stage should really be semantic errors that your own code determines and handles
-	// in whatever way is appropriate.
-	//
-	switch( ex->type )
-	{
-	case ANTLR3_UNWANTED_TOKEN_EXCEPTION:
-		// Indicates that the recognizer was fed a token which seesm to be
-		// spurious input. We can detect this when the token that follows
-		// this unwanted token would normally be part of the syntactically
-		// correct stream. Then we can see that the token we are looking at
-		// is just something that should not be there and throw this exception.
-		//
-		if( tokenNames == NULL )
-		{
-			ANTLR3_FPRINTF( stderr, "Extraneous input...\n" );
-		}
-		else
-		{
-			if( ex->expecting == ANTLR3_TOKEN_EOF )
-			{
-				ANTLR3_FPRINTF( stderr, "Extraneous input - expected <EOF>\n" );
-			}
-			else
-			{
-				ANTLR3_FPRINTF( stderr, "Extraneous input - expected %s ...\n", tokenNames[ex->expecting] );
-			}
-		}
-		break;
-
-	case ANTLR3_MISSING_TOKEN_EXCEPTION:
-
-		// Indicates that the recognizer detected that the token we just
-		// hit would be valid syntactically if preceeded by a particular 
-		// token. Perhaps a missing ';' at line end or a missing ',' in an
-		// expression list, and such like.
-		if( tokenNames == NULL )
-		{
-			ANTLR3_FPRINTF( stderr, "Missing token (%d)...\n", ex->expecting );
-		}
-		else
-		{
-			if( ex->expecting == ANTLR3_TOKEN_EOF )
-			{
-				ANTLR3_FPRINTF( stderr, "Missing <EOF>\n" );
-			}
-			else
-			{
-				ANTLR3_FPRINTF( stderr, "Missing %s\n", tokenNames[ex->expecting] );
-			}
-		}
-		break;
-
-	case ANTLR3_RECOGNITION_EXCEPTION:
-		// Indicates that the recognizer received a token
-		// in the input that was not predicted. This is the basic exception type 
-		// from which all others are derived. So we assume it was a syntax error.
-		// You may get this if there are not more tokens and more are needed
-		// to complete a parse for instance.
-		ANTLR3_FPRINTF( stderr, "Syntax error...\n" );    
-		break;
-
-	case ANTLR3_MISMATCHED_TOKEN_EXCEPTION:
-		// We were expecting to see one thing and got another. This is the
-		// most common error if we coudl not detect a missing or unwanted token.
-		// Here you can spend your efforts to
-		// derive more useful error messages based on the expected
-		// token set and the last token and so on. The error following
-		// bitmaps do a good job of reducing the set that we were looking
-		// for down to something small. Knowing what you are parsing may be
-		// able to allow you to be even more specific about an error.
-		if( tokenNames == NULL )
-		{
-			ANTLR3_FPRINTF( stderr, "Syntax error...\n" );
-		}
-		else
-		{
-			if( ex->expecting == ANTLR3_TOKEN_EOF )
-			{
-				ANTLR3_FPRINTF( stderr, "Expected <EOF>\n" );
-			}
-			else
-			{
-				ANTLR3_FPRINTF(stderr, "Expected %s ...\n", tokenNames[ex->expecting] );
-			}
-		}
-		break;
-
-	case ANTLR3_NO_VIABLE_ALT_EXCEPTION:
-		// We could not pick any alt decision from the input given
-		// so god knows what happened - however when you examine your grammar,
-		// you should. It means that at the point where the current token occurred
-		// that the DFA indicates nowhere to go from here.
-		ANTLR3_FPRINTF( stderr, "Cannot match to any predicted input...\n" );
-		break;
-
-	case ANTLR3_MISMATCHED_SET_EXCEPTION:
-		{
-			ANTLR3_UINT32	  count;
-			ANTLR3_UINT32	  bit;
-			ANTLR3_UINT32	  size;
-			ANTLR3_UINT32	  numbits;
-			pANTLR3_BITSET	  errBits;
-
-			// This means we were able to deal with one of a set of
-			// possible tokens at this point, but we did not see any
-			// member of that set.
-			ANTLR3_FPRINTF( stderr, "Unexpected input, expected one of : " );
-
-			// What tokens could we have accepted at this point in the
-			// parse?
-			count = 0;
-			errBits = antlr3BitsetLoad( ex->expectingSet );
-			numbits = errBits->numBits( errBits );
-			size = errBits->size( errBits );
-
-			if( size > 0 )
-			{
-				// However many tokens we could have dealt with here, it is usually
-				// not useful to print ALL of the set here. I arbitrarily chose 8
-				// here, but you should do whatever makes sense for you of course.
-				// No token number 0, so look for bit 1 and on.
-				for( bit = 1; bit < numbits && count < 8 && count < size; bit++ )
-				{
-					// TODO: This doesn;t look right - should be asking if the bit is set!!
-					if( tokenNames[bit] )
-					{
-						ANTLR3_FPRINTF( stderr, "%s%s", count > 0 ? ", " : "", tokenNames[bit] );
-						count++;
-					}
-				}
-				ANTLR3_FPRINTF( stderr, "\n" );
-			}
-			else
-			{
-//				ANTLR3_FPRINTF(stderr, "Actually dude, we didn't seem to be expecting anything here, or at least\n");
-//				ANTLR3_FPRINTF(stderr, "I could not work out what I was expecting, like so many of us these days!\n");
-			}
-		}
-		break;
-
-	case ANTLR3_EARLY_EXIT_EXCEPTION:
-		// We entered a loop requiring a number of token sequences
-		// but found a token that ended that sequence earlier than
-		// we should have done.
-		ANTLR3_FPRINTF( stderr, "Missing elements...\n" );
-		break;
-
-	default:
-		// We don't handle any other exceptions here, but you can
-		// if you wish. If we get an exception that hits this point
-		// then we are just going to report what we know about the
-		// token.
-		ANTLR3_FPRINTF( stderr, "Syntax not recognized...\n" );
-		break;
-	}
-
-	// Here you have the token that was in error which if this is
-	// the standard implementation will tell you the line and offset
-	// and also record the address of the start of the line in the
-	// input stream. You could therefore print the source line and so on.
-	// Generally though, I would expect that your lexer/parser will keep
-	// its own map of lines and source pointers or whatever as there
-	// are a lot of specific things you need to know about the input
-	// to do something like that.
-	// Here is where you do it though :-).
-}
-
-// TODO: move this to an error/output handling file
-void emit_error( DevaSemanticException & e )
-{
-	// TODO: exceptions need to get the file name somehow
-	// format = filename:linenum: msg
-//	cout << e.file << ":" << e.line << ":" << " error: " << e.what() << endl;
-	cout << "[INPUT]" << ":" << e.line << ":" << " error: " << e.what() << endl;
-}
-
-
 // Main entry point for this example
 //
 int ANTLR3_CDECL main( int argc, char *argv[] )
 {
-	semantics = new Semantics();
+	_argc = argc;
+	_argv = argv;
+
+	// declare the command line options
+	int verbosity = 0;
+	bool debug = false;
+	bool show_warnings = false;
+	bool show_all_scopes = false;
+	bool no_dvc = false;
+	bool show_ast = false;
+	string output;
+	string input;
+	vector<string> inputs;
+	po::options_description desc( "Supported options" );
+	desc.add_options()
+		( "help", "help message" )
+		( "version,ver", "display program version" )
+		( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
+		( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
+		( "show-ast,ast", po::value<bool>( &show_ast )->default_value( false ), "show the AST" )
+		( "show-warnings,w", po::value<bool>( &show_warnings )->default_value( false ), "show warnings" )
+		( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
+		( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
+		( "input", po::value<string>( &input ), "input filename" )
+		( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
+		;
+	po::positional_options_description p;
+	p.add( "input", 1 ).add( "options", -1 );
+	po::variables_map vm;
+	try
+	{
+		po::parsed_options parsed = po::command_line_parser( argc, argv ).options( desc ).allow_unregistered().positional( p ).run();
+		po::store( parsed, vm );
+
+	}
+	catch( po::error & e )
+	{
+		cout << e.what() << endl;
+		return 1;
+	}
+	po::notify( vm );
+
+	// handle the command line args
+	if( vm.count( "help" ) )
+	{
+		cout << desc << endl;
+		return 1;
+	}
+	if( vm.count( "version" ) )
+	{
+		// dump the version number
+		cout << "deva " << DEVA_VERSION << endl;
+		return 1;
+	}
+	if( vm.count( "all-scopes" ) )
+	{
+		show_all_scopes = true;
+	}
+	if( vm.count( "no-dvc" ) )
+	{
+		no_dvc = true;
+	}
+	// must be an input file specified
+	if( !vm.count( "input" ) )
+	{
+		cout << "usage: deva [options] <input_file>" << endl;
+		cout << "(use option --help for more information)" << endl;
+		return 1;
+	}
+
+	// get the filename part and the directory part
+	string in_dir = get_dir_part( input );
+	string fname = get_file_part( input );
+	string ext = get_extension( fname );
+
+	// change cwd to the directory
+	// if the input wasn't a full path:
+	if( in_dir[0] != '/' )
+	{
+		string cwd = get_cwd();
+		string dir = join_paths( cwd, in_dir );
+		if( chdir( dir.c_str() ) != 0 ) 
+		{
+			cout << "error: unable to change the current working directory to " << dir.c_str() << endl;
+			return -1;
+		}
+	}
+	else
+	{
+		if( chdir( in_dir.c_str() ) != 0 )
+		{
+			cout << "error: unable to change the current working directory to " << in_dir.c_str() << endl;
+			return -1;
+		}
+	}
+
+//	bool use_dvc = false;
+//	unsigned char* code;
+//	if( ext != ".dvc" )
+//	{
+//		// TODO: compile?
+//	}
+
+	semantics = new Semantics( show_warnings );
 
 	// setup the global scope
 	semantics->current_scope = new LocalScope( "global", semantics->current_scope );
@@ -327,30 +178,14 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// as instance variables for each invocation.
 	// -------------------
 
-	// Name of the input file. Note that we always use the abstract type pANTLR3_UINT8
-	// for ASCII/8 bit strings - the runtime library guarantees that this will be
-	// good on all platforms. This is a general rule - always use the ANTLR3 supplied
-	// typedefs for pointers/types/etc.
-	//
-	pANTLR3_UINT8 fName;
-
 	// The ANTLR3 character input stream, which abstracts the input source such that
 	// it is easy to privide inpput from different sources such as files, or 
 	// memory strings.
-	//
-	// For an 8Bit/latin-1/etc memory string use:
-	//     input = antlr3New8BitStringInPlaceStream (stringtouse, (ANTLR3_UINT32) length, NULL);
-	//
-	// For a UTF16 memory string use:
-	//     input = antlr3NewUTF16StringInPlaceStream (stringtouse, (ANTLR3_UINT32) length, NULL);
-	//
-	// For input from a file, see code below
-	//
 	// Note that this is essentially a pointer to a structure containing pointers to functions.
 	// You can create your own input stream type (copy one of the existing ones) and override any
 	// individual function by installing your own pointer after you have created the standard 
 	// version.
-	pANTLR3_INPUT_STREAM input;
+	pANTLR3_INPUT_STREAM input_stream;
 
 	// The lexer is of course generated by ANTLR, and so the lexer type is not upper case.
 	// The lexer is supplied with a pANTLR3_INPUT_STREAM from whence it consumes its
@@ -376,7 +211,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// based upon the rule we start with.
 	devaParser_translation_unit_return devaAST;
 
-
 	// The tree nodes are managed by a tree adaptor, which doles
 	// out the nodes upon request. You can make your own tree types and adaptors
 	// and override the built in versions. See runtime source for details and
@@ -388,34 +222,24 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// tree parser.
 	psemantic_walker treePsr;
 
-	// Create the input stream based upon the argument supplied to us on the command line
-	// for this example, the input will always default to ./input if there is no explicit
-	// argument.
-	if( argc < 2 || argv[1] == NULL )
-	{
-		ANTLR3_FPRINTF( stderr, "usage:\ndvtest <input-filename>\n" );
-		exit( -1 );
-	}
-	else
-	{
-	   fName = (pANTLR3_UINT8)argv[1];
-	}
-
 	// Create the input stream using the supplied file name
 	// (Use antlr38BitFileStreamNew for UTF16 input).
-	input = antlr3AsciiFileStreamNew( fName );
+	input_stream = antlr3AsciiFileStreamNew( (unsigned char*)fname.c_str() );
+
+	current_file = fname.c_str();
 
 	// The input will be created successfully, providing that there is enough
 	// memory and the file exists etc
-	if( !input )
+	if( !input_stream )
 	{
-	   ANTLR3_FPRINTF( stderr, "Unable to open file %s due to malloc() failure\n", (char *)fName );
+	   ANTLR3_FPRINTF( stderr, "Unable to open file %s\n", (char *)fname.c_str() );
+	   exit( -1 );
 	}
 
 	// Our input stream is now open and all set to go, so we can create a new instance of our
 	// lexer and set the lexer input to our input stream:
 	//  (file | memory | ?) --> inputstream -> lexer --> tokenstream --> parser ( --> treeparser )?
-	lxr = devaLexerNew( input );      // CLexerNew is generated by ANTLR
+	lxr = devaLexerNew( input_stream );      // CLexerNew is generated by ANTLR
 
 	// Need to check for errors
 	if( !lxr )
@@ -452,33 +276,17 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	   exit( ANTLR3_ERR_NOMEM );
 	}
 
-	// We are all ready to go. Though that looked complicated at first glance,
-	// I am sure, you will see that in fact most of the code above is dealing
-	// with errors and there isn;t really that much to do (isn;t this always the
-	// case in C? ;-).
-	//
-	// So, we now invoke the parser. All elements of ANTLR3 generated C components
-	// as well as the ANTLR C runtime library itself are pseudo objects. This means
-	// that they are represented as pointers to structures, which contain any
-	// instance data they need, and a set of pointers to other interfaces or
-	// 'methods'. Note that in general, these few pointers we have created here are
-	// the only things you will ever explicitly free() as everything else is created
-	// via factories, that allocate memory efficiently and free() everything they use
-	// automatically when you close the parser/lexer/etc.
-	//
-	// Note that this means only that the methods are always called via the object
-	// pointer and the first argument to any method, is a pointer to the structure itself.
-	// It also has the side advantage, if you are using an IDE such as VS2005 that can do it
-	// that when you type ->, you will see a list of all the methods the object supports.
 	devaAST = psr->translation_unit( psr );
+
 	// If the parser ran correctly, we will have a tree to parse. In general I recommend
 	// keeping your own flags as part of the error trapping, but here is how you can
 	// work out if there were errors if you are using the generic error messages
-	if( psr->pParser->rec->state->errorCount > 0 )
-	{
-	   ANTLR3_FPRINTF( stderr, "%d errors. aborted.\n", psr->pParser->rec->state->errorCount );
-	}
-	else
+//	if( psr->pParser->rec->state->errorCount > 0 )
+//	{
+//	   ANTLR3_FPRINTF( stderr, "%d errors. aborted.\n", psr->pParser->rec->state->errorCount );
+//	}
+//	else
+	if( psr->pParser->rec->state->errorCount == 0 )
 	{
 		nodes = antlr3CommonTreeNodeStreamNewTree( devaAST.tree, ANTLR3_SIZE_HINT ); // sIZE HINT WILL SOON BE DEPRECATED!!
 
@@ -505,8 +313,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			lxr->free( lxr );
 			lxr = NULL;
 
-			input->close( input );
-			input = NULL;
+			input_stream->close( input_stream );
+			input_stream = NULL;
 
 			nodes->free( nodes );        
 			nodes = NULL;
@@ -514,27 +322,56 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			treePsr->free( treePsr );      
 			treePsr = NULL;
 
-			// free the symbol tables
-//			for( vector<Scope*>::iterator i = scopes.begin(); i != scopes.end(); ++i )
-//			{
-//				delete *i;
-//				*i = NULL;
-//			}
+			// free the semantic objects (symbol tables et al)
+			delete semantics;
+
+			exit( -1 );
+		}
+		catch( DevaICE & e )
+		{
+			// display an error
+			emit_error( e );
+
+			// clean up
+			psr->free( psr );
+			psr = NULL;
+
+			tstream->free( tstream );
+			tstream = NULL;
+
+			lxr->free( lxr );
+			lxr = NULL;
+
+			input_stream->close( input_stream );
+			input_stream = NULL;
+
+			nodes->free( nodes );        
+			nodes = NULL;
+
+			treePsr->free( treePsr );      
+			treePsr = NULL;
+
+			// free the semantic objects (symbol tables et al)
 			delete semantics;
 
 			exit( -1 );
 		}
 
-		// TODO: only print the text repr of the tree if we're passed an option
-		// on the command line
-		pANTLR3_STRING s = nodes->root->toStringTree( nodes->root );
-		ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
+		// print the text repr of the tree?
+		if( show_ast )
+		{
+			pANTLR3_STRING s = nodes->root->toStringTree( nodes->root );
+			ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
+		}
 
 		// TODO: dump the symbol tables...
-		for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
+		if( debug && verbosity == 3 )
 		{
-			if( *i )
-				(*i)->Print();
+			for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
+			{
+				if( *i )
+					(*i)->Print();
+			}
 		}
 
 		nodes->free( nodes );        
@@ -554,15 +391,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	lxr->free( lxr );
 	lxr = NULL;
 
-	input->close( input );
-	input = NULL;
+	input_stream->close( input_stream );
+	input_stream = NULL;
 
-	// free the symbol tables
-//	for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
-//	{
-//		delete *i;
-//		*i = NULL;
-//	}
+	// free the semantics objects (symbol table et al)
 	delete semantics;
 
 	return 0;

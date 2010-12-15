@@ -46,7 +46,7 @@ struct Scope
 	// define a new symbol, returns false if symbol already exists
 	virtual bool Define( const Symbol* const s ) = 0;
 	// resolve a symbol, returns NULL if cannot be found in this scope
-	virtual const Symbol* const Resolve( const string & name ) const = 0;
+	virtual const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const = 0;
 
 	virtual void Print() = 0;
 
@@ -72,7 +72,7 @@ public:
 	const string & Name() const;
 	Scope* EnclosingScope() const;
 	bool Define( const Symbol* const  s );
-	const Symbol* const Resolve( const string & name ) const;
+	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 	void Print();
 };
 
@@ -88,7 +88,7 @@ public:
 	{}
 
 	// Scope "interface", override the Resolve method
-	const Symbol* const Resolve( const string & name ) const;
+	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 };
 
 

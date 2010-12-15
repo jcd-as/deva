@@ -12,6 +12,12 @@ options
 #include "inc/semantics.h"
 }
 
+@apifuncs 
+{
+	RECOGNIZER->displayRecognitionError = devaDisplayRecognitionError;
+	//RECOGNIZER->reportError = devaReportError;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // STATEMENTS
@@ -35,43 +41,54 @@ statement
 	|	import_statement
 	|	jump_statement
 	|	func_decl
-	|	assign_statement
+	|	assign_statement { semantics->CheckForNoEffect( $assign_statement.start ); }
 	;
 
 block 
-@init { devaPushScope( semantics->deva_function_name ); semantics->deva_in_function--; semantics->deva_arg_names.clear(); }
-@after { devaPopScope(); }
+@init { semantics->arg_names.clear(); semantics->PushScope(); }
+@after { semantics->PopScope(); }
 	:	^(Block statement*)
 	;
 
 func_decl
-@init { semantics->deva_in_function++; }
-	:	^('def' ID arg_list_decl block) { semantics->deva_function_name = (char*)$ID.text->chars; }
-	|	^('def' 'new' arg_list_decl block) { semantics->deva_function_name = "new"; }
+@after { semantics->PopScope(); }
+	:	^(Def id=ID 
+		{ semantics->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars ); if( semantics->in_class ) semantics->DefineVar( const_cast<char*>("self"), $id->getLine($id) ); }
+		arg_list_decl block) 
+	|	^(Def id='new' 
+		{ semantics->PushScope( const_cast<char*>("new") ); semantics->DefineVar( const_cast<char*>("self"), $id->getLine($id) ); }
+		arg_list_decl block)
 	;
 	
 class_decl 
-	:	^('class' ID (^(Base_classes ID+))? block)
+@after { semantics->in_class = false; }
+	:	^(Class id=ID 
+		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->in_class = true; }
+		(^(Base_classes ID+))? block)
 	;
 
 while_statement 
-	:	^('while' ^(Condition exp) block)
+@init { semantics->in_loop++; }
+@after { semantics->in_loop--; }
+	:	^(While ^(Condition con=exp) block) { semantics->CheckConditional( $con.start ); }
 	;
 
 for_statement 
-	:	^('for' in_exp block)
+@init { semantics->in_loop++; semantics->PushScope(); }
+@after { semantics->in_loop--; semantics->PopScope(); }
+	:	^(For in_exp block)
 	;
 
 if_statement
-	:	^('if' ^(Condition exp) block else_statement?)
+	:	^(If ^(Condition con=exp) block else_statement?) { semantics->CheckConditional( $con.start ); }
 	;
 
 else_statement 
-	:	^('else' block)
+	:	^(Else block)
 	;
 
 import_statement 
-	:	^('import' module_name)
+	:	^(Import module_name)
 	;
 	
 jump_statement 
@@ -81,69 +98,84 @@ jump_statement
 	;
 
 break_statement 
-	:	'break'
+	:	brk=Break { semantics->CheckBreakContinue( $brk ); }
 	;
 
 continue_statement 
-	:	'continue'
+	:	con=Continue { semantics->CheckBreakContinue( $con ); }
 	;
 
 return_statement 
-	:	^('return' exp)
-	|	'return'
+	:	^(Return exp)
+	|	Return
 	;
 
-// TODO: move 'devaCheckVarForAssign' call to use of vars in exps, not
-// assignment
 assign_statement
-	: 	^('const' id=ID value) { devaDefineVar( (char*)$id.text->chars, $id->getLine($id), mod_constant ); }
-	|	^('local' id=ID 'new'? exp) { devaDefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
-	|	^('extern' id=ID 'new'? exp) { devaDefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
-	|	^('=' exp 'new'? (exp|assign_rhs)) //{ devaCheckVarForAssign( (char*)$id.text->chars, $id.start->getLine($id.start) ); }
-	|	^(math_assignment_op exp exp)
+	: 	^(Const id=ID value) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_constant ); }
+	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
+	|	^(Local id=ID exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
+	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
+	|	^(Extern id=ID exp?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
+	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^('=' lhs=exp (exp|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(ADD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(SUB_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(MUL_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(DIV_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(MOD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
 	|	exp
 	;
 
-
 assign_rhs 
-	:	^('=' exp (assign_rhs|exp))
+	:	^('=' lhs=exp (assign_rhs|exp)) { semantics->CheckLhsForAssign( $lhs.start ); }
 	;
 	
+new_exp
+	:	^(New exp)
+	;
 	
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
 
 exp
-	:	^('>=' exp exp)
-	|	^('<=' exp exp)
-	|	^('==' exp exp)
-	|	^('!=' exp exp)
-	|	^('>' exp exp)
-	|	^('<' exp exp)
-	|	^('&&' exp exp)
-	|	^('||' exp exp)
-	|	^('+' exp exp)
-	|	^('-' exp exp)
-	|	^('*' exp exp)
-	|	^('/' exp exp)
-	|	^('%' exp exp)
-	|	^(Negate exp)
-	|	^('!' exp)
-	|	^(Call exp+)
+	:	^(GT_EQ_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(LT_EQ_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(GT_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(LT_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(EQ_OP lhs=exp rhs=exp) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
+	|	^(NOT_EQ_OP lhs=exp rhs=exp) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
+	|	^(AND_OP lhs=exp rhs=exp) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(OR_OP lhs=exp rhs=exp) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(ADD_OP lhs=exp rhs=exp) { semantics->CheckAddOp( $lhs.start, $rhs.start ); }
+	|	^(SUB_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(MUL_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(DIV_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(MOD_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(Negate in=exp) { semantics->CheckNegateOp( $in.start ); }
+	|	^(NOT_OP in=exp) { semantics->CheckNotOp( $in.start ); }
 	|	^(Key exp key_exp)
-	|	^('.' exp ID)
+	|	^(DOT_OP exp ID)
+	|	call_exp
 	|	(map_op | vec_op)
 	|	value
-	|	ID
+	|	ID  { if( semantics->making_call ) semantics->ResolveFun( (char*)$ID.text->chars, $ID->getLine($ID) ); else semantics->ResolveVar( (char*)$ID.text->chars, $ID->getLine($ID) ); }
+	;
+
+call_exp
+@init { semantics->making_call = true; }
+@after { semantics->making_call = false; }
+	:	^(Call exp exp*)
 	;
 
 key_exp
-	:	idx (idx (exp)? )? 
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp { semantics->CheckKeyExp( $idx1.start, $idx2.start, $idx3.start ); }
+	|	(idx idx)=> idx1=idx idx2=idx { semantics->CheckKeyExp( $idx1.start, $idx2.start ); }
+	|	idx1=idx { semantics->CheckKeyExp( $idx1.start ); }
 	;
 
 idx 
-	:	('$' | exp)
+	:	(END_OP | exp)
 	;
 
 arg_list_decl
@@ -151,11 +183,11 @@ arg_list_decl
 	;
 
 arg 
-	:	^(Def_arg id=ID default_arg_val?) { devaAddArg( (char*)$id.text->chars, $id->getLine($id) ); }
+	:	^(Def_arg id=ID default_arg_val?) { semantics->AddArg( (char*)$id.text->chars, $id->getLine($id) ); }
 	;
 
 in_exp 
-	:	^('in' exp+)
+	:	^(In key=ID val=ID? exp) { semantics->DefineVar( (char*)$key.text->chars, $key->getLine($key) ); if( $val ) semantics->DefineVar( (char*)$val.text->chars, $val->getLine($val) ); }
 	;
 
 map_op 
@@ -170,12 +202,9 @@ vec_op
 	:	^(Vec_init exp*)
 	;
 
-assignment_op 
-	:	'=' | math_assignment_op
-	;	
-
 module_name 
-	:	ID ('/' ID)*
+	:	(ID '/')* nm=ID
+		{ semantics->DefineVar( (char*)$nm->getText($nm)->chars, $nm->getLine($nm) ); }
 	;
 
 value
@@ -184,11 +213,6 @@ value
 
 default_arg_val
 	:	value | ID
-	|	^('-' (value | ID))
+	|	^(Negate (value | ID))
 	;
 
-math_assignment_op 
-	:	('+=' | '-=' | '*=' | '/=' | '%=')
-	;
-
- 

@@ -36,6 +36,7 @@
 
 using namespace std;
 
+
 struct DevaSemanticException : public logic_error
 {
 	int line;

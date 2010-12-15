@@ -37,6 +37,7 @@
 
 #include "symbol.h"
 #include "scope.h"
+#include "error.h"
 
 using namespace std;
 
@@ -45,22 +46,36 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////
 struct Semantics
 {
+	// warnings on?
+	bool show_warnings;
+
 	// scopes
 	Scope* global_scope;
 	Scope* current_scope;
 	vector<Scope*> scopes; // list of all scopes
 
 	// functions and arguments
-	int deva_in_function;
-	char* deva_function_name;
-	set<string> deva_arg_names;
-
-	// classes
-	//char* deva_class_name;
+	set<string> arg_names;
 
 	// variables
 
+	// functions/calls
+	bool making_call;
 
+	// classes
+	//char* class_name;
+	bool in_class;
+
+	// loop tracking
+	int in_loop;
+
+	// constructor
+	Semantics( bool warn ) : show_warnings( warn ),
+	   	global_scope( NULL ), current_scope( NULL ),
+		making_call( false ),
+		in_class( false ),
+		in_loop( false )
+	{}
 	// destructor
 	~Semantics()
 	{
@@ -70,37 +85,74 @@ struct Semantics
 			*i = NULL;
 		}
 	}
+
+	/////////////////////////////////////////////////////////////////////////////
+	// methods
+	/////////////////////////////////////////////////////////////////////////////
+
+	// scope & symbol table handling ////////////////////////////////////////////
+
+	// 'push' new scope on entering block
+	void PushScope( char* name = NULL );
+	// 'pop' scope on exiting block
+	void PopScope();
+
+	// define a variable in the current scope
+	void DefineVar( char* name, int line, VariableModifier mod = mod_none );
+
+	// resolve a variable, in the current scope
+	void ResolveVar( char* name, int line );
+
+	// define a function in the current scope
+	void DefineFun( char* name, int line );
+	
+	// resolve a function, in the current scope
+	void ResolveFun( char* name, int line );
+
+	// node validation //////////////////////////////////////////////////////////
+
+	// validate function arguments
+	void AddArg( char* arg, int line );
+
+	// validate lhs of assignment
+	void CheckLhsForAssign( pANTLR3_BASE_TREE lhs ); 
+
+	// validate relational expression
+	void CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
+
+	// validate relational expression
+	void CheckEqualityOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
+
+	// validate logical expression
+	void CheckLogicalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
+
+	// validate mathematical expression (except add)
+	void CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
+
+	// validate mathematical add expression
+	void CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
+
+	// validate negate expression
+	void CheckNegateOp( pANTLR3_BASE_TREE lhs );
+
+	// validate not expression
+	void CheckNotOp( pANTLR3_BASE_TREE lhs );
+
+	// validate if or while conditional
+	void CheckConditional( pANTLR3_BASE_TREE condition );
+
+	// validate key expressions (slices)
+	void CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 = NULL, pANTLR3_BASE_TREE idx3 = NULL );
+
+	// validate break/continue
+	void CheckBreakContinue( pANTLR3_BASE_TREE node );
+
+	// check statement for no effect (e.g. 'a;')
+	void CheckForNoEffect( pANTLR3_BASE_TREE node );
 };
 
+
 extern Semantics* semantics;
-
-
-/////////////////////////////////////////////////////////////////////////////
-// functions
-/////////////////////////////////////////////////////////////////////////////
-
-// TODO: move this function to error reporting header
-void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UINT8 * tokenNames );
-
-
-// scope & symbol table handling ////////////////////////////////////////////
-
-// 'push' new scope on entering block
-void devaPushScope( char* name );
-// 'pop' scope on exiting block
-void devaPopScope();
-
-// define a variable in the current scope
-void devaDefineVar( char* name, int line, VariableModifier mod = mod_none );
-
-// resolve a variable, in the current scope
-void devaResolveVar( char* name, int line );
-
-
-// node validation //////////////////////////////////////////////////////////
-
-// validate function arguments
-void devaAddArg( char* arg, int line );
 
 
 #endif // __SEMANTICS_H__

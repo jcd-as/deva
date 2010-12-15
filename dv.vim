@@ -55,7 +55,7 @@ syn keyword devaFunction	name
 syn keyword devaFunction	type
 syn keyword devaBool		true false
 syn keyword devaStatement	null
-syn keyword devaObj		class new
+syn keyword devaObj		class new self
 
 syn keyword devaConditional	if else
 syn keyword devaRepeat	while for in
