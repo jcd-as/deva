@@ -36,50 +36,61 @@
 
 using namespace std;
 
+
+// base class for symbols
+class SymbolBase
+{
+protected:
+	string name;
+	SymbolType type;
+
+public:
+	SymbolBase() : type( sym_end ) {}
+	SymbolBase( SymbolType t ) : type( t ) {}
+	SymbolBase( const char* const nm, SymbolType t ) : name( nm ), type( t ) {}
+	virtual ~SymbolBase() {}
+
+	const string & Name() const { return name; }
+	const SymbolType Type() const { return type; }
+};
+
 enum VariableModifier
 {
 	mod_none,
 	mod_constant,	// 'const'
 	mod_external,	// 'extern'
-	mod_local		// 'local'
+	mod_local,		// 'local'
+	mod_arg			// function argument. equivalent to local in most ways
 };
 
-class SymbolInfo
+// variable symbol, has modifier
+class Symbol : public SymbolBase
 {
 protected:
-	SymbolType type;
 	VariableModifier modifier;
 
 public:
-	SymbolInfo() : type( sym_end ), modifier( mod_none )
-	{}
-	SymbolInfo( SymbolType t ) : type( t ), modifier( mod_none )
-	{}
-	SymbolInfo( SymbolType t, VariableModifier m ) : type( t ), modifier( m )
-	{}
+	Symbol() : SymbolBase( sym_end ), modifier( mod_none ) {}
+	Symbol( SymbolType t ) : SymbolBase( t ), modifier( mod_none ) {}
+	Symbol( SymbolType t, VariableModifier m ) : SymbolBase( t ), modifier( m ) {}
+	Symbol( const char* const n, SymbolType t, VariableModifier m ) : SymbolBase( n, t ), modifier( m ) {}
 
-	SymbolType Type() const { return type; }
 	bool IsConst() const { return modifier == mod_constant; }
 	bool IsExtern() const { return modifier == mod_external; }
 	bool IsLocal() const { return modifier == mod_local; }
+	bool IsArg() const { return modifier == mod_arg; }
+	bool IsUndeclared() const { return modifier == mod_none; }
 };
 
-class Symbol : public SymbolInfo
-{
-protected:
-	string name;
-
-public:
-	Symbol() : name( "" )
-	{}
-	Symbol( const char* const n ) : name( n )
-	{}
-	Symbol( SymbolType t, const char* const n ) : SymbolInfo( t ), name( n )
-	{}
-	Symbol( SymbolType t, VariableModifier m, const char* const n ) : SymbolInfo( t, m ), name( n )
-	{}
-
-	const string & Name() const { return name; }
-};
+// TODO: is this needed? 
+//class FunSymbol : public SymbolBase
+//{
+//public:
+//	Symbol() {}
+//	Symbol( const char* const n ) : Symbol( n ) {}
+//	Symbol( const char* const n, SymbolType t ) : Symbol( n, t ) {}
+//
+//	const string & Name() const { return name; }
+//};
 
 #endif // __SYMBOL_H__

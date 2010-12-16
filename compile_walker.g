@@ -1,0 +1,240 @@
+tree grammar compile_walker;
+
+options
+{
+	language = C;
+	ASTLabelType=pANTLR3_BASE_TREE;
+	tokenVocab=deva;
+}
+
+@header
+{
+// Copyright (c) 2010 Joshua C. Shepard
+// 
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+}
+@includes
+{
+#include "inc/semantics.h"
+#include "inc/compile.h"
+}
+
+@apifuncs 
+{
+	RECOGNIZER->displayRecognitionError = devaDisplayRecognitionError;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// STATEMENTS
+/////////////////////////////////////////////////////////////////////////////
+
+translation_unit
+	: top_level_statement*
+	EOF
+	;
+
+top_level_statement
+	:	class_decl
+	|	statement
+	;
+
+statement 
+	:	block
+	|	while_statement
+	|	for_statement
+	|	if_statement
+	|	import_statement
+	|	jump_statement
+	|	func_decl
+	|	assign_statement
+	;
+
+block 
+@init { compiler->EnterBlock(); }
+@after { compiler->ExitBlock(); }
+	:	^(Block statement*)
+	;
+
+func_decl
+@init { compiler->fcn_nesting++; compiler->current_scope_idx++; }
+@after { compiler->fcn_nesting--; compiler->current_scope_idx--; }
+	:	^(Def id=ID 
+		arg_list_decl block) 
+		{ compiler->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); }
+	|	^(Def id='new' 
+		{ compiler->DefineFun( const_cast<char*>("new"), $id->getLine($id) ); }
+		arg_list_decl block)
+	;
+	
+class_decl 
+@init { compiler->in_class = true; }
+@after { compiler->in_class = false; }
+	:	^(Class id=ID 
+		{ compiler->DefineClass( (char*)$id.text-chars, $id->getLine($id) ); }
+		(^(Base_classes ID+))? block)
+	;
+
+while_statement 
+	:	^(While ^(Condition con=exp) block)
+	;
+
+for_statement 
+@init { compiler->current_scope_idx++; }
+@after { compiler->current_scope_idx--; }
+	:	^(For in_exp block)
+	;
+
+if_statement
+	:	^(If ^(Condition con=exp) block else_statement?)
+	;
+
+else_statement 
+	:	^(Else block)
+	;
+
+import_statement 
+	:	^(Import module_name)
+	;
+	
+jump_statement 
+	:	break_statement
+	|	continue_statement
+	|	return_statement
+	;
+
+break_statement 
+	:	brk=Break
+	;
+
+continue_statement 
+	:	con=Continue
+	;
+
+return_statement 
+	:	^(Return exp)
+	|	Return
+	;
+
+assign_statement
+	: 	^(Const id=ID value)
+	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp)
+	|	^(Local id=ID exp)
+	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp)
+	|	^(Extern id=ID exp?)
+	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp)
+	|	^('=' lhs=exp (exp|assign_rhs))
+	|	^(ADD_EQ_OP lhs=exp exp)
+	|	^(SUB_EQ_OP lhs=exp exp)
+	|	^(MUL_EQ_OP lhs=exp exp)
+	|	^(DIV_EQ_OP lhs=exp exp)
+	|	^(MOD_EQ_OP lhs=exp exp)
+	|	exp
+	;
+
+assign_rhs 
+	:	^('=' lhs=exp (assign_rhs|exp))
+	;
+	
+new_exp
+	:	^(New exp)
+	;
+	
+/////////////////////////////////////////////////////////////////////////////
+// EXPRESSIONS
+/////////////////////////////////////////////////////////////////////////////
+
+exp
+	:	^(GT_EQ_OP lhs=exp rhs=exp)
+	|	^(LT_EQ_OP lhs=exp rhs=exp)
+	|	^(GT_OP lhs=exp rhs=exp)
+	|	^(LT_OP lhs=exp rhs=exp)
+	|	^(EQ_OP lhs=exp rhs=exp)
+	|	^(NOT_EQ_OP lhs=exp rhs=exp)
+	|	^(AND_OP lhs=exp rhs=exp)
+	|	^(OR_OP lhs=exp rhs=exp)
+	|	^(ADD_OP lhs=exp rhs=exp)
+	|	^(SUB_OP lhs=exp rhs=exp)
+	|	^(MUL_OP lhs=exp rhs=exp)
+	|	^(DIV_OP lhs=exp rhs=exp)
+	|	^(MOD_OP lhs=exp rhs=exp)
+	|	^(Negate in=exp)
+	|	^(NOT_OP in=exp)
+	|	^(Key exp key_exp)
+	|	^(DOT_OP exp ID)
+	|	call_exp
+	|	(map_op | vec_op)
+	|	value
+	|	ID
+	;
+
+call_exp
+	:	^(Call exp exp*)
+	;
+
+key_exp
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp
+	|	(idx idx)=> idx1=idx idx2=idx
+	|	idx1=idx
+	;
+
+idx 
+	:	(END_OP | exp)
+	;
+
+arg_list_decl
+	:	^(Arg_list_decl arg*)
+	;
+
+arg 
+	:	^(Def_arg id=ID default_arg_val?)
+	;
+
+in_exp 
+	:	^(In key=ID val=ID? exp)
+	;
+
+map_op 
+	:	^(Map_init map_item*)
+	;
+
+map_item 
+	:	^(Pair exp exp)
+	;
+
+vec_op 
+	:	^(Vec_init exp*)
+	;
+
+module_name 
+	:	(ID '/')* nm=ID
+	;
+
+value
+	:	BOOL | NULLVAL | NUMBER | STRING
+	;
+
+default_arg_val
+	:	value | ID
+	|	^(Negate (value | ID))
+	;
+

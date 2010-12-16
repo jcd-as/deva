@@ -45,13 +45,30 @@ Semantics* semantics = NULL;
 // 'push' new scope on entering block
 void Semantics::PushScope( char* fcn_name /*= NULL*/ )
 {
+	static int counter = 0;
+	static char scopeId[32] = {0};
 	// if we're entering a function body, create a function scope
 	if( fcn_name )
-		current_scope = new FunctionScope( fcn_name ? fcn_name : "", semantics->current_scope );
+	{
+		if( in_class )
+		{
+			string method_name;
+			method_name.reserve( strlen( fcn_name + 1 ) );
+		   	method_name = "@";
+		   	method_name += fcn_name;
+			current_scope = new FunctionScope( method_name, semantics->current_scope, true );
+		}
+		else
+			current_scope = new FunctionScope( fcn_name, semantics->current_scope );
+	}
 	// otherwise create a local scope
 	else
-		semantics->current_scope = new LocalScope( "", semantics->current_scope );
+	{
+		sprintf( scopeId, "%i", counter );
+		semantics->current_scope = new LocalScope( scopeId, semantics->current_scope );
+	}
 	semantics->scopes.push_back( semantics->current_scope );
+	counter++;
 }
 
 // 'pop' scope on exiting block
@@ -63,7 +80,7 @@ void Semantics::PopScope()
 // define a variable in the current scope
 void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/ )
 {
-	Symbol *sym = new Symbol( sym_variable, mod, name );
+	Symbol *sym = new Symbol( name, sym_variable, mod );
 	if( !semantics->current_scope->Define( sym ) )
 	{
 		delete sym;
@@ -76,7 +93,12 @@ void Semantics::ResolveVar( char* name, int line )
 {
 	// look up the variable in the current scope
 	if( show_warnings && !semantics->current_scope->Resolve( name, sym_end ) )
+	{
 		emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
+		// add it as an 'undeclared' var, it's possible that it was emitted by
+		// an eval() call or such and will exist at run-time
+		DefineVar( name, line );
+	}
 }
 
 // define a function in the current scope
@@ -84,7 +106,7 @@ void Semantics::DefineFun( char* name, int line )
 {
 	// TODO: functions should OVERRIDE existing fcns with the same name...
 	// does it matter? we're only tracking the name & type anyway...
-	Symbol *sym = new Symbol( sym_function, mod_none, name );
+	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !semantics->current_scope->Define( sym ) )
 	{
 		delete sym;
@@ -112,7 +134,7 @@ void Semantics::AddArg( char* arg, int line )
 		semantics->arg_names.insert( sa );
 
 	// add arg to the symbol table
-	DefineVar( arg, line );
+	DefineVar( arg, line, mod_arg );
 }
 
 // validate lhs of assignment
@@ -169,22 +191,12 @@ void Semantics::CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs 
 		&& rhs_type != NUMBER 
 		&& rhs_type != STRING )
 		throw DevaSemanticException( "Invalid right-hand side of relational operator.", rhs->getLine(rhs) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = lhs->getParent( lhs );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", lhs->getLine(lhs) );
 }
 
 // validate equality expression
 void Semantics::CheckEqualityOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 {
 	// no-op: parser should have rejected all disallowed expressions
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = lhs->getParent( lhs );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", lhs->getLine(lhs) );
 }
 
 
@@ -198,11 +210,6 @@ void Semantics::CheckLogicalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 
 	if( lhs_type == STRING || rhs_type == STRING )
 		throw DevaSemanticException( "Cannot use a string in a logical expression.", lhs->getLine(lhs) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = lhs->getParent( lhs );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", lhs->getLine(lhs) );
 }
 
 // validate mathematical expression
@@ -239,11 +246,6 @@ void Semantics::CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != Call
 		&& rhs_type != NUMBER )
 		throw DevaSemanticException( "Invalid right-hand side of arithmetic operator.", rhs->getLine(rhs) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = lhs->getParent( lhs );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", lhs->getLine(lhs) );
 }
 
 void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
@@ -282,11 +284,6 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != NUMBER
 	 	&& rhs_type != STRING )
 		throw DevaSemanticException( "Invalid right-hand side of addition operator.", rhs->getLine(rhs) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = lhs->getParent( lhs );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", lhs->getLine(lhs) );
 }
 
 // validate negate expression
@@ -303,11 +300,6 @@ void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 		&& type != Call
 		&& type != NUMBER )
 		throw DevaSemanticException( "Invalid operand for negate ('-') operator.", in->getLine(in) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = in->getParent( in );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", in->getLine(in) );
 }
 
 // validate not expression
@@ -339,11 +331,6 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 		&& type != NUMBER
 		&& type != BOOL )
 		throw DevaSemanticException( "Invalid operand for logical not ('!') operator.", in->getLine(in) );
-
-	// check parent to make sure this is an expression that is being used
-//	pANTLR3_BASE_TREE parent = in->getParent( in );
-//	if( parent == NULL || parent->getType( parent ) == Block )
-//		throw DevaSemanticException( "Invalid statement: statement has no effect.", in->getLine(in) );
 }
 
 // validate if or while conditional

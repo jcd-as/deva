@@ -41,9 +41,6 @@
 
 using namespace std;
 
-/////////////////////////////////////////////////////////////////////////////
-// globals
-/////////////////////////////////////////////////////////////////////////////
 struct Semantics
 {
 	// warnings on?
@@ -60,6 +57,7 @@ struct Semantics
 	// variables
 
 	// functions/calls
+//	int in_fcn; // how many scopes deep in a fcn (1 = main body, 0 = not in fcn)
 	bool making_call;
 
 	// classes
@@ -72,6 +70,7 @@ struct Semantics
 	// constructor
 	Semantics( bool warn ) : show_warnings( warn ),
 	   	global_scope( NULL ), current_scope( NULL ),
+//		in_fcn( 0 ),
 		making_call( false ),
 		in_class( false ),
 		in_loop( false )
@@ -152,6 +151,7 @@ struct Semantics
 };
 
 
+// global semantics object
 extern Semantics* semantics;
 
 

@@ -51,6 +51,10 @@ bool LocalScope::Define( const Symbol* const s )
 		return false;
 	else
 		data[s->Name()] = const_cast<Symbol*>( s );
+
+	// add this name to the parent function's list of names
+	AddName( const_cast<Symbol*>(s) );
+
 	return true;
 }
 
@@ -77,8 +81,9 @@ void LocalScope::Print()
 		if( i->second->IsConst() ) mod = "const";
 		else if( i->second->IsLocal() ) mod = "local";
 		else if( i->second->IsExtern() ) mod = "extern";
+		else if( i->second->IsArg() ) mod = "argument";
 		else if( i->second->Type() == sym_function ) mod = "function";
-		else mod = ""; // ???
+		else mod = "undeclared";
 		cout << mod << " " << i->first << "; ";
 	}
 	cout << endl;
@@ -91,6 +96,13 @@ LocalScope::~LocalScope()
 	{
 		delete i->second;
 	}
+}
+
+// add to the parent function's list of names
+void LocalScope::AddName( Symbol* s )
+{
+	if( parent )
+		parent->AddName( s );
 }
 
 
@@ -121,4 +133,56 @@ const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) 
 	}
 	return NULL;
 }
+
+bool FunctionScope::Define( const Symbol* const  s )
+{
+	// call the base-class
+	bool ret = LocalScope::Define( s );
+
+	if( ret )
+	{
+		// if this is an arg, increment the arg counter
+		if( s->IsArg() )
+			numArgs++;
+	}
+	return ret;
+}
+
+void FunctionScope::Print()
+{
+	cout << "Function: " << name << ", " << numArgs << " arguments, " << numLocals << " locals" << endl << "\tall names: ";
+	for( map<string, Symbol*>::iterator i = names.begin(); i != names.end(); ++i )
+	{
+		const char* mod;
+		if( i->second->IsConst() ) mod = "const";
+		else if( i->second->IsLocal() ) mod = "local";
+		else if( i->second->IsExtern() ) mod = "extern";
+		else if( i->second->IsArg() ) mod = "argument";
+		else if( i->second->Type() == sym_function ) mod = "function";
+		else mod = "undeclared";
+		cout << mod << " " << i->first << "; ";
+	}
+	cout << endl << "\tlocal scope vars: ";
+	for( map<string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	{
+		const char* mod;
+		if( i->second->IsConst() ) mod = "const";
+		else if( i->second->IsLocal() ) mod = "local";
+		else if( i->second->IsExtern() ) mod = "extern";
+		else if( i->second->IsArg() ) mod = "argument";
+		else if( i->second->Type() == sym_function ) mod = "function";
+		else mod = "undeclared";
+		cout << mod << " " << i->first << "; ";
+	}
+	cout << endl;
+}
+
+// add to the parent function's list of names
+void FunctionScope::AddName( Symbol* s )
+{
+	if( s->IsLocal() )
+		numLocals++;
+	names.insert( pair<const string, Symbol*>(s->Name(), s) );
+}
+
 

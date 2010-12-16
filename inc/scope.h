@@ -48,7 +48,10 @@ struct Scope
 	// resolve a symbol, returns NULL if cannot be found in this scope
 	virtual const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const = 0;
 
+	// print the scope to stdout
 	virtual void Print() = 0;
+	// add to the parent function's list of names
+	virtual void AddName( Symbol* s ) = 0;
 
 	virtual ~Scope(){}
 };
@@ -62,10 +65,8 @@ protected:
 	Scope *parent;
 
 public:
-	LocalScope() : name( "" ), parent( NULL )
-	{}
-	LocalScope( string n, Scope* p = NULL ) : name( n ), parent( p )
-	{}
+	LocalScope() : name( "" ), parent( NULL ) {}
+	LocalScope( string n, Scope* p = NULL ) : name( n ), parent( p ) {}
 	virtual ~LocalScope();
 
 	// Scope "interface"
@@ -74,23 +75,42 @@ public:
 	bool Define( const Symbol* const  s );
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 	void Print();
+	// add to the parent function's list of names
+	virtual void AddName( Symbol* s );
 };
 
 
 class FunctionScope : public LocalScope
 {
+protected:
+	bool isMethod;
+	int numArgs;
+	int numLocals;
+
+	// all the names, local, external, functions or undeclared, used in the
+	// function
+	map<const string, Symbol*> names;
+
 public:
-	FunctionScope() : LocalScope()
-	{}
-	FunctionScope( string n, Scope* p = NULL ) : LocalScope( n, p )
-	{}
-	virtual ~FunctionScope()
-	{}
+	FunctionScope() : LocalScope(), isMethod( false ), numArgs( 0 ), numLocals( 0 ) {}
+	FunctionScope( string n, Scope* p = NULL, bool m = false ) : LocalScope( n, p ), 
+		isMethod( m ), numArgs( 0 ), numLocals( 0 ) {}
+	virtual ~FunctionScope() {}
 
-	// Scope "interface", override the Resolve method
+	// Scope "interface" overrides
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
-};
+	bool Define( const Symbol* const  s );
+	void Print();
 
+	const int NumArgs() const { return numArgs; }
+	const int NumLocals() const { return numLocals; }
+	map<const string, Symbol*> GetNames() { return names; }
+
+	// add to the parent function's list of names
+	virtual void AddName( Symbol* s );
+	// add one to the count of locals
+//	virtual void IncrementFunLocals(){ numLocals++; }
+};
 
 
 #endif // __SCOPE_H__

@@ -31,24 +31,6 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-// UNDONE: this is object type, not symbol type (for run-time, not compile-time)
-//enum SymbolType
-//{
-//	sym_null,
-//	sym_number,
-//	sym_string,
-//	sym_boolean,
-//	sym_vector,
-//	sym_map,
-//	sym_function,
-//	sym_native_function,	// a native (C) function
-////	sym_unknown,
-//	sym_class,
-//	sym_instance,
-////	sym_size,				// an integral sized value
-//	sym_native_obj,			// a native (C/C++) object (void*)
-//	sym_end = 255			// end of enum marker
-//};
 
 enum SymbolType
 {

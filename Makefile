@@ -4,8 +4,8 @@
 VPATH = src
 
 # sources/objs for test executable
-DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp
-DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c
+DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp
+DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c compile_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 DEVA_C_OBJS=$(patsubst %.cpp, %.o, ${DEVA_C_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
@@ -36,6 +36,9 @@ devaParser.c devaLexer.c devaLexer.h devaParser.h deva.tokens : deva.g
 semantic_walker.c semantic_walker.h semantic_walker.tokens : semantic_walker.g deva.tokens
 	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu semantic_walker.g
 
+compile_walker.c compile_walker.h compile_walker.tokens : compile_walker.g deva.tokens
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu compile_walker.g
+
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<
 
@@ -43,10 +46,11 @@ semantic_walker.c semantic_walker.h semantic_walker.tokens : semantic_walker.g d
 	g++ ${CXXFLAGS} -o $@ $<
 
 clean:
-	rm *.o deva *.dep* devaLexer.h devaLexer.c devaParser.h devaParser.c semantic_walker.h semantic_walker.c deva.tokens semantic_walker.tokens
+	rm *.o deva *.dep* devaLexer.h devaLexer.c devaParser.h devaParser.c semantic_walker.h semantic_walker.c deva.tokens semantic_walker.tokens compile_walker.h compile_walker.c compile_walker.tokens
 
 # run tests
-#check:
+check:
+	deva1/deva antlrtest.dv
 #	./deva runtests.dv
 
 include ${DEVA_DEP_FILES}
