@@ -29,9 +29,11 @@
 #include "devaLexer.h"
 #include "devaParser.h"
 #include "semantic_walker.h"
+#include "compile_walker.h"
 
 #include "semantics.h"
 #include "compile.h"
+#include "executor.h"
 #include "exceptions.h"
 #include "util.h"
 #include "error.h"
@@ -74,6 +76,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	bool show_all_scopes = false;
 	bool no_dvc = false;
 	bool show_ast = false;
+	bool disasm = false;
 	string output;
 	string input;
 	vector<string> inputs;
@@ -83,7 +86,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		( "version,ver", "display program version" )
 		( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 		( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
-		( "show-ast,ast", po::value<bool>( &show_ast )->default_value( false ), "show the AST" )
+		( "disasm", po::value<bool>( &disasm )->default_value( false ), "disassemble" )
+		( "show-ast", po::value<bool>( &show_ast )->default_value( false ), "show the AST" )
 		( "show-warnings,w", po::value<bool>( &show_warnings )->default_value( false ), "show warnings" )
 		( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
 		( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
@@ -167,12 +171,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 //		// TODO: compile?
 //	}
 
-	semantics = new Semantics( show_warnings );
-
-	// setup the global scope
-	semantics->current_scope = new LocalScope( "global", semantics->current_scope );
-	semantics->scopes.push_back( semantics->current_scope );
-
 	pANTLR3_INPUT_STREAM input_stream;
 	pdevaLexer lxr;
 	pANTLR3_COMMON_TOKEN_STREAM tstream;
@@ -180,6 +178,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	devaParser_translation_unit_return devaAST;
 	pANTLR3_COMMON_TREE_NODE_STREAM nodes;
 	psemantic_walker treePsr;
+	pcompile_walker cmpPsr;
 
 	// Create the input stream using the supplied file name
 	input_stream = antlr3AsciiFileStreamNew( (unsigned char*)fname.c_str() );
@@ -219,6 +218,13 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	   exit( ANTLR3_ERR_NOMEM );
 	}
 
+
+	// create and init the deva semantics, compiler and execution engine components
+	// ("current_file" must be set before we can do this)
+	semantics = new Semantics( show_warnings );
+	compiler = new Compiler();
+	ex = new Executor();
+
 	// parse and build the AST
 	devaAST = psr->translation_unit( psr );
 
@@ -236,6 +242,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			treePsr->translation_unit( treePsr );
 
 			// PASS TWO: compile
+			cmpPsr = compile_walkerNew( nodes );
+			cmpPsr->translation_unit( cmpPsr );
 		}
 		catch( DevaSemanticException & e )
 		{
@@ -287,14 +295,29 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
 		}
 
-		// dump the symbol tables...
+		// debug dumps
 		if( debug && verbosity == 3 )
 		{
+			// dump the symbol tables...
 			for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
 			{
 				if( *i )
 					(*i)->Print();
 			}
+			// dump the constant data pool
+			cout << "Constant data pool:" << endl;
+			for( vector<DevaObject>::iterator i = ex->constants.begin(); i != ex->constants.end(); ++i )
+			{
+				if( i->type == obj_string )
+					cout << i->s << endl;
+				else if( i->type == obj_number )
+					cout << i->d << endl;
+			}
+		}
+
+		if( disasm )
+		{
+			compiler->Decode();
 		}
 
 		nodes->free( nodes );        

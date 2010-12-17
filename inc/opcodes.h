@@ -58,14 +58,14 @@ typedef unsigned int dword;
 const char file_hdr_deva[5] = "deva";
 const char file_hdr_ver[6] = "1.0.0";
 const char file_hdr_pad[5] = "\0\0\0\0";
-const size_t sizeofFileHdr = sizeof( file_hdr_deva ) + sizeof( file_hdr_ver ) + sizeof( file_hdr_pad ); // 16
+const dword sizeofFileHdr = sizeof( file_hdr_deva ) + sizeof( file_hdr_ver ) + sizeof( file_hdr_pad ); // 16
 
 
 // constant data area
 /////////////////////////////////////////////////////////////////////////////
 const char constants_hdr[7] = ".const";
 const char constants_hdr_pad[1] = "";
-const size_t sizeofConstantsHdr = sizeof( constants_hdr ) + sizeof( constants_hdr_pad ); // 8
+const dword sizeofConstantsHdr = sizeof( constants_hdr ) + sizeof( constants_hdr_pad ); // 8
 // header is followed by dword containing the number of const objects
 // constant data itself is an array of DevaObject structs:
 // byte : object type. only number and string are allowed
@@ -75,7 +75,7 @@ const size_t sizeofConstantsHdr = sizeof( constants_hdr ) + sizeof( constants_hd
 // 'global names' data area
 /////////////////////////////////////////////////////////////////////////////
 const char global_hdr[8] = ".global";
-const size_t sizeofGlobalHdr = sizeof( global_hdr ); // 8
+const dword sizeofGlobalHdr = sizeof( global_hdr ); // 8
 // header is followed by a dword containing the number of global names
 // global names data itself is an array of null-terminated strings
 
@@ -84,7 +84,7 @@ const size_t sizeofGlobalHdr = sizeof( global_hdr ); // 8
 /////////////////////////////////////////////////////////////////////////////
 const char functions_hdr[6] = ".func";
 const char functions_hdr_pad[2] = "\0";
-const size_t sizeofFunctionsHdr = sizeof( functions_hdr ) + sizeof( functions_hdr_pad ); // 8
+const dword sizeofFunctionsHdr = sizeof( functions_hdr ) + sizeof( functions_hdr_pad ); // 8
 // header is followed by a dword containing the number of function objects
 // function object data itself is an array of DevaFunction objects:
 // len+1 bytes : 	name, null-terminated string
@@ -103,6 +103,8 @@ const size_t sizeofFunctionsHdr = sizeof( functions_hdr ) + sizeof( functions_hd
 // <OppN> = (dword) operand N
 // tos = top of stack, tosN = N down from top-of-stack
 
+// NOTE: if opcodes are added/removed, they also need to be added/removed from the
+// array of opcode names immediately below
 enum Opcode
 {
 	op_nop,
@@ -117,6 +119,7 @@ enum Opcode
 	// no-operand shortcuts to push locals 0-9 to the tos
 	op_pushlocal0, op_pushlocal1, op_pushlocal2, op_pushlocal3, op_pushlocal4,
 	op_pushlocal5, op_pushlocal6, op_pushlocal7, op_pushlocal8, op_pushlocal9,
+	op_pushconst,	// push value from constant pool slot <W0> onto tos
 	op_store,		// store top-of-stack to object named at <Op0>
 	op_store_true,	// store boolean 'true' to <Op0>
 	op_store_false,	// store boolean 'false' to <Op0>
@@ -125,7 +128,6 @@ enum Opcode
 	// no-operand shortcuts to store tos to locals 0-9
 	op_storelocal0, op_storelocal1, op_storelocal2, op_storelocal3, op_storelocal4,
 	op_storelocal5, op_storelocal6, op_storelocal7, op_storelocal8, op_storelocal9,
-	op_push_const,	// push value from constant pool slot <W0> onto tos
 	op_new_map,		// create a new map object and push onto tos
 	op_new_vec,		// create a new vector object and push onto tos
 	op_new_class,	// create a new class object and push onto the tos
@@ -166,5 +168,81 @@ enum Opcode
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 
+static const char* opcodeNames[] =
+{
+	"op_nop",
+	"op_pop",
+	"op_push",
+	"op_push_true",
+	"op_push_false",
+	"op_push_null",
+	"op_push0", 
+	"op_push1",
+	"op_push2",
+	"op_push3",
+	"op_pushlocal",
+	"op_pushlocal0",
+	"op_pushlocal1",
+	"op_pushlocal2",
+	"op_pushlocal3",
+   	"op_pushlocal4",
+	"op_pushlocal5",
+   	"op_pushlocal6",
+   	"op_pushlocal7",
+   	"op_pushlocal8",
+   	"op_pushlocal9",
+	"op_pushconst",
+	"op_store",
+	"op_store_true",
+	"op_store_false",
+	"op_store_null",
+	"op_storelocal",
+	"op_storelocal0",
+	"op_storelocal1",
+	"op_storelocal2",
+	"op_storelocal3",
+	"op_storelocal4",
+	"op_storelocal5",
+	"op_storelocal6",
+	"op_storelocal7",
+	"op_storelocal8",
+	"op_storelocal9",
+	"op_new_map",
+	"op_new_vec",
+	"op_new_class",
+	"op_new_instance",
+	"op_jmp",
+	"op_jmpf",
+	"op_eq",
+	"op_neq",
+	"op_lt",
+	"op_lte",
+	"op_gt",
+	"op_gte",
+	"op_or",
+	"op_and",
+	"op_neg",
+	"op_not",
+	"op_add",
+	"op_sub",
+	"op_mul",
+	"op_div",
+	"op_mod",
+	"op_call",
+	"op_return",
+	"op_break",
+	"op_continue",
+	"op_enter",
+	"op_leave",
+	"op_for_iter",
+	"op_tbl_load",
+	"op_slice2",
+	"op_slice3",
+	"op_tbl_load_local",
+	"op_slice2local",
+	"op_slice3local",
+	"op_halt",
+	"op_illegal",
+};
 
 #endif // __OPCODES_H__

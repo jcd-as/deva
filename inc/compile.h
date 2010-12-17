@@ -39,6 +39,7 @@
 #include "object.h"
 
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 
@@ -99,6 +100,7 @@ struct Compiler
 {
 	// scopes
 	int current_scope_idx;	// index to the current scope in the semantics object's list of scopes
+	int num_locals;	// number of locals in the current scope
 
 	// functions
 	int fcn_nesting;
@@ -109,13 +111,19 @@ struct Compiler
 	// instruction stream
 	InstructionStream* is;
 
-	// list of function objects
-	vector<DevaFunction*> functions;
 
-
-	// functions
+	// private helper functions
 	/////////////////////////////////////////////////////////////////////////
-	Compiler() : current_scope_idx( 0 ),
+private:
+	// find index of constant, if not found, add it
+	int GetConstant( double d );
+	int GetConstant( char* s );
+
+public:
+	// public functions
+	/////////////////////////////////////////////////////////////////////////
+	Compiler() : 
+		current_scope_idx( 0 ), num_locals( 0 ),
 		fcn_nesting( 0 ),
 		in_class( false )
 	{ is = new InstructionStream(); }
@@ -129,13 +137,8 @@ struct Compiler
 	// for debugging purposes
 	void Decode();
 
-	// add constants to the constant data
-	void AddConstant( double d );
-	void AddConstant( char* s );
-
-	// find index of constant
-	int FindConstant( double d );
-	int FindConstant( char* s );
+	// node handling functions
+	/////////////////////////////////////////////////////////////////////////
 
 	// block
 	void EnterBlock();
@@ -146,6 +149,22 @@ struct Compiler
 
 	// define a class
 	void DefineClass( char* name, int line );
+
+	// constants
+	void Number( double d );
+	void String( char* s );
+
+	// operators
+	inline void AddOp(){ Emit( op_add ); }
+	inline void SubOp(){ Emit( op_sub ); }
+	inline void MulOp(){ Emit( op_mul ); }
+	inline void DivOp(){ Emit( op_div ); }
+	inline void ModOp(){ Emit( op_mod ); }
+	inline void NegateOp(){ Emit( op_neg ); }
+	inline void NotOp(){ Emit( op_not ); }
+
+	// assignments and variable decls
+	void LocalVar( char* n );
 };
 
 

@@ -72,6 +72,19 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 	return NULL;
 }
 
+// resolve a local to an index
+int LocalScope::ResolveLocalToIndex( const string & name )
+{
+	// TODO: look in this scope only
+	//
+}
+
+// resolve an extern/undeclared to an index
+int LocalScope::ResolveGlobalToIndex( const string & name )
+{
+	// TODO: look in every scope???
+}
+
 void LocalScope::Print()
 {
 	cout << "Scope: " << name << endl << "\tvars: ";
@@ -146,6 +159,19 @@ bool FunctionScope::Define( const Symbol* const  s )
 			numArgs++;
 	}
 	return ret;
+}
+
+// resolve a local to an index
+int FunctionScope::ResolveLocalToIndex( const string & name )
+{
+	// TODO: look in this scope only
+	//
+}
+
+// resolve an extern/undeclared to an index
+int FunctionScope::ResolveGlobalToIndex( const string & name )
+{
+	// TODO: look in every scope??
 }
 
 void FunctionScope::Print()

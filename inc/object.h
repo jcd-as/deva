@@ -33,7 +33,11 @@
 
 #include "opcodes.h"
 
+#include <string>
 #include <set>
+#include <vector>
+#include <map>
+#include <cstring>
 
 using namespace std;
 
@@ -117,6 +121,97 @@ struct DevaObject
 	inline operator const NativeFunction (){ return nf; }
 	inline operator const void* (){ return no; }
 	inline operator const size_t (){ return sz; }
+
+	// equality operator
+	bool operator == ( const DevaObject& rhs )
+	{
+		if( type != rhs.type )
+			return false;
+		switch( type )
+		{
+		case obj_null:
+			return true;
+		case obj_number:
+			if( d == rhs.d )
+				return true;
+			break;
+		case obj_string:
+			if( strcmp( s, rhs.s ) == 0 )
+				return true;
+			break;
+		case obj_boolean:
+			if( b == rhs.d )
+				return true;
+			break;
+		case obj_vector:
+			if( v == rhs.v )
+				return true;
+			break;
+		case obj_map:
+		case obj_instance:
+		case obj_class:
+			if( m == rhs.m )
+				return true;
+			break;
+		case obj_function:
+			if( f == rhs.f )
+				return true;
+			break;
+		case obj_native_function:
+			if( nf == rhs.nf )
+				return true;
+			break;
+		case obj_native_obj:
+			if( no == rhs.no )
+				return true;
+			break;
+		case obj_size:
+			if( sz == rhs.sz )
+				return true;
+			break;
+		default:
+			// ???
+			break;
+		}
+		return false;
+	}
+	bool operator < ( const DevaObject & rhs )
+	{
+		if( type != rhs.type )
+			return type < rhs.type;
+		else
+		{
+			switch( type )
+			{
+			case obj_null:
+				return true; // ???
+			case obj_number:
+				return d < rhs.d;
+			case obj_string:
+				return strcmp( s, rhs.s );
+			case obj_boolean:
+				return b < rhs.d;
+			case obj_vector:
+				return v < rhs.v;
+			case obj_map:
+			case obj_instance:
+			case obj_class:
+				return m < rhs.m;
+			case obj_function:
+				return f < rhs.f;
+			case obj_native_function:
+				return nf < rhs.nf;
+			case obj_native_obj:
+				return no < rhs.no;
+			case obj_size:
+				return sz < rhs.sz;
+			}
+		}
+	}
+	static bool DerefCompare( DevaObject* lhs, DevaObject* rhs )
+	{
+		return lhs->operator < ( *rhs );
+	}
 };
 
 // TODO: should this be a list<>? dequeue<>?
@@ -169,9 +264,18 @@ struct DevaFunction
 	// dword :			number of names (externals, undeclared vars, functions)
 //	dword numNames;
 	// bytes :			names, len+1 bytes null-terminated string each
+	// TODO: this has to be a vector, we need to index it
 	set<string> names;
 	// dword :			offset in code section of the code for this function
 	dword addr;
+
+	bool operator == ( const DevaFunction & rhs )
+	{
+		if( name == rhs.name && filename == rhs.filename && firstLine == rhs.firstLine )
+			return true;
+		else
+			return false;
+	}
 };
 
 

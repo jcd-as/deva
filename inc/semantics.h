@@ -74,7 +74,11 @@ struct Semantics
 		making_call( false ),
 		in_class( false ),
 		in_loop( false )
-	{}
+	{
+		// setup the global scope (a fcn scope called "@main")
+		current_scope = new FunctionScope( "@main", current_scope );
+		scopes.push_back( current_scope );
+	}
 	// destructor
 	~Semantics()
 	{

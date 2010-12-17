@@ -36,14 +36,15 @@
 
 using namespace std;
 
+
+// file name and path utility functions
+/////////////////////////////////////////////////////////////////////////////
 static const char dirsep = '/';
 static const char extsep = '.';
 static const char* const cwdstr = ".";
 static const char* const pardirstr = "..";
 static const char* env_var_path_seps = ":";
 
-void replace( string& src, const char* const in, const char* const out );
-void split( const string& in, const char* const splitchars, vector<string> & out );
 string get_cwd();
 string get_extension( string & path );
 string get_file_part( string & path );
@@ -53,5 +54,25 @@ vector<string> split_path( string & path );
 string join_paths( const string & base, const string & add );
 string join_paths( vector<string> & parts );
 void split_env_var_paths( const string & var, vector<string> &  paths );
+
+
+// symbol name and string utility functions
+/////////////////////////////////////////////////////////////////////////////
+void replace( string& src, const char* const in, const char* const out );
+void split( const string& in, const char* const splitchars, vector<string> & out );
+
+// strip the whitespace and leading comments from a string,
+// to create a valid symbol name
+string strip_symbol( const string& src, const string& c = " \t\r\n" );
+
+// strip single and double quotes (for use in getting the value of a string
+// variable, for instance)
+string strip_quotes( const string& src );
+
+// "un-escape" a string (e.g. turn '\t' into a tab character etc)
+string unescape( const string& src );
+
+// is this identifier a keyword?
+bool is_keyword( const string & s );
 
 #endif // __UTIL_H__

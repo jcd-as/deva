@@ -49,6 +49,7 @@ options
 /////////////////////////////////////////////////////////////////////////////
 
 translation_unit
+@after { compiler->Emit( op_halt ); }
 	: top_level_statement*
 	EOF
 	;
@@ -90,7 +91,7 @@ class_decl
 @init { compiler->in_class = true; }
 @after { compiler->in_class = false; }
 	:	^(Class id=ID 
-		{ compiler->DefineClass( (char*)$id.text-chars, $id->getLine($id) ); }
+		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
 		(^(Base_classes ID+))? block)
 	;
 
@@ -138,7 +139,7 @@ return_statement
 assign_statement
 	: 	^(Const id=ID value)
 	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp)
-	|	^(Local id=ID exp)
+	|	^(Local id=ID exp) { compiler->LocalVar( (char*)$id.text->chars ); }
 	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp)
 	|	^(Extern id=ID exp?)
 	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp)
@@ -172,13 +173,13 @@ exp
 	|	^(NOT_EQ_OP lhs=exp rhs=exp)
 	|	^(AND_OP lhs=exp rhs=exp)
 	|	^(OR_OP lhs=exp rhs=exp)
-	|	^(ADD_OP lhs=exp rhs=exp)
-	|	^(SUB_OP lhs=exp rhs=exp)
-	|	^(MUL_OP lhs=exp rhs=exp)
-	|	^(DIV_OP lhs=exp rhs=exp)
-	|	^(MOD_OP lhs=exp rhs=exp)
-	|	^(Negate in=exp)
-	|	^(NOT_OP in=exp)
+	|	^(ADD_OP lhs=exp rhs=exp) { compiler->AddOp(); }
+	|	^(SUB_OP lhs=exp rhs=exp) { compiler->SubOp(); }
+	|	^(MUL_OP lhs=exp rhs=exp) { compiler->MulOp(); }
+	|	^(DIV_OP lhs=exp rhs=exp) { compiler->DivOp(); }
+	|	^(MOD_OP lhs=exp rhs=exp) { compiler->ModOp(); }
+	|	^(Negate in=exp) { compiler->NegateOp(); }
+	|	^(NOT_OP in=exp) { compiler->NotOp(); }
 	|	^(Key exp key_exp)
 	|	^(DOT_OP exp ID)
 	|	call_exp
@@ -230,7 +231,10 @@ module_name
 	;
 
 value
-	:	BOOL | NULLVAL | NUMBER | STRING
+	:	BOOL { if( strcmp( (char*)$BOOL.text->chars, "true" ) == 0 ) compiler->Emit( op_push_true ); else compiler->Emit( op_push_false ); }
+	|	NULLVAL { compiler->Emit( op_push_null ); }
+	|	NUMBER { compiler->Number( atof( (char*)$NUMBER.text->chars ) ); }
+	|	STRING { compiler->String( (char*)$STRING.text->chars ); }
 	;
 
 default_arg_val

@@ -63,6 +63,8 @@ enum VariableModifier
 	mod_arg			// function argument. equivalent to local in most ways
 };
 
+static int s_index_counter = 0;
+
 // variable symbol, has modifier
 class Symbol : public SymbolBase
 {
@@ -80,6 +82,8 @@ public:
 	bool IsLocal() const { return modifier == mod_local; }
 	bool IsArg() const { return modifier == mod_arg; }
 	bool IsUndeclared() const { return modifier == mod_none; }
+
+	int Index(){ return index; }
 };
 
 // TODO: is this needed? 
