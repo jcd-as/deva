@@ -222,8 +222,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// create and init the deva semantics, compiler and execution engine components
 	// ("current_file" must be set before we can do this)
 	semantics = new Semantics( show_warnings );
-	compiler = new Compiler();
-	ex = new Executor();
 
 	// parse and build the AST
 	devaAST = psr->translation_unit( psr );
@@ -242,8 +240,12 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			treePsr->translation_unit( treePsr );
 
 			// PASS TWO: compile
+			// (execution engine must be created BEFORE the compiler...)
+			ex = new Executor();
+			compiler = new Compiler( ex );
 			cmpPsr = compile_walkerNew( nodes );
 			cmpPsr->translation_unit( cmpPsr );
+
 		}
 		catch( DevaSemanticException & e )
 		{
@@ -306,12 +308,25 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			}
 			// dump the constant data pool
 			cout << "Constant data pool:" << endl;
-			for( vector<DevaObject>::iterator i = ex->constants.begin(); i != ex->constants.end(); ++i )
+			for( int i = 0.; i < ex->constants.Size(); i++ )
 			{
-				if( i->type == obj_string )
-					cout << i->s << endl;
-				else if( i->type == obj_number )
-					cout << i->d << endl;
+				DevaObject o = ex->constants.At( i );
+				if( o.type == obj_string )
+					cout << o.s << endl;
+				else if( o.type == obj_number )
+					cout << o.d << endl;
+			}
+			// dump the function objects
+			cout << "Function objects:" << endl;
+			for( int i = 0; i < ex->functions.Size(); i++ )
+			{
+				DevaFunction f = ex->functions.At( i );
+				cout << "function: " << f.name << ", from file: " << f.filename << ", line: " << f.first_line;
+				cout << endl;
+				cout << f.num_args << " arg(s), " << f.num_locals << " local(s): ";
+				for( int j = 0; j < f.local_names.Size(); j++ )
+					cout << f.local_names.At( j ) << " ";
+				cout << endl << "code address: " << f.addr << endl;
 			}
 		}
 

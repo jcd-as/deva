@@ -30,7 +30,6 @@
 
 #include "semantics.h"
 #include "compile.h"
-#include "executor.h"
 
 #include <iostream>
 
@@ -40,6 +39,50 @@
 /////////////////////////////////////////////////////////////////////////////
 Compiler* compiler = NULL;
 
+
+Compiler::Compiler( Executor* ex ) : 
+	max_scope_idx( 0 ),
+	num_locals( 0 ),
+	fcn_nesting( 0 ),
+	in_class( false )
+{
+	// create the instruction stream
+	is = new InstructionStream();
+
+	// copy the global names and consts from the Semantics pass/object to the executor
+	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
+	// constants
+	for( set<DevaObject>::iterator i = semantics->constants.begin(); i != semantics->constants.end(); ++i )
+	{
+		ex->AddConstant( *i );
+	}
+	// global names
+	for( set<string>::iterator i = semantics->names.begin(); i != semantics->names.end(); ++i )
+	{
+		ex->AddName( *i );
+	}
+
+	// add our 'global' function, "@main"
+	FunctionScope* scope = dynamic_cast<FunctionScope*>(semantics->global_scope);
+	DevaFunction f;
+	f.name = string( "@main" );
+	f.filename = string( current_file );
+	f.first_line = 0;
+	f.num_args = 0;
+	f.num_locals = scope->NumLocals();
+	f.addr = 0;
+	// add the global names for the global scope
+	for( int i = 0; i < scope->GetNames().Size(); i++ )
+	{
+		Symbol* s = scope->GetNames().At( i );
+		if( s->IsLocal() )
+			f.local_names.Add( s->Name() );
+	}
+	ex->functions.Add( f );
+
+	// set-up the scope stack to match
+	AddScope();
+}
 
 // disassemble the instruction stream to stdout
 void Compiler::Decode()
@@ -51,11 +94,11 @@ void Compiler::Decode()
 	Opcode op;
 
 	cout << "Instructions:" << endl;
-	while( (p - b + 1) < len )
+	while( (p - b) < len )
 	{
 		// decode opcode
 		op = (Opcode)*p;
-		cout << opcodeNames[op] << "\t";
+		cout << (int)(p - b) << ": " <<  opcodeNames[op] << "\t";
 		p++;
 		switch( op )
 		{
@@ -201,13 +244,13 @@ void Compiler::Decode()
 // find/add constants to the constant data
 int Compiler::GetConstant( double d )
 {
-	int idx = ex->AddConstant( DevaObject( d ) );
+	int idx = ex->FindConstant( DevaObject( d ) );
 	return idx;
 }
 
 int Compiler::GetConstant( char* s )
 {
-	int idx = ex->AddConstant( DevaObject( s ) );
+	int idx = ex->FindConstant( DevaObject( s ) );
 	return idx;
 }
 
@@ -215,14 +258,14 @@ int Compiler::GetConstant( char* s )
 void Compiler::EnterBlock()
 {
 	// track the current scope
-	current_scope_idx++;
+	AddScope();
 	// emit an enter instruction
 	Emit( op_enter );
 }
 void Compiler::ExitBlock()
 {
 	// track the current scope
-	current_scope_idx--;
+	LeaveScope();
 	// emit a leave instruction
 	Emit( op_leave );
 }
@@ -230,23 +273,24 @@ void Compiler::ExitBlock()
 // define a function
 void Compiler::DefineFun( char* name, int line )
 {
-	FunctionScope* scope = dynamic_cast<FunctionScope*>(semantics->scopes[current_scope_idx]);
+	FunctionScope* scope = dynamic_cast<FunctionScope*>(CurrentScope());
 
 	// create a new DevaFunction object
 	DevaFunction fcn;
 	fcn.name = string( name );
 	fcn.filename = string( current_file );
-	fcn.firstLine = line;
-	fcn.numArgs = scope->NumArgs();
-	fcn.numLocals = scope->NumLocals();
+	fcn.first_line = line;
+	fcn.num_args = scope->NumArgs();
+	fcn.num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn.addr = is->Length();
 
-	// add all the external, undeclared and function call symbols for this scope and its children
-	for( map<string, Symbol*>::iterator i = scope->GetNames().begin(); i != scope->GetNames().end(); ++i )
+	// add the global names for this (function) scope and its children
+	for( int i = 0; i < scope->GetNames().Size(); i++ )
 	{
-		if( i->second->IsExtern() || i->second->IsUndeclared() || i->second->Type() == sym_function )
-			fcn.names.insert( i->first );
+		Symbol* s = scope->GetNames().At( i );
+		if( s->IsLocal() )
+			fcn.local_names.Add( s->Name() );
 	}
 
 	// add to the list of fcn objects
@@ -259,6 +303,8 @@ void Compiler::DefineFun( char* name, int line )
 void Compiler::DefineClass( char* name, int line )
 {
 	// TODO: implement
+	// add the name to the list of constants
+	ex->AddConstant( name );
 }
 
 // constants
@@ -285,10 +331,11 @@ void Compiler::String( char* s )
 // assignments and variable decls
 void Compiler::LocalVar( char* n )
 {
-	// create an index for this local
-	int idx = num_locals++;
-	// TODO: map the name to the local
-	//
+	// get the index for the name
+	int idx = CurrentScope()->ResolveLocalToIndex( n );
+	if( idx == -1 )
+		throw DevaICE( boost::format( "Cannot locate local symbol '%1%'." ) % n );
+	// TODO: add it to the current function object ??
 	// emit a 'op_storelocalN' op
 	if( idx < 10 )
 	{
@@ -330,4 +377,29 @@ void Compiler::LocalVar( char* n )
 		Emit( op_storelocal, (dword)idx );
 }
 
+
+void Compiler::Assign( char* n )
+{
+	// is it a local?
+	int idx = CurrentScope()->ResolveLocalToIndex( n );
+
+	// TODO: no? look it up in the global names
+	if( idx == -1 )
+	{
+	}
+	// not found? add it to the global names
+}
+
+// set a default argument value
+void Compiler::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
+{
+	// TODO: implement
+	// needs to store the default value with the function object
+}
+
+void Compiler::DefaultArgId( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
+{
+	// TODO: implement
+	// needs to store the default value with the function object
+}
 

@@ -32,8 +32,10 @@
 #define __SCOPE_H__
 
 #include "symbol.h"
+#include "ordered_set.h"
 #include <string>
 #include <map>
+
 
 using namespace std;
 
@@ -48,9 +50,7 @@ struct Scope
 	// resolve a symbol, returns NULL if cannot be found in this scope
 	virtual const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const = 0;
 	// resolve a local to an index
-	int ResolveLocalToIndex( const string & name );
-	// resolve an extern/undeclared to an index
-	int ResolveGlobalToIndex( const string & name );
+	virtual int ResolveLocalToIndex( const string & name ) = 0;
 
 	// print the scope to stdout
 	virtual void Print() = 0;
@@ -80,8 +80,6 @@ public:
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 	// resolve a local to an index
 	int ResolveLocalToIndex( const string & name );
-	// resolve an extern/undeclared to an index
-	int ResolveGlobalToIndex( const string & name );
 	void Print();
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
@@ -96,8 +94,9 @@ protected:
 	int numLocals;
 
 	// all the names, local, external, functions or undeclared, used in the
-	// function
-	map<const string, Symbol*> names;
+	// function. (names can be duplicated, e.g. locals in different scopes with the same
+	// name)
+	OrderedMultiSet<Symbol*, SB_ptr_lt> names;
 
 public:
 	FunctionScope() : LocalScope(), isMethod( false ), numArgs( 0 ), numLocals( 0 ) {}
@@ -110,15 +109,11 @@ public:
 	bool Define( const Symbol* const  s );
 	// resolve a local to an index
 	int ResolveLocalToIndex( const string & name );
-	// resolve an extern/undeclared to an index
-	int ResolveGlobalToIndex( const string & name );
 	void Print();
 
 	const int NumArgs() const { return numArgs; }
 	const int NumLocals() const { return numLocals; }
-	// TODO: does this need to be a vector (index-able) type?? we need to be
-	// able to look up vars and get an index for them, for code-gen...
-	map<const string, Symbol*> GetNames() { return names; }
+	OrderedMultiSet<Symbol*, SB_ptr_lt> GetNames() { return names; }
 
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );

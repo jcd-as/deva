@@ -25,8 +25,6 @@
 // utility functions used by deva language code
 // created by jcs, october 22, 2009 
 
-// TODO:
-// *
 
 #include "util.h"
 #include <cstring>

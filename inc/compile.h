@@ -37,6 +37,7 @@
 #include "error.h"
 #include "opcodes.h"
 #include "object.h"
+#include "executor.h"
 
 #include <vector>
 #include <cstdlib>
@@ -59,23 +60,23 @@ public:
 	}
 	~InstructionStream(){ delete[] bytes; }
 	const byte* Bytes(){ return bytes; }
-	size_t Length(){ return cur - bytes + 1; }
+	inline size_t Length(){ return cur - bytes; }
 	void Append( byte b )
 	{
-		if( (cur - bytes + 1 + sizeof(byte)) > size )
+		if( (Length() + sizeof(byte)) > size )
 			Realloc();
 		*cur++ = b;
 	}
 	void Append( word w )
 	{
-		if( (cur - bytes + 1 + sizeof(word)) > size )
+		if( (Length() + sizeof(word)) > size )
 			Realloc();
 		*((word*)cur) = w;
 		cur += sizeof(word);
 	}
 	void Append( dword dw )
 	{
-		if( (cur - bytes + 1 + sizeof(dword)) > size )
+		if( (Length() + sizeof(dword)) > size )
 			Realloc();
 		*((dword*)cur) = dw;
 		cur += sizeof(dword);
@@ -99,7 +100,11 @@ private:
 struct Compiler
 {
 	// scopes
-	int current_scope_idx;	// index to the current scope in the semantics object's list of scopes
+private:
+	int max_scope_idx;		// index to the highest scope num created so far
+	vector<int> scopestack;
+
+public:
 	int num_locals;	// number of locals in the current scope
 
 	// functions
@@ -122,20 +127,19 @@ private:
 public:
 	// public functions
 	/////////////////////////////////////////////////////////////////////////
-	Compiler() : 
-		current_scope_idx( 0 ), num_locals( 0 ),
-		fcn_nesting( 0 ),
-		in_class( false )
-	{ is = new InstructionStream(); }
+	Compiler( Executor* ex );
 	~Compiler()
 	{ delete is; }
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
-//	inline void Emit( Opcode o, dword op1, dword op2 );
-//	inline void Emit( Opcode o, dword op1, dword op2, dword op3 );
 
-	// for debugging purposes
+	// mostly for debugging purposes
 	void Decode();
+
+	// scope tracking:
+	inline void AddScope() { scopestack.push_back( max_scope_idx ); max_scope_idx++; }
+	inline void LeaveScope() { scopestack.pop_back(); }
+	inline Scope* CurrentScope() { return semantics->scopes[scopestack.back()]; }
 
 	// node handling functions
 	/////////////////////////////////////////////////////////////////////////
@@ -165,6 +169,11 @@ public:
 
 	// assignments and variable decls
 	void LocalVar( char* n );
+	void Assign( char* n );
+
+	// set a default argument value
+	void DefaultArgVal( pANTLR3_BASE_TREE node, bool negate = false );
+	void DefaultArgId( pANTLR3_BASE_TREE node, bool negate = false );
 };
 
 

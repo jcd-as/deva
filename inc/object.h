@@ -32,9 +32,9 @@
 #define __OBJECT_H__
 
 #include "opcodes.h"
+#include "ordered_set.h"
 
 #include <string>
-#include <set>
 #include <vector>
 #include <map>
 #include <cstring>
@@ -175,7 +175,7 @@ struct DevaObject
 		}
 		return false;
 	}
-	bool operator < ( const DevaObject & rhs )
+	bool operator < ( const DevaObject & rhs ) const
 	{
 		if( type != rhs.type )
 			return type < rhs.type;
@@ -188,7 +188,7 @@ struct DevaObject
 			case obj_number:
 				return d < rhs.d;
 			case obj_string:
-				return strcmp( s, rhs.s );
+				return strcmp( s, rhs.s ) < 0;
 			case obj_boolean:
 				return b < rhs.d;
 			case obj_vector:
@@ -208,10 +208,12 @@ struct DevaObject
 			}
 		}
 	}
-	static bool DerefCompare( DevaObject* lhs, DevaObject* rhs )
-	{
-		return lhs->operator < ( *rhs );
-	}
+};
+
+// functor for comparing DevaObject ptrs
+struct DO_ptr_lt
+{
+	bool operator()( const DevaObject*  lhs, const DevaObject* rhs ){ return lhs->operator < (*rhs); }
 };
 
 // TODO: should this be a list<>? dequeue<>?
@@ -251,32 +253,44 @@ struct DevaMap : public map<DevaObject, DevaObject>
 
 struct DevaFunction
 {
-	// len+1 bytes : 	name, null-terminated string
+	// name
 	string name;
-	// len+1 bytes : 	filename
+	// filename
 	string filename;
-	// dword :			starting line
-	dword firstLine;
-	// dword : 			number of arguments
-	dword numArgs;
-	// dword :			number of locals
-	dword numLocals;
-	// dword :			number of names (externals, undeclared vars, functions)
-//	dword numNames;
-	// bytes :			names, len+1 bytes null-terminated string each
-	// TODO: this has to be a vector, we need to index it
-	set<string> names;
-	// dword :			offset in code section of the code for this function
+	// starting line
+	dword first_line;
+	// number of arguments
+	dword num_args;
+	// TODO: need to store default values for args too
+	// number of locals
+	dword num_locals;
+	// local names (for debugging & reflection)
+	OrderedSet<string> local_names;
+	// offset in code section of the code for this function
 	dword addr;
 
-	bool operator == ( const DevaFunction & rhs )
+	bool operator == ( const DevaFunction & rhs ) const
 	{
-		if( name == rhs.name && filename == rhs.filename && firstLine == rhs.firstLine )
+		if( name == rhs.name && filename == rhs.filename && first_line == rhs.first_line )
 			return true;
 		else
 			return false;
 	}
+	bool operator < ( const DevaFunction & rhs ) const
+	{
+		if( name == rhs.name )
+			return first_line < rhs.first_line;
+		else
+			return name < rhs.name;
+	}
 };
+
+// functor for comparing DevaFunction ptrs
+struct DF_ptr_lt
+{
+	bool operator()( const DevaFunction* lhs, const DevaFunction* rhs ){ return lhs->operator < (*rhs); }
+};
+
 
 
 #endif // __OBJECT_H__

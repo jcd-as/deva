@@ -21,10 +21,10 @@ LDFLAGS = -g -L /usr/local/lib -lantlr3c -lboost_program_options -lboost_filesys
 all : tags ID deva
 
 tags : deva
-	ctags -R 
+	ctags -R --exclude=deva1 --exclude=tests --exclude=antlr
 
 ID : deva
-	mkid -i "C++"
+	mkid -i "C++" --prune=deva1 --prune=tests --prune=antlr
 
 deva : ${DEVA_OBJS} ${DEVA_C_OBJS}
 	g++ ${LDFLAGS} -lboost_filesystem -o deva ${DEVA_OBJS} ${DEVA_C_OBJS}

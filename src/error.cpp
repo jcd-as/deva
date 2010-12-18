@@ -25,8 +25,6 @@
 // error reporting for the deva language
 // created by jcs, december 09, 2010 
 
-// TODO:
-// * 
 
 #include "error.h"
 
@@ -283,7 +281,7 @@ void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UI
 				// No token number 0, so look for bit 1 and on.
 				for( bit = 1; bit < numbits && count < 8 && count < size; bit++ )
 				{
-					// TODO: This doesn;t look right - should be asking if the bit is set!!
+					// TODO: This doesn't look right - should be asking if the bit is set!!
 					if( tokenNames[bit] )
 					{
 						ANTLR3_FPRINTF( stderr, "%s%s", count > 0 ? ", " : "", tokenNames[bit] );

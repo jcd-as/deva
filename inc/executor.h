@@ -33,6 +33,7 @@
 
 #include "opcodes.h"
 #include "object.h"
+#include "ordered_set.h"
 
 using namespace std;
 
@@ -43,23 +44,27 @@ class Executor
 	byte** code_blocks;
 
 public:
-	// (sorted, by name) list of function objects
-	vector<DevaFunction> functions;
+	// set of function objects
+	OrderedSet<DevaFunction> functions;
 
-	// (sorted) constant pool 
-	vector<DevaObject> constants;
+	// set of constants
+	OrderedSet<DevaObject> constants;
 
-	// global names
+	// set of global names
+	OrderedSet<string> names;
 
 public:
 	Executor();
 	~Executor();
-	int AddFunction( DevaFunction f );
-	int FindFunction( const DevaFunction & f );
-	inline DevaFunction GetFunction( int idx ) { return functions[idx]; }
-	int AddConstant( DevaObject o );
-	int FindConstant( const DevaObject & o );
-	inline DevaObject GetConstant( int idx ) { return constants[idx]; }
+	inline void AddFunction( DevaFunction f ) { functions.Add( f ); }
+	inline int FindFunction( const DevaFunction & f ) { return functions.Find( f ); }
+	inline DevaFunction GetFunction( int idx ) { return functions.At(idx); }
+	inline void AddConstant( DevaObject o ) { constants.Add( o ); }
+	inline int FindConstant( const DevaObject & o ) { return constants.Find( o ); }
+	inline DevaObject GetConstant( int idx ) { return constants.At(idx); }
+	inline void AddName( string s ) { names.Add( s ); }
+	inline int FindName( const string & s ) { return names.Find( s ); }
+	inline string GetName( int idx ) { return constants.At(idx); }
 };
 
 extern Executor* ex;

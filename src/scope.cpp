@@ -25,8 +25,6 @@
 // scope types for the deva language
 // created by jcs, december 09, 2010 
 
-// TODO:
-// * 
 
 #include "scope.h"
 #include <iostream>
@@ -75,14 +73,9 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 // resolve a local to an index
 int LocalScope::ResolveLocalToIndex( const string & name )
 {
-	// TODO: look in this scope only
-	//
-}
-
-// resolve an extern/undeclared to an index
-int LocalScope::ResolveGlobalToIndex( const string & name )
-{
-	// TODO: look in every scope???
+	// pass through to the function parent, which tracks locals
+	if( parent )
+		return parent->ResolveLocalToIndex( name );
 }
 
 void LocalScope::Print()
@@ -164,31 +157,26 @@ bool FunctionScope::Define( const Symbol* const  s )
 // resolve a local to an index
 int FunctionScope::ResolveLocalToIndex( const string & name )
 {
-	// TODO: look in this scope only
-	//
-}
-
-// resolve an extern/undeclared to an index
-int FunctionScope::ResolveGlobalToIndex( const string & name )
-{
-	// TODO: look in every scope??
+	Symbol s( name.c_str(), sym_end );
+	return names.Find( &s );
 }
 
 void FunctionScope::Print()
 {
 	cout << "Function: " << name << ", " << numArgs << " arguments, " << numLocals << " locals" << endl << "\tall names: ";
-	for( map<string, Symbol*>::iterator i = names.begin(); i != names.end(); ++i )
+	for( int i = 0; i < names.Size(); i++ )
 	{
+		Symbol* s = names.At( i );
 		const char* mod;
-		if( i->second->IsConst() ) mod = "const";
-		else if( i->second->IsLocal() ) mod = "local";
-		else if( i->second->IsExtern() ) mod = "extern";
-		else if( i->second->IsArg() ) mod = "argument";
-		else if( i->second->Type() == sym_function ) mod = "function";
+		if( s->IsConst() ) mod = "const";
+		else if( s->IsLocal() ) mod = "local";
+		else if( s->IsExtern() ) mod = "extern";
+		else if( s->IsArg() ) mod = "argument";
+		else if( s->Type() == sym_function ) mod = "function";
 		else mod = "undeclared";
-		cout << mod << " " << i->first << "; ";
+		cout << mod << " " << s->Name() << "; ";
 	}
-	cout << endl << "\tlocal scope vars: ";
+	cout << endl << "\targument scope vars: ";
 	for( map<string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		const char* mod;
@@ -208,7 +196,7 @@ void FunctionScope::AddName( Symbol* s )
 {
 	if( s->IsLocal() )
 		numLocals++;
-	names.insert( pair<const string, Symbol*>(s->Name(), s) );
+	names.Add( s );
 }
 
 

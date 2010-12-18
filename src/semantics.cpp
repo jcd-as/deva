@@ -25,8 +25,6 @@
 // semantic checking functions for the deva language
 // created by jcs, december 10, 2010 
 
-// TODO:
-// * 
 
 #include <semantic_walker.h>
 #include <set>
@@ -39,6 +37,7 @@
 // semantic checking functions and globals
 /////////////////////////////////////////////////////////////////////////////
 Semantics* semantics = NULL;
+
 
 // scope & symbol table handling ////////////////////////////////////////////
 
@@ -56,18 +55,18 @@ void Semantics::PushScope( char* fcn_name /*= NULL*/ )
 			method_name.reserve( strlen( fcn_name + 1 ) );
 		   	method_name = "@";
 		   	method_name += fcn_name;
-			current_scope = new FunctionScope( method_name, semantics->current_scope, true );
+			current_scope = new FunctionScope( method_name, current_scope, true );
 		}
 		else
-			current_scope = new FunctionScope( fcn_name, semantics->current_scope );
+			current_scope = new FunctionScope( fcn_name, current_scope );
 	}
 	// otherwise create a local scope
 	else
 	{
 		sprintf( scopeId, "%i", counter );
-		semantics->current_scope = new LocalScope( scopeId, semantics->current_scope );
+		current_scope = new LocalScope( scopeId, current_scope );
 	}
-	semantics->scopes.push_back( semantics->current_scope );
+	scopes.push_back( current_scope );
 	counter++;
 }
 
@@ -86,6 +85,9 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 		delete sym;
 		throw DevaSemanticException( str( boost::format( "Symbol '%1%' already defined." ) % name).c_str(), line );
 	}
+	// TODO: global? (extern/undeclared) add to names table
+	if( mod == mod_external || mod == mod_none )
+		names.insert( string( name ) );
 }
 
 // resolve a variable, in the current scope
@@ -104,8 +106,6 @@ void Semantics::ResolveVar( char* name, int line )
 // define a function in the current scope
 void Semantics::DefineFun( char* name, int line )
 {
-	// TODO: functions should OVERRIDE existing fcns with the same name...
-	// does it matter? we're only tracking the name & type anyway...
 	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !semantics->current_scope->Define( sym ) )
 	{
@@ -135,6 +135,18 @@ void Semantics::AddArg( char* arg, int line )
 
 	// add arg to the symbol table
 	DefineVar( arg, line, mod_arg );
+}
+
+// add number constant
+void Semantics::AddNumber( double arg )
+{
+	constants.insert( DevaObject( arg ) );
+}
+
+// add string constant
+void Semantics::AddString( char* arg )
+{
+	constants.insert( DevaObject( arg ) );
 }
 
 // validate lhs of assignment
@@ -452,3 +464,70 @@ void Semantics::CheckForNoEffect( pANTLR3_BASE_TREE node )
 		throw DevaSemanticException( "Invalid statement: statement has no effect.", node->getLine( node ) );
 }		
 
+// check default arg val ID to make sure it's a const
+void Semantics::CheckDefaultArgVal( char* n, int line )
+{
+	const Symbol* s = semantics->current_scope->Resolve( n, sym_end );
+	if( !s || !s->IsConst() )
+		throw DevaSemanticException( "Invalid default argument value: must be a constant or a 'const' variable.", line );
+}
+
+// add a default arg val (for the previous default arg)
+void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node )
+{
+	// must be at least one arg
+	if( arg_names.size() == 0 )
+		throw DevaICE( "Default argument value with no arguments." );
+	// must not be more default values than args
+	if( arg_names.size() <= default_arg_values.size() )
+		throw DevaICE( "More default argument values than arguments." );
+
+	// if this is the first default arg for this fcn, mark it
+	if( default_arg_values.size() == 0 )
+		first_default_arg = arg_names.size() - 1;
+
+	unsigned int type = node->getType( node );
+	char* text = (char*)node->getText( node );
+	DevaObject val;
+	switch( type )
+	{
+	case BOOL:
+		val.type = obj_boolean;
+		if( strcmp( text, "true" ) == 0 )
+			val.b = true;
+		else
+			val.b = false;
+		break;
+	case NULLVAL:
+		val.type = obj_null;
+		break;
+	case STRING:
+		val.type = obj_string;
+		// TODO: this must NOT be deleted...
+		val.s = text;
+		break;
+	case NUMBER:
+		val.type = obj_number;
+		val.d = atof( text );
+		break;
+	case ID:
+		// TODO: need to handle 'const' values (look up const var 'somewhere' and
+		// replace with that value...)
+//		val.type = obj_end;
+//		val.s = text;
+		break;
+	}
+	default_arg_values.push_back( val );
+}
+
+void Semantics::CheckAndResetFcn( int line )
+{
+	// validate the default/non-default args
+	if( first_default_arg != -1 && default_arg_values.size() != arg_names.size() - first_default_arg )
+		throw DevaSemanticException( "Non-default argument follows default argument", line );
+
+	// reset our fcn tracking vars
+	arg_names.clear();
+	default_arg_values.clear(); 
+	first_default_arg = -1;
+}

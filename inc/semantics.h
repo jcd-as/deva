@@ -33,11 +33,13 @@
 
 
 #include <set>
+#include <map>
 #include <vector>
 
 #include "symbol.h"
 #include "scope.h"
 #include "error.h"
+#include "object.h"
 
 using namespace std;
 
@@ -53,11 +55,16 @@ struct Semantics
 
 	// functions and arguments
 	set<string> arg_names;
+	vector<DevaObject> default_arg_values;
+	int first_default_arg;
 
-	// variables
+	// constants
+	set<DevaObject> constants;
 
-	// functions/calls
-//	int in_fcn; // how many scopes deep in a fcn (1 = main body, 0 = not in fcn)
+	// 'global' variables (extern, undeclared)
+	set<string> names;
+
+	// function calls
 	bool making_call;
 
 	// classes
@@ -70,14 +77,16 @@ struct Semantics
 	// constructor
 	Semantics( bool warn ) : show_warnings( warn ),
 	   	global_scope( NULL ), current_scope( NULL ),
-//		in_fcn( 0 ),
+		first_default_arg( -1 ),
 		making_call( false ),
 		in_class( false ),
 		in_loop( false )
 	{
 		// setup the global scope (a fcn scope called "@main")
-		current_scope = new FunctionScope( "@main", current_scope );
-		scopes.push_back( current_scope );
+		PushScope( (char*)"@main" );
+//		current_scope = new FunctionScope( "@main", current_scope );
+		global_scope = current_scope;
+//		scopes.push_back( current_scope );
 	}
 	// destructor
 	~Semantics()
@@ -92,7 +101,7 @@ struct Semantics
 	/////////////////////////////////////////////////////////////////////////////
 	// methods
 	/////////////////////////////////////////////////////////////////////////////
-
+	
 	// scope & symbol table handling ////////////////////////////////////////////
 
 	// 'push' new scope on entering block
@@ -116,6 +125,12 @@ struct Semantics
 
 	// validate function arguments
 	void AddArg( char* arg, int line );
+
+	// add number constant
+	void AddNumber( double arg );
+
+	// add string constant
+	void AddString( char* arg );
 
 	// validate lhs of assignment
 	void CheckLhsForAssign( pANTLR3_BASE_TREE lhs ); 
@@ -152,6 +167,15 @@ struct Semantics
 
 	// check statement for no effect (e.g. 'a;')
 	void CheckForNoEffect( pANTLR3_BASE_TREE node );
+
+	// check default arg val ID to make sure it's a const
+	void CheckDefaultArgVal( char* n, int line );
+
+	// add a default arg val (for the previous default arg)
+	void DefaultArgVal( pANTLR3_BASE_TREE node );
+
+	// check the fcn default args' placement and reset fcn tracking vars
+	void CheckAndResetFcn( int line );
 };
 
 

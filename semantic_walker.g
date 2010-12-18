@@ -70,7 +70,7 @@ statement
 	;
 
 block 
-@init { semantics->arg_names.clear(); semantics->PushScope(); }
+@init { semantics->PushScope(); }
 @after { semantics->PopScope(); }
 	:	^(Block statement*)
 	;
@@ -78,18 +78,20 @@ block
 func_decl
 @after { semantics->PopScope(); }
 	:	^(Def id=ID 
-		{ semantics->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars ); if( semantics->in_class ) semantics->DefineVar( const_cast<char*>("self"), $id->getLine($id) ); }
-		arg_list_decl block) 
+		{ semantics->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars ); if( semantics->in_class ) semantics->DefineVar( (char*)"self", $id->getLine($id) ); }
+		arg_list_decl { semantics->CheckAndResetFcn( $id->getLine($id) ); }
+		block) 
 	|	^(Def id='new' 
-		{ semantics->DefineFun( const_cast<char*>("new"), $id->getLine($id) ); semantics->PushScope( const_cast<char*>("new") ); if( semantics->in_class ) semantics->DefineVar( const_cast<char*>("self"), $id->getLine($id) ); }
-		arg_list_decl block)
+		{ semantics->DefineFun( (char*)"new", $id->getLine($id) ); semantics->PushScope( (char*)"new" ); if( semantics->in_class ) semantics->DefineVar( (char*)"self", $id->getLine($id) ); }
+		arg_list_decl { semantics->CheckAndResetFcn( $id->getLine($id) ); }
+		block)
 	;
 	
 class_decl 
 @after { semantics->in_class = false; }
 	:	^(Class id=ID 
 		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->in_class = true; }
-		(^(Base_classes ID+))? block)
+		(^(Base_classes ID+))? func_decl*)
 	;
 
 while_statement 
@@ -208,7 +210,13 @@ arg_list_decl
 	;
 
 arg 
-	:	^(Def_arg id=ID default_arg_val?) { semantics->AddArg( (char*)$id.text->chars, $id->getLine($id) ); }
+	:	^(
+			Def_arg id=ID { semantics->AddArg( (char*)$id.text->chars, $id->getLine($id) ); }
+			(
+				default_arg_val { semantics->DefaultArgVal( $default_arg_val.start ); } 
+				|
+			)
+		)
 	;
 
 in_exp 
@@ -233,11 +241,14 @@ module_name
 	;
 
 value
-	:	BOOL | NULLVAL | NUMBER | STRING
+	:	BOOL | NULLVAL 
+	|	NUMBER { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) ); }
+	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); }
 	;
 
 default_arg_val
-	:	value | ID
-	|	^(Negate (value | ID))
+	:	value 
+	|	ID { semantics->CheckDefaultArgVal( (char*)$ID.text->chars, $ID->getLine($ID) ); }
+	|	^(Negate NUMBER) { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) * -1.0 ); }
 	;
 

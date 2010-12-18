@@ -91,6 +91,7 @@ const dword sizeofFunctionsHdr = sizeof( functions_hdr ) + sizeof( functions_hdr
 // len+1 bytes : 	filename
 // dword :			starting line
 // dword : 			number of arguments
+// TODO: need to store default values for args too
 // dword :			number of locals
 // dword :			number of names (externals, undeclared vars, functions)
 // bytes :			names, len+1 bytes null-terminated string each

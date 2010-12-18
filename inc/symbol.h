@@ -52,6 +52,14 @@ public:
 
 	const string & Name() const { return name; }
 	const SymbolType Type() const { return type; }
+
+	bool operator < ( const SymbolBase & rhs ) const { return name < rhs.name; }
+};
+
+// functor for comparing SymbolBase ptrs
+struct SB_ptr_lt
+{
+	bool operator()( const SymbolBase* lhs, const SymbolBase* rhs ){ return lhs->operator < (*rhs); }
 };
 
 enum VariableModifier
@@ -75,15 +83,13 @@ public:
 	Symbol() : SymbolBase( sym_end ), modifier( mod_none ) {}
 	Symbol( SymbolType t ) : SymbolBase( t ), modifier( mod_none ) {}
 	Symbol( SymbolType t, VariableModifier m ) : SymbolBase( t ), modifier( m ) {}
-	Symbol( const char* const n, SymbolType t, VariableModifier m ) : SymbolBase( n, t ), modifier( m ) {}
+	Symbol( const char* const n, SymbolType t, VariableModifier m = mod_none ) : SymbolBase( n, t ), modifier( m ) {}
 
 	bool IsConst() const { return modifier == mod_constant; }
 	bool IsExtern() const { return modifier == mod_external; }
 	bool IsLocal() const { return modifier == mod_local; }
 	bool IsArg() const { return modifier == mod_arg; }
 	bool IsUndeclared() const { return modifier == mod_none; }
-
-	int Index(){ return index; }
 };
 
 // TODO: is this needed? 

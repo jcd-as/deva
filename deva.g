@@ -1,12 +1,7 @@
 grammar deva;
 
-// TBD:
-// -
-
 options 
 {
-//	language = Java;
-//	ASTLabelType=CommonTree;
 	language = C;
 	ASTLabelType=pANTLR3_BASE_TREE;
 
@@ -129,7 +124,7 @@ func_decl
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? ^(Block func_decl*))
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? func_decl*)
 	;
 
 while_statement 
@@ -298,7 +293,7 @@ value
 
 default_arg_val
 	:	value | ID
-	|	'-' (value | ID)									->^(Negate value? ID?)
+	|	'-' NUMBER											->^(Negate NUMBER)
 		;
 	
 atom

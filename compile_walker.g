@@ -77,13 +77,13 @@ block
 	;
 
 func_decl
-@init { compiler->fcn_nesting++; compiler->current_scope_idx++; }
-@after { compiler->fcn_nesting--; compiler->current_scope_idx--; }
+@init { compiler->fcn_nesting++; }
+@after { compiler->fcn_nesting--; compiler->LeaveScope(); }
 	:	^(Def id=ID 
+		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); }
 		arg_list_decl block) 
-		{ compiler->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); }
 	|	^(Def id='new' 
-		{ compiler->DefineFun( const_cast<char*>("new"), $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->DefineFun( const_cast<char*>("new"), $id->getLine($id) ); }
 		arg_list_decl block)
 	;
 	
@@ -92,7 +92,7 @@ class_decl
 @after { compiler->in_class = false; }
 	:	^(Class id=ID 
 		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
-		(^(Base_classes ID+))? block)
+		(^(Base_classes ID+))? func_decl*)
 	;
 
 while_statement 
@@ -100,8 +100,8 @@ while_statement
 	;
 
 for_statement 
-@init { compiler->current_scope_idx++; }
-@after { compiler->current_scope_idx--; }
+@init { compiler->AddScope(); }
+@after { compiler->LeaveScope(); }
 	:	^(For in_exp block)
 	;
 
@@ -238,7 +238,13 @@ value
 	;
 
 default_arg_val
-	:	value | ID
-	|	^(Negate (value | ID))
+	:	(
+			BOOL { compiler->DefaultArgVal( $BOOL ); }
+			| NULLVAL { compiler->DefaultArgVal( $NULLVAL ); }
+			| NUMBER { compiler->DefaultArgVal( $NUMBER ); }
+			| STRING  { compiler->DefaultArgVal( $STRING ); }
+		)
+	|	ID { compiler->DefaultArgId( $ID ); }
+	|	^(Negate NUMBER) { compiler->DefaultArgVal( $NUMBER, true ); }
 	;
 
