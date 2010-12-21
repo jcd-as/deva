@@ -37,6 +37,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 #include <cstring>
 
 using namespace std;
@@ -45,9 +46,9 @@ using namespace std;
 enum ObjectType
 {
 	obj_null,
+	obj_boolean,
 	obj_number,
 	obj_string,
-	obj_boolean,
 	obj_vector,
 	obj_map,
 	obj_function,
@@ -81,6 +82,7 @@ struct DevaObject
 	};
 
 	DevaObject() : type( obj_end ) {} // invalid object
+	DevaObject( ObjectType t ) : type( t ) {} // uninitialized object
 	DevaObject( double n ) : type( obj_number ), d( n ) {}
 	DevaObject( char* n ) : type( obj_string ), s( n ) {}
 	DevaObject( bool n ) : type( obj_boolean ), b( n ) {}
@@ -123,91 +125,8 @@ struct DevaObject
 	inline operator const size_t (){ return sz; }
 
 	// equality operator
-	bool operator == ( const DevaObject& rhs )
-	{
-		if( type != rhs.type )
-			return false;
-		switch( type )
-		{
-		case obj_null:
-			return true;
-		case obj_number:
-			if( d == rhs.d )
-				return true;
-			break;
-		case obj_string:
-			if( strcmp( s, rhs.s ) == 0 )
-				return true;
-			break;
-		case obj_boolean:
-			if( b == rhs.d )
-				return true;
-			break;
-		case obj_vector:
-			if( v == rhs.v )
-				return true;
-			break;
-		case obj_map:
-		case obj_instance:
-		case obj_class:
-			if( m == rhs.m )
-				return true;
-			break;
-		case obj_function:
-			if( f == rhs.f )
-				return true;
-			break;
-		case obj_native_function:
-			if( nf == rhs.nf )
-				return true;
-			break;
-		case obj_native_obj:
-			if( no == rhs.no )
-				return true;
-			break;
-		case obj_size:
-			if( sz == rhs.sz )
-				return true;
-			break;
-		default:
-			// ???
-			break;
-		}
-		return false;
-	}
-	bool operator < ( const DevaObject & rhs ) const
-	{
-		if( type != rhs.type )
-			return type < rhs.type;
-		else
-		{
-			switch( type )
-			{
-			case obj_null:
-				return true; // ???
-			case obj_number:
-				return d < rhs.d;
-			case obj_string:
-				return strcmp( s, rhs.s ) < 0;
-			case obj_boolean:
-				return b < rhs.d;
-			case obj_vector:
-				return v < rhs.v;
-			case obj_map:
-			case obj_instance:
-			case obj_class:
-				return m < rhs.m;
-			case obj_function:
-				return f < rhs.f;
-			case obj_native_function:
-				return nf < rhs.nf;
-			case obj_native_obj:
-				return no < rhs.no;
-			case obj_size:
-				return sz < rhs.sz;
-			}
-		}
-	}
+	bool operator == ( const DevaObject& rhs ) const;
+	bool operator < ( const DevaObject & rhs ) const;
 };
 
 // functor for comparing DevaObject ptrs
@@ -262,6 +181,7 @@ struct DevaFunction
 	// number of arguments
 	dword num_args;
 	// TODO: need to store default values for args too
+	OrderedSet<int> default_args;
 	// number of locals
 	dword num_locals;
 	// local names (for debugging & reflection)
@@ -291,6 +211,7 @@ struct DF_ptr_lt
 	bool operator()( const DevaFunction* lhs, const DevaFunction* rhs ){ return lhs->operator < (*rhs); }
 };
 
-
+// operator << for printing DevaObjects
+ostream & operator << ( ostream & os, DevaObject & obj );
 
 #endif // __OBJECT_H__

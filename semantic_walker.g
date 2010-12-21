@@ -65,7 +65,7 @@ statement
 	|	if_statement
 	|	import_statement
 	|	jump_statement
-	|	func_decl
+	|	func_decl[NULL]
 	|	assign_statement { semantics->CheckForNoEffect( $assign_statement.start ); }
 	;
 
@@ -75,23 +75,22 @@ block
 	:	^(Block statement*)
 	;
 
-func_decl
+func_decl[char* classname]
 @after { semantics->PopScope(); }
 	:	^(Def id=ID 
-		{ semantics->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars ); if( semantics->in_class ) semantics->DefineVar( (char*)"self", $id->getLine($id) ); }
-		arg_list_decl { semantics->CheckAndResetFcn( $id->getLine($id) ); }
+		{ semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block) 
 	|	^(Def id='new' 
-		{ semantics->DefineFun( (char*)"new", $id->getLine($id) ); semantics->PushScope( (char*)"new" ); if( semantics->in_class ) semantics->DefineVar( (char*)"self", $id->getLine($id) ); }
-		arg_list_decl { semantics->CheckAndResetFcn( $id->getLine($id) ); }
+		{ semantics->DefineFun( (char*)"new", classname, $id->getLine($id) ); semantics->PushScope( (char*)"new", classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block)
 	;
 	
 class_decl 
-@after { semantics->in_class = false; }
 	:	^(Class id=ID 
-		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->in_class = true; }
-		(^(Base_classes ID+))? func_decl*)
+		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->constants.insert( DevaObject( (char*)$id.text->chars ) ); }
+		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
 	;
 
 while_statement 
@@ -115,7 +114,7 @@ else_statement
 	;
 
 import_statement 
-	:	^(Import module_name)
+	:	^(Import (ID '/')* ID) { semantics->CheckImport( $Import ); }
 	;
 	
 jump_statement 
@@ -145,11 +144,11 @@ assign_statement
 	|	^(Extern id=ID exp?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
 	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
 	|	^('=' lhs=exp (exp|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(ADD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(SUB_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(MUL_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(DIV_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(MOD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(ADD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(SUB_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(MUL_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(DIV_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(MOD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
 	|	exp
 	;
 
@@ -182,7 +181,7 @@ exp
 	|	^(Negate in=exp) { semantics->CheckNegateOp( $in.start ); }
 	|	^(NOT_OP in=exp) { semantics->CheckNotOp( $in.start ); }
 	|	^(Key exp key_exp)
-	|	^(DOT_OP exp ID)
+	|	^(DOT_OP exp exp)
 	|	call_exp
 	|	(map_op | vec_op)
 	|	value
@@ -191,8 +190,9 @@ exp
 
 call_exp
 @init { semantics->making_call = true; }
-@after { semantics->making_call = false; }
-	:	^(Call exp exp*)
+	:	^(Call exp { semantics->making_call = false; }
+			^(ArgList exp*)
+		)
 	;
 
 key_exp
@@ -213,8 +213,8 @@ arg
 	:	^(
 			Def_arg id=ID { semantics->AddArg( (char*)$id.text->chars, $id->getLine($id) ); }
 			(
-				default_arg_val { semantics->DefaultArgVal( $default_arg_val.start ); } 
-				|
+				default_arg_val
+				| // or nothing
 			)
 		)
 	;
@@ -235,11 +235,6 @@ vec_op
 	:	^(Vec_init exp*)
 	;
 
-module_name 
-	:	(ID '/')* nm=ID
-		{ semantics->DefineVar( (char*)$nm->getText($nm)->chars, $nm->getLine($nm) ); }
-	;
-
 value
 	:	BOOL | NULLVAL 
 	|	NUMBER { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) ); }
@@ -247,8 +242,11 @@ value
 	;
 
 default_arg_val
-	:	value 
+	:	BOOL { semantics->DefaultArgVal( $BOOL ); }
+	|	NULLVAL { semantics->DefaultArgVal( $NULLVAL ); }
+	|	NUMBER { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) ); semantics->DefaultArgVal( $NUMBER ); }
+	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); semantics->DefaultArgVal( $STRING ); } 
 	|	ID { semantics->CheckDefaultArgVal( (char*)$ID.text->chars, $ID->getLine($ID) ); }
-	|	^(Negate NUMBER) { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) * -1.0 ); }
+	|	^(Negate NUMBER) { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) * -1.0 ); semantics->DefaultArgVal( $NUMBER, true );}
 	;
 

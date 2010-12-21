@@ -66,7 +66,7 @@ statement
 	|	if_statement
 	|	import_statement
 	|	jump_statement
-	|	func_decl
+	|	func_decl[NULL]
 	|	assign_statement
 	;
 
@@ -76,14 +76,14 @@ block
 	:	^(Block statement*)
 	;
 
-func_decl
+func_decl[char* classname]
 @init { compiler->fcn_nesting++; }
 @after { compiler->fcn_nesting--; compiler->LeaveScope(); }
 	:	^(Def id=ID 
-		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
 		arg_list_decl block) 
 	|	^(Def id='new' 
-		{ compiler->AddScope(); compiler->DefineFun( const_cast<char*>("new"), $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->DefineFun( const_cast<char*>("new"), classname, $id->getLine($id) ); }
 		arg_list_decl block)
 	;
 	
@@ -92,29 +92,29 @@ class_decl
 @after { compiler->in_class = false; }
 	:	^(Class id=ID 
 		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
-		(^(Base_classes ID+))? func_decl*)
+		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
 	;
 
 while_statement 
-	:	^(While ^(Condition con=exp) block)
+	:	^(While ^(Condition con=exp[false]) block) // TODO
 	;
 
 for_statement 
 @init { compiler->AddScope(); }
 @after { compiler->LeaveScope(); }
-	:	^(For in_exp block)
+	:	^(For in_exp block) // TODO
 	;
 
 if_statement
-	:	^(If ^(Condition con=exp) block else_statement?)
+	:	^(If ^(Condition con=exp[false]) block else_statement?) // TODO
 	;
 
 else_statement 
-	:	^(Else block)
+	:	^(Else block) // TODO
 	;
 
 import_statement 
-	:	^(Import module_name)
+	:	^(Import (ID '/')* ID) { compiler->ImportOp( $Import ); }
 	;
 	
 jump_statement 
@@ -124,82 +124,89 @@ jump_statement
 	;
 
 break_statement 
-	:	brk=Break
+	:	brk=Break // TODO
 	;
 
 continue_statement 
-	:	con=Continue
+	:	con=Continue // TODO
 	;
 
 return_statement 
-	:	^(Return exp)
-	|	Return
+	:	^(Return exp[false]) { compiler->ReturnOp(); }
+	|	Return { compiler->ReturnOp( true ); }
 	;
 
 assign_statement
-	: 	^(Const id=ID value)
-	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp)
-	|	^(Local id=ID exp) { compiler->LocalVar( (char*)$id.text->chars ); }
-	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp)
-	|	^(Extern id=ID exp?)
-	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp)
-	|	^('=' lhs=exp (exp|assign_rhs))
-	|	^(ADD_EQ_OP lhs=exp exp)
-	|	^(SUB_EQ_OP lhs=exp exp)
-	|	^(MUL_EQ_OP lhs=exp exp)
-	|	^(DIV_EQ_OP lhs=exp exp)
-	|	^(MOD_EQ_OP lhs=exp exp)
-	|	exp
+	: 	^(Const lhs=exp[true] value) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	(^(Local exp[true] new_exp))=> ^(Local lhs=exp[true] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	^(Local lhs=exp[true] exp[false]) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	(^(Extern exp[true] new_exp))=> ^(Extern lhs=exp[true] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
+	|	(^(Extern lhs=exp[true] exp[false]))=> ^(Extern lhs=exp[true] exp[false]) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
+	|	^(Extern lhs=exp[true]) { compiler->ExternVar( (char*)$lhs.text->chars, false ); }
+	|	(^('=' exp[true] new_exp))=> ^('=' lhs=exp[true] new_exp) { compiler->Assign( $lhs.start ); }
+	|	^('=' lhs=exp[true] (exp[false]|assign_rhs)) { compiler->Assign( $lhs.start ); }
+	|	^(ADD_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_add ); }
+	|	^(SUB_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_sub ); }
+	|	^(MUL_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_mul ); }
+	|	^(DIV_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_div ); }
+	|	^(MOD_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_mod ); }
+	|	exp[false]
 	;
 
 assign_rhs 
-	:	^('=' lhs=exp (assign_rhs|exp))
+	:	^('=' lhs=exp[true] (assign_rhs|exp[false]))
 	;
 	
 new_exp
-	:	^(New exp)
+	:	^(New { compiler->NewOp(); }
+			exp[false]
+		)
 	;
 	
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
 
-exp
-	:	^(GT_EQ_OP lhs=exp rhs=exp)
-	|	^(LT_EQ_OP lhs=exp rhs=exp)
-	|	^(GT_OP lhs=exp rhs=exp)
-	|	^(LT_OP lhs=exp rhs=exp)
-	|	^(EQ_OP lhs=exp rhs=exp)
-	|	^(NOT_EQ_OP lhs=exp rhs=exp)
-	|	^(AND_OP lhs=exp rhs=exp)
-	|	^(OR_OP lhs=exp rhs=exp)
-	|	^(ADD_OP lhs=exp rhs=exp) { compiler->AddOp(); }
-	|	^(SUB_OP lhs=exp rhs=exp) { compiler->SubOp(); }
-	|	^(MUL_OP lhs=exp rhs=exp) { compiler->MulOp(); }
-	|	^(DIV_OP lhs=exp rhs=exp) { compiler->DivOp(); }
-	|	^(MOD_OP lhs=exp rhs=exp) { compiler->ModOp(); }
-	|	^(Negate in=exp) { compiler->NegateOp(); }
-	|	^(NOT_OP in=exp) { compiler->NotOp(); }
-	|	^(Key exp key_exp)
-	|	^(DOT_OP exp ID)
+exp[bool is_lhs_of_assign]
+	:	^(GT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->GtEqOp(); }
+	|	^(LT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->LtEqOp(); }
+	|	^(GT_OP lhs=exp[false] rhs=exp[false]) { compiler->GtOp(); }
+	|	^(LT_OP lhs=exp[false] rhs=exp[false]) { compiler->LtOp(); }
+	|	^(EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->EqOp(); }
+	|	^(NOT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->NotEqOp(); }
+	|	^(AND_OP lhs=exp[false] rhs=exp[false]) { compiler->AndOp(); }
+	|	^(OR_OP lhs=exp[false] rhs=exp[false]) { compiler->OrOp(); }
+	|	^(ADD_OP lhs=exp[false] rhs=exp[false]) { compiler->AddOp(); }
+	|	^(SUB_OP lhs=exp[false] rhs=exp[false]) { compiler->SubOp(); }
+	|	^(MUL_OP lhs=exp[false] rhs=exp[false]) { compiler->MulOp(); }
+	|	^(DIV_OP lhs=exp[false] rhs=exp[false]) { compiler->DivOp(); }
+	|	^(MOD_OP lhs=exp[false] rhs=exp[false]) { compiler->ModOp(); }
+	|	^(Negate in=exp[false]) { compiler->NegateOp(); }
+	|	^(NOT_OP in=exp[false]) { compiler->NotOp(); }
+	|	^(Key exp[false] key=key_exp) { compiler->KeyOp( $key.start, is_lhs_of_assign ); } // TODO: slices??
+	|	^(DOT_OP exp[false] exp[false]) { compiler->KeyOp( NULL, is_lhs_of_assign ); }
 	|	call_exp
 	|	(map_op | vec_op)
 	|	value
-	|	ID
+	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign ); }
 	;
 
 call_exp
-	:	^(Call exp exp*)
+	:	^(Call id=exp[false] args) { compiler->CallOp( $id.start, $args.start ); }
+	;
+
+args
+	:	^(ArgList exp[false]*)
 	;
 
 key_exp
-	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false]
 	|	(idx idx)=> idx1=idx idx2=idx
 	|	idx1=idx
 	;
 
 idx 
-	:	(END_OP | exp)
+	:	(END_OP | exp[false])
 	;
 
 arg_list_decl
@@ -211,7 +218,7 @@ arg
 	;
 
 in_exp 
-	:	^(In key=ID val=ID? exp)
+	:	^(In key=ID val=ID? exp[false])
 	;
 
 map_op 
@@ -219,15 +226,11 @@ map_op
 	;
 
 map_item 
-	:	^(Pair exp exp)
+	:	^(Pair exp[false] exp[false])
 	;
 
 vec_op 
-	:	^(Vec_init exp*)
-	;
-
-module_name 
-	:	(ID '/')* nm=ID
+	:	^(Vec_init exp[false]*)
 	;
 
 value
@@ -239,12 +242,12 @@ value
 
 default_arg_val
 	:	(
-			BOOL { compiler->DefaultArgVal( $BOOL ); }
-			| NULLVAL { compiler->DefaultArgVal( $NULLVAL ); }
-			| NUMBER { compiler->DefaultArgVal( $NUMBER ); }
-			| STRING  { compiler->DefaultArgVal( $STRING ); }
+			BOOL { /*do nothing!*/ }
+			| NULLVAL { /*do nothing!*/ }
+			| NUMBER { /*do nothing!*/ }
+			| STRING { /*do nothing!*/ }
 		)
-	|	ID { compiler->DefaultArgId( $ID ); }
-	|	^(Negate NUMBER) { compiler->DefaultArgVal( $NUMBER, true ); }
+	|	ID { /*do nothing!*/ }
+	|	^(Negate NUMBER) { /*do nothing!*/ }
 	;
 

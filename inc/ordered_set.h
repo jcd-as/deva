@@ -54,8 +54,6 @@ public:
 	void Add( const T& t )
 	{
 			size_t ip = insertionPoint( t );
-//			if( allowDuplicates || (data.size() == 0 || !(data[ip] == t)) )
-//			if( allowDuplicates || (data.size() >= ip || (t < data[ip])) )
 			if( allowDuplicates || (data.size() >= ip || BinaryPredicate()(t, data[ip])) )
 				data.insert( data.begin() + ip, t );
 	}
@@ -67,8 +65,6 @@ public:
 		if( data.size() == 0 )
 			return -1;
 		int ip = insertionPoint( t );
-//		if( data[ip] == t )
-//		if( ip != data.size() && !(t < data[ip]) )
 		if( ip != data.size() && !BinaryPredicate()(t, data[ip]) )
 			return (int)ip;
 		else

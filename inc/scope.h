@@ -32,6 +32,7 @@
 #define __SCOPE_H__
 
 #include "symbol.h"
+#include "object.h"
 #include "ordered_set.h"
 #include <string>
 #include <map>
@@ -39,6 +40,8 @@
 
 using namespace std;
 
+
+class FunctionScope;
 
 struct Scope
 {
@@ -51,22 +54,28 @@ struct Scope
 	virtual const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const = 0;
 	// resolve a local to an index
 	virtual int ResolveLocalToIndex( const string & name ) = 0;
-
 	// print the scope to stdout
 	virtual void Print() = 0;
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s ) = 0;
 
+	virtual FunctionScope* getParentFun() = 0;
+
 	virtual ~Scope(){}
 };
-
 
 class LocalScope : public Scope
 {
 protected:
 	string name;
+	// all names in this scope
 	map<const string, Symbol*> data;
+	// locals only, int is the index into the parent function scope's locals array
+	map<const string, int> local_map;
 	Scope *parent;
+
+	// helper fcn
+	virtual FunctionScope* getParentFun();
 
 public:
 	LocalScope() : name( "" ), parent( NULL ) {}
@@ -80,6 +89,7 @@ public:
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 	// resolve a local to an index
 	int ResolveLocalToIndex( const string & name );
+	// print the scope to stdout
 	void Print();
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
@@ -91,17 +101,25 @@ class FunctionScope : public LocalScope
 protected:
 	bool isMethod;
 	int numArgs;
-	int numLocals;
 
 	// all the names, local, external, functions or undeclared, used in the
 	// function. (names can be duplicated, e.g. locals in different scopes with the same
 	// name)
 	OrderedMultiSet<Symbol*, SB_ptr_lt> names;
 
+	// locals (incl args), for determining local indices
+	vector<string> locals;
+
+	// default argument values
+	OrderedSet<DevaObject> default_arg_values;
+
+	// helper fcn
+	virtual FunctionScope* getParentFun();
+
 public:
-	FunctionScope() : LocalScope(), isMethod( false ), numArgs( 0 ), numLocals( 0 ) {}
+	FunctionScope() : LocalScope(), isMethod( false ), numArgs( 0 ) {}
 	FunctionScope( string n, Scope* p = NULL, bool m = false ) : LocalScope( n, p ), 
-		isMethod( m ), numArgs( 0 ), numLocals( 0 ) {}
+		isMethod( m ), numArgs( 0 ) {}
 	virtual ~FunctionScope() {}
 
 	// Scope "interface" overrides
@@ -111,12 +129,16 @@ public:
 	int ResolveLocalToIndex( const string & name );
 	void Print();
 
-	const int NumArgs() const { return numArgs; }
-	const int NumLocals() const { return numLocals; }
-	OrderedMultiSet<Symbol*, SB_ptr_lt> GetNames() { return names; }
-
+	// function scope methods
+	inline const int NumArgs() const { return numArgs; }
+	inline const int NumLocals() const { return locals.size(); }
+	inline OrderedMultiSet<Symbol*, SB_ptr_lt> & GetNames() { return names; }
+	inline OrderedSet<DevaObject> & GetDefaultArgVals() { return default_arg_values; }
+	inline vector<string> & GetLocals() { return locals; }
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
+	// add a defalt arg value
+	inline void AddDefaultArgVal( DevaObject o ) { default_arg_values.Add( o ); }
 };
 
 

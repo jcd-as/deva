@@ -120,14 +120,13 @@ public:
 	// private helper functions
 	/////////////////////////////////////////////////////////////////////////
 private:
-	// find index of constant, if not found, add it
-	int GetConstant( double d );
-	int GetConstant( char* s );
+	// find index of constant
+	int GetConstant( const DevaObject & o ) { return ex->FindConstant( o ); }
 
 public:
 	// public functions
 	/////////////////////////////////////////////////////////////////////////
-	Compiler( Executor* ex );
+	Compiler( Semantics* sem, Executor* ex );
 	~Compiler()
 	{ delete is; }
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
@@ -149,7 +148,7 @@ public:
 	void ExitBlock();
 
 	// define a function
-	void DefineFun( char* name, int line );
+	void DefineFun( char* name, char* classname, int line );
 
 	// define a class
 	void DefineClass( char* name, int line );
@@ -158,22 +157,51 @@ public:
 	void Number( double d );
 	void String( char* s );
 
+	// identifier
+	void Identifier( char* s, bool is_lhs_of_assign );
+
 	// operators
-	inline void AddOp(){ Emit( op_add ); }
-	inline void SubOp(){ Emit( op_sub ); }
-	inline void MulOp(){ Emit( op_mul ); }
-	inline void DivOp(){ Emit( op_div ); }
-	inline void ModOp(){ Emit( op_mod ); }
-	inline void NegateOp(){ Emit( op_neg ); }
-	inline void NotOp(){ Emit( op_not ); }
+	inline void AddOp() { Emit( op_add ); }
+	inline void SubOp() { Emit( op_sub ); }
+	inline void MulOp() { Emit( op_mul ); }
+	inline void DivOp() { Emit( op_div ); }
+	inline void ModOp() { Emit( op_mod ); }
+	inline void NegateOp() { Emit( op_neg ); }
+	inline void NotOp() { Emit( op_not ); }
+	inline void GtEqOp() { Emit( op_gte ); }
+	inline void LtEqOp() { Emit( op_lte ); }
+	inline void GtOp() { Emit( op_gt ); }
+	inline void LtOp() { Emit( op_lt ); }
+	inline void EqOp() { Emit( op_eq ); }
+	inline void NotEqOp() { Emit( op_neg ); }
+	inline void AndOp() { Emit( op_and ); }
+	inline void OrOp() { Emit( op_or ); }
 
 	// assignments and variable decls
 	void LocalVar( char* n );
-	void Assign( char* n );
+	void ExternVar( char* n, bool is_assign );
+	void Assign( pANTLR3_BASE_TREE node );
 
-	// set a default argument value
-	void DefaultArgVal( pANTLR3_BASE_TREE node, bool negate = false );
-	void DefaultArgId( pANTLR3_BASE_TREE node, bool negate = false );
+	// augmented assignment operators (+=, -=, *=, /=, %=)
+	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op );
+
+	// function call
+	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args );
+
+	// Key ('[]') and Dot ('.') ops
+	void KeyOp( pANTLR3_BASE_TREE key_exp, bool is_lhs_of_assign );
+
+	// return, continue, break ops
+	void ReturnOp( bool no_val = false );
+	// how to setup the jump and determine the right number of Leave ops to
+	// generate??
+//	void ContinueOp();
+//	void BreakOp();
+
+	void ImportOp( pANTLR3_BASE_TREE node );
+
+	// 'new'
+	void NewOp();
 };
 
 

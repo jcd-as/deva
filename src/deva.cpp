@@ -240,9 +240,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			treePsr->translation_unit( treePsr );
 
 			// PASS TWO: compile
-			// (execution engine must be created BEFORE the compiler...)
+			// (semantics and execution engine must be created BEFORE the compiler...)
 			ex = new Executor();
-			compiler = new Compiler( ex );
+			compiler = new Compiler( semantics, ex );
 			cmpPsr = compile_walkerNew( nodes );
 			cmpPsr->translation_unit( cmpPsr );
 
@@ -293,6 +293,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		// print the text repr of the tree?
 		if( show_ast )
 		{
+			cout << "AST:" << endl;
 			pANTLR3_STRING s = nodes->root->toStringTree( nodes->root );
 			ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
 		}
@@ -301,6 +302,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		if( debug && verbosity == 3 )
 		{
 			// dump the symbol tables...
+			cout << "Symbol table:" << endl;
 			for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
 			{
 				if( *i )
@@ -315,6 +317,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 					cout << o.s << endl;
 				else if( o.type == obj_number )
 					cout << o.d << endl;
+				else if( o.type == obj_boolean )
+					cout << (o.b ? "<boolean-true>" : "<boolean-false>") << endl;
+				else if( o.type == obj_null )
+					cout << "<null-value>" << endl;
 			}
 			// dump the function objects
 			cout << "Function objects:" << endl;
@@ -323,7 +329,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				DevaFunction f = ex->functions.At( i );
 				cout << "function: " << f.name << ", from file: " << f.filename << ", line: " << f.first_line;
 				cout << endl;
-				cout << f.num_args << " arg(s), " << f.num_locals << " local(s): ";
+				cout << f.num_args << " arg(s), default value indices: ";
+				for( int j = 0; j < f.default_args.Size(); j++ )
+					cout << f.default_args.At( j ) << " ";
+				cout << endl << f.num_locals << " local(s): ";
 				for( int j = 0; j < f.local_names.Size(); j++ )
 					cout << f.local_names.At( j ) << " ";
 				cout << endl << "code address: " << f.addr << endl;

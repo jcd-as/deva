@@ -47,11 +47,8 @@ public:
 	// set of function objects
 	OrderedSet<DevaFunction> functions;
 
-	// set of constants
+	// set of constants (including all names)
 	OrderedSet<DevaObject> constants;
-
-	// set of global names
-	OrderedSet<string> names;
 
 public:
 	Executor();
@@ -62,9 +59,6 @@ public:
 	inline void AddConstant( DevaObject o ) { constants.Add( o ); }
 	inline int FindConstant( const DevaObject & o ) { return constants.Find( o ); }
 	inline DevaObject GetConstant( int idx ) { return constants.At(idx); }
-	inline void AddName( string s ) { names.Add( s ); }
-	inline int FindName( const string & s ) { return names.Find( s ); }
-	inline string GetName( int idx ) { return constants.At(idx); }
 };
 
 extern Executor* ex;

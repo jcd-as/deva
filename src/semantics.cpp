@@ -32,6 +32,7 @@
 
 #include "semantics.h"
 #include "exceptions.h"
+#include "util.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // semantic checking functions and globals
@@ -42,19 +43,20 @@ Semantics* semantics = NULL;
 // scope & symbol table handling ////////////////////////////////////////////
 
 // 'push' new scope on entering block
-void Semantics::PushScope( char* fcn_name /*= NULL*/ )
+void Semantics::PushScope( char* fcn_name /*= NULL*/, char* class_name /*= NULL*/ )
 {
 	static int counter = 0;
 	static char scopeId[32] = {0};
 	// if we're entering a function body, create a function scope
 	if( fcn_name )
 	{
-		if( in_class )
+		if( class_name )
 		{
 			string method_name;
-			method_name.reserve( strlen( fcn_name + 1 ) );
-		   	method_name = "@";
-		   	method_name += fcn_name;
+			method_name.reserve( strlen( fcn_name ) + strlen( class_name ) + 1 );
+		   	method_name = fcn_name;
+		   	method_name += "@";
+			method_name += class_name;
 			current_scope = new FunctionScope( method_name, current_scope, true );
 		}
 		else
@@ -73,30 +75,30 @@ void Semantics::PushScope( char* fcn_name /*= NULL*/ )
 // 'pop' scope on exiting block
 void Semantics::PopScope()
 {
-	semantics->current_scope = semantics->current_scope->EnclosingScope();
+	current_scope = current_scope->EnclosingScope();
 }
 
 // define a variable in the current scope
 void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/ )
 {
 	Symbol *sym = new Symbol( name, sym_variable, mod );
-	if( !semantics->current_scope->Define( sym ) )
+	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
 		throw DevaSemanticException( str( boost::format( "Symbol '%1%' already defined." ) % name).c_str(), line );
 	}
-	// TODO: global? (extern/undeclared) add to names table
-	if( mod == mod_external || mod == mod_none )
-		names.insert( string( name ) );
+	// add the var name to the constant pool
+	constants.insert( DevaObject( name ) );
 }
 
 // resolve a variable, in the current scope
 void Semantics::ResolveVar( char* name, int line )
 {
 	// look up the variable in the current scope
-	if( show_warnings && !semantics->current_scope->Resolve( name, sym_end ) )
+	if( !current_scope->Resolve( name, sym_end ) )
 	{
-		emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
+		if( show_warnings )
+			emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 		// add it as an 'undeclared' var, it's possible that it was emitted by
 		// an eval() call or such and will exist at run-time
 		DefineVar( name, line );
@@ -104,21 +106,43 @@ void Semantics::ResolveVar( char* name, int line )
 }
 
 // define a function in the current scope
-void Semantics::DefineFun( char* name, int line )
+void Semantics::DefineFun( char* name, char* classname, int line )
 {
-	Symbol *sym = new Symbol( name, sym_function, mod_none );
-	if( !semantics->current_scope->Define( sym ) )
+	char* fcn_name;
+	if( classname )
+	{
+		int namelen = strlen( name );
+		int len = namelen + strlen( classname );
+		fcn_name = new char[len + 2]; // room for name, '@', classname and null-terminator
+		memset( fcn_name, 0, len + 2 ); // zero fill
+		strcpy( fcn_name, name );
+		fcn_name[namelen] = '@';
+		strcat( fcn_name, classname );
+	}
+	else
+	{
+		fcn_name = name;
+	}
+	Symbol *sym = new Symbol( fcn_name, sym_function, mod_none );
+	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
 	}
+	// add the name to the constant pool (the 'short' name, not the method name)
+	constants.insert( DevaObject( name ) );
 }
 
 // resolve a function, in the current scope
 void Semantics::ResolveFun( char* name, int line )
 {
 	// look up the function in the current scope
-	if( show_warnings && !semantics->current_scope->Resolve( name , sym_function ) )
-		emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
+	if( !current_scope->Resolve( name , sym_function ) )
+	{
+		if( show_warnings )
+			emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
+		// add it to the constant pool, assuming it will be located at run-time
+		constants.insert( DevaObject( name ) );
+	}
 }
 
 
@@ -128,10 +152,10 @@ void Semantics::ResolveFun( char* name, int line )
 void Semantics::AddArg( char* arg, int line )
 {
 	string sa( arg );
-	if( semantics->arg_names.count( sa ) != 0 )
+	if( arg_names.count( sa ) != 0 )
 		throw DevaSemanticException( boost::format( "Function argument names must be unique: '%1%' multiply defined." ) % arg, line ); 
 	else
-		semantics->arg_names.insert( sa );
+		arg_names.insert( sa );
 
 	// add arg to the symbol table
 	DefineVar( arg, line, mod_arg );
@@ -146,7 +170,12 @@ void Semantics::AddNumber( double arg )
 // add string constant
 void Semantics::AddString( char* arg )
 {
-	constants.insert( DevaObject( arg ) );
+	// strip the string of quotes and unescape it
+	string str( arg );
+	str = unescape( strip_quotes( str ) );
+	char* s = new char[str.length()+1];
+	strcpy( s, str.c_str() );
+	constants.insert( DevaObject( s ) );
 }
 
 // validate lhs of assignment
@@ -158,10 +187,32 @@ void Semantics::CheckLhsForAssign( pANTLR3_BASE_TREE lhs )
 	if( type != ID && type != Key && type != DOT_OP )
 		throw DevaSemanticException( "Invalid l-value on left-hand side of assignment.", lhs->getLine(lhs) );
 
+	char* name = (char*)lhs->getText(lhs)->chars;
 	// if lhs is an ID, check with the symbol table and ensure it is defined
 	if( type == ID )
 	{
-		ResolveVar( (char*)lhs->getText(lhs)->chars, lhs->getLine(lhs) );
+		ResolveVar( name, lhs->getLine(lhs) );
+
+		// disallow const assignments
+		const Symbol* sym = current_scope->Resolve( name, sym_end );
+		if( sym && sym->IsConst() )
+			throw DevaSemanticException( "Cannot modify the value of a 'const' variable.", lhs->getLine(lhs) );
+	}
+}
+
+// validate lhs of augmented assignment
+void Semantics::CheckLhsForAugmentedAssign( pANTLR3_BASE_TREE lhs )
+{
+	unsigned int type = lhs->getType( lhs );
+
+	CheckLhsForAssign( lhs );
+
+	// disallow slices with augmented assigns
+	if( type == Key )
+	{
+		int num_children = lhs->getChildCount( lhs );
+		if( num_children > 2 )
+			throw DevaSemanticException( "Augmented assignment operators cannot be applied to slices.", lhs->getLine( lhs ) );
 	}
 }
 
@@ -467,13 +518,13 @@ void Semantics::CheckForNoEffect( pANTLR3_BASE_TREE node )
 // check default arg val ID to make sure it's a const
 void Semantics::CheckDefaultArgVal( char* n, int line )
 {
-	const Symbol* s = semantics->current_scope->Resolve( n, sym_end );
+	const Symbol* s = current_scope->Resolve( n, sym_end );
 	if( !s || !s->IsConst() )
 		throw DevaSemanticException( "Invalid default argument value: must be a constant or a 'const' variable.", line );
 }
 
 // add a default arg val (for the previous default arg)
-void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node )
+void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 {
 	// must be at least one arg
 	if( arg_names.size() == 0 )
@@ -487,7 +538,7 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node )
 		first_default_arg = arg_names.size() - 1;
 
 	unsigned int type = node->getType( node );
-	char* text = (char*)node->getText( node );
+	char* text = (char*)node->getText( node )->chars;
 	DevaObject val;
 	switch( type )
 	{
@@ -509,6 +560,7 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node )
 	case NUMBER:
 		val.type = obj_number;
 		val.d = atof( text );
+		if( negate ) val.d *= -1.0;
 		break;
 	case ID:
 		// TODO: need to handle 'const' values (look up const var 'somewhere' and
@@ -520,14 +572,41 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node )
 	default_arg_values.push_back( val );
 }
 
-void Semantics::CheckAndResetFcn( int line )
+void Semantics::CheckAndResetFun( int line )
 {
 	// validate the default/non-default args
 	if( first_default_arg != -1 && default_arg_values.size() != arg_names.size() - first_default_arg )
 		throw DevaSemanticException( "Non-default argument follows default argument", line );
 
+	// copy the default args to the scope
+	FunctionScope* scope = dynamic_cast<FunctionScope*>(current_scope);
+	if( !scope )
+		throw DevaICE( "Local scope found where function scope expected" );
+	for( int i = 0; i < default_arg_values.size(); i++ )
+	{
+		scope->GetDefaultArgVals().Add( default_arg_values[i]  );
+	}
+
 	// reset our fcn tracking vars
 	arg_names.clear();
 	default_arg_values.clear(); 
 	first_default_arg = -1;
+}
+
+// compose and define the module name
+void Semantics::CheckImport( pANTLR3_BASE_TREE node )
+{
+	string modname;
+
+	// get each child and append its name to the module name string
+	int num_children = node->getChildCount( node );
+	for( int i = 0; i < num_children; i++ )
+	{
+		pANTLR3_BASE_TREE child = (pANTLR3_BASE_TREE)node->getChild( node, i );
+		char* childname = (char*)child->getText( child )->chars;
+		modname += childname;
+	}
+	char* mod = new char[modname.length() + 1];
+	strcpy( mod, modname.c_str() );
+	DefineVar( mod, node->getLine( node ) );
 }

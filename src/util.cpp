@@ -143,6 +143,14 @@ void split( const string & in, const char* const splitchars, vector<string> & re
 	}
 }
 
+// allocate and return a copy of a string
+inline char* copystr( const char* in )
+{
+	char* ret = new char[strlen( in ) + 1];
+	strcpy( ret, in );
+	return ret;
+}
+
 // strip the whitespace and leading comments from a string,
 // to create a valid symbol name
 string strip_symbol( const string& src, const string& c )

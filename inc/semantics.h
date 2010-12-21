@@ -58,18 +58,11 @@ struct Semantics
 	vector<DevaObject> default_arg_values;
 	int first_default_arg;
 
-	// constants
+	// constants (numbers & strings)
 	set<DevaObject> constants;
-
-	// 'global' variables (extern, undeclared)
-	set<string> names;
 
 	// function calls
 	bool making_call;
-
-	// classes
-	//char* class_name;
-	bool in_class;
 
 	// loop tracking
 	int in_loop;
@@ -79,14 +72,11 @@ struct Semantics
 	   	global_scope( NULL ), current_scope( NULL ),
 		first_default_arg( -1 ),
 		making_call( false ),
-		in_class( false ),
 		in_loop( false )
 	{
 		// setup the global scope (a fcn scope called "@main")
 		PushScope( (char*)"@main" );
-//		current_scope = new FunctionScope( "@main", current_scope );
 		global_scope = current_scope;
-//		scopes.push_back( current_scope );
 	}
 	// destructor
 	~Semantics()
@@ -105,7 +95,7 @@ struct Semantics
 	// scope & symbol table handling ////////////////////////////////////////////
 
 	// 'push' new scope on entering block
-	void PushScope( char* name = NULL );
+	void PushScope( char* name = NULL, char* class_name = NULL );
 	// 'pop' scope on exiting block
 	void PopScope();
 
@@ -116,7 +106,7 @@ struct Semantics
 	void ResolveVar( char* name, int line );
 
 	// define a function in the current scope
-	void DefineFun( char* name, int line );
+	void DefineFun( char* name, char* classname, int line );
 	
 	// resolve a function, in the current scope
 	void ResolveFun( char* name, int line );
@@ -134,6 +124,9 @@ struct Semantics
 
 	// validate lhs of assignment
 	void CheckLhsForAssign( pANTLR3_BASE_TREE lhs ); 
+
+	// validate lhs of augmented assignment ('+= etc)
+	void CheckLhsForAugmentedAssign( pANTLR3_BASE_TREE lhs ); 
 
 	// validate relational expression
 	void CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs );
@@ -172,10 +165,13 @@ struct Semantics
 	void CheckDefaultArgVal( char* n, int line );
 
 	// add a default arg val (for the previous default arg)
-	void DefaultArgVal( pANTLR3_BASE_TREE node );
+	void DefaultArgVal( pANTLR3_BASE_TREE node, bool negate = false );
 
 	// check the fcn default args' placement and reset fcn tracking vars
-	void CheckAndResetFcn( int line );
+	void CheckAndResetFun( int line );
+
+	// compose and define the module name
+	void CheckImport( pANTLR3_BASE_TREE node );
 };
 
 

@@ -4,7 +4,7 @@
 VPATH = src
 
 # sources/objs for test executable
-DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp
+DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp object.cpp
 DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c compile_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 DEVA_C_OBJS=$(patsubst %.cpp, %.o, ${DEVA_C_SOURCES})

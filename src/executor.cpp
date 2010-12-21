@@ -46,6 +46,11 @@ Executor::Executor()
 	// set-up the constant and function object pools
 	functions.Reserve( 256 );
 	constants.Reserve( 256 );
+
+	// add the "perpetual constants":
+	constants.Add( DevaObject( true ) );
+	constants.Add( DevaObject( false ) );
+	constants.Add( DevaObject( obj_null ) );
 }
 
 Executor::~Executor()

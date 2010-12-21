@@ -17,6 +17,7 @@ tokens
 	Base_classes;		// base class list
 	Arg_list_decl;		// argument list declaration
 	Call;				// function call
+	ArgList;			// function call argument list
 	Def_arg;			// define function argument 
 	Key;				// index or slice with one, two or three args
 	Condition;			// if condition
@@ -256,7 +257,8 @@ primary_exp
 
 arg_list_exp
 	:	
-	'('! (exp (','! exp)*)? ')'!
+//	'('! (exp (','! exp)*)? ')'!
+	'(' (exp (',' exp)*)? ')'								-> ^(ArgList exp*)
 	;
 
 // map key (inside '[]'s) - only 'math' expresssions allowed inside, 

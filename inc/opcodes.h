@@ -110,7 +110,7 @@ enum Opcode
 {
 	op_nop,
 	op_pop,			// pop tos
-	op_push,		// push object named at names slot <Op0> 
+	op_push,		// push object named at constants slot <Op0> 
 	op_push_true,	// push boolean 'true' to tos
 	op_push_false,	// push boolean 'false' to tos
 	op_push_null,	// push null to tos
@@ -150,7 +150,13 @@ enum Opcode
 	op_mul,			// multiply tos and tos1
 	op_div,			// divide tos and tos1
 	op_mod,			// modulus tos and tos1
-	op_call,		// call function named at <Op0>. arguments on stack
+	op_add_assign,	// add <Op0> and tos and store back into <Op0>
+	op_sub_assign,	// subtract <Op0> and tos and store back into <Op0>
+	op_mul_assign,	// multiply <Op0> and tos and store back into <Op0>
+	op_div_assign,	// divide <Op0> and tos and store back into <Op0>
+	op_mod_assign,	// modulus <Op0> and tos and store back into <Op0>
+	op_call,		// call function on tos. arguments next on stack
+	op_call_n,		// call function named at <Op0>. arguments on stack
 	op_return,		// pop the return address and unconditionally jump to it, tos holds return value
 	op_break,		// break loop
 	op_continue,	// continue loop
@@ -159,91 +165,140 @@ enum Opcode
 	op_for_iter,	// tos has iterable object, call next() on it & push value onto tos
 
 	op_tbl_load,	// tos = tos1[tos]
-	op_slice2,		// tos = tos2[tos1:tos]
-	op_slice3,		// tos = tos3[tos2:tos1:tos]
-	op_tbl_load_local,	// tos = local tos1[tos]
-	op_slice2local,	// tos = local tos2[tos1:tos]
-	op_slice3local,	// tos = local tos3[tos2:tos1:tos]
+	op_loadslice2,	// tos = tos2[tos1:tos]
+	op_loadslice3,	// tos = tos3[tos2:tos1:tos]
+	op_tbl_store,	// tos2[tos1] = tos
+	op_storeslice2,	// 
+	op_storeslice3,
+	// augmented assignment for table stores
+	op_add_tbl_store,// tos2[tos1] += tos
+	op_sub_tbl_store,// tos2[tos1] -= tos
+	op_mul_tbl_store,// tos2[tos1] *= tos
+	op_div_tbl_store,// tos2[tos1] /= tos
+	op_mod_tbl_store,// tos2[tos1] %= tos
 
+	op_dup,			// tos -> tos<Op0> = tos (dup tos N times)
+	// no-operand shortcuts to dup n times:
+	op_dup1, op_dup2, op_dup3,
+	op_dup_top_n,	// tos<Op0> -> tos<Op0>*2 = tos -> tos<Op0> (dup top N items once)
+	// no-operand shortcuts to dup top n:
+	op_dup_top1, op_dup_top2, op_dup_top3,
+	op_swap,		// tos = tos1, tos1 = tos
+	op_rot,			// tos = tos<Op0>, tos1 -> tos<Op0> = tosN-1
+	// no-operand shortcuts to rot n times (rot1 is op_swap):
+	op_rot2, op_rot3, op_rot4, 
+
+	op_print,		// tos to stdout
+	op_printline,	// tos + newline to stdout
+	op_import,
+
+	// 100 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
 
 static const char* opcodeNames[] =
 {
-	"op_nop",
-	"op_pop",
-	"op_push",
-	"op_push_true",
-	"op_push_false",
-	"op_push_null",
-	"op_push0", 
-	"op_push1",
-	"op_push2",
-	"op_push3",
-	"op_pushlocal",
-	"op_pushlocal0",
-	"op_pushlocal1",
-	"op_pushlocal2",
-	"op_pushlocal3",
-   	"op_pushlocal4",
-	"op_pushlocal5",
-   	"op_pushlocal6",
-   	"op_pushlocal7",
-   	"op_pushlocal8",
-   	"op_pushlocal9",
-	"op_pushconst",
-	"op_store",
-	"op_store_true",
-	"op_store_false",
-	"op_store_null",
-	"op_storelocal",
-	"op_storelocal0",
-	"op_storelocal1",
-	"op_storelocal2",
-	"op_storelocal3",
-	"op_storelocal4",
-	"op_storelocal5",
-	"op_storelocal6",
-	"op_storelocal7",
-	"op_storelocal8",
-	"op_storelocal9",
-	"op_new_map",
-	"op_new_vec",
-	"op_new_class",
-	"op_new_instance",
-	"op_jmp",
-	"op_jmpf",
-	"op_eq",
-	"op_neq",
-	"op_lt",
-	"op_lte",
-	"op_gt",
-	"op_gte",
-	"op_or",
-	"op_and",
-	"op_neg",
-	"op_not",
-	"op_add",
-	"op_sub",
-	"op_mul",
-	"op_div",
-	"op_mod",
-	"op_call",
-	"op_return",
-	"op_break",
-	"op_continue",
-	"op_enter",
-	"op_leave",
-	"op_for_iter",
-	"op_tbl_load",
-	"op_slice2",
-	"op_slice3",
-	"op_tbl_load_local",
-	"op_slice2local",
-	"op_slice3local",
-	"op_halt",
-	"op_illegal",
+	"nop",
+	"pop",
+	"push",
+	"push_true",
+	"push_false",
+	"push_null",
+	"push0", 
+	"push1",
+	"push2",
+	"push3",
+	"pushlocal",
+	"pushlocal0",
+	"pushlocal1",
+	"pushlocal2",
+	"pushlocal3",
+   	"pushlocal4",
+	"pushlocal5",
+   	"pushlocal6",
+   	"pushlocal7",
+   	"pushlocal8",
+   	"pushlocal9",
+	"pushconst",
+	"store",
+	"store_true",
+	"store_false",
+	"store_null",
+	"storelocal",
+	"storelocal0",
+	"storelocal1",
+	"storelocal2",
+	"storelocal3",
+	"storelocal4",
+	"storelocal5",
+	"storelocal6",
+	"storelocal7",
+	"storelocal8",
+	"storelocal9",
+	"new_map",
+	"new_vec",
+	"new_class",
+	"new_instance",
+	"jmp",
+	"jmpf",
+	"eq",
+	"neq",
+	"lt",
+	"lte",
+	"gt",
+	"gte",
+	"or",
+	"and",
+	"neg",
+	"not",
+	"add",
+	"sub",
+	"mul",
+	"div",
+	"mod",
+	"add_assign",
+	"sub_assign",
+	"mul_assign",
+	"div_assign",
+	"mod_assign",
+	"call",
+	"call_n",
+	"return",
+	"break",
+	"continue",
+	"enter",
+	"leave",
+	"for_iter",
+	"tbl_load",
+	"loadslice2",
+	"loadslice3",
+	"tbl_store",
+	"storeslice2",
+	"storeslice3",
+	"add_tbl_store",
+	"sub_tbl_store",
+	"mul_tbl_store",
+	"div_tbl_store",
+	"mod_tbl_store",
+	"dup",
+	"dup1", 
+	"dup2", 
+	"dup3",
+	"dup_top_n",
+	"dup_top1", 
+	"dup_top2", 
+	"dup_top3",
+	"swap",
+	"rot",
+	"rot2", 
+	"rot3", 
+	"rot4", 
+	"print",
+	"printline",
+	"import",
+	"halt",
+	"illegal",
 };
 
 #endif // __OPCODES_H__

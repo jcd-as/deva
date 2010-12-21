@@ -33,6 +33,13 @@
 // LocalScope class methods:
 /////////////////////////////////////////////////////////////////////////////
 
+// helper fcn
+FunctionScope* LocalScope::getParentFun()
+{
+	if( parent )
+		return parent->getParentFun();
+}
+
 const string & LocalScope::Name() const
 {
 	return name;
@@ -45,13 +52,33 @@ Scope* LocalScope::EnclosingScope() const
 
 bool LocalScope::Define( const Symbol* const s )
 {
-	if( data.count( s->Name() ) != 0 )
-		return false;
-	else
-		data[s->Name()] = const_cast<Symbol*>( s );
+	// if it's a local, check with the locals for this scope
+	if( s->IsLocal() )
+	{
+		map<const string, int>::iterator i = local_map.find( s->Name() );
+		if( i != local_map.end() )
+			return false;
+	}
+	// if it's a const, disallow re-def
+	else if( s->IsConst() )
+	{
+		if( data.count( s->Name() ) != 0 )
+			return false;
+	}
+	// ensure it's added to the list of names for this scope
+	data[s->Name()] = const_cast<Symbol*>( s );
 
 	// add this name to the parent function's list of names
 	AddName( const_cast<Symbol*>(s) );
+
+	// is this a local? add it to this scope and to the fcn scope
+	if( s->IsLocal() || s->IsConst() )
+	{
+		FunctionScope* fun = getParentFun();
+		int idx = fun->GetLocals().size();
+		fun->GetLocals().push_back( string( s->Name() ) );
+		local_map.insert( pair<string, int>( s->Name(), idx ) );
+	}
 
 	return true;
 }
@@ -73,7 +100,15 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 // resolve a local to an index
 int LocalScope::ResolveLocalToIndex( const string & name )
 {
-	// pass through to the function parent, which tracks locals
+	// look in this scope first
+	map<const string, int>::iterator i = local_map.find( name );
+	int idx = -1;
+	if( i != local_map.end() )
+		idx = i->second;
+	if( idx != -1 )
+		return idx;
+
+	// not found? pass through to the parent scope
 	if( parent )
 		return parent->ResolveLocalToIndex( name );
 }
@@ -116,6 +151,12 @@ void LocalScope::AddName( Symbol* s )
 // FunctionScope class methods:
 /////////////////////////////////////////////////////////////////////////////
 
+// helper fcn
+FunctionScope* FunctionScope::getParentFun()
+{
+	return this;
+}
+
 const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) const
 {
 	// external vars can't be actually resolved until runtime, all we can do is
@@ -157,13 +198,17 @@ bool FunctionScope::Define( const Symbol* const  s )
 // resolve a local to an index
 int FunctionScope::ResolveLocalToIndex( const string & name )
 {
-	Symbol s( name.c_str(), sym_end );
-	return names.Find( &s );
+	for( int i = 0; i < locals.size(); i++ )
+	{
+		if( locals[i] == name )
+			return i;
+	}
+	return -1;
 }
 
 void FunctionScope::Print()
 {
-	cout << "Function: " << name << ", " << numArgs << " arguments, " << numLocals << " locals" << endl << "\tall names: ";
+	cout << "Function: " << name << ", " << numArgs << " arguments, " << NumLocals() << " locals" << endl << "\tall names: ";
 	for( int i = 0; i < names.Size(); i++ )
 	{
 		Symbol* s = names.At( i );
@@ -194,8 +239,6 @@ void FunctionScope::Print()
 // add to the parent function's list of names
 void FunctionScope::AddName( Symbol* s )
 {
-	if( s->IsLocal() )
-		numLocals++;
 	names.Add( s );
 }
 
