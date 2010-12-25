@@ -33,6 +33,10 @@
 
 using namespace boost;
 
+
+namespace deva
+{
+
 // file name and path utility functions
 /////////////////////////////////////////////////////////////////////////////
 string get_cwd()
@@ -238,3 +242,5 @@ bool is_keyword( const string & s )
 	else
 		return false;
 }
+
+} // namespace deva

@@ -35,6 +35,7 @@ options
 @includes
 {
 #include "inc/semantics.h"
+using namespace deva_compile;
 }
 
 @apifuncs 
@@ -96,7 +97,7 @@ class_decl
 while_statement 
 @init { semantics->in_loop++; }
 @after { semantics->in_loop--; }
-	:	^(While ^(Condition con=exp) block) { semantics->CheckConditional( $con.start ); }
+	:	^(While ^(Condition con=exp[false]) block) { semantics->CheckConditional( $con.start ); }
 	;
 
 for_statement 
@@ -106,7 +107,7 @@ for_statement
 	;
 
 if_statement
-	:	^(If ^(Condition con=exp) block else_statement?) { semantics->CheckConditional( $con.start ); }
+	:	^(If ^(Condition con=exp[false]) block else_statement?) { semantics->CheckConditional( $con.start ); }
 	;
 
 else_statement 
@@ -132,77 +133,77 @@ continue_statement
 	;
 
 return_statement 
-	:	^(Return exp)
+	:	^(Return exp[false])
 	|	Return
 	;
 
 assign_statement
-	: 	^(Const id=ID value) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_constant ); }
+	: 	^(Const id=ID value[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_constant ); }
 	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
-	|	^(Local id=ID exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
+	|	^(Local id=ID exp[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
 	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
-	|	^(Extern id=ID exp?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
-	|	(^('=' exp new_exp))=> ^('=' lhs=exp new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^('=' lhs=exp (exp|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^(ADD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
-	|	^(SUB_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
-	|	^(MUL_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
-	|	^(DIV_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
-	|	^(MOD_EQ_OP lhs=exp exp) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
-	|	exp
+	|	^(Extern id=ID exp[false]?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
+	|	(^('=' exp[false] new_exp))=> ^('=' lhs=exp[false] new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^('=' lhs=exp[false] (exp[false]|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(ADD_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(SUB_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(MUL_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(DIV_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(MOD_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	exp[false]
 	;
 
 assign_rhs 
-	:	^('=' lhs=exp (assign_rhs|exp)) { semantics->CheckLhsForAssign( $lhs.start ); }
+	:	^('=' lhs=exp[false] (assign_rhs|exp[false])) { semantics->CheckLhsForAssign( $lhs.start ); }
 	;
 	
 new_exp
-	:	^(New exp)
+	:	^(New exp[false])
 	;
 	
 /////////////////////////////////////////////////////////////////////////////
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
 
-exp
-	:	^(GT_EQ_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
-	|	^(LT_EQ_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
-	|	^(GT_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
-	|	^(LT_OP lhs=exp rhs=exp) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
-	|	^(EQ_OP lhs=exp rhs=exp) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
-	|	^(NOT_EQ_OP lhs=exp rhs=exp) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
-	|	^(AND_OP lhs=exp rhs=exp) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
-	|	^(OR_OP lhs=exp rhs=exp) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
-	|	^(ADD_OP lhs=exp rhs=exp) { semantics->CheckAddOp( $lhs.start, $rhs.start ); }
-	|	^(SUB_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
-	|	^(MUL_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
-	|	^(DIV_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
-	|	^(MOD_OP lhs=exp rhs=exp) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
-	|	^(Negate in=exp) { semantics->CheckNegateOp( $in.start ); }
-	|	^(NOT_OP in=exp) { semantics->CheckNotOp( $in.start ); }
-	|	^(Key exp key_exp)
-	|	^(DOT_OP exp exp)
+exp[bool invert]
+	:	^(GT_EQ_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(LT_EQ_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(GT_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(LT_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckRelationalOp( $lhs.start, $rhs.start ); }
+	|	^(EQ_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
+	|	^(NOT_EQ_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
+	|	^(AND_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(OR_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(ADD_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckAddOp( $lhs.start, $rhs.start ); }
+	|	^(SUB_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(MUL_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(DIV_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(MOD_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
+	|	^(Negate in=exp[true]) { semantics->CheckNegateOp( $in.start ); }
+	|	^(NOT_OP in=exp[false]) { semantics->CheckNotOp( $in.start ); }
+	|	^(Key exp[false] key_exp)
+	|	^(DOT_OP exp[false] exp[false])
 	|	call_exp
 	|	(map_op | vec_op)
-	|	value
+	|	value[invert]
 	|	ID  { if( semantics->making_call ) semantics->ResolveFun( (char*)$ID.text->chars, $ID->getLine($ID) ); else semantics->ResolveVar( (char*)$ID.text->chars, $ID->getLine($ID) ); }
 	;
 
 call_exp
 @init { semantics->making_call = true; }
-	:	^(Call exp { semantics->making_call = false; }
-			^(ArgList exp*)
+	:	^(Call exp[false] { semantics->making_call = false; }
+			^(ArgList exp[false]*)
 		)
 	;
 
 key_exp
-	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp { semantics->CheckKeyExp( $idx1.start, $idx2.start, $idx3.start ); }
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false] { semantics->CheckKeyExp( $idx1.start, $idx2.start, $idx3.start ); }
 	|	(idx idx)=> idx1=idx idx2=idx { semantics->CheckKeyExp( $idx1.start, $idx2.start ); }
 	|	idx1=idx { semantics->CheckKeyExp( $idx1.start ); }
 	;
 
 idx 
-	:	(END_OP | exp)
+	:	(END_OP | exp[false])
 	;
 
 arg_list_decl
@@ -220,7 +221,7 @@ arg
 	;
 
 in_exp 
-	:	^(In key=ID val=ID? exp) { semantics->DefineVar( (char*)$key.text->chars, $key->getLine($key) ); if( $val ) semantics->DefineVar( (char*)$val.text->chars, $val->getLine($val) ); }
+	:	^(In key=ID val=ID? exp[false]) { semantics->DefineVar( (char*)$key.text->chars, $key->getLine($key) ); if( $val ) semantics->DefineVar( (char*)$val.text->chars, $val->getLine($val) ); }
 	;
 
 map_op 
@@ -228,16 +229,16 @@ map_op
 	;
 
 map_item 
-	:	^(Pair exp exp)
+	:	^(Pair exp[false] exp[false])
 	;
 
 vec_op 
-	:	^(Vec_init exp*)
+	:	^(Vec_init exp[false]*)
 	;
 
-value
+value[bool invert]
 	:	BOOL | NULLVAL 
-	|	NUMBER { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) ); }
+	|	NUMBER { semantics->AddNumber( (invert ? -1.0 : 1.0) * atof( (char*)$NUMBER.text->chars ) ); }
 	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); }
 	;
 

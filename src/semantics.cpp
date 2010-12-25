@@ -34,6 +34,9 @@
 #include "exceptions.h"
 #include "util.h"
 
+namespace deva_compile
+{
+
 /////////////////////////////////////////////////////////////////////////////
 // semantic checking functions and globals
 /////////////////////////////////////////////////////////////////////////////
@@ -363,6 +366,10 @@ void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 		&& type != Call
 		&& type != NUMBER )
 		throw DevaSemanticException( "Invalid operand for negate ('-') operator.", in->getLine(in) );
+
+	// if a NUMBER, set flag
+	if( type == NUMBER )
+		in->u = (void*)0x1;
 }
 
 // validate not expression
@@ -610,3 +617,5 @@ void Semantics::CheckImport( pANTLR3_BASE_TREE node )
 	strcpy( mod, modname.c_str() );
 	DefineVar( mod, node->getLine( node ) );
 }
+
+} // namespace deva_compile

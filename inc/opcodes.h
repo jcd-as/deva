@@ -31,6 +31,8 @@
 #ifndef __OPCODES_H__
 #define __OPCODES_H__
 
+namespace deva
+{
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -114,6 +116,8 @@ enum Opcode
 	op_push_true,	// push boolean 'true' to tos
 	op_push_false,	// push boolean 'false' to tos
 	op_push_null,	// push null to tos
+	op_push_zero,	// push the number '0'
+	op_push_one,	// push the number '1'
 	// no-operand shortcuts to push objects 0-3 to the tos
 	op_push0, op_push1, op_push2, op_push3,
 	op_pushlocal,	// push local number <Op0>
@@ -129,10 +133,10 @@ enum Opcode
 	// no-operand shortcuts to store tos to locals 0-9
 	op_storelocal0, op_storelocal1, op_storelocal2, op_storelocal3, op_storelocal4,
 	op_storelocal5, op_storelocal6, op_storelocal7, op_storelocal8, op_storelocal9,
-	op_new_map,		// create a new map object and push onto tos
-	op_new_vec,		// create a new vector object and push onto tos
-	op_new_class,	// create a new class object and push onto the tos
-	op_new_instance,// create a new instance of a class and push onto the tos
+	op_new_map,		// create a new map object and push onto tos. <Op0> has count of items on stack
+	op_new_vec,		// create a new vector object and push onto tos. <Op0> has count of items on stack
+	op_new_class,	// create a new class object and push onto the tos. <Op0> has count of items on stack
+	op_new_instance,// create a new instance of a class and push onto the tos. <Op0> has count of items on stack
 	op_jmp,			// unconditional jump to the address on the tos
 	op_jmpf,		// jump on tos evaluating to false 
 	op_eq,			// == compare tos and tos1
@@ -155,11 +159,9 @@ enum Opcode
 	op_mul_assign,	// multiply <Op0> and tos and store back into <Op0>
 	op_div_assign,	// divide <Op0> and tos and store back into <Op0>
 	op_mod_assign,	// modulus <Op0> and tos and store back into <Op0>
-	op_call,		// call function on tos. arguments next on stack
-	op_call_n,		// call function named at <Op0>. arguments on stack
-	op_return,		// pop the return address and unconditionally jump to it, tos holds return value
-	op_break,		// break loop
-	op_continue,	// continue loop
+	op_call,		// call function with <Op0> args on stack, fcn on stack after args
+	op_return,		// execute <Op0> leave ops, pop the return address from the frame stack and jump to it, tos holds return value
+	op_exit_loop,	// break/continue loop, jumping to <Op0>, executing <Op1> leave ops
 	op_enter,		// enter (non-function) scope
 	op_leave,		// leave (non-function) scope
 	op_for_iter,	// tos has iterable object, call next() on it & push value onto tos
@@ -184,15 +186,14 @@ enum Opcode
 	// no-operand shortcuts to dup top n:
 	op_dup_top1, op_dup_top2, op_dup_top3,
 	op_swap,		// tos = tos1, tos1 = tos
+	// TODO: do we need the rot ops?? (were used for call, but depr)
 	op_rot,			// tos = tos<Op0>, tos1 -> tos<Op0> = tosN-1
 	// no-operand shortcuts to rot n times (rot1 is op_swap):
 	op_rot2, op_rot3, op_rot4, 
 
-	op_print,		// tos to stdout
-	op_printline,	// tos + newline to stdout
 	op_import,
 
-	// 100 (update as opcodes are added above)
+	// 96 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -205,6 +206,8 @@ static const char* opcodeNames[] =
 	"push_true",
 	"push_false",
 	"push_null",
+	"push_zero",
+	"push_one",
 	"push0", 
 	"push1",
 	"push2",
@@ -263,10 +266,8 @@ static const char* opcodeNames[] =
 	"div_assign",
 	"mod_assign",
 	"call",
-	"call_n",
 	"return",
-	"break",
-	"continue",
+	"exit_loop",
 	"enter",
 	"leave",
 	"for_iter",
@@ -294,11 +295,10 @@ static const char* opcodeNames[] =
 	"rot2", 
 	"rot3", 
 	"rot4", 
-	"print",
-	"printline",
 	"import",
 	"halt",
 	"illegal",
 };
 
+} // namespace deva
 #endif // __OPCODES_H__

@@ -43,6 +43,9 @@
 using namespace std;
 
 
+namespace deva
+{
+
 enum ObjectType
 {
 	obj_null,
@@ -60,7 +63,8 @@ enum ObjectType
 	obj_end = 255			// end of enum marker
 };
 
-typedef void (*NativeFunction)(void);
+class Frame;
+typedef void (*NativeFunction)(Frame*);
 class DevaVector;
 struct DevaMap;
 struct DevaFunction;
@@ -127,6 +131,9 @@ struct DevaObject
 	// equality operator
 	bool operator == ( const DevaObject& rhs ) const;
 	bool operator < ( const DevaObject & rhs ) const;
+
+	// coerce to a boolean (for jmpf op, for instance)
+	bool CoerceToBool();
 };
 
 // functor for comparing DevaObject ptrs
@@ -213,5 +220,7 @@ struct DF_ptr_lt
 
 // operator << for printing DevaObjects
 ostream & operator << ( ostream & os, DevaObject & obj );
+
+} // namespace deva
 
 #endif // __OBJECT_H__

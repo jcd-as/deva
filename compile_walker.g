@@ -36,6 +36,7 @@ options
 {
 #include "inc/semantics.h"
 #include "inc/compile.h"
+using namespace deva_compile;
 }
 
 @apifuncs 
@@ -71,14 +72,14 @@ statement
 	;
 
 block 
-@init { compiler->EnterBlock(); }
-@after { compiler->ExitBlock(); }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->EnterBlock(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->ExitBlock(); } }
 	:	^(Block statement*)
 	;
 
 func_decl[char* classname]
-@init { compiler->fcn_nesting++; }
-@after { compiler->fcn_nesting--; compiler->LeaveScope(); }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->LeaveScope(); compiler->EndFun(); } }
 	:	^(Def id=ID 
 		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
 		arg_list_decl block) 
@@ -88,29 +89,34 @@ func_decl[char* classname]
 	;
 	
 class_decl 
-@init { compiler->in_class = true; }
-@after { compiler->in_class = false; }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = true; } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = false; } }
 	:	^(Class id=ID 
 		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
 		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
 	;
 
 while_statement 
-	:	^(While ^(Condition con=exp[false]) block) // TODO
+	:	^(While { compiler->WhileOpStart(); }
+			^(Condition con=exp[false]) { compiler->WhileOpConditionJump(); }
+			block { compiler->WhileOpEnd(); }
+		)
 	;
 
 for_statement 
-@init { compiler->AddScope(); }
-@after { compiler->LeaveScope(); }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->AddScope(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->LeaveScope(); } }
 	:	^(For in_exp block) // TODO
 	;
 
 if_statement
-	:	^(If ^(Condition con=exp[false]) block else_statement?) // TODO
+	:	(^(If ^(Condition con=exp[false]) block else_statement))=>
+		^(If ^(Condition con=exp[false]) { compiler->IfOpJump(); } block { compiler->ElseOpJump(); } else_statement { compiler->ElseOpEndLabel(); } )
+	|	^(If ^(Condition con=exp[false]) { compiler->IfOpJump(); } block { compiler->EndIfOpJump(); } )
 	;
 
 else_statement 
-	:	^(Else block) // TODO
+	:	^(Else block)
 	;
 
 import_statement 
@@ -124,11 +130,11 @@ jump_statement
 	;
 
 break_statement 
-	:	brk=Break // TODO
+	:	brk=Break { compiler->BreakOp(); }
 	;
 
 continue_statement 
-	:	con=Continue // TODO
+	:	con=Continue { compiler->ContinueOp(); }
 	;
 
 return_statement 
@@ -181,8 +187,8 @@ exp[bool is_lhs_of_assign]
 	|	^(MUL_OP lhs=exp[false] rhs=exp[false]) { compiler->MulOp(); }
 	|	^(DIV_OP lhs=exp[false] rhs=exp[false]) { compiler->DivOp(); }
 	|	^(MOD_OP lhs=exp[false] rhs=exp[false]) { compiler->ModOp(); }
-	|	^(Negate in=exp[false]) { compiler->NegateOp(); }
-	|	^(NOT_OP in=exp[false]) { compiler->NotOp(); }
+	|	^(Negate in=exp[false]) { compiler->NegateOp( $in.start ); }
+	|	^(NOT_OP in=exp[false]) { compiler->NotOp( $in.start ); }
 	|	^(Key exp[false] key=key_exp) { compiler->KeyOp( $key.start, is_lhs_of_assign ); } // TODO: slices??
 	|	^(DOT_OP exp[false] exp[false]) { compiler->KeyOp( NULL, is_lhs_of_assign ); }
 	|	call_exp
@@ -192,6 +198,8 @@ exp[bool is_lhs_of_assign]
 	;
 
 call_exp
+//	:	(^(Call id=ID args))=> ^(Call id=exp[true] args) { compiler->CallOp( $id.start, $args.start ); }
+//	|	^(Call id=exp[false] args) { compiler->CallOp( $id.start, $args.start ); }
 	:	^(Call id=exp[false] args) { compiler->CallOp( $id.start, $args.start ); }
 	;
 
@@ -222,7 +230,7 @@ in_exp
 	;
 
 map_op 
-	:	^(Map_init map_item*)
+	:	^(Map_init map_item*) { compiler->MapOp( $Map_init ); }
 	;
 
 map_item 
@@ -230,13 +238,14 @@ map_item
 	;
 
 vec_op 
-	:	^(Vec_init exp[false]*)
+	:	^(Vec_init exp[false]*) { compiler->VecOp( $Vec_init ); }
 	;
 
 value
 	:	BOOL { if( strcmp( (char*)$BOOL.text->chars, "true" ) == 0 ) compiler->Emit( op_push_true ); else compiler->Emit( op_push_false ); }
 	|	NULLVAL { compiler->Emit( op_push_null ); }
-	|	NUMBER { compiler->Number( atof( (char*)$NUMBER.text->chars ) ); }
+//	|	NUMBER { compiler->Number( atof( (char*)$NUMBER.text->chars ) ); }
+	|	NUMBER { compiler->Number( $NUMBER ); }
 	|	STRING { compiler->String( (char*)$STRING.text->chars ); }
 	;
 

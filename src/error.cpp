@@ -33,10 +33,19 @@
 using namespace std;
 
 
+namespace deva
+{
+
 void emit_error( DevaSemanticException & e )
 {
 	// format = filename:linenum: msg
 	cerr << current_file << ":" << e.line << ":" << " error: " << e.what() << endl;
+}
+
+void emit_error( DevaRuntimeException & e )
+{
+	// format = filename:linenum: msg
+	cerr << "error: " << e.what() << endl;
 }
 
 void emit_error( DevaICE & e )
@@ -325,3 +334,4 @@ void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UI
 	// Here is where you do it though :-).
 }
 
+} // namespace deva

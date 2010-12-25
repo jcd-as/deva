@@ -34,10 +34,15 @@
 #include <antlr3.h>
 #include "exceptions.h"
 
+
+namespace deva
+{
+
 // global object to track current filename
 extern const char* current_file;
 
 void emit_error( DevaSemanticException & e );
+void emit_error( DevaRuntimeException & e );
 void emit_error( DevaICE & e );
 
 void emit_warning( char* warning, int line );
@@ -45,5 +50,6 @@ void emit_warning( char* warning, int line );
 // override for ANTLR parser error
 void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UINT8 * tokenNames );
 
+} // namespace deva
 
 #endif // __ERROR_H__

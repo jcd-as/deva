@@ -32,16 +32,20 @@
 #define __SEMANTICS_H__
 
 
-#include <set>
-#include <map>
-#include <vector>
-
 #include "symbol.h"
 #include "scope.h"
 #include "error.h"
 #include "object.h"
 
+#include <set>
+#include <map>
+#include <vector>
+
 using namespace std;
+using namespace deva;
+
+namespace deva_compile
+{
 
 struct Semantics
 {
@@ -178,5 +182,6 @@ struct Semantics
 // global semantics object
 extern Semantics* semantics;
 
+} // namespace deva_compile
 
 #endif // __SEMANTICS_H__

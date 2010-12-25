@@ -37,6 +37,9 @@
 using namespace std;
 
 
+namespace deva
+{
+
 struct DevaSemanticException : public logic_error
 {
 	int line;
@@ -88,5 +91,7 @@ public:
 	DevaICE( boost::format fmt ) : DevaRuntimeException( fmt )
 	{}
 };
+
+} // namespace deva
 
 #endif // __EXCEPTIONS_H__

@@ -32,6 +32,9 @@
 #define __TYPES_H__
 
 
+namespace deva_compile
+{
+
 enum SymbolType
 {
 	sym_variable,			// a variable
@@ -41,5 +44,6 @@ enum SymbolType
 	sym_end = 255			// end of enum marker
 };
 
+} // namespace deva_compile
 
 #endif //__TYPES_H__

@@ -35,11 +35,18 @@
 
 #include <iostream>
 
+namespace deva_compile
+{
 
 /////////////////////////////////////////////////////////////////////////////
 // compilation functions and globals
 /////////////////////////////////////////////////////////////////////////////
 Compiler* compiler = NULL;
+// tracking scopes inside loops (for break/continue statements)
+static vector<dword> loop_scope_stack;
+static vector< vector<dword>* > loop_break_locations;
+// tracking scopes inside functions (for return statements)
+static vector<dword> fcn_scope_stack;
 
 
 Compiler::Compiler( Semantics* sem, Executor* ex ) : 
@@ -65,21 +72,21 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 
 	// add our 'global' function, "@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
-	DevaFunction f;
-	f.name = string( "@main" );
-	f.filename = string( current_file );
-	f.first_line = 0;
-	f.num_args = 0;
-	f.num_locals = scope->NumLocals();
-	f.addr = 0;
+	DevaFunction* f = new DevaFunction();
+	f->name = string( "@main" );
+	f->filename = string( current_file );
+	f->first_line = 0;
+	f->num_args = 0;
+	f->num_locals = scope->NumLocals();
+	f->addr = 0;
 	// add the global names for the global scope
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
 	{
 		Symbol* s = scope->GetNames().At( i );
 		if( s->IsLocal() || s->IsArg() || s->IsConst() )
-			f.local_names.Add( s->Name() );
+			f->local_names.Add( s->Name() );
 	}
-	ex->functions.Add( f );
+	ex->AddFunction( f );
 
 	// set-up the scope stack to match
 	AddScope();
@@ -91,7 +98,7 @@ void Compiler::Decode()
 	const byte* b = is->Bytes();
 	const byte* p = b;
 	size_t len = is->Length();
-	dword arg;
+	dword arg, arg2;
 	Opcode op;
 	DevaObject o;
 
@@ -118,6 +125,8 @@ void Compiler::Decode()
 		case op_push_true:
 		case op_push_false:
 		case op_push_null:
+		case op_push_zero:
+		case op_push_one:
 		case op_push0:
 		case op_push1:
 		case op_push2:
@@ -194,31 +203,39 @@ void Compiler::Decode()
 		case op_storelocal9:
 			break;
 		case op_new_map:
-			// ???
+			// 1 arg: size
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
 			break;
 		case op_new_vec:
-			// ???
+			// 1 arg: size
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
 			break;
 		case op_new_class:
-			// ???
+			// 1 arg: size
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
 			break;
 		case op_new_instance:
-			// ???
+			// 1 arg: size
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
 			break;
 		case op_jmp:
 			// 1 arg: size
 			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
+			cout << "\t\t" << arg;
 			p += sizeof( dword );
 			break;
 		case op_jmpf:
 			// 1 arg: size
 			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
+			cout << "\t\t" << arg;
 			p += sizeof( dword );
 			break;
 		case op_eq:
@@ -238,18 +255,25 @@ void Compiler::Decode()
 		case op_mod:
 			break;
 		case op_call:
-			break;
-		case op_call_n:
-			// 1 arg: fcn name
+			// 1 arg: number of args passed
 			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
+			cout << "\t\t" << arg;
 			p += sizeof( dword );
 			break;
 		case op_return:
-		case op_break:
-		case op_continue:
+			// 1 arg: number of scopes to leave
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
+			break;
+		case op_exit_loop:
+			// 2 args: jump target address, number of scopes to leave
+			arg = *((dword*)p);
+			p += sizeof( dword );
+			arg2 = *((dword*)p);
+			p += sizeof( dword );
+			cout << "\t\t" << arg << "\t" << arg2;
+			break;
 		case op_enter:
 		case op_leave:
 			break;
@@ -293,8 +317,6 @@ void Compiler::Decode()
 		case op_rot2:
 		case op_rot3:
 		case op_rot4:
-		case op_print:
-		case op_printline:
 		case op_import:
 			// 1 arg:
 			arg = *((dword*)p);
@@ -317,6 +339,22 @@ void Compiler::Decode()
 // block
 void Compiler::EnterBlock()
 {
+	// track the loop scopes
+	if( loop_scope_stack.size() > 0 )
+	{
+		int loop_scopes = loop_scope_stack.back();
+		loop_scope_stack.pop_back();
+		loop_scopes++;
+		loop_scope_stack.push_back( loop_scopes );
+	}
+	// track the fcn scopes
+	if( fcn_scope_stack.size() > 0 )
+	{
+		int fcn_scopes = fcn_scope_stack.back();
+		fcn_scope_stack.pop_back();
+		fcn_scopes++;
+		fcn_scope_stack.push_back( fcn_scopes );
+	}
 	// track the current scope
 	AddScope();
 	// emit an enter instruction
@@ -324,6 +362,22 @@ void Compiler::EnterBlock()
 }
 void Compiler::ExitBlock()
 {
+	// track the loop scopes
+	if( loop_scope_stack.size() > 0 )
+	{
+		int loop_scopes = loop_scope_stack.back();
+		loop_scope_stack.pop_back();
+		loop_scopes--;
+		loop_scope_stack.push_back( loop_scopes );
+	}
+	// track the fcn scopes
+	if( fcn_scope_stack.size() > 0 )
+	{
+		int fcn_scopes = fcn_scope_stack.back();
+		fcn_scope_stack.pop_back();
+		fcn_scopes--;
+		fcn_scope_stack.push_back( fcn_scopes );
+	}
 	// track the current scope
 	LeaveScope();
 	// emit a leave instruction
@@ -336,40 +390,61 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	// TODO: new/delete methods need code added that calls the base-class
 	// new/delete methods
 
+	// generate jump around fcn so 'main' (or module 'global' as the case
+	// may be) doesn't execute its body inline
+	// emit the jump over fcn body
+	Emit( op_jmp, (dword)-1 );
+	AddPatchLoc();
+
+	// start a new count of scopes inside this fcn
+	fcn_scope_stack.push_back( 0 );
+
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(CurrentScope());
 
 	// create a new DevaFunction object
-	DevaFunction fcn;
-	fcn.name = string( name );
+	DevaFunction* fcn = new DevaFunction();
+	fcn->name = string( name );
 	if( classname )
 	{
-		fcn.name += "@";
-		fcn.name += classname;
+		fcn->name += "@";
+		fcn->name += classname;
 	}
-	fcn.filename = string( current_file );
-	fcn.first_line = line;
-	fcn.num_args = scope->NumArgs();
-	fcn.num_locals = scope->NumLocals();
+	fcn->filename = string( current_file );
+	fcn->first_line = line;
+	fcn->num_args = scope->NumArgs();
+	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
-	fcn.addr = is->Length();
+	fcn->addr = is->Length();
 
 	// add the global names for this (function) scope and its local scope children
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
 	{
 		Symbol* s = scope->GetNames().At( i );
 		if( s->IsLocal() || s->IsArg() || s->IsConst() )
-			fcn.local_names.Add( s->Name() );
+			fcn->local_names.Add( s->Name() );
 	}
 	// add the default arg indices for this (function) scope
 	for( int i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
 	{
 		// find the index for this constant
 		int idx = GetConstant( scope->GetDefaultArgVals().At( i ) );
-		fcn.default_args.Add( idx );
+		fcn->default_args.Add( idx );
 	}
 
 	// add to the list of fcn objects
 	ex->AddFunction( fcn );
+}
+
+void Compiler::EndFun()
+{
+	// generate a 'return' statement, in case there isn't one that will be hit
+	// (check the immediately preceding instruction so we at least don't
+	// generate two returns in a row...)
+	if( (Opcode)*(is->Bytes()-5) != op_return )
+		Emit( op_return, 0 );
+
+	// back-patch the jump over fcn body
+	BackpatchToCur();
 }
 
 // define a class
@@ -385,14 +460,36 @@ void Compiler::DefineClass( char* name, int line )
 }
 
 // constants
-void Compiler::Number( double d )
+void Compiler::Number( pANTLR3_BASE_TREE node )
 {
-	// get the constant pool index for this number
-	int idx = GetConstant( DevaObject( d ) );
-	if( idx < 0 )
-		throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % d );
-	// emit op to push it onto the stack
-	Emit( op_pushconst, (dword)idx );
+	double d = atof( (char*)node->getText(node)->chars );
+
+	// negate numbers that should be negative
+	unsigned int type = node->getType( node );
+	if( type == NUMBER )
+	{
+		// check for negate flag from pass one
+		if( (int)(node->u) == 0x1 )
+			d *= -1.0;
+	}
+
+	if( d == 0.0 )
+	{
+		Emit( op_push_zero );
+	}
+	else if( d == 1.0 )
+	{
+		Emit( op_push_one );
+	}
+	else
+	{
+		// get the constant pool index for this number
+		int idx = GetConstant( DevaObject( d ) );
+		if( idx < 0 )
+			throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % d );
+		// emit op to push it onto the stack
+		Emit( op_pushconst, (dword)idx );
+	}
 }
 
 void Compiler::String( char* name )
@@ -477,6 +574,30 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		else
 			Emit( op_pushlocal, (dword)idx );
 	}
+}
+
+// unary operators
+void Compiler::NegateOp( pANTLR3_BASE_TREE node )
+{
+	// test for simple case where node is a number
+	unsigned int type = node->getType( node );
+	bool is_negative_number = false;
+	if( type == NUMBER )
+	{
+		// check for negate flag from pass one
+		if( (int)(node->u) == 0x1 )
+			is_negative_number = true;
+	}
+
+	// don't need to do anything for negative number constants
+	if( !is_negative_number )
+		Emit( op_neg );
+}
+
+void Compiler::NotOp( pANTLR3_BASE_TREE node )
+{
+	// TODO: test for simple case where node is a boolean, string or number
+	Emit( op_not );
 }
 
 // assignments and variable decls
@@ -634,48 +755,10 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 // function call
 void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args )
 {
-	unsigned int type = fcn->getType( fcn );
-	// is the node an identifier? must be the fcn name
-	if( type == ID )
-	{
-		// find the name in the constant pool
-		char* name = (char*)fcn->getText( fcn )->chars;
-		int idx = GetConstant( DevaObject( name ) );
-		// not found? error
-		if( idx == -1 )
-			throw DevaICE( boost::format( "Function '%1%' not found." ) % name );
-		Emit( op_call_n, (dword)idx );
-	}
-	// otherwise it must be an object of some kind, we need to rotate the stack
-	// and call it
-	else
-	{
-		// TODO: if it is a method there will be an extra 'self' arg!
-
-		// rotate by the number of args
-		int num_children = args->getChildCount( args );
-		if( num_children == 1 )
-		{
-			Emit( op_swap );
-		}
-		else if( num_children == 2 )
-		{
-			Emit( op_rot2 );
-		}
-		else if( num_children == 3 )
-		{
-			Emit( op_rot3 );
-		}
-		else if( num_children == 4 )
-		{
-			Emit( op_rot4 );
-		}
-		else if( num_children > 0 )
-		{
-			Emit( op_rot, (dword)num_children );
-		}
-		Emit( op_call );
-	}
+	// how many args are being pushed?
+	int num_children = args->getChildCount( args );
+	// emit the call
+	Emit( op_call, (dword)num_children );
 }
 
 // augmented assignment operators
@@ -763,8 +846,30 @@ void Compiler::ReturnOp( bool no_val /*= false*/ )
 	if( no_val )
 		Emit( op_push_null );
 
-	Emit( op_return );
+	dword scopecount = fcn_scope_stack.back();
+	Emit( op_return, scopecount );
 }
+
+void Compiler::ContinueOp()
+{
+	dword scopecount = loop_scope_stack.back();
+	dword address = labelstack.back();
+	Emit( op_exit_loop, address, scopecount );
+}
+
+void Compiler::BreakOp()
+{
+	dword scopecount = loop_scope_stack.back();
+
+	// save the location for back-patching
+	// (to be double-safe, check to ensure we're in a loop...)
+	if( loop_break_locations.size() == 0 )
+		throw DevaICE( "Invalid break statement: Not inside a loop.." );
+
+	Emit( op_exit_loop, (dword)-1, scopecount );
+	loop_break_locations.back()->push_back( is->Length() - (2 * sizeof(dword)) );
+}
+
 
 void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 {
@@ -790,7 +895,96 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 // 'new'
 void Compiler::NewOp()
 {
-	// generate a new_map op for the call to 'new' to use
-	Emit( op_new_map );
+	// generate a new_class op for the call to 'new' to use
+	Emit( op_new_class );
 }
 
+// vector and map creation ops
+void Compiler::VecOp( pANTLR3_BASE_TREE node )
+{
+	int num_children = node->getChildCount( node );
+	Emit( op_new_vec, (dword)num_children );
+}
+
+void Compiler::MapOp( pANTLR3_BASE_TREE node )
+{
+	int num_children = node->getChildCount( node );
+	Emit( op_new_map, (dword)num_children );
+}
+
+// if/else statements
+void Compiler::IfOpJump()
+{
+	// generate a jmpf to the else-label
+	Emit( op_jmpf, (dword)-1 );
+	AddPatchLoc();
+}
+
+void Compiler::EndIfOpJump()
+{
+	// back-patch the 'if' jmpf to current loc
+	BackpatchToCur();
+}
+
+void Compiler::ElseOpJump()
+{
+	// generate the jmp to the end-else-label (for the preceding 'if')
+	Emit( op_jmp, (dword)-1 );
+	// back-patch the 'if' jmpf to current loc
+	BackpatchToCur();
+	// generate the else-label
+	AddPatchLoc();
+}
+
+void Compiler::ElseOpEndLabel()
+{
+	// backpatch the else jmp to current loc
+	BackpatchToCur();
+}
+
+// while statement
+void Compiler::WhileOpStart()
+{
+	// start a new count of scopes inside this loop
+	loop_scope_stack.push_back( 0 );
+
+	// start a new loop context for back-patching 'break' statements
+	loop_break_locations.push_back( new vector<dword>() );
+
+	// mark the pre-condition-IL label
+	AddLabel();
+}
+
+void Compiler::WhileOpConditionJump()
+{
+	// emit the conditional jump
+	Emit( op_jmpf, (dword)-1 );
+	AddPatchLoc();
+}
+
+void Compiler::WhileOpEnd()
+{
+	// emit the jump-to-start
+	Emit( op_jmp, (dword)-1 );
+	AddPatchLoc();
+	BackpatchToLastLabel();
+			
+	// back-patch the conditional jump
+	BackpatchToCur();
+
+	loop_scope_stack.pop_back();
+
+	// back-patch any 'break' statements
+	// pop the loop from the loop stack
+	vector<size_t>* breaks = loop_break_locations.back();
+	loop_break_locations.pop_back();
+	for( vector<size_t>::iterator it = breaks->begin(); it != breaks->end(); ++it )
+	{
+		// back-patch the instruction at the break to point to the current
+		// location in the instruction stream (end of this loop)
+		is->Set( *it, (size_t)is->Length() );
+	}
+	delete breaks;
+}
+
+} // namespace deva_compile

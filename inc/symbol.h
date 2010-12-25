@@ -37,6 +37,9 @@
 using namespace std;
 
 
+namespace deva_compile
+{
+
 // base class for symbols
 class SymbolBase
 {
@@ -102,5 +105,7 @@ public:
 //
 //	const string & Name() const { return name; }
 //};
+
+} // namespace deva_compile
 
 #endif // __SYMBOL_H__

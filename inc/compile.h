@@ -44,6 +44,9 @@
 
 using namespace std;
 
+namespace deva_compile
+{
+
 class InstructionStream
 {
 	size_t size;
@@ -81,6 +84,11 @@ public:
 		*((dword*)cur) = dw;
 		cur += sizeof(dword);
 	}
+	// random access, for back-patching
+	inline void Set( size_t loc, dword val )
+	{
+		*((dword*)(bytes + loc)) = val;
+	}
 private:
 	void Realloc()
 	{
@@ -103,6 +111,9 @@ struct Compiler
 private:
 	int max_scope_idx;		// index to the highest scope num created so far
 	vector<int> scopestack;
+	// stacks for labels/back-patching
+	vector<size_t> patchstack;
+	vector<size_t> labelstack;
 
 public:
 	int num_locals;	// number of locals in the current scope
@@ -116,12 +127,17 @@ public:
 	// instruction stream
 	InstructionStream* is;
 
-
 	// private helper functions
 	/////////////////////////////////////////////////////////////////////////
 private:
 	// find index of constant
 	int GetConstant( const DevaObject & o ) { return ex->FindConstant( o ); }
+
+	// label and back-patching helpers
+	inline void AddLabel() { labelstack.push_back( is->Length() ); }
+	inline void AddPatchLoc() { patchstack.push_back( is->Length() - sizeof(dword) ); }
+	inline void BackpatchToCur() { is->Set( patchstack.back(), (size_t)is->Length() ); patchstack.pop_back(); }
+	inline void BackpatchToLastLabel() { is->Set( patchstack.back(), labelstack.back() ); patchstack.pop_back(); labelstack.pop_back(); }
 
 public:
 	// public functions
@@ -131,6 +147,7 @@ public:
 	{ delete is; }
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
+	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }
 
 	// mostly for debugging purposes
 	void Decode();
@@ -149,25 +166,24 @@ public:
 
 	// define a function
 	void DefineFun( char* name, char* classname, int line );
+	void EndFun();
 
 	// define a class
 	void DefineClass( char* name, int line );
 
 	// constants
-	void Number( double d );
+	void Number( pANTLR3_BASE_TREE node );
 	void String( char* s );
 
 	// identifier
 	void Identifier( char* s, bool is_lhs_of_assign );
 
-	// operators
+	// binary operators
 	inline void AddOp() { Emit( op_add ); }
 	inline void SubOp() { Emit( op_sub ); }
 	inline void MulOp() { Emit( op_mul ); }
 	inline void DivOp() { Emit( op_div ); }
 	inline void ModOp() { Emit( op_mod ); }
-	inline void NegateOp() { Emit( op_neg ); }
-	inline void NotOp() { Emit( op_not ); }
 	inline void GtEqOp() { Emit( op_gte ); }
 	inline void LtEqOp() { Emit( op_lte ); }
 	inline void GtOp() { Emit( op_gt ); }
@@ -176,6 +192,10 @@ public:
 	inline void NotEqOp() { Emit( op_neg ); }
 	inline void AndOp() { Emit( op_and ); }
 	inline void OrOp() { Emit( op_or ); }
+
+	// unary operators
+	void NegateOp( pANTLR3_BASE_TREE node );
+	void NotOp( pANTLR3_BASE_TREE node );
 
 	// assignments and variable decls
 	void LocalVar( char* n );
@@ -193,20 +213,34 @@ public:
 
 	// return, continue, break ops
 	void ReturnOp( bool no_val = false );
-	// how to setup the jump and determine the right number of Leave ops to
-	// generate??
-//	void ContinueOp();
-//	void BreakOp();
+	void ContinueOp();
+	void BreakOp();
 
 	void ImportOp( pANTLR3_BASE_TREE node );
 
 	// 'new'
 	void NewOp();
+	
+	// vector and map creation ops
+	void VecOp( pANTLR3_BASE_TREE node );
+	void MapOp( pANTLR3_BASE_TREE node );
+
+	// if/else statements
+	void IfOpJump();
+	void EndIfOpJump();
+	void ElseOpJump();
+	void ElseOpEndLabel();
+
+	// while statement
+	void WhileOpStart();
+	void WhileOpConditionJump();
+	void WhileOpEnd();
 };
 
 
 // global compiler object
 extern Compiler* compiler;
 
+} // namespace deva_compile
 
 #endif // __COMPILE_H__

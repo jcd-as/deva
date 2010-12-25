@@ -38,6 +38,9 @@
 using namespace std;
 
 
+namespace deva
+{
+
 // a "set" class that supports indexing (random access)
 // (internally a vector that is kept sorted for faster binary-search finds)
 // T is the type to store in the collection and BinaryPredicate is a Less-Than
@@ -111,5 +114,6 @@ template<typename T, typename Pred=lessThanPredicate<T> > class OrderedMultiSet 
 {
 };
 
+} // namespace deva
 
 #endif // __ORDERED_SET_H__	

@@ -49,11 +49,14 @@
 using namespace std;
 namespace po = boost::program_options;
 
+using namespace deva;
+using namespace deva_compile;
+
 /////////////////////////////////////////////////////////////////////////////
 // globals
 /////////////////////////////////////////////////////////////////////////////
 // global object to track current filename
-const char* current_file;
+const char* deva::current_file;
 
 int _argc;
 char** _argv;
@@ -77,20 +80,24 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	bool no_dvc = false;
 	bool show_ast = false;
 	bool disasm = false;
+	bool compile_only = false;
+	bool warnings_as_errors = false;
 	string output;
 	string input;
 	vector<string> inputs;
 	po::options_description desc( "Supported options" );
 	desc.add_options()
 		( "help", "help message" )
-		( "version,ver", "display program version" )
+		( "version,v", "display program version" )
 		( "verbosity,r", po::value<int>( &verbosity )->default_value( 0 ), "set verbosity level (0-3)" )
 		( "debug-dump", po::value<bool>( &debug )->default_value( false ), "turn debug output on/off" )
-		( "disasm", po::value<bool>( &disasm )->default_value( false ), "disassemble" )
-		( "show-ast", po::value<bool>( &show_ast )->default_value( false ), "show the AST" )
-		( "show-warnings,w", po::value<bool>( &show_warnings )->default_value( false ), "show warnings" )
 		( "all-scopes,s", "show all scopes in tracebacks, not just calls" )
 		( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
+		( "disasm", "disassemble" )
+		( "show-ast,a", "show the AST" )
+		( "compile-only,c", "compile only, do not execute" )
+		( "show-warnings,w", "show warnings" )
+		( "warnings-as-errors,e", "treat warnings as errors" )
 		( "input", po::value<string>( &input ), "input filename" )
 		( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
 		;
@@ -129,6 +136,26 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	if( vm.count( "no-dvc" ) )
 	{
 		no_dvc = true;
+	}
+	if( vm.count( "disasm" ) )
+	{
+		disasm = true;
+	}
+	if( vm.count( "show-ast" ) )
+	{
+		show_ast = true;
+	}
+	if( vm.count( "compile-only" ) )
+	{
+		compile_only = true;
+	}
+	if( vm.count( "show-warnings" ) )
+	{
+		show_warnings = true;
+	}
+	if( vm.count( "warnings-as-errors" ) )
+	{
+		warnings_as_errors = true;
 	}
 	// must be an input file specified
 	if( !vm.count( "input" ) )
@@ -246,6 +273,12 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			cmpPsr = compile_walkerNew( nodes );
 			cmpPsr->translation_unit( cmpPsr );
 
+			if( !compile_only )
+			{
+				// TODO: do this right...
+				Code c( (byte*)compiler->is->Bytes(), compiler->is->Length() );
+				ex->ExecuteCode( c );
+			}
 		}
 		catch( DevaSemanticException & e )
 		{
@@ -256,6 +289,14 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			exit( -1 );
 		}
 		catch( DevaICE & e )
+		{
+			// display an error
+			emit_error( e );
+
+			// quick exit, don't bother to clean up, OS will reclaim memory
+			exit( -1 );
+		}
+		catch( DevaRuntimeException & e )
 		{
 			// display an error
 			emit_error( e );
@@ -303,16 +344,16 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		{
 			// dump the symbol tables...
 			cout << "Symbol table:" << endl;
-			for( vector<Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
+			for( vector<deva_compile::Scope*>::iterator i = semantics->scopes.begin(); i != semantics->scopes.end(); ++i )
 			{
 				if( *i )
 					(*i)->Print();
 			}
 			// dump the constant data pool
 			cout << "Constant data pool:" << endl;
-			for( int i = 0.; i < ex->constants.Size(); i++ )
+			for( int i = 0.; i < ex->NumConstants(); i++ )
 			{
-				DevaObject o = ex->constants.At( i );
+				DevaObject o = ex->GetConstant( i );
 				if( o.type == obj_string )
 					cout << o.s << endl;
 				else if( o.type == obj_number )
@@ -324,18 +365,18 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			}
 			// dump the function objects
 			cout << "Function objects:" << endl;
-			for( int i = 0; i < ex->functions.Size(); i++ )
+			for( map<string,DevaFunction*>::iterator i = ex->GetFunctions().begin(); i != ex->GetFunctions().end(); ++i )
 			{
-				DevaFunction f = ex->functions.At( i );
-				cout << "function: " << f.name << ", from file: " << f.filename << ", line: " << f.first_line;
+				DevaFunction* f = i->second;
+				cout << "function: " << f->name << ", from file: " << f->filename << ", line: " << f->first_line;
 				cout << endl;
-				cout << f.num_args << " arg(s), default value indices: ";
-				for( int j = 0; j < f.default_args.Size(); j++ )
-					cout << f.default_args.At( j ) << " ";
-				cout << endl << f.num_locals << " local(s): ";
-				for( int j = 0; j < f.local_names.Size(); j++ )
-					cout << f.local_names.At( j ) << " ";
-				cout << endl << "code address: " << f.addr << endl;
+				cout << f->num_args << " arg(s), default value indices: ";
+				for( int j = 0; j < f->default_args.Size(); j++ )
+					cout << f->default_args.At( j ) << " ";
+				cout << endl << f->num_locals << " local(s): ";
+				for( int j = 0; j < f->local_names.Size(); j++ )
+					cout << f->local_names.At( j ) << " ";
+				cout << endl << "code address: " << f->addr << endl;
 			}
 		}
 

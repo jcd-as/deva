@@ -39,7 +39,10 @@
 
 
 using namespace std;
+using namespace deva;
 
+namespace deva_compile
+{
 
 class FunctionScope;
 
@@ -141,5 +144,6 @@ public:
 	inline void AddDefaultArgVal( DevaObject o ) { default_arg_values.Add( o ); }
 };
 
+} // namespace deva_compile
 
 #endif // __SCOPE_H__

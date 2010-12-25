@@ -29,6 +29,10 @@
 #include "scope.h"
 #include <iostream>
 
+
+namespace deva_compile
+{
+
 /////////////////////////////////////////////////////////////////////////////
 // LocalScope class methods:
 /////////////////////////////////////////////////////////////////////////////
@@ -53,7 +57,7 @@ Scope* LocalScope::EnclosingScope() const
 bool LocalScope::Define( const Symbol* const s )
 {
 	// if it's a local, check with the locals for this scope
-	if( s->IsLocal() )
+	if( s->IsLocal() || s->IsArg() )
 	{
 		map<const string, int>::iterator i = local_map.find( s->Name() );
 		if( i != local_map.end() )
@@ -72,7 +76,7 @@ bool LocalScope::Define( const Symbol* const s )
 	AddName( const_cast<Symbol*>(s) );
 
 	// is this a local? add it to this scope and to the fcn scope
-	if( s->IsLocal() || s->IsConst() )
+	if( s->IsLocal() || s->IsConst() || s->IsArg() )
 	{
 		FunctionScope* fun = getParentFun();
 		int idx = fun->GetLocals().size();
@@ -242,4 +246,4 @@ void FunctionScope::AddName( Symbol* s )
 	names.Add( s );
 }
 
-
+} // namespace deva_compile

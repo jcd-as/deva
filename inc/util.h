@@ -37,6 +37,9 @@
 using namespace std;
 
 
+namespace deva
+{
+
 // file name and path utility functions
 /////////////////////////////////////////////////////////////////////////////
 static const char dirsep = '/';
@@ -76,5 +79,7 @@ string unescape( const string& src );
 
 // is this identifier a keyword?
 bool is_keyword( const string & s );
+
+} // namespace deva
 
 #endif // __UTIL_H__
