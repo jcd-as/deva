@@ -159,6 +159,11 @@ enum Opcode
 	op_mul_assign,	// multiply <Op0> and tos and store back into <Op0>
 	op_div_assign,	// divide <Op0> and tos and store back into <Op0>
 	op_mod_assign,	// modulus <Op0> and tos and store back into <Op0>
+	op_add_assign_local,// add local #<Op0> and tos and store back into <Op0>
+	op_sub_assign_local,// subtract local #<Op0> and tos and store back into local #<Op0>
+	op_mul_assign_local,// multiply local #<Op0> and tos and store back into local #<Op0>
+	op_div_assign_local,// divide local #<Op0> and tos and store back into local #<Op0>
+	op_mod_assign_local,// modulus local #<Op0> and tos and store back into local #<Op0>
 	op_call,		// call function with <Op0> args on stack, fcn on stack after args
 	op_return,		// execute <Op0> leave ops, pop the return address from the frame stack and jump to it, tos holds return value
 	op_exit_loop,	// break/continue loop, jumping to <Op0>, executing <Op1> leave ops
@@ -179,6 +184,7 @@ enum Opcode
 	op_div_tbl_store,// tos2[tos1] /= tos
 	op_mod_tbl_store,// tos2[tos1] %= tos
 
+	// TODO: do we need the dup, swap and rot ops?
 	op_dup,			// tos -> tos<Op0> = tos (dup tos N times)
 	// no-operand shortcuts to dup n times:
 	op_dup1, op_dup2, op_dup3,
@@ -186,14 +192,13 @@ enum Opcode
 	// no-operand shortcuts to dup top n:
 	op_dup_top1, op_dup_top2, op_dup_top3,
 	op_swap,		// tos = tos1, tos1 = tos
-	// TODO: do we need the rot ops?? (were used for call, but depr)
 	op_rot,			// tos = tos<Op0>, tos1 -> tos<Op0> = tosN-1
 	// no-operand shortcuts to rot n times (rot1 is op_swap):
 	op_rot2, op_rot3, op_rot4, 
 
 	op_import,
 
-	// 96 (update as opcodes are added above)
+	// 103 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -265,6 +270,11 @@ static const char* opcodeNames[] =
 	"mul_assign",
 	"div_assign",
 	"mod_assign",
+	"add_assign_local",
+	"sub_assign_local",
+	"mul_assign_local",
+	"div_assign_local",
+	"mod_assign_local",
 	"call",
 	"return",
 	"exit_loop",

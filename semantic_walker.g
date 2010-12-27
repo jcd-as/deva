@@ -238,7 +238,8 @@ vec_op
 
 value[bool invert]
 	:	BOOL | NULLVAL 
-	|	NUMBER { semantics->AddNumber( (invert ? -1.0 : 1.0) * atof( (char*)$NUMBER.text->chars ) ); }
+	|	NUMBER { semantics->AddNumber( (invert ? -1.0 : 1.0) * atof( (char*)$NUMBER.text->chars ) ); $NUMBER->u = (void*)0x0; }
+		
 	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); }
 	;
 

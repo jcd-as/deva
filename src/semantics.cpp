@@ -174,11 +174,12 @@ void Semantics::AddNumber( double arg )
 void Semantics::AddString( char* arg )
 {
 	// strip the string of quotes and unescape it
-	string str( arg );
-	str = unescape( strip_quotes( str ) );
-	char* s = new char[str.length()+1];
-	strcpy( s, str.c_str() );
-	constants.insert( DevaObject( s ) );
+//	string str( arg );
+//	str = unescape( strip_quotes( str ) );
+//	char* s = new char[str.length()+1];
+//	strcpy( s, str.c_str() );
+//	constants.insert( DevaObject( s ) );
+	constants.insert( DevaObject( arg ) );
 }
 
 // validate lhs of assignment
@@ -370,6 +371,8 @@ void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 	// if a NUMBER, set flag
 	if( type == NUMBER )
 		in->u = (void*)0x1;
+	else
+		in->u = (void*)0x0;
 }
 
 // validate not expression
@@ -560,9 +563,10 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 		val.type = obj_null;
 		break;
 	case STRING:
+		{
 		val.type = obj_string;
-		// TODO: this must NOT be deleted...
 		val.s = text;
+		}
 		break;
 	case NUMBER:
 		val.type = obj_number;
@@ -570,10 +574,6 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 		if( negate ) val.d *= -1.0;
 		break;
 	case ID:
-		// TODO: need to handle 'const' values (look up const var 'somewhere' and
-		// replace with that value...)
-//		val.type = obj_end;
-//		val.s = text;
 		break;
 	}
 	default_arg_values.push_back( val );

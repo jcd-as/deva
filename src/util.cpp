@@ -148,7 +148,7 @@ void split( const string & in, const char* const splitchars, vector<string> & re
 }
 
 // allocate and return a copy of a string
-inline char* copystr( const char* in )
+char* copystr( const char* in )
 {
 	char* ret = new char[strlen( in ) + 1];
 	strcpy( ret, in );
@@ -190,7 +190,7 @@ string strip_quotes( const string& src )
 
 	int start = src.find_first_of( quotes );
 	if( start == string::npos )
-		return string();
+		return src;
 
 	char c;
 	if( src[start] == '"' )
@@ -200,7 +200,7 @@ string strip_quotes( const string& src )
 
 	int p2 = src.find_last_not_of( c );
 	if( p2 == string::npos ) 
-		return string();
+		return src;
 	int p1 = src.find_first_not_of( c );
 	if( p1 == string::npos )
 		p1 = 0;

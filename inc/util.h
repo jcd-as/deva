@@ -64,7 +64,7 @@ void split_env_var_paths( const string & var, vector<string> &  paths );
 void replace( string& src, const char* const in, const char* const out );
 void split( const string& in, const char* const splitchars, vector<string> & out );
 // allocate and return a copy of a string
-inline char* copystr( const char* in );
+char* copystr( const char* in );
 
 // strip the whitespace and leading comments from a string,
 // to create a valid symbol name

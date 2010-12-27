@@ -51,7 +51,7 @@ public:
 	SymbolBase() : type( sym_end ) {}
 	SymbolBase( SymbolType t ) : type( t ) {}
 	SymbolBase( const char* const nm, SymbolType t ) : name( nm ), type( t ) {}
-	virtual ~SymbolBase() {}
+//	virtual ~SymbolBase() {}
 
 	const string & Name() const { return name; }
 	const SymbolType Type() const { return type; }

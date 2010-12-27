@@ -273,6 +273,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			cmpPsr = compile_walkerNew( nodes );
 			cmpPsr->translation_unit( cmpPsr );
 
+			// executor is now setup, delete semantics & compiler
 			if( !compile_only )
 			{
 				// TODO: do this right...
@@ -324,6 +325,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 //
 //			treePsr->free( treePsr );      
 //			treePsr = NULL;
+//
+///			cmpPsr->free( cmpPsr );      
+//			cmpPsr = NULL;
 //
 //			// free the semantic objects (symbol tables et al)
 //			delete semantics;
@@ -389,6 +393,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		nodes = NULL;
 		treePsr->free( treePsr );      
 		treePsr = NULL;
+		cmpPsr->free( cmpPsr );      
+		cmpPsr = NULL;
 	}
 
 	// close down our open objects, in the reverse order we created them
@@ -404,8 +410,11 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	input_stream->close( input_stream );
 	input_stream = NULL;
 
-	// free the semantics objects (symbol table et al)
+	// free the semantics objects (symbol table et al), compiler, executor
+	delete ex;
+	delete compiler;
 	delete semantics;
+
 
 	return 0;
 }

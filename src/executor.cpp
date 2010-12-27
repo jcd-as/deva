@@ -97,8 +97,7 @@ Executor::~Executor()
 	// free the constants' string data
 	for( int i = 0; i < constants.Size(); i++ )
 	{
-		// TODO: ???
-//		if( *i.Type() == obj_string ) delete *i.s;
+		if( constants.At( i ).type == obj_string ) delete [] constants.At( i ).s;
 	}
 	// free the function objects
 	for( map<string, DevaFunction*>::iterator i = functions.begin(); i != functions.end(); ++i )
@@ -116,6 +115,10 @@ void Executor::AddBuiltin( const char* name, NativeFunction fcn )
 
 void Executor::ExecuteCode( const Code & code )
 {
+	// NOTE: all actions that create a new C string (char*) as a local need to
+	// add it to that frame's strings collection (i.e. call
+	// CurrentFrame()->AddString())
+
 	byte *base = code.code;
 	byte *ip = code.code;
 	byte *end = code.code + code.len;
@@ -181,34 +184,34 @@ void Executor::ExecuteCode( const Code & code )
 			ip += sizeof( dword );
 			break;
 		case op_pushlocal0:
-			stack.push_back( callstack.back()->GetLocal( 0 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 0 ) );
 			break;
 		case op_pushlocal1:
-			stack.push_back( callstack.back()->GetLocal( 1 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 1 ) );
 			break;
 		case op_pushlocal2:
-			stack.push_back( callstack.back()->GetLocal( 2 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 2 ) );
 			break;
 		case op_pushlocal3:
-			stack.push_back( callstack.back()->GetLocal( 3 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 3 ) );
 			break;
 		case op_pushlocal4:
-			stack.push_back( callstack.back()->GetLocal( 4 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 4 ) );
 			break;
 		case op_pushlocal5:
-			stack.push_back( callstack.back()->GetLocal( 5 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 5 ) );
 			break;
 		case op_pushlocal6:
-			stack.push_back( callstack.back()->GetLocal( 6 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 6 ) );
 			break;
 		case op_pushlocal7:
-			stack.push_back( callstack.back()->GetLocal( 7 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 7 ) );
 			break;
 		case op_pushlocal8:
-			stack.push_back( callstack.back()->GetLocal( 8 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 8 ) );
 			break;
 		case op_pushlocal9:
-			stack.push_back( callstack.back()->GetLocal( 9 ) );
+			stack.push_back( CurrentFrame()->GetLocal( 9 ) );
 			break;
 		case op_pushconst:
 			// 1 arg: index to constant
@@ -223,6 +226,8 @@ void Executor::ExecuteCode( const Code & code )
 			o = GetConstant( arg );
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
 			// TODO: free lhs before assigning to it??
@@ -236,6 +241,8 @@ void Executor::ExecuteCode( const Code & code )
 			o = GetConstant(arg);
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			// TODO: free lhs before assigning to it??
 			*plhs = DevaObject( true );
 			ip += sizeof( dword );
@@ -247,6 +254,8 @@ void Executor::ExecuteCode( const Code & code )
 			o = GetConstant(arg);
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			// TODO: free lhs before assigning to it??
 			*plhs = DevaObject( true );
 			ip += sizeof( dword );
@@ -258,6 +267,8 @@ void Executor::ExecuteCode( const Code & code )
 			o = GetConstant(arg);
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			// TODO: free lhs before assigning to it??
 			*plhs = DevaObject( obj_null );
 			ip += sizeof( dword );
@@ -333,21 +344,25 @@ void Executor::ExecuteCode( const Code & code )
 			break;
 			break;
 		case op_new_map:
+			// TODO:
 			// 1 arg: size
 			arg = *((dword*)ip);
 			ip += sizeof( dword );
 			break;
 		case op_new_vec:
+			// TODO:
 			// 1 arg: size
 			arg = *((dword*)ip);
 			ip += sizeof( dword );
 			break;
 		case op_new_class:
+			// TODO:
 			// 1 arg: size
 			arg = *((dword*)ip);
 			ip += sizeof( dword );
 			break;
 		case op_new_instance:
+			// TODO:
 			// 1 arg: size
 			arg = *((dword*)ip);
 			ip += sizeof( dword );
@@ -517,6 +532,7 @@ void Executor::ExecuteCode( const Code & code )
 				memset( ret, 0, len );
 				strcpy( ret, lhs.s );
 				strcat( ret, rhs.s );
+				CurrentFrame()->AddString( ret );
 				stack.push_back( DevaObject( ret ) ); 
 			}
 			break;
@@ -574,25 +590,29 @@ void Executor::ExecuteCode( const Code & code )
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant( arg );
+			// TODO: this needs to look for locals first!!
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
-			if( lhs.type != obj_number && lhs.type != obj_string )
+			if( plhs->type != obj_number && plhs->type != obj_string )
 				throw DevaRuntimeException( "Left-hand side of addition assignment operator must be a number or a string." );
 			if( rhs.type != obj_number && rhs.type != obj_string )
 				throw DevaRuntimeException( "Right-hand side of addition assignment operator must be a number or a string." );
-			if( lhs.type != rhs.type )
+			if( plhs->type != rhs.type )
 				throw DevaRuntimeException( "Addition assignment operator used on operands of different types." );
-			if( lhs.type == obj_number )
+			if( plhs->type == obj_number )
 				*plhs = DevaObject( plhs->d + rhs.d );
-			else if( lhs.type == obj_string )
+			else if( plhs->type == obj_string )
 			{
 				size_t len = strlen( plhs->s ) + strlen( rhs.s ) + 1;
 				char* ret = new char[len];
 				memset( ret, 0, len );
 				strcpy( ret, plhs->s );
 				strcat( ret, rhs.s );
+				CurrentFrame()->AddString( ret );
 				*plhs = DevaObject( ret );
 			}
 			ip += sizeof( dword );
@@ -602,11 +622,14 @@ void Executor::ExecuteCode( const Code & code )
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant( arg );
+			// TODO: this needs to look for locals first!!
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
-			if( lhs.type != obj_number && lhs.type != obj_string )
+			if( plhs->type != obj_number )
 				throw DevaRuntimeException( "Left-hand side of subtraction assignment operator must be a number." );
 			if( rhs.type != obj_number && rhs.type != obj_string )
 				throw DevaRuntimeException( "Right-hand side of subtraction assignment operator must be a number." );
@@ -618,11 +641,14 @@ void Executor::ExecuteCode( const Code & code )
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant( arg );
+			// TODO: this needs to look for locals first!!
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
-			if( lhs.type != obj_number && lhs.type != obj_string )
+			if( plhs->type != obj_number )
 				throw DevaRuntimeException( "Left-hand side of multiplication assignment operator must be a number." );
 			if( rhs.type != obj_number && rhs.type != obj_string )
 				throw DevaRuntimeException( "Right-hand side of multiplication assignment operator must be a number." );
@@ -634,14 +660,19 @@ void Executor::ExecuteCode( const Code & code )
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant( arg );
+			// TODO: this needs to look for locals first!!
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
-			if( lhs.type != obj_number && lhs.type != obj_string )
+			if( plhs->type != obj_number )
 				throw DevaRuntimeException( "Left-hand side of division assignment operator must be a number." );
 			if( rhs.type != obj_number && rhs.type != obj_string )
 				throw DevaRuntimeException( "Right-hand side of division assignment operator must be a number." );
+			if( rhs.d == 0.0 )
+				throw DevaRuntimeException( "Divide-by-zero error." );
 			*plhs = DevaObject( plhs->d / rhs.d );
 			ip += sizeof( dword );
 			break;
@@ -650,16 +681,112 @@ void Executor::ExecuteCode( const Code & code )
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant( arg );
+			// TODO: this needs to look for locals first!!
 			// find the variable
 			plhs = CurrentScope()->FindSymbol( o.s );
+			if( !plhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			rhs = stack.back();
 			stack.pop_back();
-			if( lhs.type != obj_number && lhs.type != obj_string )
+			if( plhs->type != obj_number )
 				throw DevaRuntimeException( "Left-hand side of modulus assignment operator must be a number." );
 			if( rhs.type != obj_number && rhs.type != obj_string )
 				throw DevaRuntimeException( "Right-hand side of modulus assignment operator must be a number." );
+			if( rhs.d == 0.0 )
+				throw DevaRuntimeException( "Divide-by-zero error." );
 			// TODO: error if arguments aren't integral numbers...
 			*plhs = DevaObject( (double)((int)plhs->d / (int)rhs.d) );
+			ip += sizeof( dword );
+			break;
+		case op_add_assign_local:
+			// 1 arg
+			arg = *((dword*)ip);
+			// look-up the local
+			lhs = CurrentFrame()->GetLocal( arg );
+			rhs = stack.back();
+			stack.pop_back();
+			if( lhs.type != obj_number && lhs.type != obj_string )
+				throw DevaRuntimeException( "Left-hand side of addition assignment operator must be a number or a string." );
+			if( rhs.type != obj_number && rhs.type != obj_string )
+				throw DevaRuntimeException( "Right-hand side of addition assignment operator must be a number or a string." );
+			if( lhs.type != rhs.type )
+				throw DevaRuntimeException( "Addition assignment operator used on operands of different types." );
+			if( lhs.type == obj_number )
+				CurrentFrame()->SetLocal( arg, DevaObject( lhs.d + rhs.d ) );
+			else if( lhs.type == obj_string )
+			{
+				size_t len = strlen( lhs.s ) + strlen( rhs.s ) + 1;
+				char* ret = new char[len];
+				memset( ret, 0, len );
+				strcpy( ret, lhs.s );
+				strcat( ret, rhs.s );
+				CurrentFrame()->AddString( ret );
+				CurrentFrame()->SetLocal( arg, DevaObject( ret ) );
+			}
+			ip += sizeof( dword );
+			break;
+		case op_sub_assign_local:
+			// 1 arg
+			arg = *((dword*)ip);
+			// look-up the local
+			lhs = CurrentFrame()->GetLocal( arg );
+			// find the variable
+			rhs = stack.back();
+			stack.pop_back();
+			if( lhs.type != obj_number )
+				throw DevaRuntimeException( "Left-hand side of subtraction assignment operator must be a number." );
+			if( rhs.type != obj_number )
+				throw DevaRuntimeException( "Right-hand side of subtraction assignment operator must be a number." );
+			CurrentFrame()->SetLocal( arg, DevaObject( lhs.d - rhs.d ) );
+			ip += sizeof( dword );
+			break;
+		case op_mul_assign_local:
+			// 1 arg
+			arg = *((dword*)ip);
+			// look-up the local
+			lhs = CurrentFrame()->GetLocal( arg );
+			rhs = stack.back();
+			stack.pop_back();
+			if( lhs.type != obj_number )
+				throw DevaRuntimeException( "Left-hand side of multiplication assignment operator must be a number." );
+			if( rhs.type != obj_number )
+				throw DevaRuntimeException( "Right-hand side of multiplication assignment operator must be a number." );
+			CurrentFrame()->SetLocal( arg, DevaObject( lhs.d * rhs.d ) );
+			ip += sizeof( dword );
+			break;
+		case op_div_assign_local:
+			// 1 arg
+			arg = *((dword*)ip);
+			// look-up the local
+			lhs = CurrentFrame()->GetLocal( arg );
+			if( lhs )
+				throw DevaRuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
+			rhs = stack.back();
+			stack.pop_back();
+			if( plhs->type != obj_number )
+				throw DevaRuntimeException( "Left-hand side of division assignment operator must be a number." );
+			if( rhs.type != obj_number )
+				throw DevaRuntimeException( "Right-hand side of division assignment operator must be a number." );
+			if( rhs.d == 0.0 )
+				throw DevaRuntimeException( "Divide-by-zero error." );
+			CurrentFrame()->SetLocal( arg, DevaObject( lhs.d / rhs.d ) );
+			ip += sizeof( dword );
+			break;
+		case op_mod_assign_local:
+			// 1 arg
+			arg = *((dword*)ip);
+			// look-up the local
+			lhs = CurrentFrame()->GetLocal( arg );
+			rhs = stack.back();
+			stack.pop_back();
+			if( lhs.type != obj_number )
+				throw DevaRuntimeException( "Left-hand side of modulus assignment operator must be a number." );
+			if( rhs.type != obj_number )
+				throw DevaRuntimeException( "Right-hand side of modulus assignment operator must be a number." );
+			if( rhs.d == 0.0 )
+				throw DevaRuntimeException( "Divide-by-zero error." );
+			// TODO: error if arguments aren't integral numbers...
+			CurrentFrame()->SetLocal( arg, DevaObject( (double)((int)lhs.d % (int)rhs.d) ) );
 			ip += sizeof( dword );
 			break;
 		case op_call: // call function with <Op0> args on on stack, fcn after args
@@ -679,6 +806,19 @@ void Executor::ExecuteCode( const Code & code )
 					frame->SetLocal( arg-i-1, ob );
 					stack.pop_back();
 				}
+				// TODO: this doesn't work when the # of default arg vals != #
+				// of args
+				// default arg vals...
+				int num_defaults = o.f->num_args - arg;
+				if( num_defaults != 0 )
+				{
+					for( int i = 0; i < num_defaults; i++ )
+					{
+						int idx = o.f->default_args.At( arg+i );
+						DevaObject o = GetConstant( arg );
+						frame->SetLocal( arg+i, o );
+					}
+				}
 				// push the frame onto the callstack
 				PushFrame( frame );
 				// jump to the function
@@ -688,7 +828,6 @@ void Executor::ExecuteCode( const Code & code )
 			// is it a native fcn?
 			else if( o.type == obj_native_function )
 			{
-				// TODO: anything else needed for native function calls??
 				// create a frame for the fcn
 				Frame* frame = new Frame( (dword)ip, (int)arg, o.f );
 				// set the args for the frame
@@ -719,6 +858,17 @@ void Executor::ExecuteCode( const Code & code )
 						frame->SetLocal( arg-i-1, ob );
 						stack.pop_back();
 					}
+					// default arg vals...
+					int num_defaults = f->num_args - arg;
+					if( num_defaults != 0 )
+					{
+						for( int i = 0; i < num_defaults; i++ )
+						{
+							int idx = f->default_args.At( arg+i );
+							DevaObject ob = GetConstant( idx );
+							frame->SetLocal( arg+i, ob );
+						}
+					}
 					// push the frame onto the callstack
 					PushFrame( frame );
 					// jump to the function
@@ -730,7 +880,6 @@ void Executor::ExecuteCode( const Code & code )
 					NativeFunction nf = FindNativeFunction( o.s );
 					if( nf )
 					{
-						// TODO: anything else needed for native function calls??
 						// create a frame for the fcn
 						Frame* frame = new Frame( (dword)ip, arg, nf );
 						// set the args for the frame
@@ -783,34 +932,61 @@ void Executor::ExecuteCode( const Code & code )
 			PopScope();
 			break;
 		case op_for_iter:
+			// TODO:
 			// 1 arg: iterable object
 			arg = *((dword*)ip);
 			// look-up the constant
 			o = GetConstant(arg);
 			ip += sizeof( dword );
 			break;
-		case op_tbl_load:
+		case op_tbl_load:// tos = tos1[tos]
+			// TODO:
 		case op_loadslice2:
+			// TODO:
 		case op_loadslice3:
-		case op_tbl_store:
+			// TODO:
+		case op_tbl_store:// tos2[tos1] = tos
+			// TODO:
 		case op_storeslice2:
+			// TODO:
 		case op_storeslice3:
+			// TODO:
 		case op_add_tbl_store:
+			// TODO:
 		case op_sub_tbl_store:
+			// TODO:
 		case op_mul_tbl_store:
+			// TODO:
 		case op_div_tbl_store:
+			// TODO:
 		case op_mod_tbl_store:
+			// TODO:
+			break;
 		case op_dup:
+			stack.push_back( stack.back() );
+			break;
 		case op_dup1:
+			stack.push_back( stack[stack.size()-2] );
+			break;
 		case op_dup2:
+			stack.push_back( stack[stack.size()-3] );
+			break;
 		case op_dup3:
+			stack.push_back( stack[stack.size()-3] );
+			break;
 		case op_dup_top_n:
+			// TODO:
 		case op_dup_top1:
+			// TODO:
 		case op_dup_top2:
+			// TODO:
 		case op_dup_top3:
+			// TODO:
 		case op_swap:
+			// TODO:
 			break;
 		case op_rot:
+			// TODO:
 			// 1 arg:
 			arg = *((dword*)ip);
 			// look-up the constant
@@ -818,9 +994,13 @@ void Executor::ExecuteCode( const Code & code )
 			ip += sizeof( dword );
 			break;
 		case op_rot2:
+			// TODO:
 		case op_rot3:
+			// TODO:
 		case op_rot4:
+			// TODO:
 		case op_import:
+			// TODO:
 			// 1 arg:
 			arg = *((dword*)ip);
 			// look-up the constant
@@ -835,6 +1015,8 @@ void Executor::ExecuteCode( const Code & code )
 			break;
 		}
 	}
+	// TODO: review. is this where this frame should be added?
+	PopFrame();
 }
 
 } // namespace deva

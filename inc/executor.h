@@ -86,9 +86,12 @@ public:
 		// more than one scope (global scope)??
 		if( data.size() != 1 )
 			throw DevaICE( "Scope table not empty at exit." );
+//		for( vector<Scope*>::reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+//			delete *i;
+		delete data.back();
 	}
 	inline void PushScope( Scope* s ) { data.push_back( s ); }
-	inline void PopScope() { data.pop_back(); }
+	inline void PopScope() { delete data.back(); data.pop_back(); }
 	inline Scope* CurrentScope() { return data.back(); }
 	inline Scope* At( size_t idx ) { return data[idx]; }
 	DevaObject* FindSymbol( const char* name )
@@ -120,6 +123,10 @@ class Frame
 	// with a plain pointer/array we can get rid of one add.. worth it?
 	vector<DevaObject> locals;
 
+	// string data that the locals in this frame point to (i.e. non-constant
+	// strings that are created by actions in the executor)
+	vector<char*> strings;
+
 	// number of arguments actually passed to the call
 	int num_args;
 
@@ -143,6 +150,14 @@ public:
 		num_args( args_passed ), 
 		addr( loc )
 		{}
+	~Frame()
+	{
+		// free the local strings
+		for( vector<char*>::iterator i = strings.begin(); i != strings.end(); ++i )
+		{
+			delete [] *i;
+		}
+	}
 	inline bool IsNative() { return is_native; }
 	inline const DevaFunction* GetFunction() { return (is_native ? NULL : function ); }
 	inline const NativeFunction GetNativeFunction() { return (is_native ? native_function : NULL); }
@@ -150,6 +165,7 @@ public:
 	inline void SetLocal( int i, DevaObject o ) { locals[i] = o; }
 	inline dword GetReturnAddress() { return addr; }
 	inline int NumArgsPassed() { return num_args; }
+	inline void AddString( char* s ) { strings.push_back( s ); }
 };
 
 struct Code
@@ -176,7 +192,6 @@ class Executor
 	// scope table
 	ScopeTable scopes;
 
-//public:
 	// set of function objects
 	map<string, DevaFunction*> functions;
 
@@ -218,7 +233,7 @@ public:
 	inline map<string,NativeFunction> GetNativeFunctions(){ return builtins; }
 
 
-	inline void AddConstant( DevaObject o ) { constants.Add( o ); }
+	inline bool AddConstant( DevaObject o ) { return constants.Add( o ); }
 	inline int FindConstant( const DevaObject & o ) { return constants.Find( o ); }
 	inline DevaObject GetConstant( int idx ) { return constants.At(idx); }
 	inline size_t NumConstants() { return constants.Size(); }

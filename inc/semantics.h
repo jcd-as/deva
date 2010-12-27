@@ -88,7 +88,7 @@ struct Semantics
 		for( vector<Scope*>::iterator i = scopes.begin(); i != scopes.end(); ++i )
 		{
 			delete *i;
-			*i = NULL;
+//			*i = NULL;
 		}
 	}
 

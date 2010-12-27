@@ -63,6 +63,7 @@ public:
 	}
 	~InstructionStream(){ delete[] bytes; }
 	const byte* Bytes(){ return bytes; }
+	const byte* Current(){ return cur; }
 	inline size_t Length(){ return cur - bytes; }
 	void Append( byte b )
 	{

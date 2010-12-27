@@ -67,7 +67,21 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	// constants
 	for( set<DevaObject>::iterator i = sem->constants.begin(); i != sem->constants.end(); ++i )
 	{
-		ex->AddConstant( *i );
+		// copy (allocate new) strings
+		if( i->type == obj_string )
+		{
+			// strip quotes and unescape
+			string str( i->s );
+			str = unescape( strip_quotes( str ) );
+			char* s = new char[str.length()+1];
+			strcpy( s, str.c_str() );
+			// try to add the string constant, if we aren't allowed to (because
+			// it's a duplicate), free the string
+			if( !ex->AddConstant( DevaObject( s ) ) )
+				delete [] s;
+		}
+		else
+			ex->AddConstant( *i );
 	}
 
 	// add our 'global' function, "@main"
@@ -254,6 +268,28 @@ void Compiler::Decode()
 		case op_div:
 		case op_mod:
 			break;
+		case op_add_assign:
+		case op_sub_assign:
+		case op_mul_assign:
+		case op_div_assign:
+		case op_mod_assign:
+			// 1 arg: lhs
+			arg = *((dword*)p);
+			// look-up the constant
+			o = ex->GetConstant(arg);
+			cout << "\t\t" << arg << " (" << o << ")";
+			p += sizeof( dword );
+			break;
+		case op_add_assign_local:
+		case op_sub_assign_local:
+		case op_mul_assign_local:
+		case op_div_assign_local:
+		case op_mod_assign_local:
+			// 1 arg: lhs
+			arg = *((dword*)p);
+			cout << "\t\t" << arg;
+			p += sizeof( dword );
+			break;
 		case op_call:
 			// 1 arg: number of args passed
 			arg = *((dword*)p);
@@ -426,8 +462,21 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	// add the default arg indices for this (function) scope
 	for( int i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
 	{
+		int idx = -1;
 		// find the index for this constant
-		int idx = GetConstant( scope->GetDefaultArgVals().At( i ) );
+		DevaObject obj = scope->GetDefaultArgVals().At( i );
+		if( obj.type == obj_string )
+		{
+			// strip the string of quotes and unescape it
+			string str( obj.s );
+			str = unescape( strip_quotes( str ) );
+			char* s = new char[str.length()+1];
+			strcpy( s, str.c_str() );
+			idx = GetConstant( DevaObject( s ) );
+			delete [] s;
+		}
+		else
+			idx = GetConstant( obj );
 		fcn->default_args.Add( idx );
 	}
 
@@ -440,7 +489,7 @@ void Compiler::EndFun()
 	// generate a 'return' statement, in case there isn't one that will be hit
 	// (check the immediately preceding instruction so we at least don't
 	// generate two returns in a row...)
-	if( (Opcode)*(is->Bytes()-5) != op_return )
+	if( is->Length() <= 5 || (Opcode)*(is->Current()-5) != op_return )
 		Emit( op_return, 0 );
 
 	// back-patch the jump over fcn body
@@ -472,6 +521,8 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 		if( (int)(node->u) == 0x1 )
 			d *= -1.0;
 	}
+	else
+		throw DevaICE( "Expecting a number type." );
 
 	if( d == 0.0 )
 	{
@@ -503,9 +554,13 @@ void Compiler::String( char* name )
 	// get the constant pool index for this string
 	int idx = GetConstant( DevaObject( s ) );
 	if( idx < 0 )
+	{
+		delete s;
 		throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % s );
+	}
 	// emit op to push it onto the stack
 	Emit( op_pushconst, (dword)idx );
+	delete [] s;
 }
 
 // identifier
@@ -774,32 +829,63 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 		// get the text
 		char* lhs = (char*)lhs_node->getText( lhs_node )->chars;
 
-		// look it up in the constant pool
-		int idx = GetConstant( DevaObject( lhs ) );
-		// not found? error
-		if( idx == -1 )
-			throw DevaICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+		// is it a local?
+		int idx = CurrentScope()->ResolveLocalToIndex( lhs );
 
-		switch( op )
+		// no? look it up as a non-local
+		if( idx == -1 )
 		{
-		case op_add:
-			Emit( op_add_assign, (dword)idx );
-			break;
-		case op_sub:
-			Emit( op_sub_assign, (dword)idx );
-			break;
-		case op_mul:
-			Emit( op_mul_assign, (dword)idx );
-			break;
-		case op_div:
-			Emit( op_div_assign, (dword)idx );
-			break;
-		case op_mod:
-			Emit( op_mod_assign, (dword)idx );
-			break;
-		default:
-			throw DevaICE( "Unknown augmented assign operator." );
-			break;
+			// look it up in the constant pool
+			int idx = GetConstant( DevaObject( lhs ) );
+			// not found? error
+			if( idx == -1 )
+				throw DevaICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+
+			switch( op )
+			{
+			case op_add:
+				Emit( op_add_assign, (dword)idx );
+				break;
+			case op_sub:
+				Emit( op_sub_assign, (dword)idx );
+				break;
+			case op_mul:
+				Emit( op_mul_assign, (dword)idx );
+				break;
+			case op_div:
+				Emit( op_div_assign, (dword)idx );
+				break;
+			case op_mod:
+				Emit( op_mod_assign, (dword)idx );
+				break;
+			default:
+				throw DevaICE( "Unknown augmented assign operator." );
+				break;
+			}
+		}
+		else
+		{
+			switch( op )
+			{
+			case op_add:
+				Emit( op_add_assign_local, (dword)idx );
+				break;
+			case op_sub:
+				Emit( op_sub_assign_local, (dword)idx );
+				break;
+			case op_mul:
+				Emit( op_mul_assign_local, (dword)idx );
+				break;
+			case op_div:
+				Emit( op_div_assign_local, (dword)idx );
+				break;
+			case op_mod:
+				Emit( op_mod_assign_local, (dword)idx );
+				break;
+			default:
+				throw DevaICE( "Unknown augmented assign operator." );
+				break;
+			}
 		}
 	}
 	// is the lhs a key (or dot) op?

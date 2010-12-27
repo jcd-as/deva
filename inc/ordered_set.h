@@ -53,12 +53,17 @@ public:
 	void Reserve( int n ) { data.reserve( n ); }
 	T& At( int n ) { return data[n]; }
 	size_t Size() { return data.size(); }
-	// adds
-	void Add( const T& t )
+	// adds. if a rejected dup (if dups rejected), returns false, else true
+	bool Add( const T& t )
 	{
 			size_t ip = insertionPoint( t );
-			if( allowDuplicates || (data.size() >= ip || BinaryPredicate()(t, data[ip])) )
+			if( allowDuplicates || (data.size() <= ip || BinaryPredicate()(t, data[ip])) )
+			{
 				data.insert( data.begin() + ip, t );
+				return true;
+			}
+			else
+				return allowDuplicates;
 	}
 	void RemoveAt( int n ) { data.erase( data.begin() + n ); }
 	// returns index of item, or -1 if not found
