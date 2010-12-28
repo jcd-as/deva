@@ -45,31 +45,39 @@ using namespace std;
 namespace deva
 {
 
-const size_t FRAME_SIZE = 128;
-const size_t STACK_SIZE = 1024;
-
 
 // TODO: move these into their own file??
 class Scope
 {
+	// pointers to locals (actual objects stored in the frame, but the scope
+	// controls freeing objects when they go out of scope)
 	// TODO: switch to boost unordered map (hash table)??
-	map<string, DevaObject*> data;
+	map<string, Object*> data;
 
 public:
+	Scope() {}
 	~Scope()
 	{
-		for( map<string, DevaObject*>::iterator i = data.begin(); i != data.end(); ++i )
+		// TODO: release-ref the vectors/maps
+
+		// 'zero' out the locals non-ref types, to error out in case they get 
+		// accidentally used after they should be gone
+		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
 		{
-			delete i->second;
+			if( IsMapType( i->second->type ) ) i->second->m->DecRef();
+			else if( IsVecType( i->second->type ) ) i->second->v->DecRef();
+			else *(i->second) = Object();
 		}
 	}
-	void AddObject( const char* name, DevaObject* ob )
+	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
+	void AddSymbol( string name, Object* ob )
 	{
-		data.insert( pair<string, DevaObject*>(string(name), ob) );
+		data.insert( pair<string, Object*>(string(name), ob) );
 	}
-	DevaObject* FindSymbol( const char* name )
+	Object* FindSymbol( const char* name ) const
 	{
-		map<string, DevaObject*>::iterator i = data.find( string(name) );
+		// check locals
+		map<string, Object*>::const_iterator i = data.find( string(name) );
 		if( i == data.end() )
 			return NULL;
 		else return i->second;
@@ -84,23 +92,25 @@ public:
 	~ScopeTable()
 	{
 		// more than one scope (global scope)??
-		if( data.size() != 1 )
-			throw DevaICE( "Scope table not empty at exit." );
-//		for( vector<Scope*>::reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
-//			delete *i;
-		delete data.back();
+		if( data.size() > 1 )
+			throw ICE( "Scope table not empty at exit." );
+		if( data.size() == 1 )
+			delete data.back();
 	}
 	inline void PushScope( Scope* s ) { data.push_back( s ); }
 	inline void PopScope() { delete data.back(); data.pop_back(); }
-	inline Scope* CurrentScope() { return data.back(); }
-	inline Scope* At( size_t idx ) { return data[idx]; }
-	DevaObject* FindSymbol( const char* name )
+	inline Scope* CurrentScope() const { return data.back(); }
+	inline Scope* At( size_t idx ) const { return data[idx]; }
+	Object* FindSymbol( const char* name ) const
 	{
+		// TODO: full look-up logic: ???
+		// builtins(???), module names, functions(???)
+		//
 		// look in each scope
-		for( vector<Scope*>::reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
 		{
 			// check for the symbol
-			DevaObject* o = (*i)->FindSymbol( name );
+			Object* o = (*i)->FindSymbol( name );
 			if( o )
 				return o;
 		}
@@ -114,14 +124,12 @@ class Frame
 {
 	union
 	{
-		DevaFunction* function;
+		Function* function;
 		NativeFunction native_function;
 	};
 	bool is_native;
-	// locals (including args):
-	// TODO: a vector's [] op uses one deref and two adds to get to a value,
-	// with a plain pointer/array we can get rid of one add.. worth it?
-	vector<DevaObject> locals;
+	// array of locals (including args at front of array):
+	Object* locals;
 
 	// string data that the locals in this frame point to (i.e. non-constant
 	// strings that are created by actions in the executor)
@@ -133,23 +141,26 @@ class Frame
 	// return address
 	dword addr;
 	
+	// pointer at the scopes so symbols can be resolved from the frame object
+	ScopeTable* scopes;
+
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( dword loc, int args_passed, DevaFunction* f ) : 
+	Frame( ScopeTable* s, dword loc, int args_passed, Function* f ) : 
+		scopes( s ),
 		function( f ), 
 		is_native( false ), 
-		locals( f->num_locals ), 
 		num_args( args_passed ), 
 		addr( loc )
-		{}
-	Frame( dword loc, int args_passed, NativeFunction f ) : 
+		{ locals = new Object[f->num_locals]; }
+	Frame( ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
+		scopes( s ),
 		native_function( f ), 
 		is_native( true ), 
-		locals( args_passed ), // native fcn, has no locals except the args passed to it
 		num_args( args_passed ), 
 		addr( loc )
-		{}
+		{ locals = new Object[args_passed]; /*native fcn, has no locals except the args passed to it*/ }
 	~Frame()
 	{
 		// free the local strings
@@ -157,15 +168,21 @@ public:
 		{
 			delete [] *i;
 		}
+		// free the locals array storage
+		delete [] locals;
 	}
-	inline bool IsNative() { return is_native; }
-	inline const DevaFunction* GetFunction() { return (is_native ? NULL : function ); }
-	inline const NativeFunction GetNativeFunction() { return (is_native ? native_function : NULL); }
-	inline DevaObject GetLocal( int i ) { return locals[i]; }
-	inline void SetLocal( int i, DevaObject o ) { locals[i] = o; }
-	inline dword GetReturnAddress() { return addr; }
-	inline int NumArgsPassed() { return num_args; }
+	inline bool IsNative() const { return is_native; }
+	inline Function* GetFunction() const { return (is_native ? NULL : function ); }
+	inline const NativeFunction GetNativeFunction() const { return (is_native ? native_function : NULL); }
+	inline Object GetLocal( int i ) const { return locals[i]; }
+	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
+	inline void SetLocal( int i, Object o ) { locals[i] = o; }
+	inline dword GetReturnAddress() const { return addr; }
+	inline int NumArgsPassed() const { return num_args; }
 	inline void AddString( char* s ) { strings.push_back( s ); }
+
+	// resolve symbols through the scope table
+	inline Object* FindSymbol( const char* name ) const { return scopes->FindSymbol( name ); }
 };
 
 struct Code
@@ -187,55 +204,55 @@ class Executor
 	// operand stack
 	// TODO: a vector's [] op uses one deref and two adds to get to a value,
 	// with a plain pointer/array we can get rid of one add.. worth it?
-	vector<DevaObject> stack;
+	vector<Object> stack;
 
 	// scope table
-	ScopeTable scopes;
+	ScopeTable* scopes;
 
 	// set of function objects
-	map<string, DevaFunction*> functions;
+	map<string, Function*> functions;
 
 	// native fcns/builtins
 	map<string, NativeFunction> builtins;
 
 	// set of constants (including all names)
-	OrderedSet<DevaObject> constants;
+	OrderedSet<Object> constants;
 
 public:
 	Executor();
 	~Executor();
 
-	inline Scope* CurrentScope() { return scopes.CurrentScope(); }
-	inline Scope* GlobalScope() { return scopes.At( 0 ); }
+	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
+	inline Scope* GlobalScope() { return scopes->At( 0 ); }
 	inline Frame* CurrentFrame() { return callstack.back(); }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
 	inline void PopFrame() { delete callstack.back(); callstack.pop_back(); }
 
-	inline void PushScope( Scope* s ) { scopes.PushScope( s ); }
-	inline void PopScope() { scopes.PopScope(); }
+	inline void PushScope( Scope* s ) { scopes->PushScope( s ); }
+	inline void PopScope() { scopes->PopScope(); }
 
-	inline void PushStack( DevaObject o ) { stack.push_back( o ); }
-	inline DevaObject PopStack() { DevaObject o = stack.back(); stack.pop_back(); return o; }
+	inline void PushStack( Object o ) { stack.push_back( o ); }
+	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
 
-	inline DevaObject* FindSymbol( const char* name ) { return scopes.FindSymbol( name ); }
-	inline DevaObject* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
+	inline Object* FindSymbol( const char* name ) { return scopes->FindSymbol( name ); }
+	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
 	// helpers
 	// TODO: adding a fcn whose name already exists should *override* the
 	// existing fcn (map's behaviour is to not accept the new value)
-	inline void AddFunction( DevaFunction* f ) { functions.insert( pair<string, DevaFunction*>( f->name, f ) ); }
-	inline DevaFunction* FindFunction( string name ) { map<string, DevaFunction*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
-	inline map<string,DevaFunction*> GetFunctions(){ return functions; }
+	inline void AddFunction( Function* f ) { functions.insert( pair<string, Function*>( f->name, f ) ); }
+	inline Function* FindFunction( string name ) { map<string, Function*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
+	inline map<string,Function*> GetFunctions(){ return functions; }
 
 	inline void AddNativeFunction( string name, NativeFunction f ) { builtins.insert( pair<string, NativeFunction>( name, f ) ); }
 	inline NativeFunction FindNativeFunction( string name ) { map<string, NativeFunction>::iterator i = builtins.find( name ); return (i == builtins.end() ? NULL : i->second); }
 	inline map<string,NativeFunction> GetNativeFunctions(){ return builtins; }
 
 
-	inline bool AddConstant( DevaObject o ) { return constants.Add( o ); }
-	inline int FindConstant( const DevaObject & o ) { return constants.Find( o ); }
-	inline DevaObject GetConstant( int idx ) { return constants.At(idx); }
+	inline bool AddConstant( Object o ) { return constants.Add( o ); }
+	inline int FindConstant( const Object & o ) { return constants.Find( o ); }
+	inline Object GetConstant( int idx ) { return constants.At(idx); }
 	inline size_t NumConstants() { return constants.Size(); }
 
 	void AddBuiltin( const char* name, NativeFunction fcn );

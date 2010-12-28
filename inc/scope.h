@@ -114,7 +114,7 @@ protected:
 	vector<string> locals;
 
 	// default argument values
-	OrderedSet<DevaObject> default_arg_values;
+	OrderedSet<Object> default_arg_values;
 
 	// helper fcn
 	virtual FunctionScope* getParentFun();
@@ -136,12 +136,12 @@ public:
 	inline const int NumArgs() const { return numArgs; }
 	inline const int NumLocals() const { return locals.size(); }
 	inline OrderedMultiSet<Symbol*, SB_ptr_lt> & GetNames() { return names; }
-	inline OrderedSet<DevaObject> & GetDefaultArgVals() { return default_arg_values; }
+	inline OrderedSet<Object> & GetDefaultArgVals() { return default_arg_values; }
 	inline vector<string> & GetLocals() { return locals; }
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
 	// add a defalt arg value
-	inline void AddDefaultArgVal( DevaObject o ) { default_arg_values.Add( o ); }
+	inline void AddDefaultArgVal( Object o ) { default_arg_values.Add( o ); }
 };
 
 } // namespace deva_compile

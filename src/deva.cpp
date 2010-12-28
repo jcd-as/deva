@@ -281,7 +281,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				ex->ExecuteCode( c );
 			}
 		}
-		catch( DevaSemanticException & e )
+		catch( SemanticException & e )
 		{
 			// display an error
 			emit_error( e );
@@ -289,7 +289,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// quick exit, don't bother to clean up, OS will reclaim memory
 			exit( -1 );
 		}
-		catch( DevaICE & e )
+		catch( ICE & e )
 		{
 			// display an error
 			emit_error( e );
@@ -297,7 +297,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// quick exit, don't bother to clean up, OS will reclaim memory
 			exit( -1 );
 		}
-		catch( DevaRuntimeException & e )
+		catch( RuntimeException & e )
 		{
 			// display an error
 			emit_error( e );
@@ -357,7 +357,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			cout << "Constant data pool:" << endl;
 			for( int i = 0.; i < ex->NumConstants(); i++ )
 			{
-				DevaObject o = ex->GetConstant( i );
+				Object o = ex->GetConstant( i );
 				if( o.type == obj_string )
 					cout << o.s << endl;
 				else if( o.type == obj_number )
@@ -369,9 +369,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			}
 			// dump the function objects
 			cout << "Function objects:" << endl;
-			for( map<string,DevaFunction*>::iterator i = ex->GetFunctions().begin(); i != ex->GetFunctions().end(); ++i )
+			for( map<string,Function*>::iterator i = ex->GetFunctions().begin(); i != ex->GetFunctions().end(); ++i )
 			{
-				DevaFunction* f = i->second;
+				Function* f = i->second;
 				cout << "function: " << f->name << ", from file: " << f->filename << ", line: " << f->first_line;
 				cout << endl;
 				cout << f->num_args << " arg(s), default value indices: ";

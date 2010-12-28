@@ -41,9 +41,9 @@ namespace deva
 // global object to track current filename
 extern const char* current_file;
 
-void emit_error( DevaSemanticException & e );
-void emit_error( DevaRuntimeException & e );
-void emit_error( DevaICE & e );
+void emit_error( SemanticException & e );
+void emit_error( RuntimeException & e );
+void emit_error( ICE & e );
 
 void emit_warning( char* warning, int line );
 

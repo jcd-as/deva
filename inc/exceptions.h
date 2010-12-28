@@ -40,55 +40,55 @@ using namespace std;
 namespace deva
 {
 
-struct DevaSemanticException : public logic_error
+struct SemanticException : public logic_error
 {
 	int line;
 
 public:
-	DevaSemanticException( const char* const s, int l ) : logic_error( s ), line( l )
+	SemanticException( const char* const s, int l ) : logic_error( s ), line( l )
 	{}
-	DevaSemanticException( boost::format fmt, int l ) : logic_error( str( fmt ).c_str() ), line( l )
+	SemanticException( boost::format fmt, int l ) : logic_error( str( fmt ).c_str() ), line( l )
 	{}
-	~DevaSemanticException() throw()
-	{}
-};
-
-class DevaRuntimeException : public runtime_error
-{
-public:
-	DevaRuntimeException( const char* const s ) : runtime_error( s )
-	{}
-	DevaRuntimeException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
+	~SemanticException() throw()
 	{}
 };
 
-class DevaStackException : public DevaRuntimeException
+class RuntimeException : public runtime_error
 {
 public:
-	DevaStackException( const char* const s ) : DevaRuntimeException( s )
+	RuntimeException( const char* const s ) : runtime_error( s )
 	{}
-	DevaStackException( boost::format fmt ) : DevaRuntimeException( fmt )
+	RuntimeException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
+	{}
+};
+
+class StackException : public RuntimeException
+{
+public:
+	StackException( const char* const s ) : RuntimeException( s )
+	{}
+	StackException( boost::format fmt ) : RuntimeException( fmt )
 	{}
 };
 
 // critical (often non-recoverable) error
-class DevaCriticalException : public runtime_error
+class CriticalException : public runtime_error
 {
 public:
-	DevaCriticalException( const char* const s ) : runtime_error( s )
+	CriticalException( const char* const s ) : runtime_error( s )
 	{}
-	DevaCriticalException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
+	CriticalException( boost::format fmt ) : runtime_error( str( fmt ).c_str() )
 	{}
 };
 
 // internal compiler error: indicates something wrong with the compiler's
 // code-gen, internal state etc
-class DevaICE : public DevaRuntimeException
+class ICE : public RuntimeException
 {
 public:
-	DevaICE( const char* const s ) : DevaRuntimeException( s )
+	ICE( const char* const s ) : RuntimeException( s )
 	{}
-	DevaICE( boost::format fmt ) : DevaRuntimeException( fmt )
+	ICE( boost::format fmt ) : RuntimeException( fmt )
 	{}
 };
 

@@ -132,7 +132,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 private:
 	// find index of constant
-	int GetConstant( const DevaObject & o ) { return ex->FindConstant( o ); }
+	int GetConstant( const Object & o ) { return ex->FindConstant( o ); }
 
 	// label and back-patching helpers
 	inline void AddLabel() { labelstack.push_back( is->Length() ); }

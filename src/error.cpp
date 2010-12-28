@@ -36,19 +36,19 @@ using namespace std;
 namespace deva
 {
 
-void emit_error( DevaSemanticException & e )
+void emit_error( SemanticException & e )
 {
 	// format = filename:linenum: msg
 	cerr << current_file << ":" << e.line << ":" << " error: " << e.what() << endl;
 }
 
-void emit_error( DevaRuntimeException & e )
+void emit_error( RuntimeException & e )
 {
 	// format = filename:linenum: msg
 	cerr << "error: " << e.what() << endl;
 }
 
-void emit_error( DevaICE & e )
+void emit_error( ICE & e )
 {
 	// format = filename:linenum: msg
 	cerr << current_file << ":" << " Interal Compiler Error: " << e.what() << endl;

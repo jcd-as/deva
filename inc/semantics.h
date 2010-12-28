@@ -59,11 +59,11 @@ struct Semantics
 
 	// functions and arguments
 	set<string> arg_names;
-	vector<DevaObject> default_arg_values;
+	vector<Object> default_arg_values;
 	int first_default_arg;
 
 	// constants (numbers & strings)
-	set<DevaObject> constants;
+	set<Object> constants;
 
 	// function calls
 	bool making_call;
@@ -88,7 +88,6 @@ struct Semantics
 		for( vector<Scope*>::iterator i = scopes.begin(); i != scopes.end(); ++i )
 		{
 			delete *i;
-//			*i = NULL;
 		}
 	}
 

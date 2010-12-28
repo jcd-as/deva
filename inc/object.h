@@ -33,6 +33,7 @@
 
 #include "opcodes.h"
 #include "ordered_set.h"
+#include "refcounted.h"
 
 #include <string>
 #include <vector>
@@ -46,6 +47,7 @@ using namespace std;
 namespace deva
 {
 
+// object type for tagged union object type
 enum ObjectType
 {
 	obj_null,
@@ -60,16 +62,25 @@ enum ObjectType
 	obj_instance,
 	obj_native_obj,			// a native (C/C++) object (void*)
 	obj_size,				// an integral sized value (internal use only, for code addresses etc)
+	obj_symbol_name,		// an identifier, same data as a string
 	obj_end = 255			// end of enum marker
 };
 
+inline bool IsRefType( ObjectType t ) { return (t == obj_vector || t == obj_map || t == obj_class || t == obj_instance ); }
+inline bool IsMapType( ObjectType t ) { return (t == obj_map || t == obj_class || t == obj_instance ); }
+inline bool IsVecType( ObjectType t ) { return t == obj_vector; }
+
+
+// forward decls needed by Object class
 class Frame;
 typedef void (*NativeFunction)(Frame*);
-class DevaVector;
-struct DevaMap;
-struct DevaFunction;
+struct Function;
+class VectorBase;
+class MapBase;
+typedef RefCounted<VectorBase> Vector;
+typedef RefCounted<MapBase> Map;
 
-struct DevaObject
+struct Object
 {
 	ObjectType type;
 	union
@@ -77,34 +88,36 @@ struct DevaObject
 		double d;
 		char* s;
 		bool b;
-		DevaVector* v;
-		DevaMap* m;
-		DevaFunction* f;
+		Vector* v;
+		Map* m;
+		Function* f;
 		NativeFunction nf;
 		void* no;
 		size_t sz;
 	};
 
-	DevaObject() : type( obj_end ) {} // invalid object
-	DevaObject( ObjectType t ) : type( t ) {} // uninitialized object
-	DevaObject( double n ) : type( obj_number ), d( n ) {}
-	DevaObject( char* n ) : type( obj_string ), s( n ) {}
-	DevaObject( bool n ) : type( obj_boolean ), b( n ) {}
-	DevaObject( DevaVector* n ) : type( obj_vector ), v( n ) {}
-	DevaObject( DevaMap* n ) : type( obj_map ), m( n ) {}
-	DevaObject( DevaFunction* n ) : type( obj_function ), f( n ) {}
-	DevaObject( NativeFunction n ) : type( obj_native_function ), nf( n ) {}
-	DevaObject( void* n ) : type( obj_native_obj ), no( n ) {}
-	DevaObject( size_t n ) : type( obj_size ), sz( n ) {}
+	Object() : type( obj_end ), d( 0.0 ) {} // invalid object
+	Object( ObjectType t ) : type( t ) {} // uninitialized object
+	Object( double n ) : type( obj_number ), d( n ) {}
+	Object( char* n ) : type( obj_string ), s( n ) {}
+	Object( bool n ) : type( obj_boolean ), b( n ) {}
+	Object( Vector* n ) : type( obj_vector ), v( n ) {}
+	Object( Map* n ) : type( obj_map ), m( n ) {}
+	Object( Function* n ) : type( obj_function ), f( n ) {}
+	Object( NativeFunction n ) : type( obj_native_function ), nf( n ) {}
+	Object( void* n ) : type( obj_native_obj ), no( n ) {}
+	Object( size_t n ) : type( obj_size ), sz( n ) {}
+	Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
+	{ /*assert( t == obj_symbol_name );*/ }
 
 	// creation functions for classes & instances
 	// (which are maps internally)
-	static DevaObject* CreateClass( DevaMap* n )
-	{ DevaObject* ret = new DevaObject(); ret->m = n; ret->type = obj_class; return ret; }
-	void MakeClass( DevaMap* n ){ type = obj_class; m = n; }
-	static DevaObject* CreateInstance( DevaMap* n )
-	{ DevaObject* ret = new DevaObject(); ret->m = n; ret->type = obj_instance; return ret; }
-	void MakeInstance( DevaMap* n ){ type = obj_instance; m = n; }
+	static Object* CreateClass( Map* n )
+	{ Object* ret = new Object(); ret->m = n; ret->type = obj_class; return ret; }
+	void MakeClass( Map* n ){ type = obj_class; m = n; }
+	static Object* CreateInstance( Map* n )
+	{ Object* ret = new Object(); ret->m = n; ret->type = obj_instance; return ret; }
+	void MakeInstance( Map* n ){ type = obj_instance; m = n; }
 
 	// helper functions
 	inline bool IsNull(){ return type == obj_null; }
@@ -121,63 +134,81 @@ struct DevaObject
 	inline operator const bool (){ return b; }
 	inline operator const double (){ return d; }
 	inline operator const string (){ return s; }
-	inline operator const DevaVector* (){ return v; }
-	inline operator const DevaMap* (){ return m; }
-	inline operator const DevaFunction* (){ return f; }
+	inline operator const Vector* (){ return v; }
+	inline operator const Map* (){ return m; }
+	inline operator const Function* (){ return f; }
 	inline operator const NativeFunction (){ return nf; }
 	inline operator const void* (){ return no; }
 	inline operator const size_t (){ return sz; }
 
 	// equality operator
-	bool operator == ( const DevaObject& rhs ) const;
-	bool operator < ( const DevaObject & rhs ) const;
+	bool operator == ( const Object& rhs ) const;
+	bool operator < ( const Object & rhs ) const;
 
 	// coerce to a boolean (for jmpf op, for instance)
 	bool CoerceToBool();
 };
 
-// functor for comparing DevaObject ptrs
+// functor for comparing Object ptrs
 struct DO_ptr_lt
 {
-	bool operator()( const DevaObject*  lhs, const DevaObject* rhs ){ return lhs->operator < (*rhs); }
+	bool operator()( const Object*  lhs, const Object* rhs ){ return lhs->operator < (*rhs); }
 };
 
+
+// operator << for printing Objects
+ostream & operator << ( ostream & os, Object & obj );
+
+
+struct Object;
+
 // TODO: should this be a list<>? dequeue<>?
-struct DevaVector : public vector<DevaObject>
+class VectorBase : public vector<Object>
 {
 	// current index for enumerating the vector
 	size_t index;
 
+public:
 	// default constructor
-	DevaVector() : vector<DevaObject>(), index( 0 )
-	{}
+	VectorBase() : vector<Object>(), index( 0 ) {}
 
 	// copy constructor
-	DevaVector( const DevaVector & v ) : vector<DevaObject>( v ), index( 0 )
-	{}
+	VectorBase( const VectorBase & v ) : vector<Object>( v ), index( 0 ) {}
+
+	// create with 'n' empty items
+	VectorBase( size_t n ) : vector<Object>( n ), index( 0 ) {}
 
 	// 'slice constructor'
-	DevaVector( const DevaVector & v, size_t start, size_t end ) : vector<DevaObject>( v.begin() + start, v.begin() + end ), index( 0 )
-	{}
+	VectorBase( const VectorBase & v, size_t start, size_t end ) : vector<Object>( v.begin() + start, v.begin() + end ), index( 0 ) {}
 };
+inline Vector* CreateVector() { return Vector::Create(); }
+inline Vector* CreateVector( Vector & v ) { return Vector::Create( v ); }
+inline Vector* CreateVector( size_t n ) { return Vector::Create( n ); }
+inline Vector* CreateVector( Vector & v, size_t start, size_t end ) { return Vector::Create( v, start, end ); }
 
 // TODO: make this a boost::unordered_map (hash map)
-// (need to implement a boost hash_function for DevaObjects)
-struct DevaMap : public map<DevaObject, DevaObject>
+// (need to implement a boost hash_function for Objects)
+class MapBase : public map<Object, Object>
 {
 	// current index for enumerating the map pairs
 	size_t index;
 
+public:
 	// default constructor
-	DevaMap() : map<DevaObject, DevaObject>(), index( 0 )
+	MapBase() : map<Object, Object>(), index( 0 )
 	{}
 
 	// copy constructor
-	DevaMap( const DevaMap & m ) : map<DevaObject, DevaObject>( m ), index( 0 )
+	MapBase( const MapBase & m ) : map<Object, Object>( m ), index( 0 )
 	{}
 };
 
-struct DevaFunction
+inline Map* CreateMap() { return Map::Create(); }
+inline Map* CreateMap( Map & m ) { return Map::Create( m ); }
+
+
+
+struct Function
 {
 	// name
 	string name;
@@ -196,14 +227,14 @@ struct DevaFunction
 	// offset in code section of the code for this function
 	dword addr;
 
-	bool operator == ( const DevaFunction & rhs ) const
+	bool operator == ( const Function & rhs ) const
 	{
 		if( name == rhs.name && filename == rhs.filename && first_line == rhs.first_line )
 			return true;
 		else
 			return false;
 	}
-	bool operator < ( const DevaFunction & rhs ) const
+	bool operator < ( const Function & rhs ) const
 	{
 		if( name == rhs.name )
 			return first_line < rhs.first_line;
@@ -212,14 +243,12 @@ struct DevaFunction
 	}
 };
 
-// functor for comparing DevaFunction ptrs
+// functor for comparing Function ptrs
 struct DF_ptr_lt
 {
-	bool operator()( const DevaFunction* lhs, const DevaFunction* rhs ){ return lhs->operator < (*rhs); }
+	bool operator()( const Function* lhs, const Function* rhs ){ return lhs->operator < (*rhs); }
 };
 
-// operator << for printing DevaObjects
-ostream & operator << ( ostream & os, DevaObject & obj );
 
 } // namespace deva
 

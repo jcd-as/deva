@@ -32,7 +32,7 @@ namespace deva
 {
 
 // equality operator
-bool DevaObject::operator == ( const DevaObject& rhs ) const
+bool Object::operator == ( const Object& rhs ) const
 {
 	if( type != rhs.type )
 		return false;
@@ -78,6 +78,10 @@ bool DevaObject::operator == ( const DevaObject& rhs ) const
 		if( sz == rhs.sz )
 			return true;
 		break;
+	case obj_symbol_name:
+		if( strcmp( s, rhs.s ) == 0 )
+			return true;
+		break;
 	default:
 		// ???
 		break;
@@ -86,7 +90,7 @@ bool DevaObject::operator == ( const DevaObject& rhs ) const
 }
 
 // less-than operator
-bool DevaObject::operator < ( const DevaObject & rhs ) const
+bool Object::operator < ( const Object & rhs ) const
 {
 	if( type != rhs.type )
 		return type < rhs.type;
@@ -116,12 +120,14 @@ bool DevaObject::operator < ( const DevaObject & rhs ) const
 			return no < rhs.no;
 		case obj_size:
 			return sz < rhs.sz;
+		case obj_symbol_name:
+			return strcmp( s, rhs.s ) < 0;
 		}
 	}
 }
 
 // coerce to a boolean (for jmpf op, for instance)
-bool DevaObject::CoerceToBool()
+bool Object::CoerceToBool()
 {
 	switch( type )
 	{
@@ -147,6 +153,7 @@ bool DevaObject::CoerceToBool()
 	case obj_instance:
 	case obj_class:
 	case obj_function:
+	case obj_symbol_name: // technically, this shouldn't happen
 		return true;
 		break;
 	case obj_null:
@@ -156,7 +163,7 @@ bool DevaObject::CoerceToBool()
 	return false;
 }
 
-ostream & operator << ( ostream & os, DevaObject & obj )
+ostream & operator << ( ostream & os, Object & obj )
 {
 	static bool prettify_strings = false;
 	switch( obj.type )
@@ -187,8 +194,8 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 //			smart_ptr<DOMap> mp( obj.map_val );
 //			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
 //			{
-//				DevaObject key = (*it).first;
-//				DevaObject val = (*it).second;
+//				Object key = (*it).first;
+//				Object val = (*it).second;
 //				prettify_strings = true;
 //				os << key << ":";
 //				prettify_strings = true;
@@ -202,24 +209,25 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 			}
 		case obj_vector:
 			{
-			os << "vector";
-			// TODO: dump vector contents
-//			os << "[";
-//			smart_ptr<DOVector> vec( obj.vec_val );
-//			for( DOVector::iterator it = vec->begin(); it != vec->end(); ++it )
-//			{
-//				DevaObject val = (*it);
-//				prettify_strings = true;
-//				os << val;
-//				prettify_strings = false;
-//			   	if( it+1 != vec->end() )
-//					os << ", ";
-//			}
-//			os << "]";
+			// dump vector contents
+			os << "[";
+			for( int i = 0; i < obj.v->size(); i++ )
+			{
+				Object val = obj.v->at( i );
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
+			   	if( i+1 != obj.v->size() )
+					os << ", ";
+			}
+			os << "]";
 			break;
 			}
 		case obj_size:
 			os << "address/sized-value = " << (size_t)obj.sz;
+			break;
+		case obj_symbol_name:
+			os << obj.s ;
 			break;
 		case obj_native_obj:
 			os << "native object = " << (void*)obj.no;
@@ -240,8 +248,8 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 //			smart_ptr<DOMap> mp( obj.map_val );
 //			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
 //			{
-//				DevaObject key = (*it).first;
-//				DevaObject val = (*it).second;
+//				Object key = (*it).first;
+//				Object val = (*it).second;
 //				prettify_strings = true;
 //				os << key << ":";
 //				prettify_strings = true;
@@ -261,8 +269,8 @@ ostream & operator << ( ostream & os, DevaObject & obj )
 //			smart_ptr<DOMap> mp( obj.map_val );
 //			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
 //			{
-//				DevaObject key = (*it).first;
-//				DevaObject val = (*it).second;
+//				Object key = (*it).first;
+//				Object val = (*it).second;
 //				prettify_strings = true;
 //				os << key << ":";
 //				prettify_strings = true;

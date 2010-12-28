@@ -65,7 +65,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
 	// constants
-	for( set<DevaObject>::iterator i = sem->constants.begin(); i != sem->constants.end(); ++i )
+	for( set<Object>::iterator i = sem->constants.begin(); i != sem->constants.end(); ++i )
 	{
 		// copy (allocate new) strings
 		if( i->type == obj_string )
@@ -77,7 +77,15 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 			strcpy( s, str.c_str() );
 			// try to add the string constant, if we aren't allowed to (because
 			// it's a duplicate), free the string
-			if( !ex->AddConstant( DevaObject( s ) ) )
+			if( !ex->AddConstant( Object( s ) ) )
+				delete [] s;
+		}
+		else if( i->type == obj_symbol_name )
+		{
+			char* s = copystr( i->s );
+			// try to add the symbol name, if we aren't allowed to (because
+			// it's a duplicate), free the string
+			if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
 				delete [] s;
 		}
 		else
@@ -86,7 +94,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 
 	// add our 'global' function, "@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
-	DevaFunction* f = new DevaFunction();
+	Function* f = new Function();
 	f->name = string( "@main" );
 	f->filename = string( current_file );
 	f->first_line = 0;
@@ -114,7 +122,7 @@ void Compiler::Decode()
 	size_t len = is->Length();
 	dword arg, arg2;
 	Opcode op;
-	DevaObject o;
+	Object o;
 
 	cout << "Instructions:" << endl;
 	while( (p - b) < len )
@@ -215,6 +223,21 @@ void Compiler::Decode()
 		case op_storelocal7:
 		case op_storelocal8:
 		case op_storelocal9:
+			break;
+		case op_def_local:
+			// 1 arg
+			p += sizeof( dword );
+			break;
+		case op_def_local0:
+		case op_def_local1:
+		case op_def_local2:
+		case op_def_local3:
+		case op_def_local4:
+		case op_def_local5:
+		case op_def_local6:
+		case op_def_local7:
+		case op_def_local8:
+		case op_def_local9:
 			break;
 		case op_new_map:
 			// 1 arg: size
@@ -437,8 +460,8 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(CurrentScope());
 
-	// create a new DevaFunction object
-	DevaFunction* fcn = new DevaFunction();
+	// create a new Function object
+	Function* fcn = new Function();
 	fcn->name = string( name );
 	if( classname )
 	{
@@ -464,7 +487,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	{
 		int idx = -1;
 		// find the index for this constant
-		DevaObject obj = scope->GetDefaultArgVals().At( i );
+		Object obj = scope->GetDefaultArgVals().At( i );
 		if( obj.type == obj_string )
 		{
 			// strip the string of quotes and unescape it
@@ -472,7 +495,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 			str = unescape( strip_quotes( str ) );
 			char* s = new char[str.length()+1];
 			strcpy( s, str.c_str() );
-			idx = GetConstant( DevaObject( s ) );
+			idx = GetConstant( Object( s ) );
 			delete [] s;
 		}
 		else
@@ -522,7 +545,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 			d *= -1.0;
 	}
 	else
-		throw DevaICE( "Expecting a number type." );
+		throw ICE( "Expecting a number type." );
 
 	if( d == 0.0 )
 	{
@@ -535,9 +558,9 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	else
 	{
 		// get the constant pool index for this number
-		int idx = GetConstant( DevaObject( d ) );
+		int idx = GetConstant( Object( d ) );
 		if( idx < 0 )
-			throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % d );
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % d );
 		// emit op to push it onto the stack
 		Emit( op_pushconst, (dword)idx );
 	}
@@ -552,11 +575,11 @@ void Compiler::String( char* name )
 	strcpy( s, str.c_str() );
 
 	// get the constant pool index for this string
-	int idx = GetConstant( DevaObject( s ) );
+	int idx = GetConstant( Object( s ) );
 	if( idx < 0 )
 	{
 		delete s;
-		throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 	}
 	// emit op to push it onto the stack
 	Emit( op_pushconst, (dword)idx );
@@ -580,9 +603,9 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 	if( idx == -1 )
 	{
 		// get the constant pool index for this identifier
-		idx = GetConstant( DevaObject( s ) );
+		idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx < 0 )
-			throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % s );
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
 		Emit( op_push, (dword)idx );
 	}
@@ -661,55 +684,55 @@ void Compiler::LocalVar( char* n )
 	// get the index for the name
 	int idx = CurrentScope()->ResolveLocalToIndex( n );
 	if( idx == -1 )
-		throw DevaICE( boost::format( "Cannot locate local symbol '%1%'." ) % n );
-	// emit a 'op_storelocalN' op
+		throw ICE( boost::format( "Cannot locate local symbol '%1%'." ) % n );
+	// emit a 'op_def_localN' op
 	if( idx < 10 )
 	{
 		switch( idx )
 		{
 		case 0:
-			Emit( op_storelocal0 );
+			Emit( op_def_local0 );
 			break;
 		case 1:
-			Emit( op_storelocal1 );
+			Emit( op_def_local1 );
 			break;
 		case 2:
-			Emit( op_storelocal2 );
+			Emit( op_def_local2 );
 			break;
 		case 3:
-			Emit( op_storelocal3 );
+			Emit( op_def_local3 );
 			break;
 		case 4:
-			Emit( op_storelocal4 );
+			Emit( op_def_local4 );
 			break;
 		case 5:
-			Emit( op_storelocal5 );
+			Emit( op_def_local5 );
 			break;
 		case 6:
-			Emit( op_storelocal6 );
+			Emit( op_def_local6 );
 			break;
 		case 7:
-			Emit( op_storelocal7 );
+			Emit( op_def_local7 );
 			break;
 		case 8:
-			Emit( op_storelocal8 );
+			Emit( op_def_local8 );
 			break;
 		case 9:
-			Emit( op_storelocal9 );
+			Emit( op_def_local9 );
 			break;
 		}
 	}
 	else
-		Emit( op_storelocal, (dword)idx );
+		Emit( op_def_local, (dword)idx );
 }
 
 void Compiler::ExternVar( char* n, bool is_assign )
 {
 	// find the name in the constant pool
-	int idx = GetConstant( DevaObject( n ) );
+	int idx = GetConstant( Object( obj_symbol_name, n ) );
 	// not found? error
 	if( idx == -1 )
-		throw DevaICE( boost::format( "Cannot find constant '%1%'." ) % n );
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % n );
 
 	// if this is an assignment, generate a store op
 	if( is_assign )
@@ -733,10 +756,10 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 		// no? look it up as a non-local
 		if( idx == -1 )
 		{
-			idx = GetConstant( DevaObject( lhs ) );
+			idx = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
 			if( idx == -1 )
-				throw DevaICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
 			Emit( op_store, (dword)idx );
 		}
@@ -836,10 +859,10 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 		if( idx == -1 )
 		{
 			// look it up in the constant pool
-			int idx = GetConstant( DevaObject( lhs ) );
+			int idx = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
 			if( idx == -1 )
-				throw DevaICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
 			switch( op )
 			{
@@ -859,7 +882,7 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 				Emit( op_mod_assign, (dword)idx );
 				break;
 			default:
-				throw DevaICE( "Unknown augmented assign operator." );
+				throw ICE( "Unknown augmented assign operator." );
 				break;
 			}
 		}
@@ -883,7 +906,7 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 				Emit( op_mod_assign_local, (dword)idx );
 				break;
 			default:
-				throw DevaICE( "Unknown augmented assign operator." );
+				throw ICE( "Unknown augmented assign operator." );
 				break;
 			}
 		}
@@ -909,7 +932,7 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 			Emit( op_mod_tbl_store );
 			break;
 		default:
-			throw DevaICE( "Unknown augmented assign operator." );
+			throw ICE( "Unknown augmented assign operator." );
 			break;
 		}
 	}
@@ -950,7 +973,7 @@ void Compiler::BreakOp()
 	// save the location for back-patching
 	// (to be double-safe, check to ensure we're in a loop...)
 	if( loop_break_locations.size() == 0 )
-		throw DevaICE( "Invalid break statement: Not inside a loop.." );
+		throw ICE( "Invalid break statement: Not inside a loop.." );
 
 	Emit( op_exit_loop, (dword)-1, scopecount );
 	loop_break_locations.back()->push_back( is->Length() - (2 * sizeof(dword)) );
@@ -971,10 +994,10 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 	}
 
 	// find the name in the constant pool
-	int idx = GetConstant( DevaObject( (char*)modname.c_str() ) );
+	int idx = GetConstant( Object( (char*)modname.c_str() ) );
 	// not found? error
 	if( idx == -1 )
-		throw DevaICE( boost::format( "Symbol '%1%' not found." ) % modname );
+		throw ICE( boost::format( "Symbol '%1%' not found." ) % modname );
 	Emit( op_import, (dword)idx );
 }
 

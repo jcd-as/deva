@@ -90,7 +90,7 @@ func_decl[char* classname]
 	
 class_decl 
 	:	^(Class id=ID 
-		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->constants.insert( DevaObject( (char*)$id.text->chars ) ); }
+		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
 		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
 	;
 

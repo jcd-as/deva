@@ -88,10 +88,10 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
-		throw DevaSemanticException( str( boost::format( "Symbol '%1%' already defined." ) % name).c_str(), line );
+		throw SemanticException( str( boost::format( "Symbol '%1%' already defined." ) % name).c_str(), line );
 	}
 	// add the var name to the constant pool
-	constants.insert( DevaObject( name ) );
+	constants.insert( Object( obj_symbol_name, name ) );
 }
 
 // resolve a variable, in the current scope
@@ -132,7 +132,7 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 		delete sym;
 	}
 	// add the name to the constant pool (the 'short' name, not the method name)
-	constants.insert( DevaObject( name ) );
+	constants.insert( Object( obj_symbol_name, name ) );
 }
 
 // resolve a function, in the current scope
@@ -144,7 +144,7 @@ void Semantics::ResolveFun( char* name, int line )
 		if( show_warnings )
 			emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
 		// add it to the constant pool, assuming it will be located at run-time
-		constants.insert( DevaObject( name ) );
+		constants.insert( Object( obj_symbol_name, name ) );
 	}
 }
 
@@ -156,7 +156,7 @@ void Semantics::AddArg( char* arg, int line )
 {
 	string sa( arg );
 	if( arg_names.count( sa ) != 0 )
-		throw DevaSemanticException( boost::format( "Function argument names must be unique: '%1%' multiply defined." ) % arg, line ); 
+		throw SemanticException( boost::format( "Function argument names must be unique: '%1%' multiply defined." ) % arg, line ); 
 	else
 		arg_names.insert( sa );
 
@@ -167,19 +167,13 @@ void Semantics::AddArg( char* arg, int line )
 // add number constant
 void Semantics::AddNumber( double arg )
 {
-	constants.insert( DevaObject( arg ) );
+	constants.insert( Object( arg ) );
 }
 
 // add string constant
 void Semantics::AddString( char* arg )
 {
-	// strip the string of quotes and unescape it
-//	string str( arg );
-//	str = unescape( strip_quotes( str ) );
-//	char* s = new char[str.length()+1];
-//	strcpy( s, str.c_str() );
-//	constants.insert( DevaObject( s ) );
-	constants.insert( DevaObject( arg ) );
+	constants.insert( Object( arg ) );
 }
 
 // validate lhs of assignment
@@ -189,7 +183,7 @@ void Semantics::CheckLhsForAssign( pANTLR3_BASE_TREE lhs )
 
 	// lhs must be an ID, Key expression or '.'
 	if( type != ID && type != Key && type != DOT_OP )
-		throw DevaSemanticException( "Invalid l-value on left-hand side of assignment.", lhs->getLine(lhs) );
+		throw SemanticException( "Invalid l-value on left-hand side of assignment.", lhs->getLine(lhs) );
 
 	char* name = (char*)lhs->getText(lhs)->chars;
 	// if lhs is an ID, check with the symbol table and ensure it is defined
@@ -200,7 +194,7 @@ void Semantics::CheckLhsForAssign( pANTLR3_BASE_TREE lhs )
 		// disallow const assignments
 		const Symbol* sym = current_scope->Resolve( name, sym_end );
 		if( sym && sym->IsConst() )
-			throw DevaSemanticException( "Cannot modify the value of a 'const' variable.", lhs->getLine(lhs) );
+			throw SemanticException( "Cannot modify the value of a 'const' variable.", lhs->getLine(lhs) );
 	}
 }
 
@@ -216,7 +210,7 @@ void Semantics::CheckLhsForAugmentedAssign( pANTLR3_BASE_TREE lhs )
 	{
 		int num_children = lhs->getChildCount( lhs );
 		if( num_children > 2 )
-			throw DevaSemanticException( "Augmented assignment operators cannot be applied to slices.", lhs->getLine( lhs ) );
+			throw SemanticException( "Augmented assignment operators cannot be applied to slices.", lhs->getLine( lhs ) );
 	}
 }
 
@@ -242,7 +236,7 @@ void Semantics::CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs 
 		&& lhs_type != BOOL 
 		&& lhs_type != NUMBER 
 		&& lhs_type != STRING )
-		throw DevaSemanticException( "Invalid left-hand side of relational operator.", lhs->getLine(lhs) );
+		throw SemanticException( "Invalid left-hand side of relational operator.", lhs->getLine(lhs) );
 	else if( rhs_type != ID 
 		&& rhs_type != Negate 
 		&& rhs_type != ADD_OP
@@ -257,7 +251,7 @@ void Semantics::CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs 
 		&& rhs_type != BOOL 
 		&& rhs_type != NUMBER 
 		&& rhs_type != STRING )
-		throw DevaSemanticException( "Invalid right-hand side of relational operator.", rhs->getLine(rhs) );
+		throw SemanticException( "Invalid right-hand side of relational operator.", rhs->getLine(rhs) );
 }
 
 // validate equality expression
@@ -276,7 +270,7 @@ void Semantics::CheckLogicalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 	unsigned int rhs_type = rhs->getType( rhs );
 
 	if( lhs_type == STRING || rhs_type == STRING )
-		throw DevaSemanticException( "Cannot use a string in a logical expression.", lhs->getLine(lhs) );
+		throw SemanticException( "Cannot use a string in a logical expression.", lhs->getLine(lhs) );
 }
 
 // validate mathematical expression
@@ -299,7 +293,7 @@ void Semantics::CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& lhs_type != DOT_OP 
 		&& lhs_type != Call
 		&& lhs_type != NUMBER )
-		throw DevaSemanticException( "Invalid left-hand side of arithmetic operator.", lhs->getLine(lhs) );
+		throw SemanticException( "Invalid left-hand side of arithmetic operator.", lhs->getLine(lhs) );
 	else if( rhs_type != Negate
 		&& rhs_type != ADD_OP
 		&& rhs_type != SUB_OP
@@ -312,7 +306,7 @@ void Semantics::CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != DOT_OP 
 		&& rhs_type != Call
 		&& rhs_type != NUMBER )
-		throw DevaSemanticException( "Invalid right-hand side of arithmetic operator.", rhs->getLine(rhs) );
+		throw SemanticException( "Invalid right-hand side of arithmetic operator.", rhs->getLine(rhs) );
 }
 
 void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
@@ -336,7 +330,7 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& lhs_type != Call
 		&& lhs_type != NUMBER
 	 	&& lhs_type != STRING )
-		throw DevaSemanticException( "Invalid left-hand side of addition operator.", lhs->getLine(lhs) );
+		throw SemanticException( "Invalid left-hand side of addition operator.", lhs->getLine(lhs) );
 	else if( rhs_type != Negate
 		&& rhs_type != ADD_OP
 		&& rhs_type != SUB_OP
@@ -350,7 +344,7 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != Call
 		&& rhs_type != NUMBER
 	 	&& rhs_type != STRING )
-		throw DevaSemanticException( "Invalid right-hand side of addition operator.", rhs->getLine(rhs) );
+		throw SemanticException( "Invalid right-hand side of addition operator.", rhs->getLine(rhs) );
 }
 
 // validate negate expression
@@ -366,7 +360,7 @@ void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 		&& type != DOT_OP 
 		&& type != Call
 		&& type != NUMBER )
-		throw DevaSemanticException( "Invalid operand for negate ('-') operator.", in->getLine(in) );
+		throw SemanticException( "Invalid operand for negate ('-') operator.", in->getLine(in) );
 
 	// if a NUMBER, set flag
 	if( type == NUMBER )
@@ -403,7 +397,7 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 		&& type != Call
 		&& type != NUMBER
 		&& type != BOOL )
-		throw DevaSemanticException( "Invalid operand for logical not ('!') operator.", in->getLine(in) );
+		throw SemanticException( "Invalid operand for logical not ('!') operator.", in->getLine(in) );
 }
 
 // validate if or while conditional
@@ -434,7 +428,7 @@ void Semantics::CheckConditional( pANTLR3_BASE_TREE condition )
 		&& type != Call
 		&& type != NUMBER
 		&& type != BOOL )
-		throw DevaSemanticException( "Invalid conditional.", condition->getLine(condition) );
+		throw SemanticException( "Invalid conditional.", condition->getLine(condition) );
 }
 
 // validate key expressions (slices)
@@ -459,7 +453,7 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 		&& idx1_type != DOT_OP 
 		&& idx1_type != Call
 		&& idx1_type != NUMBER )
-		throw DevaSemanticException( "Invalid first index in slice.", idx1->getLine(idx1) );
+		throw SemanticException( "Invalid first index in slice.", idx1->getLine(idx1) );
 
 	unsigned int idx2_type = idx2->getType( idx2 );
 	if( idx2_type != END_OP
@@ -475,7 +469,7 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 		&& idx2_type != DOT_OP 
 		&& idx2_type != Call
 		&& idx2_type != NUMBER )
-		throw DevaSemanticException( "Invalid second index in slice.", idx2->getLine(idx2) );
+		throw SemanticException( "Invalid second index in slice.", idx2->getLine(idx2) );
 
 	// idx3 must be something resulting in a number
 	if( idx3 )
@@ -493,7 +487,7 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 			&& idx3_type != DOT_OP 
 			&& idx3_type != Call
 			&& idx3_type != NUMBER )
-		throw DevaSemanticException( "Invalid third index in slice.", idx3->getLine(idx3) );
+		throw SemanticException( "Invalid third index in slice.", idx3->getLine(idx3) );
 	}
 }
 
@@ -502,7 +496,7 @@ void Semantics::CheckBreakContinue( pANTLR3_BASE_TREE node )
 {
 	// invalid if we're not inside a loop
 	if( in_loop == 0 )
-		throw DevaSemanticException( "Invalid 'break' or 'continue': must be inside a loop.", node->getLine(node) );
+		throw SemanticException( "Invalid 'break' or 'continue': must be inside a loop.", node->getLine(node) );
 }
 
 // check statement for no effect (e.g. 'a;')
@@ -522,7 +516,7 @@ void Semantics::CheckForNoEffect( pANTLR3_BASE_TREE node )
 		&& type != Local
 		&& type != Extern
 	  )
-		throw DevaSemanticException( "Invalid statement: statement has no effect.", node->getLine( node ) );
+		throw SemanticException( "Invalid statement: statement has no effect.", node->getLine( node ) );
 }		
 
 // check default arg val ID to make sure it's a const
@@ -530,7 +524,7 @@ void Semantics::CheckDefaultArgVal( char* n, int line )
 {
 	const Symbol* s = current_scope->Resolve( n, sym_end );
 	if( !s || !s->IsConst() )
-		throw DevaSemanticException( "Invalid default argument value: must be a constant or a 'const' variable.", line );
+		throw SemanticException( "Invalid default argument value: must be a constant or a 'const' variable.", line );
 }
 
 // add a default arg val (for the previous default arg)
@@ -538,10 +532,10 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 {
 	// must be at least one arg
 	if( arg_names.size() == 0 )
-		throw DevaICE( "Default argument value with no arguments." );
+		throw ICE( "Default argument value with no arguments." );
 	// must not be more default values than args
 	if( arg_names.size() <= default_arg_values.size() )
-		throw DevaICE( "More default argument values than arguments." );
+		throw ICE( "More default argument values than arguments." );
 
 	// if this is the first default arg for this fcn, mark it
 	if( default_arg_values.size() == 0 )
@@ -549,7 +543,7 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 
 	unsigned int type = node->getType( node );
 	char* text = (char*)node->getText( node )->chars;
-	DevaObject val;
+	Object val;
 	switch( type )
 	{
 	case BOOL:
@@ -574,6 +568,12 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 		if( negate ) val.d *= -1.0;
 		break;
 	case ID:
+		// this MUST be a const variable!
+		const Symbol *sym = current_scope->Resolve( text );
+		if( !sym->IsConst() )
+			throw SemanticException( "Only 'const' variables can be used as default argument values.", node->getLine( node ) );
+		val.type = obj_symbol_name;
+		val.s = text;
 		break;
 	}
 	default_arg_values.push_back( val );
@@ -583,12 +583,12 @@ void Semantics::CheckAndResetFun( int line )
 {
 	// validate the default/non-default args
 	if( first_default_arg != -1 && default_arg_values.size() != arg_names.size() - first_default_arg )
-		throw DevaSemanticException( "Non-default argument follows default argument", line );
+		throw SemanticException( "Non-default argument follows default argument", line );
 
 	// copy the default args to the scope
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(current_scope);
 	if( !scope )
-		throw DevaICE( "Local scope found where function scope expected" );
+		throw ICE( "Local scope found where function scope expected" );
 	for( int i = 0; i < default_arg_values.size(); i++ )
 	{
 		scope->GetDefaultArgVals().Add( default_arg_values[i]  );
