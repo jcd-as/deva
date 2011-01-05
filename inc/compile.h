@@ -125,6 +125,9 @@ public:
 	// classes
 	bool in_class;
 
+	// dot op
+	bool is_dot_rhs;
+
 	// instruction stream
 	InstructionStream* is;
 
@@ -207,7 +210,7 @@ public:
 	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op );
 
 	// function call
-	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args );
+	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent );
 
 	// Key ('[]') and Dot ('.') ops
 	void KeyOp( pANTLR3_BASE_TREE key_exp, bool is_lhs_of_assign );
@@ -236,6 +239,11 @@ public:
 	void WhileOpStart();
 	void WhileOpConditionJump();
 	void WhileOpEnd();
+
+	// for statement
+	void InOp( char* key, char* val, pANTLR3_BASE_TREE container );
+	void InOp( char* key, pANTLR3_BASE_TREE container );
+	void ForOpEnd();
 };
 
 

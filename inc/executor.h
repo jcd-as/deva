@@ -36,6 +36,7 @@
 #include "object.h"
 #include "ordered_set.h"
 #include "exceptions.h"
+#include "util.h"
 
 #include <vector>
 
@@ -58,15 +59,15 @@ public:
 	Scope() {}
 	~Scope()
 	{
-		// TODO: release-ref the vectors/maps
-
+		// release-ref the vectors/maps and
 		// 'zero' out the locals non-ref types, to error out in case they get 
 		// accidentally used after they should be gone
 		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
 		{
-			if( IsMapType( i->second->type ) ) i->second->m->DecRef();
-			else if( IsVecType( i->second->type ) ) i->second->v->DecRef();
-			else *(i->second) = Object();
+			if( IsRefType( i->second->type ) )
+				DecRef( *(i->second) );
+			else
+				*(i->second) = Object();
 		}
 	}
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
@@ -122,6 +123,8 @@ public:
 // TODO: move this into its own file??
 class Frame
 {
+	Frame* parent;
+
 	union
 	{
 		Function* function;
@@ -147,20 +150,22 @@ class Frame
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( ScopeTable* s, dword loc, int args_passed, Function* f ) : 
+	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, Function* f/*, void* self = NULL*/ ) : 
+		parent( p ),
 		scopes( s ),
 		function( f ), 
 		is_native( false ), 
 		num_args( args_passed ), 
 		addr( loc )
 		{ locals = new Object[f->num_locals]; }
-	Frame( ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
+	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
+		parent( p ),
 		scopes( s ),
 		native_function( f ), 
 		is_native( true ), 
 		num_args( args_passed ), 
 		addr( loc )
-		{ locals = new Object[args_passed]; /*native fcn, has no locals except the args passed to it*/ }
+		{ locals = new Object[args_passed]; }
 	~Frame()
 	{
 		// free the local strings
@@ -171,15 +176,17 @@ public:
 		// free the locals array storage
 		delete [] locals;
 	}
+	inline Frame* GetParent() { return parent; }
 	inline bool IsNative() const { return is_native; }
 	inline Function* GetFunction() const { return (is_native ? NULL : function ); }
-	inline const NativeFunction GetNativeFunction() const { return (is_native ? native_function : NULL); }
+	inline const NativeFunction GetNativeFunction() const { NativeFunction nf; nf.p=NULL; nf.is_method=false; return (is_native ? native_function : nf ); }
 	inline Object GetLocal( int i ) const { return locals[i]; }
 	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
 	inline void SetLocal( int i, Object o ) { locals[i] = o; }
 	inline dword GetReturnAddress() const { return addr; }
 	inline int NumArgsPassed() const { return num_args; }
 	inline void AddString( char* s ) { strings.push_back( s ); }
+	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }
 
 	// resolve symbols through the scope table
 	inline Object* FindSymbol( const char* name ) const { return scopes->FindSymbol( name ); }
@@ -219,6 +226,11 @@ class Executor
 	OrderedSet<Object> constants;
 
 public:
+	// flags:
+	bool debug;
+	bool trace;
+
+public:
 	Executor();
 	~Executor();
 
@@ -243,22 +255,30 @@ public:
 	// existing fcn (map's behaviour is to not accept the new value)
 	inline void AddFunction( Function* f ) { functions.insert( pair<string, Function*>( f->name, f ) ); }
 	inline Function* FindFunction( string name ) { map<string, Function*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
-	inline map<string,Function*> GetFunctions(){ return functions; }
 
-	inline void AddNativeFunction( string name, NativeFunction f ) { builtins.insert( pair<string, NativeFunction>( name, f ) ); }
-	inline NativeFunction FindNativeFunction( string name ) { map<string, NativeFunction>::iterator i = builtins.find( name ); return (i == builtins.end() ? NULL : i->second); }
-	inline map<string,NativeFunction> GetNativeFunctions(){ return builtins; }
-
-
+	// constant pool handling methods
 	inline bool AddConstant( Object o ) { return constants.Add( o ); }
 	inline int FindConstant( const Object & o ) { return constants.Find( o ); }
 	inline Object GetConstant( int idx ) { return constants.At(idx); }
 	inline size_t NumConstants() { return constants.Size(); }
 
-	void AddBuiltin( const char* name, NativeFunction fcn );
+	// builtin handling methods
+	void AddBuiltins();
+	void AddBuiltin( const string name, NativeFunction fcn );
+	NativeFunction FindBuiltin( string name );
 
-	// code execution functions:
+	// code execution methods:
 	void ExecuteCode( const Code & code );
+
+	// debug and output methods:
+	// decode and print an opcode/instruction stream
+protected:
+	int PrintOpcode( Opcode op, const byte* base, byte* ip );
+public:
+	void Decode( const Code & code );
+
+	void DumpFunctions();
+	void DumpConstantPool();
 };
 
 extern Executor* ex;

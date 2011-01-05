@@ -41,13 +41,13 @@ template<typename T> class RefCounted : public T
 {
 	int refcount;
 	// private constructor, don't allow creation except via 'Create()'
-	RefCounted() { refcount = 1; }
+	RefCounted() : refcount( 0 ) {}
 	// private copy constructor
-	RefCounted( T & v ) : T( v ), refcount( 1 ) {}
+	RefCounted( T & v ) : T( v ), refcount( 0 ) {}
 	// create with 'n' empty items
-	RefCounted( size_t n ) : T( n ), refcount( 1 ) {}
+	RefCounted( size_t n ) : T( n ), refcount( 0 ) {}
 	// 'slice' copy constructor
-	RefCounted( T & v, size_t start, size_t end ) : T( v, start, end ), refcount( 1 ) {}
+	RefCounted( T & v, size_t start, size_t end ) : T( v, start, end ), refcount( 0 ) {}
 public:
 	// creation fcn
 	static RefCounted<T>* Create() { return new RefCounted<T>(); }

@@ -57,10 +57,10 @@ translation_unit
 
 top_level_statement
 	:	class_decl
-	|	statement
+	|	statement[$top_level_statement.start]
 	;
 
-statement 
+statement[pANTLR3_BASE_TREE parent]
 	:	block
 	|	while_statement
 	|	for_statement
@@ -68,13 +68,13 @@ statement
 	|	import_statement
 	|	jump_statement
 	|	func_decl[NULL]
-	|	assign_statement
+	|	assign_statement[$parent]
 	;
 
 block 
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->EnterBlock(); } }
 @after { if( PSRSTATE->backtracking == 0 ){ compiler->ExitBlock(); } }
-	:	^(Block statement*)
+	:	^(Block statement[$block.start]*)
 	;
 
 func_decl[char* classname]
@@ -98,7 +98,7 @@ class_decl
 
 while_statement 
 	:	^(While { compiler->WhileOpStart(); }
-			^(Condition con=exp[false]) { compiler->WhileOpConditionJump(); }
+			^(Condition con=exp[false,NULL]) { compiler->WhileOpConditionJump(); }
 			block { compiler->WhileOpEnd(); }
 		)
 	;
@@ -106,13 +106,13 @@ while_statement
 for_statement 
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->AddScope(); } }
 @after { if( PSRSTATE->backtracking == 0 ){ compiler->LeaveScope(); } }
-	:	^(For in_exp block) // TODO
+	:	^(For in_exp block) { if( PSRSTATE->backtracking == 0 ) compiler->ForOpEnd(); }
 	;
 
 if_statement
-	:	(^(If ^(Condition con=exp[false]) block else_statement))=>
-		^(If ^(Condition con=exp[false]) { compiler->IfOpJump(); } block { compiler->ElseOpJump(); } else_statement { compiler->ElseOpEndLabel(); } )
-	|	^(If ^(Condition con=exp[false]) { compiler->IfOpJump(); } block { compiler->EndIfOpJump(); } )
+	:	(^(If ^(Condition con=exp[false,NULL]) block else_statement))=>
+		^(If ^(Condition con=exp[false,NULL]) { compiler->IfOpJump(); } block { compiler->ElseOpJump(); } else_statement { compiler->ElseOpEndLabel(); } )
+	|	^(If ^(Condition con=exp[false,NULL]) { compiler->IfOpJump(); } block { compiler->EndIfOpJump(); } )
 	;
 
 else_statement 
@@ -138,34 +138,34 @@ continue_statement
 	;
 
 return_statement 
-	:	^(Return exp[false]) { compiler->ReturnOp(); }
+	:	^(Return exp[false,NULL]) { compiler->ReturnOp(); }
 	|	Return { compiler->ReturnOp( true ); }
 	;
 
-assign_statement
-	: 	^(Const lhs=exp[true] value) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	(^(Local exp[true] new_exp))=> ^(Local lhs=exp[true] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	^(Local lhs=exp[true] exp[false]) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	(^(Extern exp[true] new_exp))=> ^(Extern lhs=exp[true] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
-	|	(^(Extern lhs=exp[true] exp[false]))=> ^(Extern lhs=exp[true] exp[false]) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
-	|	^(Extern lhs=exp[true]) { compiler->ExternVar( (char*)$lhs.text->chars, false ); }
-	|	(^('=' exp[true] new_exp))=> ^('=' lhs=exp[true] new_exp) { compiler->Assign( $lhs.start ); }
-	|	^('=' lhs=exp[true] (exp[false]|assign_rhs)) { compiler->Assign( $lhs.start ); }
-	|	^(ADD_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_add ); }
-	|	^(SUB_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_sub ); }
-	|	^(MUL_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_mul ); }
-	|	^(DIV_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_div ); }
-	|	^(MOD_EQ_OP lhs=exp[true] exp[false]) { compiler->AugmentedAssignOp( $lhs.start, op_mod ); }
-	|	exp[false]
+assign_statement[pANTLR3_BASE_TREE parent]
+	: 	^(Const lhs=exp[true,NULL] value) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	(^(Local exp[true,NULL] new_exp))=> ^(Local lhs=exp[true,NULL] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	^(Local lhs=exp[true,NULL] exp[false,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars ); }
+	|	(^(Extern exp[true,NULL] new_exp))=> ^(Extern lhs=exp[true,NULL] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
+	|	(^(Extern lhs=exp[true,NULL] exp[false,NULL]))=> ^(Extern lhs=exp[true,NULL] exp[false,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
+	|	^(Extern lhs=exp[true,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, false ); }
+	|	(^('=' exp[true,NULL] new_exp))=> ^('=' lhs=exp[true,NULL] new_exp) { compiler->Assign( $lhs.start ); }
+	|	^('=' lhs=exp[true,NULL] (exp[false,NULL]|assign_rhs)) { compiler->Assign( $lhs.start ); }
+	|	^(ADD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_add ); }
+	|	^(SUB_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_sub ); }
+	|	^(MUL_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mul ); }
+	|	^(DIV_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_div ); }
+	|	^(MOD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mod ); }
+	|	exp[false,parent]
 	;
 
 assign_rhs 
-	:	^('=' lhs=exp[true] (assign_rhs|exp[false]))
+	:	^('=' lhs=exp[true,NULL] (assign_rhs|exp[false,NULL]))
 	;
 	
 new_exp
 	:	^(New { compiler->NewOp(); }
-			exp[false]
+			exp[false,NULL]
 		)
 	;
 	
@@ -173,48 +173,55 @@ new_exp
 // EXPRESSIONS
 /////////////////////////////////////////////////////////////////////////////
 
-exp[bool is_lhs_of_assign]
-	:	^(GT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->GtEqOp(); }
-	|	^(LT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->LtEqOp(); }
-	|	^(GT_OP lhs=exp[false] rhs=exp[false]) { compiler->GtOp(); }
-	|	^(LT_OP lhs=exp[false] rhs=exp[false]) { compiler->LtOp(); }
-	|	^(EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->EqOp(); }
-	|	^(NOT_EQ_OP lhs=exp[false] rhs=exp[false]) { compiler->NotEqOp(); }
-	|	^(AND_OP lhs=exp[false] rhs=exp[false]) { compiler->AndOp(); }
-	|	^(OR_OP lhs=exp[false] rhs=exp[false]) { compiler->OrOp(); }
-	|	^(ADD_OP lhs=exp[false] rhs=exp[false]) { compiler->AddOp(); }
-	|	^(SUB_OP lhs=exp[false] rhs=exp[false]) { compiler->SubOp(); }
-	|	^(MUL_OP lhs=exp[false] rhs=exp[false]) { compiler->MulOp(); }
-	|	^(DIV_OP lhs=exp[false] rhs=exp[false]) { compiler->DivOp(); }
-	|	^(MOD_OP lhs=exp[false] rhs=exp[false]) { compiler->ModOp(); }
-	|	^(Negate in=exp[false]) { compiler->NegateOp( $in.start ); }
-	|	^(NOT_OP in=exp[false]) { compiler->NotOp( $in.start ); }
-	|	^(Key exp[false] key=key_exp) { compiler->KeyOp( $key.start, is_lhs_of_assign ); } // TODO: slices??
-	|	^(DOT_OP exp[false] exp[false]) { compiler->KeyOp( NULL, is_lhs_of_assign ); }
-	|	call_exp
+exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
+	:	^(GT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtEqOp(); }
+	|	^(LT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtEqOp(); }
+	|	^(GT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtOp(); }
+	|	^(LT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtOp(); }
+	|	^(EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->EqOp(); }
+	|	^(NOT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->NotEqOp(); }
+	|	^(AND_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AndOp(); }
+	|	^(OR_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->OrOp(); }
+	|	^(ADD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AddOp(); }
+	|	^(SUB_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->SubOp(); }
+	|	^(MUL_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->MulOp(); }
+	|	^(DIV_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->DivOp(); }
+	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp(); }
+	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start ); }
+	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start ); }
+	|	^(Key exp[false,NULL] key=key_exp) { compiler->KeyOp( $key.start, is_lhs_of_assign ); } // TODO: slices??
+	|	dot_exp[is_lhs_of_assign]
+	|	call_exp[$parent]
 	|	(map_op | vec_op)
 	|	value
 	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign ); }
 	;
 
-call_exp
-//	:	(^(Call id=ID args))=> ^(Call id=exp[true] args) { compiler->CallOp( $id.start, $args.start ); }
-//	|	^(Call id=exp[false] args) { compiler->CallOp( $id.start, $args.start ); }
-	:	^(Call id=exp[false] args) { compiler->CallOp( $id.start, $args.start ); }
+dot_exp[bool is_lhs_of_assign]
+@after { compiler->is_dot_rhs = false; }
+	:	^(
+			DOT_OP 
+			exp[false,NULL] {compiler->is_dot_rhs=true;} 
+			exp[false,NULL]
+		) { compiler->KeyOp( NULL, is_lhs_of_assign ); }
+	;
+
+call_exp[pANTLR3_BASE_TREE parent]
+	:	^(Call args id=exp[false,NULL]) { compiler->CallOp( $id.start, $args.start, $parent ); }
 	;
 
 args
-	:	^(ArgList exp[false]*)
+	:	^(ArgList exp[false,NULL]*)
 	;
 
 key_exp
-	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false]
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false,NULL]
 	|	(idx idx)=> idx1=idx idx2=idx
 	|	idx1=idx
 	;
 
 idx 
-	:	(END_OP | exp[false])
+	:	(END_OP | exp[false,NULL])
 	;
 
 arg_list_decl
@@ -226,7 +233,9 @@ arg
 	;
 
 in_exp 
-	:	^(In key=ID val=ID? exp[false])
+//	:	^(In key=ID val=ID? exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( $key $ ); }
+	:	(^(In key=ID exp[false,NULL]))=> ^(In key=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, $exp.start ); } }
+	|	^(In key=ID val=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, (char*)$val.text->chars, $exp.start ); } }
 	;
 
 map_op 
@@ -234,17 +243,16 @@ map_op
 	;
 
 map_item 
-	:	^(Pair exp[false] exp[false])
+	:	^(Pair exp[false,NULL] exp[false,NULL])
 	;
 
 vec_op 
-	:	^(Vec_init exp[false]*) { compiler->VecOp( $Vec_init ); }
+	:	^(Vec_init exp[false,NULL]*) { compiler->VecOp( $Vec_init ); }
 	;
 
 value
 	:	BOOL { if( strcmp( (char*)$BOOL.text->chars, "true" ) == 0 ) compiler->Emit( op_push_true ); else compiler->Emit( op_push_false ); }
 	|	NULLVAL { compiler->Emit( op_push_null ); }
-//	|	NUMBER { compiler->Number( atof( (char*)$NUMBER.text->chars ) ); }
 	|	NUMBER { compiler->Number( $NUMBER ); }
 	|	STRING { compiler->String( (char*)$STRING.text->chars ); }
 	;

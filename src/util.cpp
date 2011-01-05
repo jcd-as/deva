@@ -199,8 +199,9 @@ string strip_quotes( const string& src )
 		c = '\'';
 
 	int p2 = src.find_last_not_of( c );
+	// no characters after 'start' that aren't quotes: zero-length string
 	if( p2 == string::npos ) 
-		return src;
+		return string( "" );
 	int p1 = src.find_first_not_of( c );
 	if( p1 == string::npos )
 		p1 = 0;

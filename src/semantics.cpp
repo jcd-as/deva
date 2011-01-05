@@ -33,6 +33,7 @@
 #include "semantics.h"
 #include "exceptions.h"
 #include "util.h"
+#include "builtins.h"
 
 namespace deva_compile
 {
@@ -42,6 +43,16 @@ namespace deva_compile
 /////////////////////////////////////////////////////////////////////////////
 Semantics* semantics = NULL;
 
+
+void Semantics::DumpSymbolTable()
+{
+	cout << "Symbol table:" << endl;
+	for( vector<deva_compile::Scope*>::iterator i = scopes.begin(); i != scopes.end(); ++i )
+	{
+		if( *i )
+			(*i)->Print();
+	}
+}
 
 // scope & symbol table handling ////////////////////////////////////////////
 
@@ -100,11 +111,12 @@ void Semantics::ResolveVar( char* name, int line )
 	// look up the variable in the current scope
 	if( !current_scope->Resolve( name, sym_end ) )
 	{
-		if( show_warnings )
-			emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
-		// add it as an 'undeclared' var, it's possible that it was emitted by
-		// an eval() call or such and will exist at run-time
-		DefineVar( name, line );
+//		if( show_warnings )
+//			emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
+//		// add it as an 'undeclared' var, it's possible that it was emitted by
+//		// an eval() call or such and will exist at run-time
+//		DefineVar( name, line );
+		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
 }
 
@@ -138,13 +150,22 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 // resolve a function, in the current scope
 void Semantics::ResolveFun( char* name, int line )
 {
-	// look up the function in the current scope
-	if( !current_scope->Resolve( name , sym_function ) )
+	// TODO: modules???
+	// if it is a builtin fcn, add it to the constants pool
+	if( IsBuiltin( string( name ) ) )
 	{
-		if( show_warnings )
-			emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
-		// add it to the constant pool, assuming it will be located at run-time
 		constants.insert( Object( obj_symbol_name, name ) );
+	}
+	// otherwise, look up the function in the current scope
+//	else if( !current_scope->Resolve( name, sym_function ) )
+	else if( !current_scope->Resolve( name, sym_end ) )
+	{
+//		if( show_warnings )
+//			emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
+//		// add it to the constant pool, assuming it will be located at run-time
+//		constants.insert( Object( obj_symbol_name, name ) );
+
+		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
 }
 
@@ -173,6 +194,20 @@ void Semantics::AddNumber( double arg )
 // add string constant
 void Semantics::AddString( char* arg )
 {
+	// if we're in a map key, add this as a symbol (as well as a string)
+	if( in_map_key )
+	{
+		// strip the string of quotes and unescape it
+		string str( arg );
+		str = unescape( strip_quotes( str ) );
+		char* s = new char[str.length()+1];
+		strcpy( s, str.c_str() );
+		Symbol *sym = new Symbol( s, sym_variable );
+		current_scope->Define( sym );
+		// symbol stores a copy of s, free s now
+		delete [] s;
+//		constants.insert( Object( obj_symbol_name, arg ) );
+	}
 	constants.insert( Object( arg ) );
 }
 

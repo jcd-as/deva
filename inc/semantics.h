@@ -36,6 +36,7 @@
 #include "scope.h"
 #include "error.h"
 #include "object.h"
+#include "builtins.h"
 
 #include <set>
 #include <map>
@@ -50,7 +51,7 @@ namespace deva_compile
 struct Semantics
 {
 	// warnings on?
-	bool show_warnings;
+//	bool show_warnings;
 
 	// scopes
 	Scope* global_scope;
@@ -62,20 +63,24 @@ struct Semantics
 	vector<Object> default_arg_values;
 	int first_default_arg;
 
-	// constants (numbers & strings)
+	// constants (numbers, strings & symbol names)
 	set<Object> constants;
 
 	// function calls
 	bool making_call;
 
+	// map key
+	bool in_map_key;
+
 	// loop tracking
 	int in_loop;
 
 	// constructor
-	Semantics( bool warn ) : show_warnings( warn ),
+	Semantics() : //show_warnings( warn ),
 	   	global_scope( NULL ), current_scope( NULL ),
 		first_default_arg( -1 ),
 		making_call( false ),
+		in_map_key( false ),
 		in_loop( false )
 	{
 		// setup the global scope (a fcn scope called "@main")
@@ -95,6 +100,8 @@ struct Semantics
 	// methods
 	/////////////////////////////////////////////////////////////////////////////
 	
+	void DumpSymbolTable();
+
 	// scope & symbol table handling ////////////////////////////////////////////
 
 	// 'push' new scope on entering block

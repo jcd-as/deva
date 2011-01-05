@@ -32,8 +32,11 @@
 #include "semantics.h"
 #include "compile.h"
 #include "util.h"
+#include "vector_builtins.h"
 
 #include <iostream>
+#include <cmath>
+#include <climits>
 
 namespace deva_compile
 {
@@ -53,7 +56,8 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	max_scope_idx( 0 ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
-	in_class( false )
+	in_class( false ),
+	is_dot_rhs( false )
 {
 	// create the instruction stream
 	is = new InstructionStream();
@@ -92,6 +96,15 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 			ex->AddConstant( *i );
 	}
 
+	// add the builtins, vector builtins and map builtins to the constant pool
+	for( int i = 0; i < num_of_builtins; i++ )
+		ex->AddConstant( Object( obj_symbol_name, copystr( builtin_names[i].c_str() ) ) );
+	for( int i = 0; i < num_of_vector_builtins; i++ )
+		ex->AddConstant( Object( obj_symbol_name, copystr( vector_builtin_names[i].c_str() ) ) );
+	// TODO: add map builtins
+//	for( int i = 0; i < num_of_map_builtins; i++ )
+//		ex->AddConstant( Object( obj_symbol_name, copystr( map_builtin_names[i].c_str() ) ) );
+
 	// add our 'global' function, "@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
 	Function* f = new Function();
@@ -112,287 +125,6 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 
 	// set-up the scope stack to match
 	AddScope();
-}
-
-// disassemble the instruction stream to stdout
-void Compiler::Decode()
-{
-	const byte* b = is->Bytes();
-	const byte* p = b;
-	size_t len = is->Length();
-	dword arg, arg2;
-	Opcode op;
-	Object o;
-
-	cout << "Instructions:" << endl;
-	while( (p - b) < len )
-	{
-		// decode opcode
-		op = (Opcode)*p;
-		cout << (int)(p - b) << ": " <<  opcodeNames[op] << "\t";
-		p++;
-		switch( op )
-		{
-		case op_nop:
-		case op_pop:
-			break;
-		case op_push:
-			// 1 arg
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_push_true:
-		case op_push_false:
-		case op_push_null:
-		case op_push_zero:
-		case op_push_one:
-		case op_push0:
-		case op_push1:
-		case op_push2:
-		case op_push3:
-			break;
-		case op_pushlocal:
-			// 1 arg
-			p += sizeof( dword );
-			break;
-		case op_pushlocal0:
-		case op_pushlocal1:
-		case op_pushlocal2:
-		case op_pushlocal3:
-		case op_pushlocal4:
-		case op_pushlocal5:
-		case op_pushlocal6:
-		case op_pushlocal7:
-		case op_pushlocal8:
-		case op_pushlocal9:
-			break;
-		case op_pushconst:
-			// 1 arg: index to constant
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_store:
-			// 1 arg
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_store_true:
-			// 1 arg
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_store_false:
-			// 1 arg
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_store_null:
-			// 1 arg
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_storelocal:
-			// 1 arg
-			p += sizeof( dword );
-			break;
-		case op_storelocal0:
-		case op_storelocal1:
-		case op_storelocal2:
-		case op_storelocal3:
-		case op_storelocal4:
-		case op_storelocal5:
-		case op_storelocal6:
-		case op_storelocal7:
-		case op_storelocal8:
-		case op_storelocal9:
-			break;
-		case op_def_local:
-			// 1 arg
-			p += sizeof( dword );
-			break;
-		case op_def_local0:
-		case op_def_local1:
-		case op_def_local2:
-		case op_def_local3:
-		case op_def_local4:
-		case op_def_local5:
-		case op_def_local6:
-		case op_def_local7:
-		case op_def_local8:
-		case op_def_local9:
-			break;
-		case op_new_map:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_new_vec:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_new_class:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_new_instance:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_jmp:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_jmpf:
-			// 1 arg: size
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_eq:
-		case op_neq:
-		case op_lt:
-		case op_lte:
-		case op_gt:
-		case op_gte:
-		case op_or:
-		case op_and:
-		case op_neg:
-		case op_not:
-		case op_add:
-		case op_sub:
-		case op_mul:
-		case op_div:
-		case op_mod:
-			break;
-		case op_add_assign:
-		case op_sub_assign:
-		case op_mul_assign:
-		case op_div_assign:
-		case op_mod_assign:
-			// 1 arg: lhs
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_add_assign_local:
-		case op_sub_assign_local:
-		case op_mul_assign_local:
-		case op_div_assign_local:
-		case op_mod_assign_local:
-			// 1 arg: lhs
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_call:
-			// 1 arg: number of args passed
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_return:
-			// 1 arg: number of scopes to leave
-			arg = *((dword*)p);
-			cout << "\t\t" << arg;
-			p += sizeof( dword );
-			break;
-		case op_exit_loop:
-			// 2 args: jump target address, number of scopes to leave
-			arg = *((dword*)p);
-			p += sizeof( dword );
-			arg2 = *((dword*)p);
-			p += sizeof( dword );
-			cout << "\t\t" << arg << "\t" << arg2;
-			break;
-		case op_enter:
-		case op_leave:
-			break;
-		case op_for_iter:
-			// 1 arg: iterable object
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_tbl_load:
-		case op_loadslice2:
-		case op_loadslice3:
-		case op_tbl_store:
-		case op_storeslice2:
-		case op_storeslice3:
-		case op_add_tbl_store:
-		case op_sub_tbl_store:
-		case op_mul_tbl_store:
-		case op_div_tbl_store:
-		case op_mod_tbl_store:
-		case op_dup:
-		case op_dup1:
-		case op_dup2:
-		case op_dup3:
-		case op_dup_top_n:
-		case op_dup_top1:
-		case op_dup_top2:
-		case op_dup_top3:
-		case op_swap:
-			break;
-		case op_rot:
-			// 1 arg:
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_rot2:
-		case op_rot3:
-		case op_rot4:
-		case op_import:
-			// 1 arg:
-			arg = *((dword*)p);
-			// look-up the constant
-			o = ex->GetConstant(arg);
-			cout << "\t\t" << arg << " (" << o << ")";
-			p += sizeof( dword );
-			break;
-		case op_halt:
-			break;
-		case op_illegal:
-		default:
-			cout << "Error: Invalid instruction.";
-			break;
-		}
-		cout << endl;
-	}
 }
 
 // block
@@ -509,11 +241,15 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 void Compiler::EndFun()
 {
-	// generate a 'return' statement, in case there isn't one that will be hit
+	// generate a 'return' statement and return value, 
+	// in case there isn't one that will be hit
 	// (check the immediately preceding instruction so we at least don't
 	// generate two returns in a row...)
 	if( is->Length() <= 5 || (Opcode)*(is->Current()-5) != op_return )
+	{
+		Emit( op_push_null );
 		Emit( op_return, 0 );
+	}
 
 	// back-patch the jump over fcn body
 	BackpatchToCur();
@@ -525,7 +261,13 @@ void Compiler::DefineClass( char* name, int line )
 	// TODO: 
 	// - create the map for the class
 	// - add the __name__, __class__, __module__ and __bases__ members
-	// 
+//	Emit( op_pushconst, /*__name__*/ name );
+//	Emit( op_pushconst, /*__class__*/ cls );
+//	Emit( op_pushconst, /*__module__*/ module );
+//	Emit( op_pushconst, /*__bases__*/ bases );
+//	Emit( op_new_class, 4 );
+	Emit( op_new_class, 0 );
+	// TODO:
 	// - if new and delete methods aren't defined for this class, we need to add
 	// them and generate code for them (that calls the base-class new/delete
 	// methods)
@@ -535,6 +277,7 @@ void Compiler::DefineClass( char* name, int line )
 void Compiler::Number( pANTLR3_BASE_TREE node )
 {
 	double d = atof( (char*)node->getText(node)->chars );
+	double intpart; // for modf call
 
 	// negate numbers that should be negative
 	unsigned int type = node->getType( node );
@@ -554,6 +297,11 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	else if( d == 1.0 )
 	{
 		Emit( op_push_one );
+	}
+	else if( d <= INT_MAX && modf( d, &intpart ) == 0.0 )
+	{
+		// use op_push to push an integer value directly
+		Emit( op_push, (dword)((int)intpart) );
 	}
 	else
 	{
@@ -605,9 +353,20 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		// get the constant pool index for this identifier
 		idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx < 0 )
-			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		{
+			// if we're on the right hand side of a dot op, try looking for it
+			// as a string too, as it could be a map/class/instance member 
+			// (where 'a.b' is just short-hand for 'a["b"]')
+			if( is_dot_rhs )
+			{
+				idx = GetConstant( Object( s ) );
+			}
 
-		Emit( op_push, (dword)idx );
+			if( idx < 0 )
+				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		}
+
+		Emit( op_pushconst, (dword)idx );
 	}
 	// local
 	else
@@ -736,7 +495,7 @@ void Compiler::ExternVar( char* n, bool is_assign )
 
 	// if this is an assignment, generate a store op
 	if( is_assign )
-		Emit( op_store, (dword)idx );
+		Emit( op_storeconst, (dword)idx );
 }
 
 void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
@@ -761,7 +520,7 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 			if( idx == -1 )
 				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
-			Emit( op_store, (dword)idx );
+			Emit( op_storeconst, (dword)idx );
 		}
 		else
 		{
@@ -831,12 +590,28 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 }
 
 // function call
-void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args )
+void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent )
 {
 	// how many args are being pushed?
 	int num_children = args->getChildCount( args );
-	// emit the call
 	Emit( op_call, (dword)num_children );
+	// if the return value is unused, a pop instruction needs to be generated
+	if( parent )
+	{
+		// TODO: actually, i think anything except NULL indicates a pop...
+		unsigned int type = parent->getType( parent );
+		if( type != ASSIGN_OP 
+			&& type != ADD_EQ_OP
+			&& type != SUB_EQ_OP
+			&& type != MUL_EQ_OP
+			&& type != DIV_EQ_OP
+			&& type != MOD_EQ_OP
+			&& type != Const
+			&& type != Local
+			&& type != Extern
+		  )
+			Emit( op_pop );
+	}
 }
 
 // augmented assignment operators
@@ -1004,8 +779,9 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 // 'new'
 void Compiler::NewOp()
 {
-	// generate a new_class op for the call to 'new' to use
-	Emit( op_new_class );
+	// generate a new_instance op for the call to 'new' to use
+	// TODO: populate with __class__ etc
+	Emit( op_new_instance, 0 );
 }
 
 // vector and map creation ops
@@ -1095,5 +871,108 @@ void Compiler::WhileOpEnd()
 	}
 	delete breaks;
 }
+
+// maps
+void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
+{
+	//TODO: implement
+}
+
+// vectors
+void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
+{
+	// is the key a local?
+	int key_idx = CurrentScope()->ResolveLocalToIndex( key );
+
+	// not found? error out, for loop vars are always locals
+	if( key_idx == -1 )
+	{
+		throw ICE( boost::format( "For loop variable '%1%' not found in the local symbols." ) % key );
+	}
+
+	// the vector to iterate is on top of the stack, dup it for the calls to
+	// 'rewind' and 'next'
+	Emit( op_dup1 );
+	
+	// generate the call to 'rewind'
+	int rewind_idx = GetConstant( Object( obj_symbol_name, const_cast<char*>("rewind") ) );
+	// not found? error
+	if( rewind_idx == -1 )
+		throw ICE( "Non-local symbol 'rewind' not found in Compiler::InOp()." );
+	Emit( op_pushconst, (dword)rewind_idx );
+	Emit( op_tbl_load );
+	Emit( op_call, 0 );
+	Emit( op_pop );	// pop the unused return value from 'rewind'
+
+	// vector to iterate is now on top of the stack again
+
+	// mark the label for the loop beginning
+	AddLabel();
+
+	// generate the for_iter instruction
+	Emit( op_for_iter, (dword)-1 );
+
+	// mark it for back-patching
+	AddPatchLoc();
+
+	// the key is now on the stack, store it into the local loop var
+
+	// index under 10: use the short instructions
+	if( key_idx < 10 )
+	{
+		switch( key_idx )
+		{
+		case 0:
+			Emit( op_storelocal0 );
+			break;
+		case 1:
+			Emit( op_storelocal1 );
+			break;
+		case 2:
+			Emit( op_storelocal2 );
+			break;
+		case 3:
+			Emit( op_storelocal3 );
+			break;
+		case 4:
+			Emit( op_storelocal4 );
+			break;
+		case 5:
+			Emit( op_storelocal5 );
+			break;
+		case 6:
+			Emit( op_storelocal6 );
+			break;
+		case 7:
+			Emit( op_storelocal7 );
+			break;
+		case 8:
+			Emit( op_storelocal8 );
+			break;
+		case 9:
+			Emit( op_storelocal9 );
+			break;
+		}
+	}
+	else
+		Emit( op_storelocal, (dword)key_idx );
+
+	// loop body:
+}
+
+void Compiler::ForOpEnd()
+{
+	// emit the jump-to-start
+	Emit( op_jmp, (dword)-1 );
+	AddPatchLoc();
+	BackpatchToLastLabel();
+
+	// backpatch the for_iter instruction with this (loop complete) location
+	BackpatchToCur();
+
+	// pop the remaining iterable item off the stack
+	Emit( op_pop );
+}
+
 
 } // namespace deva_compile

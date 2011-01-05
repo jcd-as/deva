@@ -248,7 +248,8 @@ unary_exp
 primary_exp 
 	:	(atom->atom)
 		(
-			args=arg_list_exp								-> ^(Call $primary_exp $args?)
+//			args=arg_list_exp								-> ^(Call $primary_exp $args?)
+			args=arg_list_exp								-> ^(Call $args? $primary_exp)
 		|	indices=key_exp									-> ^(Key $primary_exp $indices	)
 		|	'.' id=ID										-> ^(DOT_OP $primary_exp $id)
 		)*

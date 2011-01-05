@@ -4,7 +4,7 @@
 VPATH = src
 
 # sources/objs for test executable
-DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp object.cpp
+DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp object.cpp api.cpp builtins.cpp vector_builtins.cpp builtins_helpers.cpp
 DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c compile_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 DEVA_C_OBJS=$(patsubst %.cpp, %.o, ${DEVA_C_SOURCES})
@@ -46,7 +46,7 @@ compile_walker.c compile_walker.h compile_walker.tokens : compile_walker.g deva.
 	g++ ${CXXFLAGS} -o $@ $<
 
 clean:
-	rm *.o deva *.dep* devaLexer.h devaLexer.c devaParser.h devaParser.c semantic_walker.h semantic_walker.c deva.tokens semantic_walker.tokens compile_walker.h compile_walker.c compile_walker.tokens
+	-rm *.o deva *.dep* devaLexer.h devaLexer.c devaParser.h devaParser.c semantic_walker.h semantic_walker.c deva.tokens semantic_walker.tokens compile_walker.h compile_walker.c compile_walker.tokens
 
 # run tests
 check:

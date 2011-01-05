@@ -112,6 +112,8 @@ enum Opcode
 {
 	op_nop,
 	op_pop,			// pop tos
+	// TODO: this is the same as op_push_const! (should use this instead to push
+	// integer values directly)
 	op_push,		// push object named at constants slot <Op0> 
 	op_push_true,	// push boolean 'true' to tos
 	op_push_false,	// push boolean 'false' to tos
@@ -125,7 +127,7 @@ enum Opcode
 	op_pushlocal0, op_pushlocal1, op_pushlocal2, op_pushlocal3, op_pushlocal4,
 	op_pushlocal5, op_pushlocal6, op_pushlocal7, op_pushlocal8, op_pushlocal9,
 	op_pushconst,	// push value from constant pool slot <W0> onto tos
-	op_store,		// store top-of-stack to object named at <Op0>
+	op_storeconst,	// store top-of-stack to object named at <Op0> in the const pool
 	op_store_true,	// store boolean 'true' to <Op0>
 	op_store_false,	// store boolean 'false' to <Op0>
 	op_store_null,	// store null to <Op0>
@@ -188,10 +190,10 @@ enum Opcode
 	op_div_tbl_store,// tos2[tos1] /= tos
 	op_mod_tbl_store,// tos2[tos1] %= tos
 
-	// TODO: do we need the dup, swap and rot ops?
 	op_dup,			// tos -> tos<Op0> = tos (dup tos N times)
 	// no-operand shortcuts to dup n times:
 	op_dup1, op_dup2, op_dup3,
+	// TODO: do we need the dup_top, swap and rot ops?
 	op_dup_top_n,	// tos<Op0> -> tos<Op0>*2 = tos -> tos<Op0> (dup top N items once)
 	// no-operand shortcuts to dup top n:
 	op_dup_top1, op_dup_top2, op_dup_top3,
@@ -233,7 +235,7 @@ static const char* opcodeNames[] =
    	"pushlocal8",
    	"pushlocal9",
 	"pushconst",
-	"store",
+	"storeconst",
 	"store_true",
 	"store_false",
 	"store_null",
@@ -248,17 +250,17 @@ static const char* opcodeNames[] =
 	"storelocal7",
 	"storelocal8",
 	"storelocal9",
-	"op_def_local",
-	"op_def_local0", 
-	"op_def_local1", 
-	"op_def_local2", 
-	"op_def_local3", 
-	"op_def_local4",
-	"op_def_local5", 
-	"op_def_local6", 
-	"op_def_local7", 
-	"op_def_local8", 
-	"op_def_local9",
+	"def_local", 
+	"def_local0", 
+	"def_local1", 
+	"def_local2", 
+	"def_local3", 
+	"def_local4",
+	"def_local5", 
+	"def_local6", 
+	"def_local7", 
+	"def_local8", 
+	"def_local9",
 	"new_map",
 	"new_vec",
 	"new_class",

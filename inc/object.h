@@ -22,7 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 // object.h
-// object type for the deva language
+// object (and related) types for the deva language
 // created by jcs, december 14, 2010 
 
 // TODO:
@@ -65,6 +65,24 @@ enum ObjectType
 	obj_symbol_name,		// an identifier, same data as a string
 	obj_end = 255			// end of enum marker
 };
+static const char* object_type_names[] = 
+{
+	"null",
+	"boolean",
+	"number",
+	"string",
+	"vector",
+	"map",
+	"function",
+	"native function",
+	"class",
+	"object",
+	"native object",
+	"size/address",
+	"symbol name",
+	"<invalid>"
+};
+
 
 inline bool IsRefType( ObjectType t ) { return (t == obj_vector || t == obj_map || t == obj_class || t == obj_instance ); }
 inline bool IsMapType( ObjectType t ) { return (t == obj_map || t == obj_class || t == obj_instance ); }
@@ -73,12 +91,20 @@ inline bool IsVecType( ObjectType t ) { return t == obj_vector; }
 
 // forward decls needed by Object class
 class Frame;
-typedef void (*NativeFunction)(Frame*);
 struct Function;
 class VectorBase;
 class MapBase;
+
+// types needed by Object class
 typedef RefCounted<VectorBase> Vector;
 typedef RefCounted<MapBase> Map;
+//typedef void (*NativeFunction)(Frame*);
+typedef void (*NativeFunctionPtr)(Frame*);
+struct NativeFunction
+{
+	NativeFunctionPtr p; 
+	bool is_method; 
+};
 
 struct Object
 {
@@ -100,11 +126,13 @@ struct Object
 	Object( ObjectType t ) : type( t ) {} // uninitialized object
 	Object( double n ) : type( obj_number ), d( n ) {}
 	Object( char* n ) : type( obj_string ), s( n ) {}
+	Object( const char* n ) : type( obj_string ), s( const_cast<char*>(n) ) {}
 	Object( bool n ) : type( obj_boolean ), b( n ) {}
 	Object( Vector* n ) : type( obj_vector ), v( n ) {}
 	Object( Map* n ) : type( obj_map ), m( n ) {}
 	Object( Function* n ) : type( obj_function ), f( n ) {}
 	Object( NativeFunction n ) : type( obj_native_function ), nf( n ) {}
+	Object( NativeFunctionPtr n, bool method = false ) : type( obj_native_function ) { nf.p = n; nf.is_method = method; }
 	Object( void* n ) : type( obj_native_obj ), no( n ) {}
 	Object( size_t n ) : type( obj_size ), sz( n ) {}
 	Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
@@ -158,6 +186,8 @@ struct DO_ptr_lt
 
 // operator << for printing Objects
 ostream & operator << ( ostream & os, Object & obj );
+// operator << for printing ObjectTypes
+ostream & operator << ( ostream & os, ObjectType t );
 
 
 struct Object;
@@ -167,6 +197,8 @@ class VectorBase : public vector<Object>
 {
 	// current index for enumerating the vector
 	size_t index;
+	friend void do_vector_rewind( Frame* );
+	friend void do_vector_next( Frame* );
 
 public:
 	// default constructor
@@ -181,6 +213,8 @@ public:
 	// 'slice constructor'
 	VectorBase( const VectorBase & v, size_t start, size_t end ) : vector<Object>( v.begin() + start, v.begin() + end ), index( 0 ) {}
 };
+
+// functions to create Vector objects
 inline Vector* CreateVector() { return Vector::Create(); }
 inline Vector* CreateVector( Vector & v ) { return Vector::Create( v ); }
 inline Vector* CreateVector( size_t n ) { return Vector::Create( n ); }
@@ -203,9 +237,14 @@ public:
 	{}
 };
 
+// functions to create Map objects
 inline Map* CreateMap() { return Map::Create(); }
 inline Map* CreateMap( Map & m ) { return Map::Create( m ); }
 
+
+// helper functions for reference counting
+void IncRef( Object & o );
+int DecRef( Object & o );
 
 
 struct Function
@@ -216,6 +255,8 @@ struct Function
 	string filename;
 	// starting line
 	dword first_line;
+	// is this a method (does it have an extra implicit arg for 'this')
+	bool is_method;
 	// number of arguments
 	dword num_args;
 	// TODO: need to store default values for args too
@@ -226,6 +267,8 @@ struct Function
 	OrderedSet<string> local_names;
 	// offset in code section of the code for this function
 	dword addr;
+
+	Function() : first_line( 0 ), is_method( false ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
 
 	bool operator == ( const Function & rhs ) const
 	{

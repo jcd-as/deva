@@ -186,14 +186,20 @@ exp[bool invert]
 	|	call_exp
 	|	(map_op | vec_op)
 	|	value[invert]
+// TODO: map key items need to be added as variables
+// TODO: this calls ResolveFun on every ID in, for example, 'a.b.c()'
 	|	ID  { if( semantics->making_call ) semantics->ResolveFun( (char*)$ID.text->chars, $ID->getLine($ID) ); else semantics->ResolveVar( (char*)$ID.text->chars, $ID->getLine($ID) ); }
 	;
 
 call_exp
-@init { semantics->making_call = true; }
-	:	^(Call exp[false] { semantics->making_call = false; }
-			^(ArgList exp[false]*)
-		)
+//@init { semantics->making_call = true; }
+//	:	^(Call exp[false] { semantics->making_call = false; }
+//			^(ArgList exp[false]*)
+//		)
+	:	^(Call 
+			^(ArgList exp[false]*) { semantics->making_call = true; }
+			exp[false]
+		) { semantics->making_call = false; }
 	;
 
 key_exp
@@ -221,7 +227,7 @@ arg
 	;
 
 in_exp 
-	:	^(In key=ID val=ID? exp[false]) { semantics->DefineVar( (char*)$key.text->chars, $key->getLine($key) ); if( $val ) semantics->DefineVar( (char*)$val.text->chars, $val->getLine($val) ); }
+	:	^(In key=ID val=ID? exp[false]) { semantics->DefineVar( (char*)$key.text->chars, $key->getLine($key), mod_local ); if( $val ) semantics->DefineVar( (char*)$val.text->chars, $val->getLine($val), mod_local ); }
 	;
 
 map_op 
@@ -229,7 +235,14 @@ map_op
 	;
 
 map_item 
-	:	^(Pair exp[false] exp[false])
+//	:	^(Pair exp[false] exp[false])
+	:	^(Pair map_key[false] exp[false])
+	;
+
+map_key[bool invert]
+@init { semantics->in_map_key = true; }
+@after { semantics->in_map_key = false; }
+	:	(exp[invert])
 	;
 
 vec_op 
