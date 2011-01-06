@@ -226,6 +226,8 @@ class MapBase : public map<Object, Object>
 {
 	// current index for enumerating the map pairs
 	size_t index;
+	friend void do_map_rewind( Frame* );
+	friend void do_map_next( Frame* );
 
 public:
 	// default constructor

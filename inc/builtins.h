@@ -47,10 +47,15 @@ namespace deva
 // pre-decls for builtin executors
 void do_print( Frame *f );
 void do_str( Frame *f );
-//void do_chr( Frame *f );
-//void do_append( Frame *f );
-//void do_length( Frame *f );
-//void do_copy( Frame *f );
+void do_chr( Frame *f );
+void do_append( Frame *f );
+void do_length( Frame *f );
+void do_copy( Frame *f );
+void do_name( Frame *f );
+void do_type( Frame *f );
+void do_exit( Frame *f );
+void do_num( Frame *f );
+void do_range( Frame *f );
 //void do_eval( Frame *f );
 //void do_open( Frame *f );
 //void do_close( Frame *f );
@@ -65,14 +70,9 @@ void do_str( Frame *f );
 //void do_writelines( Frame *f );
 //void do_seek( Frame *f );
 //void do_tell( Frame *f );
-//void do_name( Frame *f );
-//void do_type( Frame *f );
 //void do_stdin( Frame *f );
 //void do_stdout( Frame *f );
 //void do_stderr( Frame *f );
-//void do_exit( Frame *f );
-//void do_num( Frame *f );
-//void do_range( Frame *f );
 //void do_format( Frame *f );
 //void do_join( Frame *f );
 //void do_error( Frame *f );
@@ -88,6 +88,11 @@ static const string builtin_names[] =
 	string( "append" ),
 	string( "length" ),
 	string( "copy" ),
+	string( "name" ),
+	string( "type" ),
+	string( "exit" ),
+	string( "num" ),
+	string( "range" ),
 	string( "eval" ),
 	string( "open" ),
 	string( "close" ),
@@ -102,14 +107,9 @@ static const string builtin_names[] =
 	string( "writelines" ),
 	string( "seek" ),
 	string( "tell" ),
-	string( "name" ),
-	string( "type" ),
 	string( "stdin" ),
 	string( "stdout" ),
 	string( "stderr" ),
-	string( "exit" ),
-	string( "num" ),
-	string( "range" ),
 	string( "format" ),
 	string( "join" ),
 	string( "error" ),
@@ -122,10 +122,15 @@ static NativeFunctionPtr builtin_fcns[] =
 {
 	do_print,
 	do_str,
-//	do_chr,
-//	do_append,
-//	do_length,
-//	do_copy,
+	do_chr,
+	do_append,
+	do_length,
+	do_copy,
+	do_name,
+	do_type,
+	do_exit,
+	do_num,
+	do_range,
 //	do_eval,
 //	do_open,
 //	do_close,
@@ -140,14 +145,9 @@ static NativeFunctionPtr builtin_fcns[] =
 //	do_writelines,
 //	do_seek,
 //	do_tell,
-//	do_name,
-//	do_type,
 //	do_stdin,
 //	do_stdout,
 //	do_stderr,
-//	do_exit,
-//	do_num,
-//	do_range,
 //	do_format,
 //	do_join,
 //	do_error,

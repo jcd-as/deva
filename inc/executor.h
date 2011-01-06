@@ -83,6 +83,16 @@ public:
 			return NULL;
 		else return i->second;
 	}
+	const char* FindSymbolName( Object* o )
+	{
+		// check locals
+		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
+		{
+			if( *(i->second) == *o )
+				return i->first.c_str();
+		}
+		return NULL;
+	}
 };
 
 class ScopeTable
@@ -114,6 +124,21 @@ public:
 			Object* o = (*i)->FindSymbol( name );
 			if( o )
 				return o;
+		}
+		return NULL;
+	}
+	const char* FindSymbolName( Object* o )
+	{
+		// TODO: full look-up logic: ???
+		// builtins(???), module names, functions(???)
+		//
+		// look in each scope
+		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+		{
+			// check for the symbol
+			const char* n = (*i)->FindSymbolName( o );
+			if( n )
+				return n;
 		}
 		return NULL;
 	}
@@ -190,6 +215,8 @@ public:
 
 	// resolve symbols through the scope table
 	inline Object* FindSymbol( const char* name ) const { return scopes->FindSymbol( name ); }
+	// find a symbol's name
+	inline const char* FindSymbolName( Object* o ) { return scopes->FindSymbolName( o ); }
 };
 
 struct Code
@@ -279,6 +306,11 @@ public:
 
 	void DumpFunctions();
 	void DumpConstantPool();
+
+	// process exit
+	// TODO: anything needs doing here? prevent the process from exit, just the
+	// executor?? (so debugger won't exit, perhaps?)
+	void Exit( int exit_code ) { exit( exit_code ); }
 };
 
 extern Executor* ex;

@@ -34,6 +34,8 @@
 #include "exceptions.h"
 #include "util.h"
 #include "builtins.h"
+#include "vector_builtins.h"
+#include "map_builtins.h"
 
 namespace deva_compile
 {
@@ -111,11 +113,6 @@ void Semantics::ResolveVar( char* name, int line )
 	// look up the variable in the current scope
 	if( !current_scope->Resolve( name, sym_end ) )
 	{
-//		if( show_warnings )
-//			emit_warning( (char*)str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
-//		// add it as an 'undeclared' var, it's possible that it was emitted by
-//		// an eval() call or such and will exist at run-time
-//		DefineVar( name, line );
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
 }
@@ -152,7 +149,7 @@ void Semantics::ResolveFun( char* name, int line )
 {
 	// TODO: modules???
 	// if it is a builtin fcn, add it to the constants pool
-	if( IsBuiltin( string( name ) ) )
+	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 	{
 		constants.insert( Object( obj_symbol_name, name ) );
 	}
@@ -160,11 +157,6 @@ void Semantics::ResolveFun( char* name, int line )
 //	else if( !current_scope->Resolve( name, sym_function ) )
 	else if( !current_scope->Resolve( name, sym_end ) )
 	{
-//		if( show_warnings )
-//			emit_warning( (char*)str(boost::format( "Function '%1%' not defined." ) % name).c_str(), line );
-//		// add it to the constant pool, assuming it will be located at run-time
-//		constants.insert( Object( obj_symbol_name, name ) );
-
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
 }
@@ -206,7 +198,6 @@ void Semantics::AddString( char* arg )
 		current_scope->Define( sym );
 		// symbol stores a copy of s, free s now
 		delete [] s;
-//		constants.insert( Object( obj_symbol_name, arg ) );
 	}
 	constants.insert( Object( arg ) );
 }

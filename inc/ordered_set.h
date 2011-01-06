@@ -52,7 +52,7 @@ template<typename T, typename BinaryPredicate, bool allowDuplicates> class _Orde
 public:
 	void Reserve( int n ) { data.reserve( n ); }
 	T& At( int n ) { return data[n]; }
-	size_t Size() { return data.size(); }
+	size_t Size() const { return data.size(); }
 	// adds. if a rejected dup (if dups rejected), returns false, else true
 	bool Add( const T& t )
 	{
@@ -68,7 +68,7 @@ public:
 	void RemoveAt( int n ) { data.erase( data.begin() + n ); }
 	// returns index of item, or -1 if not found
 	// NOTE: because the set is kept ordered, adding an item invalidates all indices
-	int Find( const T& t )
+	int Find( const T& t ) const
 	{
 		if( data.size() == 0 )
 			return -1;
@@ -80,7 +80,7 @@ public:
 	}
 private:
 	// (same as std::lower_bound on entire collection)
-	int insertionPoint( const T& t )
+	int insertionPoint( const T& t ) const
 	{
 		int len = data.size();
 		if( len == 0 )

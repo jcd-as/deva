@@ -48,17 +48,17 @@ namespace deva
 // pre-decls for builtin executors
 void do_vector_append( Frame *frame );
 void do_vector_length( Frame *frame );
-//void do_vector_copy( Frame *frame );
-//void do_vector_concat( Frame *frame );
-//void do_vector_min( Frame *frame );
-//void do_vector_max( Frame *frame );
-//void do_vector_pop( Frame *frame );
-//void do_vector_insert( Frame *frame );
-//void do_vector_remove( Frame *frame );
-//void do_vector_find( Frame *frame );
-//void do_vector_rfind( Frame *frame );
-//void do_vector_count( Frame *frame );
-//void do_vector_reverse( Frame *frame );
+void do_vector_copy( Frame *frame );
+void do_vector_concat( Frame *frame );
+void do_vector_min( Frame *frame );
+void do_vector_max( Frame *frame );
+void do_vector_pop( Frame *frame );
+void do_vector_insert( Frame *frame );
+void do_vector_remove( Frame *frame );
+void do_vector_find( Frame *frame );
+void do_vector_rfind( Frame *frame );
+void do_vector_count( Frame *frame );
+void do_vector_reverse( Frame *frame );
 //void do_vector_sort( Frame *frame );
 //void do_vector_map( Frame *frame );
 //void do_vector_filter( Frame *frame );
@@ -75,17 +75,17 @@ static const string vector_builtin_names[] =
 {
 	string( "append" ),
 	string( "length" ),
-//	string( "copy" ),
-//	string( "concat" ),
-//	string( "min" ),
-//	string( "max" ),
-//	string( "pop" ),
-//	string( "insert" ),
-//	string( "remove" ),
-//	string( "find" ),
-//	string( "rfind" ),
-//	string( "count" ),
-//	string( "reverse" ),
+	string( "copy" ),
+	string( "concat" ),
+	string( "min" ),
+	string( "max" ),
+	string( "pop" ),
+	string( "insert" ),
+	string( "remove" ),
+	string( "find" ),
+	string( "rfind" ),
+	string( "count" ),
+	string( "reverse" ),
 //	string( "sort" ),
 //	string( "map" ),
 //	string( "filter" ),
@@ -102,17 +102,17 @@ static NativeFunctionPtr vector_builtin_fcns[] =
 {
 	do_vector_append,
 	do_vector_length,
-//	do_vector_copy,
-//	do_vector_concat,
-//	do_vector_min,
-//	do_vector_max,
-//	do_vector_pop,
-//	do_vector_insert,
-//	do_vector_remove,
-//	do_vector_find,
-//	do_vector_rfind,
-//	do_vector_count,
-//	do_vector_reverse,
+	do_vector_copy,
+	do_vector_concat,
+	do_vector_min,
+	do_vector_max,
+	do_vector_pop,
+	do_vector_insert,
+	do_vector_remove,
+	do_vector_find,
+	do_vector_rfind,
+	do_vector_count,
+	do_vector_reverse,
 //	do_vector_sort,
 //	do_vector_map,
 //	do_vector_filter,

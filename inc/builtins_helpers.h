@@ -59,6 +59,14 @@ public:
 	void CheckNumberOfArguments( int num_args_expected );
 	void CheckNumberOfArguments( int min_num_args, int max_num_args );
 	void ExpectType( Object* obj, ObjectType t );
+	void ExpectMapType( Object* obj );
+	void ExpectRefType( Object* obj );
+	void ExpectNonRefType( Object* obj );
+	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2 );
+	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3 );
+	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4 );
+	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4, ObjectType t5 );
+	void ExpectIntegralNumber( Object* obj );
 
 	// argument/data handling
 	Object* GetLocalN( int local_num );

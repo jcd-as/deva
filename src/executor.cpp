@@ -30,6 +30,7 @@
 #include "error.h"
 #include "builtins.h"
 #include "vector_builtins.h"
+#include "map_builtins.h"
 
 #include <cmath>
 #include <algorithm>
@@ -261,7 +262,6 @@ void Executor::ExecuteCode( const Code & code )
 			if( !plhs )
 				throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			DecRef( *plhs );
-			IncRef( rhs );
 			*plhs = Object( true );
 			ip += sizeof( dword );
 			break;
@@ -275,7 +275,6 @@ void Executor::ExecuteCode( const Code & code )
 			if( !plhs )
 				throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			DecRef( *plhs );
-			IncRef( rhs );
 			*plhs = Object( true );
 			ip += sizeof( dword );
 			break;
@@ -289,7 +288,6 @@ void Executor::ExecuteCode( const Code & code )
 			if( !plhs )
 				throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 			DecRef( *plhs );
-			IncRef( rhs );
 			*plhs = Object( obj_null );
 			ip += sizeof( dword );
 			break;
@@ -1006,12 +1004,8 @@ void Executor::ExecuteCode( const Code & code )
 				for( int i = 0; i < arg; i++ )
 				{
 					Object ob = stack.back();
-					// store op, needs IncRef()
-					IncRef( ob );
 					frame->SetLocal( arg-i-1, ob );
 					stack.pop_back();
-					// define the local in the current scope
-					scope->AddSymbol( frame->GetFunction()->local_names.At( arg-i-1 ), frame->GetLocalRef( arg-i-1 ) );
 				}
 				// default arg vals...
 				int num_defaults = o.f->num_args - arg;
@@ -1045,12 +1039,7 @@ void Executor::ExecuteCode( const Code & code )
 				for( int i = 0; i < arg; i++ )
 				{
 					Object ob = stack.back();
-					// store op, needs IncRef()
-					IncRef( ob );
 					frame->SetLocal( arg-i-1, ob );
-					// define the local in the current scope
-					// (don't know what the arg names are for native fcns)
-					scope->AddSymbol( string( "" ), frame->GetLocalRef( arg-i-1 ) );
 					stack.pop_back();
 				}
 				// push the frame onto the callstack
@@ -1079,11 +1068,7 @@ void Executor::ExecuteCode( const Code & code )
 					for( int i = 0; i < arg; i++ )
 					{
 						Object ob = stack.back();
-						// store op, needs IncRef()
-						IncRef( ob );
 						frame->SetLocal( arg-i-1, ob );
-						// define the local in the current scope
-						scope->AddSymbol( frame->GetFunction()->local_names.At( arg-i-1 ), frame->GetLocalRef( arg-i-1 ) );
 						stack.pop_back();
 					}
 					// default arg vals...
@@ -1095,7 +1080,6 @@ void Executor::ExecuteCode( const Code & code )
 						{
 							int idx = f->default_args.At( arg+i-non_defaults );
 							Object ob = GetConstant( idx );
-							IncRef( ob );
 							frame->SetLocal( arg+i, ob );
 						}
 					}
@@ -1121,12 +1105,7 @@ void Executor::ExecuteCode( const Code & code )
 						for( int i = 0; i < arg; i++ )
 						{
 							Object ob = stack.back();
-							// store op, needs IncRef()
-							IncRef( ob );
 							frame->SetLocal( arg-i-1, ob );
-							// define the local in the current scope
-							// (don't know what the arg names are for native fcns)
-							scope->AddSymbol( string( "" ), frame->GetLocalRef( arg-i-1 ) );
 							stack.pop_back();
 						}
 						// push the frame onto the callstack
@@ -1176,6 +1155,7 @@ void Executor::ExecuteCode( const Code & code )
 			break;
 		case op_for_iter:
 			{
+			bool is_map = false;
 			// 1 arg: size/address to jump to if done looping
 			arg = *((dword*)ip);
 			ip += sizeof( dword );
@@ -1202,11 +1182,11 @@ void Executor::ExecuteCode( const Code & code )
 				Scope* scope = new Scope();
 				// set the arg for the frame
 				// store op, needs IncRef()
-				IncRef( lhs );
+//				IncRef( lhs );
 				frame->SetLocal( 0, lhs );
 				// define the local in the current scope
 				// (don't know what the arg names are for native fcns)
-				scope->AddSymbol( string( "" ), frame->GetLocalRef( 0 ) );
+//				scope->AddSymbol( string( "arg0" ), frame->GetLocalRef( 0 ) );
 				// push the frame onto the callstack
 				PushFrame( frame );
 				PushScope( scope );
@@ -1217,12 +1197,42 @@ void Executor::ExecuteCode( const Code & code )
 			}
 			else if( IsMapType( lhs.type ) )
 			{
-				// TODO: handle maps
+				is_map = true;
 				if( lhs.type == obj_class || lhs.type == obj_instance )
 				{
 					// TODO: handle classes and instances
 //					Object next( "next" );
 					// do a tbl_load to get the fcn object for 'next' on the stack
+				}
+				// TODO: handle maps
+				else
+				{
+					// get map 'next' method
+					NativeFunction nf = GetMapBuiltin( string( "next" ) );
+					if( !nf.p )
+						throw ICE( "Map builtin 'next' not found." );
+					if( !nf.is_method )
+						throw ICE( "Map builtin not marked as a method." );
+					// call 'next'
+					// this is a method, so there's an extra arg for 'this'
+					int args = 1;
+					// create a frame for the fcn
+					Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, 1, nf );
+					Scope* scope = new Scope();
+					// set the arg for the frame
+					// store op, needs IncRef()
+//					IncRef( lhs );
+					frame->SetLocal( 0, lhs );
+					// define the local in the current scope
+					// (don't know what the arg names are for native fcns)
+//					scope->AddSymbol( string( "arg0" ), frame->GetLocalRef( 0 ) );
+					// push the frame onto the callstack
+					PushFrame( frame );
+					PushScope( scope );
+					// call 'next' map builtin
+					nf.p( frame );
+					PopScope();
+					PopFrame();
 				}
 			}
 			// 'next' has put a two-item vector on the stack, with a bool
@@ -1243,8 +1253,19 @@ void Executor::ExecuteCode( const Code & code )
 			// otherwise push the item(s) onto the stack
 			else
 			{
-				for( int i = 1; i < o.v->size(); i++ )
-					stack.push_back( o.v->operator[]( i ) );
+				// a map will have returned the second item as a vector
+				// (key/value pair)
+				if( is_map )
+				{
+					Object ov = o.v->operator[]( 1 );
+					if( ov.type != obj_vector )
+						throw RuntimeException( "map 'next' builtin method did not return a vector with a vector key/value pair as its second item." );
+					stack.push_back( ov.v->operator[]( 0 ) );
+					stack.push_back( ov.v->operator[]( 1 ) );
+				}
+				// a vector will just be the value we want
+				else
+					stack.push_back( o.v->operator[]( 1 ) );
 			}
 			}
 			break;
@@ -1289,12 +1310,29 @@ void Executor::ExecuteCode( const Code & code )
 			// map/class/instance:
 			else
 			{
-				// TODO: check for map built-in method
-				// TODO: check for class/instance method
 				// find the rhs (key in the lhs (map)
 				Map::iterator i = lhs.m->find( rhs );
 				if( i == lhs.m->end() )
-					throw RuntimeException( "Invalid key value. Item not found." );
+				{
+					if( rhs.type == obj_string || rhs.type == obj_symbol_name )
+					{
+						// check for map built-in method
+						NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
+						if( nf.p )
+						{
+							if( !nf.is_method )
+								throw ICE( "Map builtin not marked as a method." );
+							stack.push_back( lhs );
+							stack.push_back( Object( nf ) );
+						}
+						else
+							throw RuntimeException( "Invalid vector index or method." );
+						break;
+					}
+					// TODO: check for class/instance method
+					else 
+						throw RuntimeException( "Invalid key value. Item not found." );
+				}
 				stack.push_back( i->second );
 			}
 			break;
@@ -1331,7 +1369,11 @@ void Executor::ExecuteCode( const Code & code )
 			// map/class/instance:
 			else
 			{
-				// TODO:
+				// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+				// keys... ???
+				lhs.m->operator[]( rhs ) = o;
+				// IncRef stored item
+				IncRef( o );
 			}
 			break;
 		case op_storeslice2:
@@ -1671,6 +1713,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_mul_tbl_store:
 	case op_div_tbl_store:
 	case op_mod_tbl_store:
+		break;
 	case op_dup:
 		// 1 arg:
 		arg = *((dword*)p);

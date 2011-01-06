@@ -79,8 +79,8 @@ bool LocalScope::Define( const Symbol* const s )
 	if( s->IsLocal() || s->IsConst() || s->IsArg() )
 	{
 		FunctionScope* fun = getParentFun();
-		int idx = fun->GetLocals().size();
-		fun->GetLocals().push_back( string( s->Name() ) );
+		fun->GetLocals().Add( string( s->Name() ) );
+		int idx = fun->GetLocals().Find( string( s->Name() ) );
 		local_map.insert( pair<string, int>( s->Name(), idx ) );
 	}
 
@@ -202,12 +202,7 @@ bool FunctionScope::Define( const Symbol* const  s )
 // resolve a local to an index
 int FunctionScope::ResolveLocalToIndex( const string & name )
 {
-	for( int i = 0; i < locals.size(); i++ )
-	{
-		if( locals[i] == name )
-			return i;
-	}
-	return -1;
+	return locals.Find( name );
 }
 
 void FunctionScope::Print()

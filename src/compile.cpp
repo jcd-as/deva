@@ -33,6 +33,7 @@
 #include "compile.h"
 #include "util.h"
 #include "vector_builtins.h"
+#include "map_builtins.h"
 
 #include <iostream>
 #include <cmath>
@@ -98,12 +99,24 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 
 	// add the builtins, vector builtins and map builtins to the constant pool
 	for( int i = 0; i < num_of_builtins; i++ )
-		ex->AddConstant( Object( obj_symbol_name, copystr( builtin_names[i].c_str() ) ) );
+	{
+		char* s = copystr( builtin_names[i].c_str() );
+		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
 	for( int i = 0; i < num_of_vector_builtins; i++ )
-		ex->AddConstant( Object( obj_symbol_name, copystr( vector_builtin_names[i].c_str() ) ) );
-	// TODO: add map builtins
-//	for( int i = 0; i < num_of_map_builtins; i++ )
-//		ex->AddConstant( Object( obj_symbol_name, copystr( map_builtin_names[i].c_str() ) ) );
+	{
+		char* s = copystr( vector_builtin_names[i].c_str() );
+		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
+	// add map builtins
+	for( int i = 0; i < num_of_map_builtins; i++ )
+	{
+		char* s = copystr( map_builtin_names[i].c_str() );
+		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
 
 	// add our 'global' function, "@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
@@ -113,6 +126,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	f->first_line = 0;
 	f->num_args = 0;
 	f->num_locals = scope->NumLocals();
+	f->is_method = false;
 	f->addr = 0;
 	// add the global names for the global scope
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
@@ -199,7 +213,10 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	{
 		fcn->name += "@";
 		fcn->name += classname;
+		fcn->is_method = true;
 	}
+	else
+		fcn->is_method = false;
 	fcn->filename = string( current_file );
 	fcn->first_line = line;
 	fcn->num_args = scope->NumArgs();
@@ -872,20 +889,20 @@ void Compiler::WhileOpEnd()
 	delete breaks;
 }
 
-// maps
 void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 {
-	//TODO: implement
-}
+	// if 'val' is NULL this is a vector
 
-// vectors
-void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
-{
 	// is the key a local?
 	int key_idx = CurrentScope()->ResolveLocalToIndex( key );
 
+	// is the val a local?
+	int val_idx = -1;
+	if( val )
+		val_idx = CurrentScope()->ResolveLocalToIndex( val );
+
 	// not found? error out, for loop vars are always locals
-	if( key_idx == -1 )
+	if( key_idx == -1 || (val && val_idx == -1) )
 	{
 		throw ICE( boost::format( "For loop variable '%1%' not found in the local symbols." ) % key );
 	}
@@ -915,8 +932,52 @@ void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
 	// mark it for back-patching
 	AddPatchLoc();
 
-	// the key is now on the stack, store it into the local loop var
+	// the val & key are now on the stack, store them into the local loop vars
+	// val:
+	// index under 10: use the short instructions
+	if( val )
+	{
+		if( val_idx < 10 )
+		{
+			switch( val_idx )
+			{
+			case 0:
+				Emit( op_storelocal0 );
+				break;
+			case 1:
+				Emit( op_storelocal1 );
+				break;
+			case 2:
+				Emit( op_storelocal2 );
+				break;
+			case 3:
+				Emit( op_storelocal3 );
+				break;
+			case 4:
+				Emit( op_storelocal4 );
+				break;
+			case 5:
+				Emit( op_storelocal5 );
+				break;
+			case 6:
+				Emit( op_storelocal6 );
+				break;
+			case 7:
+				Emit( op_storelocal7 );
+				break;
+			case 8:
+				Emit( op_storelocal8 );
+				break;
+			case 9:
+				Emit( op_storelocal9 );
+				break;
+			}
+		}
+		else
+			Emit( op_storelocal, (dword)val_idx );
+	}
 
+	// key:
 	// index under 10: use the short instructions
 	if( key_idx < 10 )
 	{
@@ -957,7 +1018,13 @@ void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
 	else
 		Emit( op_storelocal, (dword)key_idx );
 
-	// loop body:
+	// loop body here
+}
+
+// vectors
+void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
+{
+	InOp( key, NULL, container );
 }
 
 void Compiler::ForOpEnd()

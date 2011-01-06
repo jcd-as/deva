@@ -84,7 +84,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		( "disasm", "disassemble" )
 		( "trace", "show execution trace" )
 		( "show-ast,a", "show the AST" )
-		( "debug-dump", po::value<bool>( &debug_dump )->default_value( false ), "turn internal debug output on/off" )
+		( "debug-dump", "turn internal debug output on" )
 		( "input", po::value<string>( &input ), "input filename" )
 		( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
 		;
@@ -131,6 +131,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	if( vm.count( "show-ast" ) )
 	{
 		show_ast = true;
+	}
+	if( vm.count( "debug-dump" ) )
+	{
+		debug_dump = true;
 	}
 	if( vm.count( "compile-only" ) )
 	{

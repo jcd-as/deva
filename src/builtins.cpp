@@ -148,174 +148,246 @@ void do_str( Frame *frame )
 	const char* str = frame->GetParent()->AddString( s );
 	helper.ReturnVal( Object( str ) );
 }
-/*
-void do_chr( Executor *ex )
+
+void do_chr( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'chr'." );
+	BuiltinHelper helper( NULL, "chr", frame );
+	helper.CheckNumberOfArguments( 1 );
 
-	// get the argument off the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'chr'." );
-	}
-	if( !o )
-		o = &obj;
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectType( o, obj_number );
 
-	// ensure the argument is a number
-	if( o->Type() != sym_number )
-		throw DevaRuntimeException( "'num' argument to built-in function 'chr' must be a numercal value." );
-
-	char c = (char)(o->num_val);
+	char c = (char)(o->d);
 	char* s = new char[2];
 	s[0] = c;
 	s[1] = '\0';
+	frame->GetParent()->AddString( s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", s ) );
+	helper.ReturnVal( Object( s ) );
 }
 
-void do_append( Executor *ex )
+
+void do_append( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'append'." );
+	BuiltinHelper helper( NULL, "append", frame );
+	helper.CheckNumberOfArguments( 2 );
 
-	// vector to append to
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// value to append
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'append'." );
-	}
-	if( !o )
-		o = &obj;
+	Object* o = helper.GetLocalN( 1 );
+	Object* v = helper.GetLocalN( 0 );
+	helper.ExpectType( v, obj_vector );
 
-	// vector
-	if( o->Type() != sym_vector )
-		throw DevaRuntimeException( "'destination' argument to built-in function 'append' must be a vector." );
+	v->v->push_back( *o );
 
-	o->vec_val->push_back( val );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_length( Executor *ex )
+void do_length( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'length'." );
+	BuiltinHelper helper( NULL, "length", frame );
+	helper.CheckNumberOfArguments( 1 );
 
-	// arg (vector, map or string) is at stack+0
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'length'." );
-	}
-	if( !o )
-		o = &obj;
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectTypes( o, obj_string, obj_vector, obj_map, obj_class, obj_instance );
 
 	int len;
 	// string
-	if( o->Type() == sym_string )
+	if( o->type == obj_string )
 	{
-		len = string( o->str_val ).size();
+		len = string( o->s ).size();
 	}
 	// vector
-	else if( o->Type() == sym_vector )
+	else if( o->type == obj_vector )
 	{
-		len = o->vec_val->size();
+		len = o->v->size();
 	}
 	// map, class, instance
-	else if( o->Type() == sym_map || o->Type() == sym_class || o->Type() == sym_instance )
+	else if( o->type == obj_map || o->type == obj_class || o->type == obj_instance )
 	{
-		len = o->map_val->size();
+		len = o->m->size();
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the length
-	ex->stack.push_back( DevaObject( "", (double)len ) );
+	helper.ReturnVal( Object( (double)len ) );
 }
 
-void do_copy( Executor *ex )
+void do_copy( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'copy'." );
+	BuiltinHelper helper( NULL, "copy", frame );
+	helper.CheckNumberOfArguments( 1 );
 
-	// object to copy at top of stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'copy'." );
-	}
-	if( !o )
-		o = &obj;
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectRefType( o );
 
-		DevaObject copy;
-	if( o->Type() == sym_map )
+	Object copy;
+
+	if( o->type == obj_map )
 	{
 		// create a new map object that is a copy of the one we received,
-		DOMap* m = new DOMap( *(o->map_val) );
-		copy = DevaObject( "", m );
+		Map* m = CreateMap( *(o->m) );
+		copy = Object( m );
 	}
-	else if( o->Type() == sym_class )
+	else if( o->type == obj_class )
 	{
-		DOMap* m = new DOMap( *(o->map_val) );
-		copy = DevaObject::ClassFromMap( "", m );
+		Map* m = CreateMap( *(o->m) );
+		copy = Object::CreateClass( m );
 	}
-	else if( o->Type() == sym_instance )
+	else if( o->type == obj_instance )
 	{
-		DOMap* m = new DOMap( *(o->map_val) );
-		copy = DevaObject::InstanceFromMap( "", m );
+		Map* m = CreateMap( *(o->m) );
+		copy = Object::CreateInstance( m );
 	}
-	else if( o->Type() == sym_vector )
+	else if( o->type == obj_vector )
 	{
 		// create a new vector object that is a copy of the one we received,
-		DOVector* v = new DOVector( *(o->vec_val) );
-		copy = DevaObject( "", v );
+		Vector* v = CreateVector( *(o->v) );
+		copy = Object( v );
+	}
+
+	helper.ReturnVal( copy );
+}
+
+void do_name( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "name", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	const char* name;
+	// TODO: if this is a class, get the name attribute
+	if( o->type == obj_class )
+	{
+//		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__name__" ) ) );
+//		if( it != o->map_val->end() )
+//		{
+//			if( it->second.Type() != sym_string )
+//				throw DevaICE( "__name__ attribute on a class object is not of type 'string'." );
+//			name = it->second.str_val;
+//		}
+//		else
+//			throw DevaICE( "__name__ attribute not found on a class object." );
 	}
 	else
 	{
-		throw DevaRuntimeException( "Object for built-in function 'copy' is not a map or vector." );
+		// locate the name of this object
+		const char* str = frame->GetParent()->FindSymbolName( o );
+		name = frame->GetParent()->AddString( str );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( copy );
+	helper.ReturnVal( Object( name ) );
 }
 
+void do_type( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "type", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	const char* s = object_type_names[o->type];
+
+	helper.ReturnVal( Object( s ) );
+}
+
+void do_exit( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "exit", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectIntegralNumber( o );
+
+	ex->Exit( *o );
+
+	helper.ReturnVal( Object( obj_null ) );
+}
+
+void do_num( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "num", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectNonRefType( o );
+
+	double d = 0.0;
+	switch( o->type )
+	{
+	case obj_number:
+		d = o->d;
+		break;
+	case obj_string:
+	case obj_symbol_name:
+		d = atof( o->s );
+		break;
+	case obj_boolean:
+		if( o->b )
+			d = 1.0;
+		break;
+	case obj_size:
+		d = o->sz;
+		break;
+	case obj_native_obj:
+		d = (size_t)o->no;
+		break;
+	case obj_native_function:
+		d = (size_t)o->nf.p;
+		break;
+	case obj_function:
+		d = (size_t)o->f->addr;
+		break;
+	case obj_null:
+		break;
+	default:
+		break;
+	}
+
+	helper.ReturnVal( Object( d ) );
+}
+
+void do_range( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "range", frame );
+	helper.CheckNumberOfArguments( 2, 3 );
+
+	int step = 1;
+	Object *stepobj, *startobj, *endobj;
+
+	int num_args = frame->NumArgsPassed();
+	if( num_args == 3 )
+	{
+		startobj = helper.GetLocalN( 0 );
+		endobj = helper.GetLocalN( 1 );
+		stepobj = helper.GetLocalN( 2 );
+
+		helper.ExpectIntegralNumber( stepobj );
+		step = (int)stepobj->d;
+	}
+	else
+	{
+		startobj = helper.GetLocalN( 0 );
+		endobj = helper.GetLocalN( 1 );
+	}
+	helper.ExpectIntegralNumber( startobj );
+	helper.ExpectIntegralNumber( endobj );
+	int start = startobj->d;
+	int end = endobj->d;
+
+	if( start < 0 || end < 0 || step < 0 )
+		throw RuntimeException( "Arguments to 'range' must be positive integral numbers." );
+
+	// generate the range
+	// convert to a vector of numbers
+	Vector* vec = CreateVector();
+	vec->reserve( (int)((end - start) / step) );
+	for( double c = start; c < end; c += step )
+	{
+		vec->push_back( Object( c ) );
+	}
+
+	helper.ReturnVal( Object( vec ) );
+}
+
+/*
 void do_eval( Executor *ex )
 {
 	if( Executor::args_on_stack != 1 )
@@ -1121,119 +1193,6 @@ void do_tell( Executor *ex )
 	ex->stack.push_back( DevaObject( "", (double)pos ) );
 }
 
-void do_name( Executor *ex )
-{
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'type'." );
-
-	// get the argument off the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'type'." );
-	}
-	if( !o )
-		o = &obj;
-
-	string name;
-	// if this is a class, get the name attribute
-	if( o->Type() == sym_class )
-	{
-		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__name__" ) ) );
-		if( it != o->map_val->end() )
-		{
-			if( it->second.Type() != sym_string )
-				throw DevaICE( "__name__ attribute on a class object is not of type 'string'." );
-			name = it->second.str_val;
-		}
-		else
-			throw DevaICE( "__name__ attribute not found on a class object." );
-	}
-	else
-		name = o->name;
-	
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", name ) );
-}
-
-void do_type( Executor *ex )
-{
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'name'." );
-
-	// get the argument off the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'name'." );
-	}
-	if( !o )
-		o = &obj;
-
-	string type;
-	switch( o->Type() )
-	{
-	case sym_null:
-		type = "null";
-		break;
-	case sym_boolean:
-		type = "bool";
-		break;
-	case sym_number:
-		type = "number";
-		break;
-	case sym_string:
-		type = "string";
-		break;
-	case sym_vector:
-		type = "vector";
-		break;
-	case sym_map:
-		type = "map";
-		break;
-	case sym_address:
-		type = "address";
-		break;
-	case sym_function_call:
-		type = "call";
-		break;
-	case sym_unknown:
-		type = "variable";
-		break;
-	case sym_class:
-		type = "class";
-		break;
-	case sym_instance:
-		type = "instance";
-		break;
-	case sym_size:
-		type = "size";
-		break;
-	case sym_native_obj:
-		type = "native object";
-		break;
-	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", type ) );
-}
-
 void do_stdin( Executor *ex )
 {
 	if( Executor::args_on_stack != 0 )
@@ -1268,197 +1227,6 @@ void do_stderr( Executor *ex )
 
 	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", (void*)stderr ) );
-}
-
-void do_exit( Executor *ex )
-{
-	if( Executor::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments in built-in function 'exit'." );
-
-	int exit_val = 0;
-
-	if( Executor::args_on_stack == 1 )
-	{
-		// number is on top of the stack
-		DevaObject num = ex->stack.back();
-		ex->stack.pop_back();
-	
-		DevaObject* o = NULL;
-		if( num.Type() == sym_unknown )
-		{
-			o = ex->find_symbol( num );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for 'return_value' argument built-function 'exit'" );
-		}
-		if( !o )
-			o = &num;
-
-		// check type
-		if( o->Type() != sym_number )
-			throw DevaRuntimeException( "'return_value' argument to built-in function 'exit' must be a number." );
-
-		exit_val = (int)o->num_val;
-	}
-
-	ex->Exit( exit_val );
-
-	// nothing from here on will actually ever happen, but whatever, let's
-	// pretend to be a good citizen for the sake for uniformity
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
-}
-
-void do_num( Executor *ex )
-{
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'num'." );
-
-	// get the argument off the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'num'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it is not a vector, map, instance or class
-	if( o->Type() == sym_vector || o->Type() == sym_map ||
-		o->Type() == sym_class || o->Type() == sym_instance ||
-		o->Type() == sym_unknown || o->Type() == sym_function_call )
-		throw DevaRuntimeException( "Invalid argument to built-in function 'num'." );
-
-	double d = 0.0;
-	switch( o->Type() )
-	{
-	case sym_number:
-		d = o->num_val;
-		break;
-	case sym_string:
-		d = atof( o->str_val );
-		break;
-	case sym_boolean:
-		if( o->bool_val	)
-			d = 1.0;
-		break;
-	case sym_address:
-	case sym_size:
-		d = o->sz_val;
-		break;
-	case sym_native_obj:
-		d = (size_t)o->nat_obj_val;
-		break;
-	case sym_null:
-		d = 0;
-		break;
-	default:
-		break;
-	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", d ) );
-}
-
-void do_range( Executor *ex )
-{
-	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'range'." );
-
-	double i_start = 0;
-	double i_end = -1;
-	double i_step = 1;
-	if( Executor::args_on_stack > 0 )
-	{
-		// start is first on stack
-		DevaObject start = ex->stack.back();
-		ex->stack.pop_back();
-
-		// if it's a variable, locate it in the symbol table
-		DevaObject* o = NULL;
-		if( start.Type() == sym_unknown )
-		{
-			o = ex->find_symbol( start );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for 'start' argument in call to built-in function 'range'." );
-		}
-		if( !o )
-			o = &start;
-
-		// start position
-		if( o->Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for start position argument in built-in function 'range'." );
-		i_start = o->num_val;
-	}
-	if( Executor::args_on_stack > 1 )
-	{
-		// end of range
-		DevaObject end = ex->stack.back();
-		ex->stack.pop_back();
-
-		// if it's a variable, locate it in the symbol table
-		DevaObject* o = NULL;
-		if( end.Type() == sym_unknown )
-		{
-			o = ex->find_symbol( end );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for 'end' argument in call to built-in function 'range'." );
-		}
-		if( !o )
-			o = &end;
-
-		if( o->Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for 'end' argument in built-in function 'range'." );
-		i_end = o->num_val;
-	}
-	if( Executor::args_on_stack > 2 )
-	{
-		// 'step' value
-		DevaObject step = ex->stack.back();
-		ex->stack.pop_back();
-		if( step.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for 'step' argument in built-in function 'range'." );
-		i_step = step.num_val;
-	}
-
-	// default length is the entire thing
-	if( i_end == -1 )
-	{
-		i_end = i_start;
-		i_start = 0.0;
-	}
-
-	if( i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in built-in function 'range'." );
-	if( i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in built-in function 'range'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in built-in function 'range': start is greater than end." );
-
-	// generate the range
-	// convert to a vector of numbers
-	DOVector* vec = new DOVector();
-	vec->reserve( (int)((i_end - i_start) / i_step) );
-	for( double c = i_start; c < i_end; c += i_step )
-	{
-		vec->push_back( DevaObject( "", c ) );
-	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( DevaObject( "", vec ) );
 }
 
 void do_format( Executor *ex )
