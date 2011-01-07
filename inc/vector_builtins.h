@@ -59,14 +59,14 @@ void do_vector_find( Frame *frame );
 void do_vector_rfind( Frame *frame );
 void do_vector_count( Frame *frame );
 void do_vector_reverse( Frame *frame );
-//void do_vector_sort( Frame *frame );
+void do_vector_sort( Frame *frame );
 //void do_vector_map( Frame *frame );
 //void do_vector_filter( Frame *frame );
 //void do_vector_reduce( Frame *frame );
 //void do_vector_any( Frame *frame );
 //void do_vector_all( Frame *frame );
-//void do_vector_slice( Frame *frame );
-//void do_vector_join( Frame *frame );
+void do_vector_slice( Frame *frame );
+void do_vector_join( Frame *frame );
 // 'enumerable interface'
 void do_vector_rewind( Frame *frame );
 void do_vector_next( Frame *frame );
@@ -86,14 +86,14 @@ static const string vector_builtin_names[] =
 	string( "rfind" ),
 	string( "count" ),
 	string( "reverse" ),
-//	string( "sort" ),
+	string( "sort" ),
 //	string( "map" ),
 //	string( "filter" ),
 //	string( "reduce" ),
 //	string( "any" ),
 //	string( "all" ),
-//	string( "slice" ),
-//	string( "join" ),
+	string( "slice" ),
+	string( "join" ),
 	string( "rewind" ),
 	string( "next" ),
 };
@@ -113,14 +113,14 @@ static NativeFunctionPtr vector_builtin_fcns[] =
 	do_vector_rfind,
 	do_vector_count,
 	do_vector_reverse,
-//	do_vector_sort,
+	do_vector_sort,
 //	do_vector_map,
 //	do_vector_filter,
 //	do_vector_reduce,
 //	do_vector_any,
 //	do_vector_all,
-//	do_vector_slice,
-//	do_vector_join,
+	do_vector_slice,
+	do_vector_join,
 	do_vector_rewind,
 	do_vector_next,
 };

@@ -31,6 +31,7 @@
 #include "vector_builtins.h"
 #include "builtins_helpers.h"
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
@@ -439,16 +440,21 @@ void do_vector_reverse( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "reverse", frame );
 
-	helper.CheckNumberOfArguments( 2, 3 );
-	Object* self = helper.GetLocalN( frame->NumArgsPassed() - 1 );
+	helper.CheckNumberOfArguments( 1, 3 );
+	int num_args = frame->NumArgsPassed();
+	Object* self = helper.GetLocalN( num_args - 1 );
 	helper.ExpectType( self, obj_vector );
 	Object* startobj = helper.GetLocalN( 0 );
 
-	helper.ExpectIntegralNumber( startobj );
-
-	int start = (int)startobj->d;
+	int start = 0;
 	int end = -1;
-	if( frame->NumArgsPassed() == 3 )
+	if( num_args > 1 )
+	{
+		Object* startobj = helper.GetLocalN( 0 );
+		helper.ExpectIntegralNumber( startobj );
+		start = (int)startobj->d;
+	}
+	if( num_args > 2 )
 	{
 		Object* endobj = helper.GetLocalN( 1 );
 		helper.ExpectIntegralNumber( endobj );
@@ -472,66 +478,50 @@ void do_vector_reverse( Frame *frame )
 	helper.ReturnVal( Object( obj_null ) );
 }
 
-/*
+
 void do_vector_sort( Frame *frame )
 {
-	if( Executor::args_on_stack > 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'sort' built-in method." );
+	BuiltinHelper helper( "vector", "sort", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1, 3 );
+	int num_args = frame->NumArgsPassed();
+	Object* self = helper.GetLocalN( num_args - 1 );
+	helper.ExpectType( self, obj_vector );
+	Object* startobj = helper.GetLocalN( 0 );
 
-	int i_start = 0;
-	int i_end = -1;
-	if( Executor::args_on_stack > 1 )
+	int start = 0;
+	int end = -1;
+	if( num_args > 1 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = ex->stack.back();
-		ex->stack.pop_back();
-		// start position
-		if( start.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'reverse'." );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_start = (int)start.num_val;
+		Object* startobj = helper.GetLocalN( 0 );
+		helper.ExpectIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
-	if( Executor::args_on_stack > 0 )
+	if( num_args > 2 )
 	{
-		// end position to insert at is next on stack
-		DevaObject end = ex->stack.back();
-		ex->stack.pop_back();
-		// end position
-		if( end.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for end position argument in vector built-in method 'reverse'." );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_end = (int)end.num_val;
+		Object* endobj = helper.GetLocalN( 1 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
 	}
 
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'sort'." );
+	size_t sz = self->v->size();
 
-	if( i_end == -1 )
-		i_end = vec.vec_val->size();
+	if( end == -1 )
+		end = sz;
 
-	size_t sz = vec.vec_val->size();
+	if( start >= sz || start < 0 )
+		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
+	if( end > sz || end < 0 )
+		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'sort'." );
+	if( end < start )
+		throw RuntimeException( "Invalid arguments in vector built-in method 'sort': start is greater than end." );
 
-	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
-	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'sort'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'sort': start is greater than end." );
+	sort( self->v->begin() + start, self->v->begin() + end );
 
-	sort( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return null
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
+/*
 void do_vector_map( Frame *frame )
 {
 	if( Executor::args_on_stack != 1 )
@@ -1032,11 +1022,12 @@ void do_vector_all( Frame *frame )
 	else
 		ex->stack.push_back( DevaObject( "", false ) );
 }
+*/
 
 // helper for slicing in steps
 static size_t s_step = 1;
 static size_t s_i = 0;
-bool if_step( DevaObject )
+bool if_step( Object )
 {
 	if( s_i++ % s_step == 0 )
 		return false;
@@ -1046,148 +1037,190 @@ bool if_step( DevaObject )
 
 void do_vector_slice( Frame *frame )
 {
-	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'slice' built-in method." );
+//	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
+//		throw DevaRuntimeException( "Incorrect number of arguments to vector 'slice' built-in method." );
+//
+//	// get the vector object off the top of the stack
+//	DevaObject vec = ex->stack.back();
+//	ex->stack.pop_back();
+//
+//	size_t i_start = 0;
+//	size_t i_end = -1;
+//	size_t i_step = 1;
+//	if( Executor::args_on_stack > 0 )
+//	{
+//		// start position to insert at is next on stack
+//		DevaObject start = ex->stack.back();
+//		ex->stack.pop_back();
+//		// start position
+//		if( start.Type() != sym_number )
+//			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'slice'." );
+//		// TODO: start needs to be integral values. error if they aren't
+//		i_start = (size_t)start.num_val;
+//	}
+//	if( Executor::args_on_stack > 1 )
+//	{
+//		// end of sub-vector to slice
+//		DevaObject end = ex->stack.back();
+//		ex->stack.pop_back();
+//		if( end.Type() != sym_number )
+//			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
+//		// TODO: length need to be integral values. error if they aren't
+//		i_end = (size_t)end.num_val;
+//	}
+//	if( Executor::args_on_stack > 2 )
+//	{
+//		// 'step' value to slice with
+//		DevaObject step = ex->stack.back();
+//		ex->stack.pop_back();
+//		if( step.Type() != sym_number )
+//			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
+//		// TODO: length need to be integral values. error if they aren't
+//		i_step = (size_t)step.num_val;
+//	}
+//
+//	// vector
+//	if( vec.Type() != sym_vector )
+//		throw DevaICE( "Vector expected in vector built-in method 'slice'." );
+//
+//	size_t sz = vec.vec_val->size();
+//
+//	// default length is the entire vector
+//	if( i_end == -1 )
+//		i_end = sz;
+//
+//	if( i_start >= sz || i_start < 0 )
+//		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
+//	if( i_end > sz || i_end < 0 )
+//		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
+//	if( i_end < i_start )
+//		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
+//	if( i_step < 1 )
+//		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than one." );
+//
+//	// slice the vector
+//	DevaObject ret;
+//	// 'step' is '1' (the default)
+//	if( i_step == 1 )
+//	{
+//		// create a new vector object that is a copy of the 'sub-vector' we're
+//		// looking for
+////		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
+//		DOVector* v = new DOVector( *(vec.vec_val), i_start, i_end );
+//		ret = DevaObject( "", v );
+//	}
+//	// otherwise the vector class doesn't help us, have to do it manually
+//	else
+//	{
+//		DOVector* v = new DOVector();
+//		s_i = 0;
+//		s_step = i_step;
+//		remove_copy_if( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, back_inserter( *v ), if_step );
+//		ret = DevaObject( "", v );
+//	}
+//
+//	// pop the return address
+//	ex->stack.pop_back();
+//
+//	ex->stack.push_back( ret );
+	BuiltinHelper helper( "vector", "slice", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 3, 4 );
+	int num_args = frame->NumArgsPassed();
+	Object* self = helper.GetLocalN( num_args - 1 );
+	helper.ExpectType( self, obj_vector );
 
-	size_t i_start = 0;
-	size_t i_end = -1;
-	size_t i_step = 1;
-	if( Executor::args_on_stack > 0 )
+	Object* value = helper.GetLocalN( 0 );
+
+	int start = 0;
+	int end = -1;
+	int step = 1;
+
+	Object* startobj = helper.GetLocalN( 0 );
+	helper.ExpectIntegralNumber( startobj );
+	start = (int)startobj->d;
+
+	Object* endobj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( endobj );
+	end = (int)endobj->d;
+	
+	if( num_args > 3 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = ex->stack.back();
-		ex->stack.pop_back();
-		// start position
-		if( start.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'slice'." );
-		// TODO: start needs to be integral values. error if they aren't
-		i_start = (size_t)start.num_val;
-	}
-	if( Executor::args_on_stack > 1 )
-	{
-		// end of sub-vector to slice
-		DevaObject end = ex->stack.back();
-		ex->stack.pop_back();
-		if( end.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
-		// TODO: length need to be integral values. error if they aren't
-		i_end = (size_t)end.num_val;
-	}
-	if( Executor::args_on_stack > 2 )
-	{
-		// 'step' value to slice with
-		DevaObject step = ex->stack.back();
-		ex->stack.pop_back();
-		if( step.Type() != sym_number )
-			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
-		// TODO: length need to be integral values. error if they aren't
-		i_step = (size_t)step.num_val;
+		Object* stepobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( stepobj );
+		step = (int)stepobj->d;
 	}
 
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'slice'." );
+	size_t sz = self->v->size();
 
-	size_t sz = vec.vec_val->size();
+	if( end == -1 )
+		end = sz;
 
-	// default length is the entire vector
-	if( i_end == -1 )
-		i_end = sz;
-
-	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
-	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
-	if( i_step < 1 )
-		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than one." );
+	if( start >= sz || start < 0 )
+		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
+	if( end > sz || end < 0 )
+		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
+	if( end < start )
+		throw RuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
+	if( step < 0 )
+		throw RuntimeException( "Invalid 'step' argument in vector built-in method 'slice': must be a positive integral number." );
 
 	// slice the vector
-	DevaObject ret;
-	// 'step' is '1' (the default)
-	if( i_step == 1 )
+	Object ret;
+	// if 'step' is '1' (the default)
+	if( step == 1 )
 	{
 		// create a new vector object that is a copy of the 'sub-vector' we're
 		// looking for
-//		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
-		DOVector* v = new DOVector( *(vec.vec_val), i_start, i_end );
-		ret = DevaObject( "", v );
+		Vector* v = CreateVector( *(self->v), start, end );
+		ret = Object( v );
 	}
 	// otherwise the vector class doesn't help us, have to do it manually
 	else
 	{
-		DOVector* v = new DOVector();
+		Vector* v = CreateVector();
 		s_i = 0;
-		s_step = i_step;
-		remove_copy_if( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, back_inserter( *v ), if_step );
-		ret = DevaObject( "", v );
+		s_step = step;
+		remove_copy_if( self->v->begin() + start, self->v->begin() + end, back_inserter( *v ), if_step );
+		ret = Object( v );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( ret );
+	helper.ReturnVal( ret );
 }
 
 void do_vector_join( Frame *frame )
 {
-	if( Executor::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector built-in method 'join'." );
+	BuiltinHelper helper( "vector", "join", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1, 2 );
+	int num_args = frame->NumArgsPassed();
+	Object* self = helper.GetLocalN( num_args - 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'join'." );
-
-	string sep;
-	if( Executor::args_on_stack == 1 )
+	const char* separator = "";
+	if( num_args == 2 )
 	{
-		// optional 'separator' arg
-		DevaObject val = ex->stack.back();
-		ex->stack.pop_back();
-
-		DevaObject* o;
-		if( val.Type() == sym_unknown )
-		{
-			o = ex->find_symbol( val );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
-		}
-		else
-			o = &val;
-		if( o->Type() != sym_string )
-			throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
-
-		sep = o->str_val;
+		Object* sep = helper.GetLocalN( 0 );
+		helper.ExpectType( sep, obj_string );
+		separator = sep->s;
 	}
-	else
-		sep = "";
 
+	// build the return string
 	string ret;
-	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		ostringstream s;
-		if( i != vec.vec_val->begin() )
-			s << sep;
+		if( i != self->v->begin() )
+			s << separator;
 		s << *i;
 		ret += s.str();
 	}
+	// add the string to the parent frame
+	char* s = copystr( ret.c_str() );
+	frame->GetParent()->AddString( s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( s ) );
 }
-*/
 
 // 'enumerable interface'
 void do_vector_rewind( Frame *frame )
