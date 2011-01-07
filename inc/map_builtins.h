@@ -48,12 +48,12 @@ namespace deva
 
 // pre-decls for builtin executors
 void do_map_length( Frame *frame );
-//void do_map_copy( Frame *frame );
-//void do_map_remove( Frame *frame );
-//void do_map_find( Frame *frame );
-//void do_map_keys( Frame *frame );
-//void do_map_values( Frame *frame );
-//void do_map_merge( Frame *frame );
+void do_map_copy( Frame *frame );
+void do_map_remove( Frame *frame );
+void do_map_find( Frame *frame );
+void do_map_keys( Frame *frame );
+void do_map_values( Frame *frame );
+void do_map_merge( Frame *frame );
 void do_map_rewind( Frame *frame );
 void do_map_next( Frame *frame );
 
@@ -62,12 +62,12 @@ void do_map_next( Frame *frame );
 static const string map_builtin_names[] = 
 {
 	string( "length" ),
-//	string( "copy" ),
-//	string( "remove" ),
-//	string( "find" ),
-//	string( "keys" ),
-//	string( "values" ),
-//	string( "merge" ),
+	string( "copy" ),
+	string( "remove" ),
+	string( "find" ),
+	string( "keys" ),
+	string( "values" ),
+	string( "merge" ),
 	string( "rewind" ),
 	string( "next" ),
 };
@@ -75,12 +75,12 @@ static const string map_builtin_names[] =
 static NativeFunctionPtr map_builtin_fcns[] = 
 {
 	do_map_length,
-//	do_map_copy,
-//	do_map_remove,
-//	do_map_find,
-//	do_map_keys,
-//	do_map_values,
-//	do_map_merge,
+	do_map_copy,
+	do_map_remove,
+	do_map_find,
+	do_map_keys,
+	do_map_values,
+	do_map_merge,
 	do_map_rewind,
 	do_map_next,
 };

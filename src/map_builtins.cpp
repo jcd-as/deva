@@ -87,10 +87,10 @@ void do_map_length( Frame *frame )
 	BuiltinHelper helper( "map", "length", frame );
 
 	helper.CheckNumberOfArguments( 1 );
-	Object* po = helper.GetLocalN( 0 );
-	helper.ExpectMapType( po );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectMapType( self );
 
-	int len = po->m->size();
+	int len = self->m->size();
 
 	helper.ReturnVal( Object( (double)len ) );
 }
@@ -98,27 +98,27 @@ void do_map_length( Frame *frame )
 // 'enumerable interface'
 void do_map_rewind( Frame *frame )
 {
-	BuiltinHelper helper( "vector", "rewind", frame );
+	BuiltinHelper helper( "map", "rewind", frame );
 
 	helper.CheckNumberOfArguments( 1 );
-	Object* po = helper.GetLocalN( 0 );
-	helper.ExpectMapType( po );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectMapType( self );
 
-	po->m->index = 0;
+	self->m->index = 0;
 
 	helper.ReturnVal( Object( obj_null ) );
 }
 
 void do_map_next( Frame *frame )
 {
-	BuiltinHelper helper( "map", "rewind", frame );
+	BuiltinHelper helper( "map", "next", frame );
 
 	helper.CheckNumberOfArguments( 1 );
-	Object* po = helper.GetLocalN( 0 );
-	helper.ExpectMapType( po );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectMapType( self );
 
-	size_t idx = po->m->index;
-	size_t size = po->m->size();
+	size_t idx = self->m->index;
+	size_t size = self->m->size();
 	bool last = (idx == size);
 
 	// return a vector with the first item being a boolean indicating whether
@@ -130,22 +130,18 @@ void do_map_next( Frame *frame )
 	// if we have an object, return true and the objects
 	if( !last )
 	{
-//		Object out = po->v->operator[]( po->v->index );
-//		ret->push_back( Object( true ) );
-//		ret->push_back( out );
-
 		Vector* key_val = CreateVector();
 
 		// get the value from the map
-		if( idx >= po->m->size() )
+		if( idx >= self->m->size() )
 			throw ICE( "Index out-of-range in Map built-in method 'next'." );
 		Map::iterator it;
 		// this loop is equivalent of "it = mp->begin() + idx;" 
 		// (which is required because map iterators don't support the + op)
-		it = po->m->begin();
+		it = self->m->begin();
 		for( int i = 0; i < idx; ++i ) ++it;
 
-		if( it == po->m->end() )
+		if( it == self->m->end() )
 			throw ICE( "Index out-of-range in Map built-in method 'next'." );
 
 		pair<Object, Object> p = *it;
@@ -163,295 +159,178 @@ void do_map_next( Frame *frame )
 	}
 
 	// move to the next item
-	po->m->index++;
+	self->m->index++;
 
 	helper.ReturnVal( Object( ret ) );
 }
 
-/*
-
-void do_map_copy( Executor *ex )
+void do_map_copy( Frame* frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'copy' built-in method." );
+//	if( Executor::args_on_stack != 0 )
+//		throw DevaRuntimeException( "Incorrect number of arguments to map 'copy' built-in method." );
+//
+//	// get the map object off the top of the stack
+//	DevaObject mp = ex->stack.back();
+//	ex->stack.pop_back();
+//
+//	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+//		throw DevaICE( "Map, class or instance expected in map built-in method 'copy'." );
+//
+//	DevaObject copy;
+//	// create a new map object that is a copy of the one we received,
+//	DOMap* m = new DOMap( *(mp.map_val) );
+//	if( mp.Type() == sym_map )
+//		copy = DevaObject( "", m );
+//	else if( mp.Type() == sym_class )
+//		copy = DevaObject::ClassFromMap( "", m );
+//	else if( mp.Type() == sym_instance )
+//		copy = DevaObject::InstanceFromMap( "", m );
+//
+//	// pop the return address
+//	ex->stack.pop_back();
+//
+//	// return the copy
+//	ex->stack.push_back( copy );
+	BuiltinHelper helper( "map", "copy", frame );
 
-	// get the map object off the top of the stack
-	DevaObject mp = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectMapType( self );
 
-	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'copy'." );
+	Object copy;
+	Map* m = CreateMap( *self->m );
+	if( self->type == obj_map )
+		copy = Object( m );
+	else if( self->type == obj_class )
+		copy = Object::CreateClass( m );
+	else if( self->type == obj_instance )
+		copy = Object::CreateInstance( m );
 
-	DevaObject copy;
-	// create a new map object that is a copy of the one we received,
-	DOMap* m = new DOMap( *(mp.map_val) );
-	if( mp.Type() == sym_map )
-		copy = DevaObject( "", m );
-	else if( mp.Type() == sym_class )
-		copy = DevaObject::ClassFromMap( "", m );
-	else if( mp.Type() == sym_instance )
-		copy = DevaObject::InstanceFromMap( "", m );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( copy );
+	helper.ReturnVal( copy );
 }
 
-void do_map_remove( Executor *ex )
+void do_map_remove( Frame* frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'remove' built-in method." );
+	BuiltinHelper helper( "map", "remove", frame );
 
-	// get the map object off the top of the stack
-	DevaObject map = ex->stack.back();
-	ex->stack.pop_back();
-
-	// key of item to remove is next on stack
-	DevaObject key = ex->stack.back();
-	ex->stack.pop_back();
-
-	// map
-	if( map.Type() != sym_map && map.Type() != sym_class && map.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'remove'." );
-
-	// key
-	DevaObject* o;
-	if( key.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( key );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'key' argument in map built-in method 'find'." );
-	}
-	else
-		o = &key;
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	helper.ExpectMapType( self );
+	Object* o = helper.GetLocalN( 0 );
 
 	// remove the value
-	map.map_val->erase( *o );
+	self->m->erase( *o );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_map_find( Executor *ex )
+void do_map_find( Frame* frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'find' built-in method." );
+	BuiltinHelper helper( "map", "find", frame );
 
-	// get the map object off the top of the stack
-	DevaObject mp = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	helper.ExpectMapType( self );
+	Object* o = helper.GetLocalN( 0 );
 
-	// key is next on stack
-	DevaObject key = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// map
-	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'find'." );
-
-	// key
-	DevaObject* o;
-	if( key.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( key );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'key' argument in map built-in method 'find'." );
-	}
+	Object ret;
+	Map::iterator it = self->m->find( *o );
+	if( it == self->m->end() )
+		ret = Object( obj_null );
 	else
-		o = &key;
+		ret = Object( it->second );
 
-	DevaObject ret;
-	DOMap::iterator it = mp.map_val->find( *o );
-	if( it == mp.map_val->end() )
-		ret = DevaObject( "", sym_null );
-	else
-		ret = DevaObject( it->second );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( ret );
+	helper.ReturnVal( ret );
 }
 
-void do_map_keys( Executor *ex )
+void do_map_keys( Frame* frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'keys' built-in method." );
+	BuiltinHelper helper( "map", "keys", frame );
 
-	// get the map object off the top of the stack
-	DevaObject mp = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 ); // self = (frame->NumArgsPassed() - 1)th local
+	helper.ExpectMapType( self );
 
-	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'keys'." );
-
-	size_t sz = mp.map_val->size();
-	DOVector* v = new DOVector();
+	size_t sz = self->m->size();
+	Vector* v = CreateVector();
 	v->reserve( sz );
 	// for each pair<> element in the map
-	for( DOMap::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
+	for( Map::iterator i = self->m->begin(); i != self->m->end(); ++i )
 	{
 		// add the key for this element
-		v->push_back( DevaObject( "", i->first ) );
+		v->push_back( Object( i->first ) );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the vector of keys
-	ex->stack.push_back( DevaObject( "", v ) );
+	helper.ReturnVal( Object( v ) );
 }
 
-void do_map_values( Executor *ex )
+void do_map_values( Frame* frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'values' built-in method." );
+	BuiltinHelper helper( "map", "values", frame );
 
-	// get the map object off the top of the stack
-	DevaObject mp = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 ); // self = (frame->NumArgsPassed() - 1)th local
+	helper.ExpectMapType( self );
 
-	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'keys'." );
-
-	size_t sz = mp.map_val->size();
-	DOVector* v = new DOVector();
+	size_t sz = self->m->size();
+	Vector* v = CreateVector();
 	v->reserve( sz );
 	// for each pair<> element in the map
-	for( DOMap::iterator i = mp.map_val->begin(); i != mp.map_val->end(); ++i )
+	for( Map::iterator i = self->m->begin(); i != self->m->end(); ++i )
 	{
-		// add the value of this element
-		v->push_back( i->second );
+		// add the key for this element
+		v->push_back( Object( i->second ) );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the vector of values
-	ex->stack.push_back( DevaObject( "", v ) );
+	helper.ReturnVal( Object( v ) );
 }
 
-void do_map_merge( Executor *ex )
+void do_map_merge( Frame* frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to map 'merge' built-in method." );
+//	if( Executor::args_on_stack != 1 )
+//		throw DevaRuntimeException( "Incorrect number of arguments to map 'merge' built-in method." );
+//
+//	// get the map object off the top of the stack
+//	DevaObject mp = ex->stack.back();
+//	ex->stack.pop_back();
+//
+//	// val is next on stack
+//	DevaObject val = ex->stack.back();
+//	ex->stack.pop_back();
+//	
+//	// map
+//	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
+//		throw DevaICE( "Map, class or instance expected in map built-in method 'merge'." );
+//
+//	// val (map to merge in)
+//	DevaObject* o;
+//	if( val.Type() == sym_unknown )
+//	{
+//		o = ex->find_symbol( val );
+//		if( !o )
+//			throw DevaRuntimeException( "Symbol not found for the 'source' argument in map built-in method 'merge'." );
+//	}
+//	else
+//		o = &val;
+//
+//	mp.map_val->insert( o->map_val->begin(), o->map_val->end() );
+//
+//	// pop the return address
+//	ex->stack.pop_back();
+//
+//	// all fcns return *something*
+//	ex->stack.push_back( DevaObject( "", sym_null ) );
+	BuiltinHelper helper( "map", "merge", frame );
 
-	// get the map object off the top of the stack
-	DevaObject mp = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	helper.ExpectMapType( self );
+	Object* o = helper.GetLocalN( 0 );
 
-	// val is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// map
-	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-		throw DevaICE( "Map, class or instance expected in map built-in method 'merge'." );
+	self->m->insert( o->m->begin(), o->m->end() );
 
-	// val (map to merge in)
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'source' argument in map built-in method 'merge'." );
-	}
-	else
-		o = &val;
-
-	mp.map_val->insert( o->map_val->begin(), o->map_val->end() );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-
-// 'enumerable interface'
-void do_map_rewind( Executor *ex )
-{
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Map built-in method 'rewind' takes no arguments." );
-
-	// get the map object off the top of the stack
-	DevaObject map_obj = get_this( ex, "rewind", sym_map, true );
-
-	smart_ptr<DOMap> mp = map_obj.map_val;
-	mp->index = 0;
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push a null value onto the stack
-	ex->stack.push_back( DevaObject( "", sym_null ) );
-}
-
-void do_map_next( Executor *ex )
-{
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Map built-in method 'next' takes no arguments." );
-
-	// get the map object off the top of the stack
-	DevaObject map_obj = get_this( ex, "next", sym_map, true );
-	smart_ptr<DOMap> mp = map_obj.map_val;
-
-	size_t idx = mp->index;
-	size_t size = mp->size();
-	bool last = (idx == size);
-
-	// return a map with the first item being a boolean indicating whether
-	// there are more items or not (i.e. returns false when done enumerating)
-	// and the second item is the key,value pair as a vector 
-	// (or null if we're done enumerating)
-
-	DOVector* ret = new DOVector();
-
-	// if we have an object, return true and the object
-	if( !last )
-	{
-		DOVector* key_val = new DOVector();
-
-		// get the value from the map
-		if( idx >= mp->size() )
-			throw DevaICE( "Index out-of-range in Map built-in method 'next'." );
-		DOMap::iterator it;
-		// this loop is equivalent of "it = mp->begin() + idx;" 
-		// (which is required because map iterators don't support the + op)
-		it = mp->begin();
-		for( int i = 0; i < idx; ++i ) ++it;
-
-		if( it == mp->end() )
-			throw DevaICE( "Index out-of-range in Map built-in method 'next'." );
-
-		pair<DevaObject, DevaObject> p = *it;
-
-		key_val->push_back( p.first );
-		key_val->push_back( p.second );
-		ret->push_back( DevaObject( "", true ) );
-		ret->push_back( DevaObject( "", key_val ) );
-	}
-	// otherwise return false and null
-	else
-	{
-		ret->push_back( DevaObject( "", false ) );
-		ret->push_back( DevaObject( "", sym_null ) );
-	}
-
-	// move to the next item
-	mp->index++;
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( DevaObject( "", ret ) );
-}
-*/
 
 } // end namespace deva
