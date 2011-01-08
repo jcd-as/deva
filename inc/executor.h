@@ -37,6 +37,11 @@
 #include "ordered_set.h"
 #include "exceptions.h"
 #include "util.h"
+#include "scopetable.h"
+#include "frame.h"
+#include "builtins.h"
+#include "vector_builtins.h"
+#include "map_builtins.h"
 
 #include <vector>
 
@@ -46,178 +51,6 @@ using namespace std;
 namespace deva
 {
 
-
-// TODO: move these into their own file??
-class Scope
-{
-	// pointers to locals (actual objects stored in the frame, but the scope
-	// controls freeing objects when they go out of scope)
-	// TODO: switch to boost unordered map (hash table)??
-	map<string, Object*> data;
-
-public:
-	Scope() {}
-	~Scope()
-	{
-		// release-ref the vectors/maps and
-		// 'zero' out the locals non-ref types, to error out in case they get 
-		// accidentally used after they should be gone
-		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
-		{
-			if( IsRefType( i->second->type ) )
-				DecRef( *(i->second) );
-			else
-				*(i->second) = Object();
-		}
-	}
-	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
-	void AddSymbol( string name, Object* ob )
-	{
-		data.insert( pair<string, Object*>(string(name), ob) );
-	}
-	Object* FindSymbol( const char* name ) const
-	{
-		// check locals
-		map<string, Object*>::const_iterator i = data.find( string(name) );
-		if( i == data.end() )
-			return NULL;
-		else return i->second;
-	}
-	const char* FindSymbolName( Object* o )
-	{
-		// check locals
-		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
-		{
-			if( *(i->second) == *o )
-				return i->first.c_str();
-		}
-		return NULL;
-	}
-};
-
-class ScopeTable
-{
-	vector<Scope*> data;
-
-public:
-	~ScopeTable()
-	{
-		// more than one scope (global scope)??
-		if( data.size() > 1 )
-			throw ICE( "Scope table not empty at exit." );
-		if( data.size() == 1 )
-			delete data.back();
-	}
-	inline void PushScope( Scope* s ) { data.push_back( s ); }
-	inline void PopScope() { delete data.back(); data.pop_back(); }
-	inline Scope* CurrentScope() const { return data.back(); }
-	inline Scope* At( size_t idx ) const { return data[idx]; }
-	Object* FindSymbol( const char* name ) const
-	{
-		// TODO: full look-up logic: ???
-		// builtins(???), module names, functions(???)
-		//
-		// look in each scope
-		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
-		{
-			// check for the symbol
-			Object* o = (*i)->FindSymbol( name );
-			if( o )
-				return o;
-		}
-		return NULL;
-	}
-	const char* FindSymbolName( Object* o )
-	{
-		// TODO: full look-up logic: ???
-		// builtins(???), module names, functions(???)
-		//
-		// look in each scope
-		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
-		{
-			// check for the symbol
-			const char* n = (*i)->FindSymbolName( o );
-			if( n )
-				return n;
-		}
-		return NULL;
-	}
-};
-
-
-// TODO: move this into its own file??
-class Frame
-{
-	Frame* parent;
-
-	union
-	{
-		Function* function;
-		NativeFunction native_function;
-	};
-	bool is_native;
-	// array of locals (including args at front of array):
-	Object* locals;
-
-	// string data that the locals in this frame point to (i.e. non-constant
-	// strings that are created by actions in the executor)
-	vector<char*> strings;
-
-	// number of arguments actually passed to the call
-	int num_args;
-
-	// return address
-	dword addr;
-	
-	// pointer at the scopes so symbols can be resolved from the frame object
-	ScopeTable* scopes;
-
-	// TODO: what else? debugging info?
-	
-public:
-	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, Function* f/*, void* self = NULL*/ ) : 
-		parent( p ),
-		scopes( s ),
-		function( f ), 
-		is_native( false ), 
-		num_args( args_passed ), 
-		addr( loc )
-		{ locals = new Object[f->num_locals]; }
-	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
-		parent( p ),
-		scopes( s ),
-		native_function( f ), 
-		is_native( true ), 
-		num_args( args_passed ), 
-		addr( loc )
-		{ locals = new Object[args_passed]; }
-	~Frame()
-	{
-		// free the local strings
-		for( vector<char*>::iterator i = strings.begin(); i != strings.end(); ++i )
-		{
-			delete [] *i;
-		}
-		// free the locals array storage
-		delete [] locals;
-	}
-	inline Frame* GetParent() { return parent; }
-	inline bool IsNative() const { return is_native; }
-	inline Function* GetFunction() const { return (is_native ? NULL : function ); }
-	inline const NativeFunction GetNativeFunction() const { NativeFunction nf; nf.p=NULL; nf.is_method=false; return (is_native ? native_function : nf ); }
-	inline Object GetLocal( int i ) const { return locals[i]; }
-	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
-	inline void SetLocal( int i, Object o ) { locals[i] = o; }
-	inline dword GetReturnAddress() const { return addr; }
-	inline int NumArgsPassed() const { return num_args; }
-	inline void AddString( char* s ) { strings.push_back( s ); }
-	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }
-
-	// resolve symbols through the scope table
-	inline Object* FindSymbol( const char* name ) const { return scopes->FindSymbol( name ); }
-	// find a symbol's name
-	inline const char* FindSymbolName( Object* o ) { return scopes->FindSymbolName( o ); }
-};
 
 struct Code
 {
@@ -229,7 +62,13 @@ struct Code
 
 class Executor
 {
+	// current instruction pointer (current code)
 	byte* ip;
+	// current base pointer (module base)
+	byte* bp;
+	// end of current code block
+	byte* end;
+	// list of code blocks (modules, eval'd blocks)
 	vector<Code> code_blocks;
 
 	// call stack
@@ -244,10 +83,7 @@ class Executor
 	ScopeTable* scopes;
 
 	// set of function objects
-	map<string, Function*> functions;
-
-	// native fcns/builtins
-	map<string, NativeFunction> builtins;
+	map<string, Object*> functions;
 
 	// set of constants (including all names)
 	OrderedSet<Object> constants;
@@ -264,6 +100,7 @@ public:
 	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
 	inline Scope* GlobalScope() { return scopes->At( 0 ); }
 	inline Frame* CurrentFrame() { return callstack.back(); }
+	inline Frame* MainFrame() { return callstack[0]; }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
 	inline void PopFrame() { delete callstack.back(); callstack.pop_back(); }
@@ -280,8 +117,8 @@ public:
 	// helpers
 	// TODO: adding a fcn whose name already exists should *override* the
 	// existing fcn (map's behaviour is to not accept the new value)
-	inline void AddFunction( Function* f ) { functions.insert( pair<string, Function*>( f->name, f ) ); }
-	inline Function* FindFunction( string name ) { map<string, Function*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
+	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
+	inline Object* FindFunction( string name ) { map<string, Object*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
 
 	// constant pool handling methods
 	inline bool AddConstant( Object o ) { return constants.Add( o ); }
@@ -289,13 +126,12 @@ public:
 	inline Object GetConstant( int idx ) { return constants.At(idx); }
 	inline size_t NumConstants() { return constants.Size(); }
 
-	// builtin handling methods
-	void AddBuiltins();
-	void AddBuiltin( const string name, NativeFunction fcn );
-	NativeFunction FindBuiltin( string name );
-
 	// code execution methods:
 	void ExecuteCode( const Code & code );
+	Opcode ExecuteInstruction();
+	void ExecuteToReturn();
+	void ExecuteFunction( Function* f, int num_args );
+	void ExecuteFunction( NativeFunction f, int num_args );
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream

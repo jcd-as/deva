@@ -295,47 +295,41 @@ ostream & operator << ( ostream & os, Object & obj )
 				os << "native function = " << (void*)obj.nf.p;
 			break;
 		case obj_class:
-			os << "class";
-//			os << "class: '" << obj.name << "' = {";
-//			{
-//			// TODO: dump map contents
-//			smart_ptr<DOMap> mp( obj.map_val );
-//			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
-//			{
-//				Object key = (*it).first;
-//				Object val = (*it).second;
-//				prettify_strings = true;
-//				os << key << ":";
-//				prettify_strings = true;
-//				os << val;
-//				prettify_strings = false;
-//				if( ++it != mp->end() )
-//					os << ", ";
-//			}
-//			os << "}";
+			os << "class: ";
+			// dump map contents
+			os << "{";
+			for( Map::iterator it = obj.m->begin(); it != obj.m->end(); )
+			{
+				Object key = (*it).first;
+				Object val = (*it).second;
+				prettify_strings = true;
+				os << key << ":";
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
+				if( ++it != obj.m->end() )
+					os << ", ";
+			}
+			os << "}";
 			break;
-//			}
 		case obj_instance:
-			os << "instance";
-//			os << "instance: '" << obj.name << "' = {";
-//			{
-//			// TODO: dump map contents
-//			smart_ptr<DOMap> mp( obj.map_val );
-//			for( DOMap::iterator it = mp->begin(); it != mp->end(); )
-//			{
-//				Object key = (*it).first;
-//				Object val = (*it).second;
-//				prettify_strings = true;
-//				os << key << ":";
-//				prettify_strings = true;
-//				os << val;
-//				prettify_strings = false;
-//				if( ++it != mp->end() )
-//					os << ", ";
-//			}
-//			os << "}";
+			os << "instance: ";
+			// dump map contents
+			os << "{";
+			for( Map::iterator it = obj.m->begin(); it != obj.m->end(); )
+			{
+				Object key = (*it).first;
+				Object val = (*it).second;
+				prettify_strings = true;
+				os << key << ":";
+				prettify_strings = true;
+				os << val;
+				prettify_strings = false;
+				if( ++it != obj.m->end() )
+					os << ", ";
+			}
+			os << "}";
 			break;
-//			}
 		default:
 			os << "ERROR: unknown type";
 	}

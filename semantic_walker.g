@@ -90,8 +90,9 @@ func_decl[char* classname]
 	
 class_decl 
 	:	^(Class id=ID 
-		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id) ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
-		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
+		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
+//		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
+		(^(Base_classes ID*)) func_decl[(char*)$id.text->chars]*)
 	;
 
 while_statement 
@@ -192,10 +193,6 @@ exp[bool invert]
 	;
 
 call_exp
-//@init { semantics->making_call = true; }
-//	:	^(Call exp[false] { semantics->making_call = false; }
-//			^(ArgList exp[false]*)
-//		)
 	:	^(Call 
 			^(ArgList exp[false]*) { semantics->making_call = true; }
 			exp[false]
@@ -203,6 +200,8 @@ call_exp
 	;
 
 key_exp
+@init { semantics->in_map_key = true; }
+@after { semantics->in_map_key = false; }
 	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false] { semantics->CheckKeyExp( $idx1.start, $idx2.start, $idx3.start ); }
 	|	(idx idx)=> idx1=idx idx2=idx { semantics->CheckKeyExp( $idx1.start, $idx2.start ); }
 	|	idx1=idx { semantics->CheckKeyExp( $idx1.start ); }
@@ -235,7 +234,6 @@ map_op
 	;
 
 map_item 
-//	:	^(Pair exp[false] exp[false])
 	:	^(Pair map_key[false] exp[false])
 	;
 

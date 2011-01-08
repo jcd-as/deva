@@ -31,7 +31,8 @@
 #ifndef __MAP_BUILTINS_H__ 
 #define __MAP_BUILTINS_H__
 
-#include "executor.h"
+//#include "executor.h"
+#include "object.h"
 #include <string>
 
 using namespace std;
@@ -45,6 +46,8 @@ namespace deva
 // 1) add a new fcn to the builtin_names and builtin_fcns arrays below
 // 2) implement the function in this file
 
+// pre-decls:
+class Frame;
 
 // pre-decls for builtin executors
 void do_map_length( Frame *frame );
@@ -84,6 +87,18 @@ static NativeFunctionPtr map_builtin_fcns[] =
 	do_map_rewind,
 	do_map_next,
 };
+static Object map_builtin_fcn_objs[] = 
+{
+	Object( do_map_length ),
+	Object( do_map_copy ),
+	Object( do_map_remove ),
+	Object( do_map_find ),
+	Object( do_map_keys ),
+	Object( do_map_values ),
+	Object( do_map_merge ),
+	Object( do_map_rewind ),
+	Object( do_map_next ),
+};
 const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builtin_names[0] );
 
 // is a given name a builtin function?
@@ -91,6 +106,9 @@ bool IsMapBuiltin( const string & name );
 
 // get the native function ptr
 NativeFunction GetMapBuiltin( const string & name );
+
+// get the Object* for a builtin
+Object* GetMapBuiltinObjectRef( const string & name );
 
 } // end namespace deva
 

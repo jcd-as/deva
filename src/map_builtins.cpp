@@ -76,6 +76,28 @@ NativeFunction GetMapBuiltin( const string & name )
 	}
 }
 
+// get the Object* for a builtin
+Object* GetMapBuiltinObjectRef( const string & name )
+{
+	const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
+	if( i == map_builtin_names + num_of_map_builtins )
+	{
+		return NULL;
+	}
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&map_builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_map_builtins )
+	{
+		return NULL;
+	}
+	else
+	{
+		// return the function
+		return &map_builtin_fcn_objs[idx];
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // map builtins

@@ -76,6 +76,28 @@ NativeFunction GetVectorBuiltin( const string & name )
 	}
 }
 
+Object* GetVectorBuiltinObjectRef( const string & name )
+{
+	const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
+	if( i == vector_builtin_names + num_of_vector_builtins )
+	{
+		return NULL;
+	}
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&vector_builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_vector_builtins )
+	{
+		return NULL;
+	}
+	else
+	{
+		// return the function object
+		return &vector_builtin_fcn_objs[idx];
+	}
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // vector builtins
@@ -521,508 +543,320 @@ void do_vector_sort( Frame *frame )
 	helper.ReturnVal( Object( obj_null ) );
 }
 
-/*
+
 void do_vector_map( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'map' built-in method." );
+	BuiltinHelper helper( "vector", "map", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// function value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'map'." );
+	Object* o = helper.GetLocalN( 0 );
 
-	// function value
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'map'." );
-	}
-	else
-		o = &val;
-
-	// check fcn value
-	if( o->Type() != sym_address )
-		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'map'." );
-
-	// TODO: (a built-in will be of type sym_unknown)
+	helper.ExpectTypes( o, obj_function, obj_native_function );
 
 	// return vector
-	DOVector* ret = new DOVector();
-	ret->reserve( vec.vec_val->size() );
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
-	// handle 'class methods' ('static' methods in c++ lingo)
-	// the "@" sign in the fcn name indicates it is a method
-	// get the lhs and rhs of the "@" (method & object)
+	// TODO:
+	// handle instance and class methods 
+
 	bool is_method = false;
-	string fcn, object;
-	DevaObject* ob_ptr;
-	size_t idx = o->name.find( "@" );
-	if( idx != string::npos )
-	{
-		is_method = true;
 
-		fcn.assign( o->name, 0, idx );
-		// TODO: ensure idx + 1 < o->name.length()
-		object.assign( o->name, idx + 1, o->name.length() );
-
-		// find the object in the current scope
-		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
-		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'map'." );
-		// TODO: how to ensure object is a class, not an instance??
-		// (the ob_ptr will always point to a sym_class object at this point)
-	}
+	if( o->type == obj_function )
+		is_method = o->f->IsMethod();
+	else if( o->type == obj_native_function )
+		is_method = o->nf.is_method;
 
 	// walk each item in the vector
-	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
-		ex->stack.push_back( *i );
-		// push 'self', for methods
-		if( is_method )
-		{
-			// push the object ("self") first
-			ex->stack.push_back( *ob_ptr );
-		}
+		ex->PushStack( *i );
+		// TODO: push 'self', for methods
+//		if( is_method )
+//		{
+//			// push the object ("self") first
+//			ex->PushStack( *self );
+//		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
-		if( is_method )
-			ex->ExecuteDevaFunction( o->name, 2 );
-		else
-			ex->ExecuteDevaFunction( o->name, 1 );
+		if( o->type == obj_function )
+			ex->ExecuteFunction( o->f, 1 );
+		else if( o->type == obj_native_function )
+			ex->ExecuteFunction( o->nf, 1 );
 		// get the result (return value) and push it onto our return collection
-		DevaObject retval = ex->stack.back();
-		ex->stack.pop_back();
+		Object retval = ex->PopStack();
+		// if we got a string back, we need to allocate a copy in our parent's
+		// frame so it doesn't get deleted when we return
+		if( retval.type == obj_string )
+		{
+			const char* str = frame->GetParent()->AddString( string( retval.s ) );
+			retval.s = const_cast<char*>(str);
+		}
 		ret->push_back( retval );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting vector
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_vector_filter( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'filter' built-in method." );
+	BuiltinHelper helper( "vector", "filter", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// function value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'filter'." );
+	Object* o = helper.GetLocalN( 0 );
 
-	// function value
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'filter'." );
-	}
-	else
-		o = &val;
-
-	// check fcn value
-	if( o->Type() != sym_address )
-		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'filter'." );
-
-	// TODO: (a built-in will be of type sym_unknown)
+	helper.ExpectTypes( o, obj_function, obj_native_function );
 
 	// return vector
-	DOVector* ret = new DOVector();
-	// TODO: should the return vector be allocated as the FULL size of the input
-	// vector? we know we're calling it to possibly filter out some items...
-	// maybe it should start at *half* the size? or maybe just the default with
-	// no extra space reserved??
-	ret->reserve( vec.vec_val->size() );
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
-	// handle 'class methods' ('static' methods in c++ lingo)
-	// the "@" sign in the fcn name indicates it is a method
-	// get the lhs and rhs of the "@" (method & object)
+	// TODO:
+	// handle instance and class methods 
+
 	bool is_method = false;
-	string fcn, object;
-	DevaObject* ob_ptr;
-	size_t idx = o->name.find( "@" );
-	if( idx != string::npos )
-	{
-		is_method = true;
 
-		fcn.assign( o->name, 0, idx );
-		// TODO: ensure idx + 1 < o->name.length()
-		object.assign( o->name, idx + 1, o->name.length() );
-
-		// find the object in the current scope
-		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
-		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'filter'." );
-		// TODO: how to ensure object is a class, not an instance??
-		// (the ob_ptr will always point to a sym_class object at this point)
-	}
+	if( o->type == obj_function )
+		is_method = o->f->IsMethod();
+	else if( o->type == obj_native_function )
+		is_method = o->nf.is_method;
 
 	// walk each item in the vector
-	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
-		ex->stack.push_back( *i );
-		// push 'self' for methods
-		if( is_method )
-		{
-			// push the object ("self") first
-			ex->stack.push_back( *ob_ptr );
-		}
-		// call the function given (*must* be a single arg fcn to be used with filter
+		ex->PushStack( *i );
+		// TODO: push 'self', for methods
+//		if( is_method )
+//		{
+//			// push the object ("self") first
+//			ex->PushStack( *self );
+//		}
+		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
-		if( is_method )
-			ex->ExecuteDevaFunction( o->name, 2 );
-		else
-			ex->ExecuteDevaFunction( o->name, 1 );
-		// get the result (return value) and push it onto our return collection
-		DevaObject retval = ex->stack.back();
-		ex->stack.pop_back();
-		// only add this item to the returned vector if the function returned a
-		// 'true' value
-		if( ex->evaluate_object_as_boolean( retval ) )
+		if( o->type == obj_function )
+			ex->ExecuteFunction( o->f, 1 );
+		else if( o->type == obj_native_function )
+			ex->ExecuteFunction( o->nf, 1 );
+		// get the result (return value), but only add this item to the returned 
+		// vector if the function returned a 'true' value
+		Object retval = ex->PopStack();
+		if( retval.CoerceToBool() )
+		{
+			// if we got a string, we need to allocate a copy in our parent's
+			// frame so it doesn't get deleted when we return
+			if( i->type == obj_string )
+			{
+				const char* str = frame->GetParent()->AddString( string( i->s ) );
+				i->s = const_cast<char*>(str);
+			}
 			ret->push_back( *i );
+		}
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting vector
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_vector_reduce( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'reduce' built-in method." );
+	BuiltinHelper helper( "vector", "reduce", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// function value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'reduce'." );
-	if( vec.vec_val->size() < 2 )
-		throw DevaRuntimeException( "Vector built-in method 'reduce' requires a vector with at least two elements." );
+	Object* o = helper.GetLocalN( 0 );
 
-	// function value
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'reduce'." );
-	}
-	else
-		o = &val;
+	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// check fcn value
-	if( o->Type() != sym_address )
-		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'reduce'." );
+	// return vector
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
-	// TODO: (a built-in will be of type sym_unknown)
+	// TODO:
+	// handle instance and class methods 
 
-	// handle 'class methods' ('static' methods in c++ lingo)
-	// the "@" sign in the fcn name indicates it is a method
-	// e.g. 'method@class'. BUT...we need the instance object!
-	// get the lhs and rhs of the "@" (method & object)
 	bool is_method = false;
-	string fcn, object;
-	DevaObject* ob_ptr;
-	size_t idx = o->name.find( "@" );
-	if( idx != string::npos )
-	{
-		is_method = true;
 
-		fcn.assign( o->name, 0, idx );
-		// TODO: ensure idx + 1 < o->name.length()
-		object.assign( o->name, idx + 1, o->name.length() );
-
-		// find the object in the current scope
-		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
-		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'reduce'." );
-		// TODO: how to ensure object is a class, not an instance??
-		// (the ob_ptr will always point to a sym_class object at this point)
-	}
+	if( o->type == obj_function )
+		is_method = o->f->IsMethod();
+	else if( o->type == obj_native_function )
+		is_method = o->nf.is_method;
 
 	// first iteration uses the first two items in the vector
-	ex->stack.push_back( vec.vec_val->at( 1 ) );
-	ex->stack.push_back( vec.vec_val->at( 0 ) );
-	// push 'self'
-	if( is_method )
-	{
-		// push the object ("self") first
-		ex->stack.push_back( *ob_ptr );
-	}
-	// call the deva function
-	if( is_method )
-		ex->ExecuteDevaFunction( o->name, 3 );
-	else
-		ex->ExecuteDevaFunction( o->name, 2 );
-	DevaObject retval = ex->stack.back();
-	ex->stack.pop_back();
+	ex->PushStack( self->v->operator[]( 1 ) );
+	ex->PushStack( self->v->operator[]( 0 ) );
+	// TODO: push 'self'
+//	if( is_method )
+//	{
+//		// push the object ("self") first
+//		ex->stack.push_back( *ob_ptr );
+//	}
+	// call the function
+	if( o->type == obj_function )
+		ex->ExecuteFunction( o->f, 2 );
+	else if( o->type == obj_native_function )
+		ex->ExecuteFunction( o->nf, 2 );
+	Object retval = ex->PopStack();
 	// walk the rest of the items in the vector
-	if( vec.vec_val->size() > 2 )
+	if( self->v->size() > 2 )
 	{
-		for( DOVector::iterator i = vec.vec_val->begin()+2; i != vec.vec_val->end(); ++i )
+		for( Vector::iterator i = self->v->begin()+2; i != self->v->end(); ++i )
 		{
 			// push the item
-			ex->stack.push_back( *i );
+			ex->PushStack( *i );
 			// use the retval from the previous iteration as the first arg to the fcn
-			ex->stack.push_back( retval );
-			// push 'self'
-			if( is_method )
-			{
-				// push the object ("self") first
-				ex->stack.push_back( *ob_ptr );
-			}
+			ex->PushStack( retval );
+			// TODO: push 'self'
+//			if( is_method )
+//			{
+//				// push the object ("self") first
+//				ex->stack.push_back( *ob_ptr );
+//			}
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
-			if( is_method )
-				ex->ExecuteDevaFunction( o->name, 3 );
-			else
-				ex->ExecuteDevaFunction( o->name, 2 );
+			if( o->type == obj_function )
+				ex->ExecuteFunction( o->f, 2 );
+			else if( o->type == obj_native_function )
+				ex->ExecuteFunction( o->nf, 2 );
 			// get the result (return value) and push it onto our return collection
-			retval = ex->stack.back();
-			ex->stack.pop_back();
+			retval = ex->PopStack();
 		}
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
+	// if we're returning a string, ensure memory will exist in frame returned to
+	if( retval.type == obj_string )
+	{
+		const char* str = frame->GetParent()->AddString( string( retval.s ) );
+		retval.s = const_cast<char*>(str);
+	}
 
-	// return the resulting value
-	ex->stack.push_back( DevaObject( "", retval ) );
+	helper.ReturnVal( retval );
 }
 
 void do_vector_any( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'any' built-in method." );
+	BuiltinHelper helper( "vector", "any", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// function value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'any'." );
+	Object* o = helper.GetLocalN( 0 );
 
-	// function value
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'any'." );
-	}
-	else
-		o = &val;
+	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// check fcn value
-	if( o->Type() != sym_address )
-		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'any'." );
+	// return vector
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
-	// TODO: (a built-in will be of type sym_unknown)
+	// TODO:
+	// handle instance and class methods 
 
-
-	// handle 'class methods' ('static' methods in c++ lingo)
-	// the "@" sign in the fcn name indicates it is a method
-	// get the lhs and rhs of the "@" (method & object)
 	bool is_method = false;
-	string fcn, object;
-	DevaObject* ob_ptr;
-	size_t idx = o->name.find( "@" );
-	if( idx != string::npos )
-	{
-		is_method = true;
 
-		fcn.assign( o->name, 0, idx );
-		// TODO: ensure idx + 1 < o->name.length()
-		object.assign( o->name, idx + 1, o->name.length() );
+	if( o->type == obj_function )
+		is_method = o->f->IsMethod();
+	else if( o->type == obj_native_function )
+		is_method = o->nf.is_method;
 
-		// find the object in the current scope
-		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
-		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'any'." );
-		// TODO: how to ensure object is a class, not an instance??
-		// (the ob_ptr will always point to a sym_class object at this point)
-	}
-
-	bool any_true = false;
+	bool value = false;
 
 	// walk each item in the vector
-	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
-		ex->stack.push_back( *i );
-		// push 'self', for methods
-		if( is_method )
-		{
-			// push the object ("self") first
-			ex->stack.push_back( *ob_ptr );
-		}
-		// call the function given (*must* be a single arg fcn to be used with
-		// the 'any' builtin)
-		if( is_method )
-			ex->ExecuteDevaFunction( o->name, 2 );
-		else
-			ex->ExecuteDevaFunction( o->name, 1 );
+		ex->PushStack( *i );
+		// TODO: push 'self', for methods
+//		if( is_method )
+//		{
+//			// push the object ("self") first
+//			ex->PushStack( *self );
+//		}
+		// call the function given (*must* be a single arg fcn to be used with map
+		// builtin)
+		if( o->type == obj_function )
+			ex->ExecuteFunction( o->f, 1 );
+		else if( o->type == obj_native_function )
+			ex->ExecuteFunction( o->nf, 1 );
 		// get the result (return value)
-		DevaObject retval = ex->stack.back();
-		ex->stack.pop_back();
-		// return type must be boolean
-		if( retval.Type() != sym_boolean )
-			throw DevaRuntimeException( "Function used with the vector built-in method 'any' returned a non-boolean." );
-		// if it's 'true', bail
-		if( retval.bool_val )
+		Object retval = ex->PopStack();
+		// if it evaluates to true, bail
+		if( retval.CoerceToBool() )
 		{
-			any_true = true;
+			value = true;
 			break;
 		}
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting vector
-	if( any_true )
-		ex->stack.push_back( DevaObject( "", true ) );
-	else
-		ex->stack.push_back( DevaObject( "", false ) );
+	helper.ReturnVal( Object( value ) );
 }
 
 void do_vector_all( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to vector 'all' built-in method." );
+	BuiltinHelper helper( "vector", "all", frame );
 
-	// get the vector object off the top of the stack
-	DevaObject vec = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 1 );
+	helper.ExpectType( self, obj_vector );
 
-	// function value is next on stack
-	DevaObject val = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// vector
-	if( vec.Type() != sym_vector )
-		throw DevaICE( "Vector expected in vector built-in method 'all'." );
+	Object* o = helper.GetLocalN( 0 );
 
-	// function value
-	DevaObject* o;
-	if( val.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( val );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for the 'function' argument in vector built-in method 'all'." );
-	}
-	else
-		o = &val;
+	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// check fcn value
-	if( o->Type() != sym_address )
-		throw DevaRuntimeException( "Function expected as argument in vector built-in method 'all'." );
+	// return vector
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
-	// TODO: (a built-in will be of type sym_unknown)
+	// TODO:
+	// handle instance and class methods 
 
-
-	// handle 'class methods' ('static' methods in c++ lingo)
-	// the "@" sign in the fcn name indicates it is a method
-	// get the lhs and rhs of the "@" (method & object)
 	bool is_method = false;
-	string fcn, object;
-	DevaObject* ob_ptr;
-	size_t idx = o->name.find( "@" );
-	if( idx != string::npos )
-	{
-		is_method = true;
 
-		fcn.assign( o->name, 0, idx );
-		// TODO: ensure idx + 1 < o->name.length()
-		object.assign( o->name, idx + 1, o->name.length() );
+	if( o->type == obj_function )
+		is_method = o->f->IsMethod();
+	else if( o->type == obj_native_function )
+		is_method = o->nf.is_method;
 
-		// find the object in the current scope
-		ob_ptr = ex->find_symbol( DevaObject( object, sym_unknown ) );
-		if( !ob_ptr )
-			throw DevaRuntimeException( "Symbol not found for the object instance of the method passed to the 'function' argument in vector built-in method 'all'." );
-		// TODO: how to ensure object is a class, not an instance??
-		// (the ob_ptr will always point to a sym_class object at this point)
-	}
-
-	bool all_true = true;
+	bool value = true;
 
 	// walk each item in the vector
-	for( DOVector::iterator i = vec.vec_val->begin(); i != vec.vec_val->end(); ++i )
+	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
-		ex->stack.push_back( *i );
-		// push 'self', for methods
-		if( is_method )
-		{
-			// push the object ("self") first
-			ex->stack.push_back( *ob_ptr );
-		}
-		// call the function given (*must* be a single arg fcn to be used with
-		// the 'all' builtin)
-		if( is_method )
-			ex->ExecuteDevaFunction( o->name, 2 );
-		else
-			ex->ExecuteDevaFunction( o->name, 1 );
+		ex->PushStack( *i );
+		// TODO: push 'self', for methods
+//		if( is_method )
+//		{
+//			// push the object ("self") first
+//			ex->PushStack( *self );
+//		}
+		// call the function given (*must* be a single arg fcn to be used with map
+		// builtin)
+		if( o->type == obj_function )
+			ex->ExecuteFunction( o->f, 1 );
+		else if( o->type == obj_native_function )
+			ex->ExecuteFunction( o->nf, 1 );
 		// get the result (return value)
-		DevaObject retval = ex->stack.back();
-		ex->stack.pop_back();
-		// return type must be boolean
-		if( retval.Type() != sym_boolean )
-			throw DevaRuntimeException( "Function used with the vector built-in method 'all' returned a non-boolean." );
-		// if it's 'false', bail
-		if( !retval.bool_val )
+		Object retval = ex->PopStack();
+		// if it evaluates to false, bail
+		if( !retval.CoerceToBool() )
 		{
-			all_true = false;
+			value = false;
 			break;
 		}
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting vector
-	if( all_true )
-		ex->stack.push_back( DevaObject( "", true ) );
-	else
-		ex->stack.push_back( DevaObject( "", false ) );
+	helper.ReturnVal( Object( value ) );
 }
-*/
+
 
 // helper for slicing in steps
 static size_t s_step = 1;
@@ -1037,92 +871,6 @@ bool if_step( Object )
 
 void do_vector_slice( Frame *frame )
 {
-//	if( Executor::args_on_stack > 3 || Executor::args_on_stack < 1 )
-//		throw DevaRuntimeException( "Incorrect number of arguments to vector 'slice' built-in method." );
-//
-//	// get the vector object off the top of the stack
-//	DevaObject vec = ex->stack.back();
-//	ex->stack.pop_back();
-//
-//	size_t i_start = 0;
-//	size_t i_end = -1;
-//	size_t i_step = 1;
-//	if( Executor::args_on_stack > 0 )
-//	{
-//		// start position to insert at is next on stack
-//		DevaObject start = ex->stack.back();
-//		ex->stack.pop_back();
-//		// start position
-//		if( start.Type() != sym_number )
-//			throw DevaRuntimeException( "Number expected in for start position argument in vector built-in method 'slice'." );
-//		// TODO: start needs to be integral values. error if they aren't
-//		i_start = (size_t)start.num_val;
-//	}
-//	if( Executor::args_on_stack > 1 )
-//	{
-//		// end of sub-vector to slice
-//		DevaObject end = ex->stack.back();
-//		ex->stack.pop_back();
-//		if( end.Type() != sym_number )
-//			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
-//		// TODO: length need to be integral values. error if they aren't
-//		i_end = (size_t)end.num_val;
-//	}
-//	if( Executor::args_on_stack > 2 )
-//	{
-//		// 'step' value to slice with
-//		DevaObject step = ex->stack.back();
-//		ex->stack.pop_back();
-//		if( step.Type() != sym_number )
-//			throw DevaRuntimeException( "Number expected in for 'length' argument in vector built-in method 'slice'." );
-//		// TODO: length need to be integral values. error if they aren't
-//		i_step = (size_t)step.num_val;
-//	}
-//
-//	// vector
-//	if( vec.Type() != sym_vector )
-//		throw DevaICE( "Vector expected in vector built-in method 'slice'." );
-//
-//	size_t sz = vec.vec_val->size();
-//
-//	// default length is the entire vector
-//	if( i_end == -1 )
-//		i_end = sz;
-//
-//	if( i_start >= sz || i_start < 0 )
-//		throw DevaRuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
-//	if( i_end > sz || i_end < 0 )
-//		throw DevaRuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
-//	if( i_end < i_start )
-//		throw DevaRuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );
-//	if( i_step < 1 )
-//		throw DevaRuntimeException( "Invalid 'step' argument in vector built-in method 'slice': step is less than one." );
-//
-//	// slice the vector
-//	DevaObject ret;
-//	// 'step' is '1' (the default)
-//	if( i_step == 1 )
-//	{
-//		// create a new vector object that is a copy of the 'sub-vector' we're
-//		// looking for
-////		DOVector* v = new DOVector( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end );
-//		DOVector* v = new DOVector( *(vec.vec_val), i_start, i_end );
-//		ret = DevaObject( "", v );
-//	}
-//	// otherwise the vector class doesn't help us, have to do it manually
-//	else
-//	{
-//		DOVector* v = new DOVector();
-//		s_i = 0;
-//		s_step = i_step;
-//		remove_copy_if( vec.vec_val->begin() + i_start, vec.vec_val->begin() + i_end, back_inserter( *v ), if_step );
-//		ret = DevaObject( "", v );
-//	}
-//
-//	// pop the return address
-//	ex->stack.pop_back();
-//
-//	ex->stack.push_back( ret );
 	BuiltinHelper helper( "vector", "slice", frame );
 
 	helper.CheckNumberOfArguments( 3, 4 );

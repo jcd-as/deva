@@ -31,7 +31,8 @@
 #ifndef __BUILTINS_H__
 #define __BUILTINS_H__
 
-#include "executor.h"
+//#include "executor.h"
+#include "object.h"
 #include <string>
 
 using namespace std;
@@ -43,6 +44,9 @@ namespace deva
 // to add new builtins you must:
 // 1) add a new fcn to the builtin_names and builtin_fcns arrays below
 // 2) implement the function in this file
+
+// pre-decls:
+class Frame;
 
 // pre-decls for builtin executors
 void do_print( Frame *f );
@@ -57,24 +61,24 @@ void do_exit( Frame *f );
 void do_num( Frame *f );
 void do_range( Frame *f );
 //void do_eval( Frame *f );
-//void do_open( Frame *f );
-//void do_close( Frame *f );
-//void do_flush( Frame *f );
-//void do_read( Frame *f );
-//void do_readstring( Frame *f );
-//void do_readline( Frame *f );
-//void do_readlines( Frame *f );
-//void do_write( Frame *f );
-//void do_writestring( Frame *f );
-//void do_writeline( Frame *f );
-//void do_writelines( Frame *f );
-//void do_seek( Frame *f );
-//void do_tell( Frame *f );
-//void do_stdin( Frame *f );
-//void do_stdout( Frame *f );
-//void do_stderr( Frame *f );
-//void do_format( Frame *f );
-//void do_join( Frame *f );
+void do_open( Frame *f );
+void do_close( Frame *f );
+void do_flush( Frame *f );
+void do_read( Frame *f );
+void do_readstring( Frame *f );
+void do_readline( Frame *f );
+void do_readlines( Frame *f );
+void do_write( Frame *f );
+void do_writestring( Frame *f );
+void do_writeline( Frame *f );
+void do_writelines( Frame *f );
+void do_seek( Frame *f );
+void do_tell( Frame *f );
+void do_stdin( Frame *f );
+void do_stdout( Frame *f );
+void do_stderr( Frame *f );
+void do_format( Frame *f );
+void do_join( Frame *f );
 //void do_error( Frame *f );
 //void do_seterror( Frame *f );
 //void do_geterror( Frame *f );
@@ -118,47 +122,86 @@ static const string builtin_names[] =
 	string( "importmodule" ),
 };
 // ...and function pointers to the executor functions for them
-static NativeFunctionPtr builtin_fcns[] = 
+static NativeFunction builtin_fcns[] = 
 {
-	do_print,
-	do_str,
-	do_chr,
-	do_append,
-	do_length,
-	do_copy,
-	do_name,
-	do_type,
-	do_exit,
-	do_num,
-	do_range,
-//	do_eval,
-//	do_open,
-//	do_close,
-//	do_flush,
-//	do_read,
-//	do_readstring,
-//	do_readline,
-//	do_readlines,
-//	do_write,
-//	do_writestring,
-//	do_writeline,
-//	do_writelines,
-//	do_seek,
-//	do_tell,
-//	do_stdin,
-//	do_stdout,
-//	do_stderr,
-//	do_format,
-//	do_join,
-//	do_error,
-//	do_seterror,
-//	do_geterror,
-//	do_importmodule,
+	{do_print, false},
+	{do_str, false},
+	{do_chr, false},
+	{do_append, false},
+	{do_length, false},
+	{do_copy, false},
+	{do_name, false},
+	{do_type, false},
+	{do_exit, false},
+	{do_num, false},
+	{do_range, false},
+//	{do_eval, false},
+	{do_open, false},
+	{do_close, false},
+	{do_flush, false},
+	{do_read, false},
+	{do_readstring, false},
+	{do_readline, false},
+	{do_readlines, false},
+	{do_write, false},
+	{do_writestring, false},
+	{do_writeline, false},
+	{do_writelines, false},
+	{do_seek, false},
+	{do_tell, false},
+	{do_stdin, false},
+	{do_stdout, false},
+	{do_stderr, false},
+	{do_format, false},
+	{do_join, false},
+//	{do_error, false},
+//	{do_seterror, false},
+//	{do_geterror, false},
+//	{do_importmodule, false},
+};
+static Object builtin_fcn_objs[] = 
+{
+	Object( do_print ),
+	Object( do_str ),
+	Object( do_chr ),
+	Object( do_append ),
+	Object( do_length ),
+	Object( do_copy ),
+	Object( do_name ),
+	Object( do_type ),
+	Object( do_exit ),
+	Object( do_num ),
+	Object( do_range ),
+//	Object( do_eval ),
+	Object( do_open ),
+	Object( do_close ),
+	Object( do_flush ),
+	Object( do_read ),
+	Object( do_readstring ),
+	Object( do_readline ),
+	Object( do_readlines ),
+	Object( do_write ),
+	Object( do_writestring ),
+	Object( do_writeline ),
+	Object( do_writelines ),
+	Object( do_seek ),
+	Object( do_tell ),
+	Object( do_stdin ),
+	Object( do_stdout ),
+	Object( do_stderr ),
+	Object( do_format ),
+	Object( do_join ),
+//	Object( do_error ),
+//	Object( do_seterror ),
+//	Object( do_geterror ),
+//	Object( do_importmodule ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
 // is a given name a builtin function?
 bool IsBuiltin( const string & name );
+NativeFunction GetBuiltin( const string & name );
+Object* GetBuiltinObjectRef( const string & name );
 
 } // end namespace deva
 

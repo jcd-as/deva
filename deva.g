@@ -125,7 +125,8 @@ func_decl
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? func_decl*)
+//	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? func_decl*)
+	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID*) func_decl*)
 	;
 
 while_statement 
@@ -241,6 +242,7 @@ mul_exp
 unary_exp 
 	:	primary_exp
 	|	'!' primary_exp										-> ^(NOT_OP primary_exp)
+	|	'!!' primary_exp									-> ^(NOT_OP ^(NOT_OP primary_exp))
 	|	'-' primary_exp										-> ^(Negate primary_exp)
 	;	
 
@@ -248,7 +250,6 @@ unary_exp
 primary_exp 
 	:	(atom->atom)
 		(
-//			args=arg_list_exp								-> ^(Call $primary_exp $args?)
 			args=arg_list_exp								-> ^(Call $args? $primary_exp)
 		|	indices=key_exp									-> ^(Key $primary_exp $indices	)
 		|	'.' id=ID										-> ^(DOT_OP $primary_exp $id)
@@ -258,7 +259,6 @@ primary_exp
 
 arg_list_exp
 	:	
-//	'('! (exp (','! exp)*)? ')'!
 	'(' (exp (',' exp)*)? ')'								-> ^(ArgList exp*)
 	;
 

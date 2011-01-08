@@ -110,8 +110,13 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 // resolve a variable, in the current scope
 void Semantics::ResolveVar( char* name, int line )
 {
+	// TODO: modules???
+	// accept builtins
+	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
+//		constants.insert( Object( obj_symbol_name, name ) );
+		return;
 	// look up the variable in the current scope
-	if( !current_scope->Resolve( name, sym_end ) )
+	else if( !current_scope->Resolve( name, sym_end ) )
 	{
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
@@ -121,17 +126,17 @@ void Semantics::ResolveVar( char* name, int line )
 void Semantics::DefineFun( char* name, char* classname, int line )
 {
 	char* fcn_name;
-	if( classname )
-	{
-		int namelen = strlen( name );
-		int len = namelen + strlen( classname );
-		fcn_name = new char[len + 2]; // room for name, '@', classname and null-terminator
-		memset( fcn_name, 0, len + 2 ); // zero fill
-		strcpy( fcn_name, name );
-		fcn_name[namelen] = '@';
-		strcat( fcn_name, classname );
-	}
-	else
+//	if( classname )
+//	{
+//		int namelen = strlen( name );
+//		int len = namelen + strlen( classname );
+//		fcn_name = new char[len + 2]; // room for name, '@', classname and null-terminator
+//		memset( fcn_name, 0, len + 2 ); // zero fill
+//		strcpy( fcn_name, name );
+//		fcn_name[namelen] = '@';
+//		strcat( fcn_name, classname );
+//	}
+//	else
 	{
 		fcn_name = name;
 	}
@@ -151,7 +156,8 @@ void Semantics::ResolveFun( char* name, int line )
 	// if it is a builtin fcn, add it to the constants pool
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 	{
-		constants.insert( Object( obj_symbol_name, name ) );
+		return;
+//		constants.insert( Object( obj_symbol_name, name ) );
 	}
 	// otherwise, look up the function in the current scope
 //	else if( !current_scope->Resolve( name, sym_function ) )
@@ -422,6 +428,8 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 		&& type != DOT_OP 
 		&& type != Call
 		&& type != NUMBER
+		&& type != NULLVAL
+		&& type != STRING
 		&& type != BOOL )
 		throw SemanticException( "Invalid operand for logical not ('!') operator.", in->getLine(in) );
 }

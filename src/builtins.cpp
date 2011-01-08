@@ -32,6 +32,7 @@
 #include "builtins_helpers.h"
 #include <algorithm>
 #include <sstream>
+#include <cstdio>
 
 
 namespace deva
@@ -43,6 +44,54 @@ bool IsBuiltin( const string & name )
 	const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
 	if( i != builtin_names + num_of_builtins ) return true;
 		else return false;
+}
+
+NativeFunction GetBuiltin( const string & name )
+{
+	const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+	if( i == builtin_names + num_of_builtins )
+	{
+		NativeFunction nf;
+		nf.p = NULL;
+		return nf;
+	}
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_builtins )
+	{
+		NativeFunction nf;
+		nf.p = NULL;
+		return nf;
+	}
+	else
+	{
+		// return the function object
+		return builtin_fcns[idx];
+	}
+}
+
+Object* GetBuiltinObjectRef( const string & name )
+{
+	const string* i = find( builtin_names, builtin_names + num_of_builtins, name );
+	if( i == builtin_names + num_of_builtins )
+	{
+		return NULL;
+	}
+	// compute the index of the function in the look-up table(s)
+	long l = (long)i;
+	l -= (long)&builtin_names;
+	int idx = l / sizeof( string );
+	if( idx > num_of_builtins )
+	{
+		return NULL;
+	}
+	else
+	{
+		// return the function object
+		return &builtin_fcn_objs[idx];
+	}
 }
 
 
@@ -388,7 +437,7 @@ void do_range( Frame *frame )
 }
 
 /*
-void do_eval( Executor *ex )
+void do_eval( Frame *frame )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'eval'." );
@@ -419,242 +468,122 @@ void do_eval( Executor *ex )
 	// all fcns return *something*
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
+*/
 
-void do_open( Executor *ex )
+void do_open( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 && Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'open'." );
+	BuiltinHelper helper( NULL, "open", frame );
+	helper.CheckNumberOfArguments( 1, 2 );
 
-	// filename to open is on top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// if there are two arguments the second is the file mode
-	// if there is only one, default mode is "r"
-	DevaObject arg;
-	DevaObject* mode;
-	if( Executor::args_on_stack == 2 )
+	Object *fileobj, *modeobj;
+	const char* mode = "r";
+
+	int num_args = frame->NumArgsPassed();
+	if( num_args == 2 )
 	{
-		// second argument, if any, *must* be a string
-		arg = ex->stack.back();
-		ex->stack.pop_back();
-		if( arg.Type() == sym_unknown )
-		{
-			mode = ex->find_symbol( arg );
-			if( !mode )
-				throw DevaRuntimeException( "Symbol not found for 'mode' argument in built-in function 'open'." );
-		}
-		else
-			mode = &arg;
-		if( mode->Type() != sym_string )
-			throw DevaRuntimeException( "'mode' argument to built-in function 'open' must be a string." );
+		fileobj = helper.GetLocalN( 0 );
+		helper.ExpectType( fileobj, obj_string );
+		modeobj = helper.GetLocalN( 1 );
+		helper.ExpectType( modeobj, obj_string );
+		mode = modeobj->s;
 	}
 	else
 	{
-		arg = DevaObject( "", string( "r" ) );
-		mode = &arg;
+		fileobj = helper.GetLocalN( 0 );
+		helper.ExpectType( fileobj, obj_string );
 	}
 
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file_name' argument in built-in function 'open'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure filename is a string
-	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "'file_name' argument to built-in function 'open' must be a string." );
-
-	FILE* file = fopen( o->str_val, mode->str_val );
-
-	// pop the return address
-	ex->stack.pop_back();
+	FILE* file = fopen( fileobj->s, mode );
 
 	// return the file object as a 'native object' type
 	if( file )
-		ex->stack.push_back( DevaObject( "", (void*)file ) );
+		helper.ReturnVal( Object( (void*)file ) );
 	// or null, on failure
 	else
-		ex->stack.push_back( DevaObject( "", sym_null ) );
+		helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_close( Executor *ex )
+void do_close( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'close'." );
+	BuiltinHelper helper( NULL, "close", frame );
 
-	// file object to close is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'close'." );
-	}
-	if( !o )
-		o = &obj;
+	helper.CheckNumberOfArguments( 1 );
 
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'close' is not of the correct type." );
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
 
-	fclose( (FILE*)(o->sz_val) );
+	fclose( (FILE*)(file->no) );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_flush( Executor *ex )
+void do_flush( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'flush'." );
+	BuiltinHelper helper( NULL, "flush", frame );
 
-	// file object to close is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'flush'." );
-	}
-	if( !o )
-		o = &obj;
+	helper.CheckNumberOfArguments( 1 );
 
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'flush' is not of the correct type." );
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
 
-	fflush( (FILE*)(o->sz_val) );
+	fflush( (FILE*)(file->no) );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_read( Executor *ex )
+void do_read( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'read'." );
+	BuiltinHelper helper( NULL, "read", frame );
 
-	// file object to close is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
 
-	// next is the number of bytes to read
-	DevaObject bytes = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* num_bytes_obj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( num_bytes_obj );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'read'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'read' is not of the correct type." );
-
-	// get the number of bytes
-	size_t num_bytes = 0;
-	if( bytes.Type() != sym_number )
-	{
-		DevaObject* no = ex->find_symbol( bytes );
-		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'read'." );
-		num_bytes = no->num_val;
-	}
-	else
-		num_bytes = bytes.num_val;
+	int num_bytes = (int)num_bytes_obj->d;
 
 	// allocate space for bytes plus a null-terminator
 	unsigned char* s = new unsigned char[num_bytes + 1];
 	// zero out the bytes
 	memset( s, 0, num_bytes + 1 );
-	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->sz_val) );
+	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(file->no) );
 
 	// convert to a vector of numbers
-	DOVector* vec = new DOVector();
+	Vector* vec = CreateVector();
 	vec->reserve( bytes_read );
 	for( int c = 0; c < bytes_read; ++c )
 	{
-		vec->push_back( DevaObject( "", (double)(s[c]) ) );
+		vec->push_back( Object( (double)(s[c]) ) );
 	}
 
 	delete [] s;
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the vector of read bytes
-	ex->stack.push_back( DevaObject( "", vec ) );
+	helper.ReturnVal( Object( vec ) );
 }
 
 // if there are embedded nulls in the bytes read the string
 // returned will only contain up to the first null...
 // read() should be used in this case, not readstring
-void do_readstring( Executor *ex )
+void do_readstring( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readstring'." );
+	BuiltinHelper helper( NULL, "readstring", frame );
 
-	// file object to close is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
 
-	// next is the number of bytes to read
-	DevaObject bytes = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* num_bytes_obj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( num_bytes_obj );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readstring'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'readstring' is not of the correct type." );
-
-	// get the number of bytes
-	size_t num_bytes = 0;
-	if( bytes.Type() != sym_number )
-	{
-		DevaObject* no = ex->find_symbol( bytes );
-		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'readstring'." );
-		num_bytes = no->num_val;
-	}
-	else
-		num_bytes = bytes.num_val;
+	int num_bytes = (int)num_bytes_obj->d;
 
 	// allocate space for bytes plus a null-terminator
 	char* s = new char[num_bytes + 1];
 	// zero out the bytes
 	memset( s, 0, num_bytes + 1 );
-	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(o->sz_val) );
+	size_t bytes_read = fread( (void*)s, 1, num_bytes, (FILE*)(file->no) );
 	// if we didn't read the full amount, we need to re-alloc and copy so that
 	// we don't leak the extra bytes when they are assigned to a string DevaObject
 	if( bytes_read != num_bytes )
@@ -670,36 +599,18 @@ void do_readstring( Executor *ex )
 	// returned will only contain up to the first null...
 	// read() should be used in this case, not readstring
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the read bytes as a string
-	ex->stack.push_back( DevaObject( "", s ) );
+	helper.ReturnVal( Object( s ) );
 }
 
-void do_readline( Executor *ex )
+void do_readline( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readline'." );
+	BuiltinHelper helper( NULL, "readline", frame );
 
-	// file object to read from is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
 
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readline'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'readline' is not of the correct type." );
-
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	
 	// allocate space for some bytes 
 	const size_t BUF_SZ = 10;
 	char* buffer = new char[BUF_SZ];
@@ -707,7 +618,7 @@ void do_readline( Executor *ex )
 	// track the original start of the buffer
 	size_t count = BUF_SZ;	// number of bytes read so far
 	char* buf = buffer;
-	while( fgets( buf, BUF_SZ, (FILE*)(o->sz_val) ) )
+	while( fgets( buf, BUF_SZ, (FILE*)(file->no) ) )
 	{
 		// read was valid, was the last char read a newline?
 		// if so, we're done
@@ -727,8 +638,8 @@ void do_readline( Executor *ex )
 		count += BUF_SZ - 1;
 	}
 	// was there an error??
-	if( ferror( (FILE*)(o->sz_val) ) )
-		throw DevaRuntimeException( "Error accessing file in built-in method 'readline'." );
+	if( ferror( (FILE*)(file->no) ) )
+		throw RuntimeException( "Error accessing file in built-in method 'readline'." );
 
 	// if we didn't fill the buffer, we need to re-alloc and copy so that
 	// we don't leak the extra bytes when they are assigned to a string DevaObject
@@ -742,38 +653,20 @@ void do_readline( Executor *ex )
 		buffer = new_buf;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the read bytes as a string
-	ex->stack.push_back( DevaObject( "", buffer ) );
+	helper.ReturnVal( Object( buffer ) );
 }
 
-void do_readlines( Executor *ex )
+void do_readlines( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'readlines'." );
+	BuiltinHelper helper( NULL, "readlines", frame );
 
-	// file object to read from is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
 
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'readlines'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'readlines' is not of the correct type." );
-
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	
 	// keep reading lines until we reach the EOF
-	DOVector* vec = new DOVector;
+	Vector* vec = CreateVector();
 	while( true )
 	{
 		// allocate space for some bytes 
@@ -783,7 +676,7 @@ void do_readlines( Executor *ex )
 		// track the original start of the buffer
 		size_t count = BUF_SZ;	// number of bytes read so far
 		char* buf = buffer;
-		while( fgets( buf, BUF_SZ, (FILE*)(o->sz_val) ) )
+		while( fgets( buf, BUF_SZ, (FILE*)(file->no) ) )
 		{
 			// read was valid, was the last char read a newline?
 			// if so, we're done
@@ -815,559 +708,257 @@ void do_readlines( Executor *ex )
 		}
 
 		// add this line to our output vector
-		vec->push_back( DevaObject( "", buffer ) );
+		vec->push_back( Object( buffer ) );
 
 		// done?
-		if( feof( (FILE*)(o->sz_val) ) )
+		if( feof( (FILE*)(file->no) ) )
 			break;
 		// was there an error??
-		if( ferror( (FILE*)(o->sz_val) ) )
-			throw DevaRuntimeException( "Error accessing file in built-in method 'readlines'." );
+		if( ferror( (FILE*)(file->no) ) )
+			throw RuntimeException( "Error accessing file in built-in method 'readlines'." );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the vector of lines
-	ex->stack.push_back( DevaObject( "", vec ) );
+	helper.ReturnVal( Object( vec ) );
 }
 
-void do_write( Executor *ex )
+void do_write( Frame *frame )
 {
-	if( Executor::args_on_stack != 3 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'write'." );
+	BuiltinHelper helper( NULL, "write", frame );
 
-	// file object to write to is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 3 );
 
-	// next is the number of bytes to write
-	DevaObject bytes = ex->stack.back();
-	ex->stack.pop_back();
-
-	// next is the object to write from
-	DevaObject src = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* num_bytes_obj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( num_bytes_obj );
+	Object* source = helper.GetLocalN( 2 );
+	helper.ExpectType( source, obj_vector );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'write'." );
-	}
-	if( !o )
-		o = &obj;
+	int num_bytes = (int)num_bytes_obj->d;
 
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'write' is not of the correct type." );
-
-	// get the number of bytes
-	size_t num_bytes = 0;
-	if( bytes.Type() != sym_number )
-	{
-		DevaObject* no = ex->find_symbol( bytes );
-		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'write'." );
-		num_bytes = no->num_val;
-	}
-	else
-		num_bytes = bytes.num_val;
-
-	// ensure the source is a vector
-	DevaObject* source;
-	if( src.Type() != sym_vector )
-	{
-		source = ex->find_symbol( src );
-		if( !source )
-			throw DevaRuntimeException( "'source' argument in built-in function 'write' must be a vector." );
-	}
-	else
-		source = &src;
-
-	size_t len = num_bytes < source->vec_val->size() ? num_bytes : source->vec_val->size();
+	size_t len = num_bytes < source->v->size() ? num_bytes : source->v->size();
 	unsigned char* data = new unsigned char[len];
 	// create a native array of unsigned chars to write out
 	for( int c = 0; c < len; ++c )
 	{
 		// ensure this object is a number
-		DevaObject o = source->vec_val->at( c );
-		if( o.Type() != sym_number )
-			throw DevaRuntimeException( "'source' vector in built-in function 'write' contains objects that are not numeric." );
+		Object o = source->v->operator[]( c );
+		if( o.type != obj_number )
+			throw RuntimeException( "'source' vector in built-in function 'write' contains objects that are not numeric." );
 
 		// copy the item's data
-		data[c] = (unsigned char)o.num_val;
+		data[c] = (unsigned char)o.d;
 	}
-	size_t bytes_written = fwrite( (void*)data, 1, len, (FILE*)(o->sz_val) );
+	size_t bytes_written = fwrite( (void*)data, 1, len, (FILE*)(file->no) );
 
 	delete [] data;
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the number of bytes written
-	ex->stack.push_back( DevaObject( "", (double)bytes_written ) );
+	helper.ReturnVal( Object( (double)bytes_written ) );
 }
 
-void do_writestring( Executor *ex )
+void do_writestring( Frame *frame )
 {
-	if( Executor::args_on_stack != 3 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writestring'." );
+	BuiltinHelper helper( NULL, "writestring", frame );
 
-	// file object to write to is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 3 );
 
-	// next is the number of bytes to write
-	DevaObject bytes = ex->stack.back();
-	ex->stack.pop_back();
-
-	// next is the object to write from
-	DevaObject src = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* num_bytes_obj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( num_bytes_obj );
+	Object* source = helper.GetLocalN( 2 );
+	helper.ExpectType( source, obj_vector );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writestring'." );
-	}
-	if( !o )
-		o = &obj;
+	int num_bytes = (int)num_bytes_obj->d;
 
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'writestring' is not of the correct type." );
-
-	// get the number of bytes
-	size_t num_bytes = 0;
-	if( bytes.Type() != sym_number )
-	{
-		DevaObject* no = ex->find_symbol( bytes );
-		if( !no )
-			throw DevaRuntimeException( "Symbol not found for 'num_bytes' argument in built-in function 'writestring'." );
-		num_bytes = no->num_val;
-	}
-	else
-		num_bytes = bytes.num_val;
-
-	// ensure the source is a string
-	DevaObject* source;
-	if( src.Type() != sym_string )
-	{
-		source = ex->find_symbol( src );
-		if( !source )
-			throw DevaRuntimeException( "'source' argument in built-in function 'writestring' must be a string." );
-	}
-	else
-		source = &src;
-
-	size_t slen = strlen( source->str_val );
+	size_t slen = strlen( source->s );
 	size_t len = num_bytes < slen ? num_bytes : slen;
-	size_t bytes_written = fwrite( (void*)(source->str_val), 1, len, (FILE*)(o->sz_val) );
+	size_t bytes_written = fwrite( (void*)(source->s), 1, len, (FILE*)(file->no) );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the number of bytes written
-	ex->stack.push_back( DevaObject( "", (double)bytes_written ) );
+	helper.ReturnVal( Object( (double)bytes_written ) );
 }
 
-void do_writeline( Executor *ex )
+void do_writeline( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writeline'." );
+	BuiltinHelper helper( NULL, "writeline", frame );
 
-	// file object to write to is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
 
-	// next is the object to write from
-	DevaObject src = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* source = helper.GetLocalN( 1 );
+	helper.ExpectType( source, obj_string );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writeline'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'writeline' is not of the correct type." );
-
-	// ensure the source is a string
-	DevaObject* source;
-	if( src.Type() != sym_string )
-	{
-		source = ex->find_symbol( src );
-		if( !source )
-			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writeline'." );
-	}
-	else
-		source = &src;
-
 	int ret = 1;
-	if( fputs( source->str_val, (FILE*)(o->sz_val) ) < 0 )
+	if( fputs( source->s, (FILE*)(file->no) ) < 0 )
 		ret = 0;
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return, true on success, false on failure
-	ex->stack.push_back( DevaObject( "", (bool)ret ) );
+	helper.ReturnVal( Object( (bool)ret ) );
 }
 
-void do_writelines( Executor *ex )
+void do_writelines( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'writelines'." );
+	BuiltinHelper helper( NULL, "writelines", frame );
 
-	// file object to write to is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2 );
 
-	// next is the object to write from
-	DevaObject src = ex->stack.back();
-	ex->stack.pop_back();
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* source = helper.GetLocalN( 1 );
+	helper.ExpectType( source, obj_string );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'writelines'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'writelines' is not of the correct type." );
-
-	// get the source vector
-	DevaObject* source;
-	if( src.Type() != sym_vector )
-	{
-		source = ex->find_symbol( src );
-		if( !source )
-			throw DevaRuntimeException( "Symbol not found for 'source' argument in built-in function 'writelines'." );
-		// ensure it is a vector
-		if( source->Type() != sym_vector )
-			throw DevaRuntimeException( "'source' argument to built-in function 'writelines' is not of the correct type." );
-	}
-	else
-		source = &src;
-
 	int ret = 0;
-	for( DOVector::iterator i = source->vec_val->begin(); i != source->vec_val->end(); ++i )
+	for( Vector::iterator i = source->v->begin(); i != source->v->end(); ++i )
 	{
+		if( i->type != obj_string )
+			throw RuntimeException( "Non-string found in 'lines' argument to builtin 'writelines' function: a vector of strings is required." );
 		// if failed to write the line, break
-		if( fputs( i->str_val, (FILE*)(o->sz_val) ) < 0 )
+		if( fputs( i->s, (FILE*)(file->no) ) < 0 )
 			break;
-		++ret;
+		ret++;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the number of lines written
-	ex->stack.push_back( DevaObject( "", (double)ret ) );
+	helper.ReturnVal( Object( (double)ret ) );
 }
 
-void do_seek( Executor *ex )
+void do_seek( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 && Executor::args_on_stack != 3 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seek'." );
+	BuiltinHelper helper( NULL, "seek", frame );
 
-	// file object to operate on is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 2, 3 );
 
-	// next is the position to seek to
-	DevaObject position = ex->stack.back();
-	ex->stack.pop_back();
-	
-	// next is the origin to seek from
-	// (need to be defined in standard 'io' import)
-	// SEEK_SET = 0
-	// SEEK_CUR = 1
-	// SEEK_END = 2
-	// if there are only two args, default origin is SEEK_SET (0)
-	DevaObject arg;
-	int origin;
-	if( Executor::args_on_stack == 3 )
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
+	Object* posobj = helper.GetLocalN( 1 );
+	helper.ExpectIntegralNumber( posobj );
+	int origin = 0;
+	if( frame->NumArgsPassed() == 3 )
 	{
-		// third argument, if any, *must* be a number
-		arg = ex->stack.back();
-		ex->stack.pop_back();
-		DevaObject* parg;
-		if( arg.Type() == sym_unknown )
-		{
-			parg = ex->find_symbol( arg );
-			if( !parg )
-				throw DevaRuntimeException( "Symbol not found for 'origin' argument in built-in function 'seek'." );
-		}
-		else
-			parg = &arg;
-		if( parg->Type() != sym_number )
-			throw DevaRuntimeException( "'origin' argument to built-in function 'seek' must be a number." );
-		// TODO: origin must be an integral number. error on non-integer
-		origin = (int)parg->num_val;
-	}
-	else
-	{
-		origin = 0;
+		Object* originobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( originobj );
+		origin = (int)originobj->d;
 	}
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'seek'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'seek' is not of the correct type." );
-
 	// get the position
-	long int pos = 0;
-	if( position.Type() != sym_number )
-	{
-		DevaObject* po = ex->find_symbol( position );
-		if( !po )
-			throw DevaRuntimeException( "Symbol not found for 'position' argument in built-in function 'seek'." );
-		pos = (long int)po->num_val;
-	}
-	else
-		pos = (long int)position.num_val;
+	fseek( (FILE*)(file->no), (dword)posobj->d, origin );
 
-	fseek( (FILE*)(o->sz_val), pos, origin );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all functions must return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
-void do_tell( Executor *ex )
+void do_tell( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'tell'." );
+	BuiltinHelper helper( NULL, "tell", frame );
 
-	// file object to operate on is at the top of the stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* file = helper.GetLocalN( 0 );
+	helper.ExpectType( file, obj_native_obj );
 	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'file' argument in built-in function 'tell'." );
-	}
-	if( !o )
-		o = &obj;
+	// get the position
+	long int pos = ftell( (FILE*)(file->no) );
 
-	// ensure it's a native object
-	if( o->Type() != sym_native_obj )
-		throw DevaRuntimeException( "'file' argument to built-in function 'tell' is not of the correct type." );
-
-	long int pos = ftell( (FILE*)(o->sz_val) );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the position
-	ex->stack.push_back( DevaObject( "", (double)pos ) );
+	helper.ReturnVal( Object( (double)pos ) );
 }
 
-void do_stdin( Executor *ex )
+void do_stdin( Frame *frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Built-in function 'stdin' takes no arguments." );
+	BuiltinHelper helper( NULL, "stdin", frame );
 
-	// pop the return address
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 0 );
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", (void*)stdin ) );
+	helper.ReturnVal( Object( (void*)stdin ) );
 }
 
-void do_stdout( Executor *ex )
+void do_stdout( Frame *frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Built-in function 'stdout' takes no arguments." );
+	BuiltinHelper helper( NULL, "stdout", frame );
 
-	// pop the return address
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 0 );
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", (void*)stdout ) );
+	helper.ReturnVal( Object( (void*)stdout ) );
 }
 
-void do_stderr( Executor *ex )
+void do_stderr( Frame *frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Built-in function 'stderr' takes no arguments." );
+	BuiltinHelper helper( NULL, "stderr", frame );
 
-	// pop the return address
-	ex->stack.pop_back();
+	helper.CheckNumberOfArguments( 0 );
 
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", (void*)stderr ) );
+	helper.ReturnVal( Object( (void*)stderr ) );
 }
 
-void do_format( Executor *ex )
+void do_format( Frame *frame )
 {
-	if( Executor::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'format'." );
+	BuiltinHelper helper( NULL, "format", frame );
 
-	// get the format string off the stack first 
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found for 'format_string' argument in call to built-in function 'format'." );
-	}
-	if( !o )
-		o = &obj;
-
-	// ensure it's a string
-	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "String expected for 'format_string' parameter in call to built-in function 'format'." );
-
-	// get the format_args vector off the stack next
-	DevaObject args = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* v = NULL;
-	if( args.Type() == sym_unknown )
-	{
-		v = ex->find_symbol( args );
-		if( !v )
-			throw DevaRuntimeException( "Symbol not found for 'format_args' parameter in call to built-in function 'format'." );
-	}
-	if( !v )
-		v = &args;
-
-	// ensure it's a vector
-	if( v->Type() != sym_vector )
-		throw DevaRuntimeException( "Vector expected for 'format_args' parameter in call to built-in function 'format'." );
-
-	string ret;
+	helper.CheckNumberOfArguments( 2 );
+	Object* formatstr = helper.GetLocalN( 0 );
+	helper.ExpectType( formatstr, obj_string );
+	Object* formatargs = helper.GetLocalN( 0 );
+	helper.ExpectType( formatargs, obj_vector );
 
 	// format the string using boost's format library
+	string ret;
 	boost::format formatter;
 	try
 	{
-		formatter = boost::format( o->str_val );
-		for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+		formatter = boost::format( formatstr->s );
+		for( Vector::iterator i = formatargs->v->begin(); i != formatargs->v->end(); ++i )
 		{
 			formatter % *i;
 		}
 	}
 	catch( boost::io::bad_format_string & e )
 	{
-		throw DevaRuntimeException( "The format string passed to built-in function 'format' was invalid." );
+		throw RuntimeException( "The format string passed to built-in function 'format' was invalid." );
 	}
 	catch( boost::io::too_many_args & e )
 	{
-		throw DevaRuntimeException( "The format string passed to built-in function 'format' referred to fewer parameters than were passed in the parameter vector." );
+		throw RuntimeException( "The format string passed to built-in function 'format' referred to fewer parameters than were passed in the parameter vector." );
 	}
 	catch( boost::io::too_few_args & e )
 	{
-		throw DevaRuntimeException( "The format string passed to built-in function 'format' referred to more parameters than were passed in the parameter vector." );
+		throw RuntimeException( "The format string passed to built-in function 'format' referred to more parameters than were passed in the parameter vector." );
 	}
 	ret = str( formatter );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", ret ) );
+	// return a string allocated in the parent (calling) scope
+	const char* str = frame->GetParent()->AddString( ret );
+	helper.ReturnVal( Object( str ) );
 }
 
-void do_join( Executor *ex )
+void do_join( Frame *frame )
 {
-	if( Executor::args_on_stack > 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'join'." );
+	BuiltinHelper helper( NULL, "join", frame );
 
-	// get the vector of objects to join off the stack
-	DevaObject args = ex->stack.back();
-	ex->stack.pop_back();
-	// if it's a variable, locate it in the symbol table
-	DevaObject* v = NULL;
-	if( args.Type() == sym_unknown )
+	helper.CheckNumberOfArguments( 1, 2 );
+	Object* args = helper.GetLocalN( 0 );
+	helper.ExpectType( args, obj_vector );
+	const char* sep = "";
+	if( frame->NumArgsPassed() == 2 )
 	{
-		v = ex->find_symbol( args );
-		if( !v )
-			throw DevaRuntimeException( "Symbol not found for 'args' parameter in call to built-in function 'join'." );
+		Object *o = helper.GetLocalN( 1 );
+		helper.ExpectType( o, obj_string );
+		sep = o->s;
 	}
-	if( !v )
-		v = &args;
-
-	// ensure it's a vector
-	if( v->Type() != sym_vector )
-		throw DevaRuntimeException( "Vector expected for 'args' parameter in call to built-in function 'join'." );
-
-	string sep;
-	if( Executor::args_on_stack == 2 )
-	{
-		// optional 'separator' arg
-		DevaObject val = ex->stack.back();
-		ex->stack.pop_back();
-
-		DevaObject* o;
-		if( val.Type() == sym_unknown )
-		{
-			o = ex->find_symbol( val );
-			if( !o )
-				throw DevaRuntimeException( "Symbol not found for the 'sep' argument in vector built-in method 'join'." );
-		}
-		else
-				o = &val;
-		if( o->Type() != sym_string )
-				throw DevaRuntimeException( "'sep' argument to vector built-in method 'join' must be a string." );
-
-		sep = o->str_val;
-	}
-	else
-		sep = "";
 
 	string ret;
-	for( DOVector::iterator i = v->vec_val->begin(); i != v->vec_val->end(); ++i )
+	for( Vector::iterator i = args->v->begin(); i != args->v->end(); ++i )
 	{
 		ostringstream s;
-		if( i != v->vec_val->begin() )
+		if( i != args->v->begin() )
 			s << sep;
 		s << *i;
 		ret += s.str();
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", ret ) );
+	// return a string allocated in the parent (calling) scope
+	const char* str = frame->GetParent()->AddString( ret );
+	helper.ReturnVal( Object( str ) );
 }
 
-void do_error( Executor *ex )
+/*
+void do_error( Frame *frame )
 {
 	if( Executor::args_on_stack != 0 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
@@ -1382,7 +973,7 @@ void do_error( Executor *ex )
 
 }
 
-void do_seterror( Executor *ex )
+void do_seterror( Frame *frame )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seterror'." );
@@ -1403,7 +994,7 @@ void do_seterror( Executor *ex )
 	ex->stack.push_back( DevaObject( "", sym_null ) );
 }
 
-void do_geterror( Executor *ex )
+void do_geterror( Frame *frame )
 {
 	if( Executor::args_on_stack != 0 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
@@ -1420,7 +1011,7 @@ void do_geterror( Executor *ex )
 		ex->stack.push_back( DevaObject( "", *o ) );
 }
 
-void do_importmodule( Executor *ex )
+void do_importmodule( Frame *frame )
 {
 	if( Executor::args_on_stack != 1 )
 		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'importmodule'." );

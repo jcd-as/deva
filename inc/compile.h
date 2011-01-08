@@ -173,7 +173,7 @@ public:
 	void EndFun();
 
 	// define a class
-	void DefineClass( char* name, int line );
+	void DefineClass( char* name, int line, pANTLR3_BASE_TREE bases );
 
 	// constants
 	void Number( pANTLR3_BASE_TREE node );

@@ -253,12 +253,14 @@ struct Function
 {
 	// name
 	string name;
-	// filename
+	// filename (module)
 	string filename;
 	// starting line
 	dword first_line;
 	// is this a method (does it have an extra implicit arg for 'this')
-	bool is_method;
+//	bool is_method;
+	// classname, empty if not method
+	string classname;
 	// number of arguments
 	dword num_args;
 	// TODO: need to store default values for args too
@@ -270,7 +272,9 @@ struct Function
 	// offset in code section of the code for this function
 	dword addr;
 
-	Function() : first_line( 0 ), is_method( false ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
+	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
+
+	inline bool IsMethod() { return !classname.empty(); }
 
 	bool operator == ( const Function & rhs ) const
 	{

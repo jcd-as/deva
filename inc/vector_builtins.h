@@ -31,7 +31,8 @@
 #ifndef __VECTOR_BUILTINS_H__ 
 #define __VECTOR_BUILTINS_H__
 
-#include "executor.h"
+//#include "executor.h"
+#include "object.h"
 #include <string>
 
 using namespace std;
@@ -44,6 +45,9 @@ namespace deva
 // to add new builtins you must:
 // 1) add a new fcn to the builtin_names and builtin_fcns arrays below
 // 2) implement the function in this file
+
+// pre-decls:
+class Frame;
 
 // pre-decls for builtin executors
 void do_vector_append( Frame *frame );
@@ -60,11 +64,11 @@ void do_vector_rfind( Frame *frame );
 void do_vector_count( Frame *frame );
 void do_vector_reverse( Frame *frame );
 void do_vector_sort( Frame *frame );
-//void do_vector_map( Frame *frame );
-//void do_vector_filter( Frame *frame );
-//void do_vector_reduce( Frame *frame );
-//void do_vector_any( Frame *frame );
-//void do_vector_all( Frame *frame );
+void do_vector_map( Frame *frame );
+void do_vector_filter( Frame *frame );
+void do_vector_reduce( Frame *frame );
+void do_vector_any( Frame *frame );
+void do_vector_all( Frame *frame );
 void do_vector_slice( Frame *frame );
 void do_vector_join( Frame *frame );
 // 'enumerable interface'
@@ -87,11 +91,11 @@ static const string vector_builtin_names[] =
 	string( "count" ),
 	string( "reverse" ),
 	string( "sort" ),
-//	string( "map" ),
-//	string( "filter" ),
-//	string( "reduce" ),
-//	string( "any" ),
-//	string( "all" ),
+	string( "map" ),
+	string( "filter" ),
+	string( "reduce" ),
+	string( "any" ),
+	string( "all" ),
 	string( "slice" ),
 	string( "join" ),
 	string( "rewind" ),
@@ -114,15 +118,41 @@ static NativeFunctionPtr vector_builtin_fcns[] =
 	do_vector_count,
 	do_vector_reverse,
 	do_vector_sort,
-//	do_vector_map,
-//	do_vector_filter,
-//	do_vector_reduce,
-//	do_vector_any,
-//	do_vector_all,
+	do_vector_map,
+	do_vector_filter,
+	do_vector_reduce,
+	do_vector_any,
+	do_vector_all,
 	do_vector_slice,
 	do_vector_join,
 	do_vector_rewind,
 	do_vector_next,
+};
+static Object vector_builtin_fcn_objs[] = 
+{
+	Object( do_vector_append ),
+	Object( do_vector_length ),
+	Object( do_vector_copy ),
+	Object( do_vector_concat ),
+	Object( do_vector_min ),
+	Object( do_vector_max ),
+	Object( do_vector_pop ),
+	Object( do_vector_insert ),
+	Object( do_vector_remove ),
+	Object( do_vector_find ),
+	Object( do_vector_rfind ),
+	Object( do_vector_count ),
+	Object( do_vector_reverse ),
+	Object( do_vector_sort ),
+	Object( do_vector_map ),
+	Object( do_vector_filter ),
+	Object( do_vector_reduce ),
+	Object( do_vector_any ),
+	Object( do_vector_all ),
+	Object( do_vector_slice ),
+	Object( do_vector_join ),
+	Object( do_vector_rewind ),
+	Object( do_vector_next ),
 };
 const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
 
@@ -131,6 +161,9 @@ bool IsVectorBuiltin( const string & name );
 
 // get the native function ptr
 NativeFunction GetVectorBuiltin( const string & name );
+
+// get an Object* for the fcn
+Object* GetVectorBuiltinObjectRef( const string & name );
 
 
 } // end namespace deva

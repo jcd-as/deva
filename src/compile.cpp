@@ -67,6 +67,15 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	// to generate and use indices into their collections, and adding items to
 	// the sorted collections will invalidate the indices already used
 
+	// add names that always exist
+	ex->AddConstant( copystr( "__name__" ) );
+	ex->AddConstant( copystr( "__class__" ) );
+	ex->AddConstant( copystr( "__bases__" ) );
+	ex->AddConstant( copystr( "__module__" ) );
+	ex->AddConstant( copystr( "new" ) );
+	ex->AddConstant( copystr( "delete" ) );
+	ex->AddConstant( copystr( "self" ) );
+
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
 	// constants
@@ -126,7 +135,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	f->first_line = 0;
 	f->num_args = 0;
 	f->num_locals = scope->NumLocals();
-	f->is_method = false;
+	f->classname = string( "" );
 	f->addr = 0;
 	// add the global names for the global scope
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
@@ -211,18 +220,23 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->name = string( name );
 	if( classname )
 	{
-		fcn->name += "@";
-		fcn->name += classname;
-		fcn->is_method = true;
+//		fcn->name += "@";
+//		fcn->name += classname;
+//		fcn->is_method = true;
+		fcn->classname = string( classname );
 	}
 	else
-		fcn->is_method = false;
+//		fcn->is_method = false;
+		fcn->classname = string( "" );
 	fcn->filename = string( current_file );
 	fcn->first_line = line;
 	fcn->num_args = scope->NumArgs();
 	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn->addr = is->Length();
+
+	// add the function name to the constants pool
+	ex->AddConstant( Object( obj_symbol_name, copystr( fcn->name.c_str() ) ) );
 
 	// add the global names for this (function) scope and its local scope children
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
@@ -273,21 +287,24 @@ void Compiler::EndFun()
 }
 
 // define a class
-void Compiler::DefineClass( char* name, int line )
+void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 {
-	// TODO: 
-	// - create the map for the class
-	// - add the __name__, __class__, __module__ and __bases__ members
-//	Emit( op_pushconst, /*__name__*/ name );
-//	Emit( op_pushconst, /*__class__*/ cls );
-//	Emit( op_pushconst, /*__module__*/ module );
-//	Emit( op_pushconst, /*__bases__*/ bases );
-//	Emit( op_new_class, 4 );
-	Emit( op_new_class, 0 );
+	// get the name of the class on the stack
+	int idx = GetConstant( Object( name ) );
+	if( idx < 0 )
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+	Emit( op_pushconst, (dword)idx );
+	// get the number of base classes and emit the new_class instruction
+	int num_bases = bases->getChildCount( bases );
+	Emit( op_new_class, num_bases );
+
+	// store the new class into the appropriate local (to 'main')
+	LocalVar( name );
+
 	// TODO:
 	// - if new and delete methods aren't defined for this class, we need to add
 	// them and generate code for them (that calls the base-class new/delete
-	// methods)
+	// methods) here or in the execution engine??
 }
 
 // constants
@@ -796,9 +813,14 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 // 'new'
 void Compiler::NewOp()
 {
+	// no-op??
+
 	// generate a new_instance op for the call to 'new' to use
-	// TODO: populate with __class__ etc
-	Emit( op_new_instance, 0 );
+	// get the name of the class on the stack
+//	int idx = GetConstant( Object( name ) );
+//	if( idx < 0 )
+//		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+//	Emit( op_new_instance, 0 );
 }
 
 // vector and map creation ops

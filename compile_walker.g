@@ -92,8 +92,13 @@ class_decl
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = true; } }
 @after { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = false; } }
 	:	^(Class id=ID 
-		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
-		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
+		(^(Base_classes base_class*))
+		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id), $Base_classes ); }
+		func_decl[(char*)$id.text->chars]*)
+	;
+
+base_class
+	:	id=ID { compiler->Identifier( (char*)$id.text->chars, false ); }
 	;
 
 while_statement 
