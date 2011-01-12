@@ -113,8 +113,12 @@ void Semantics::ResolveVar( char* name, int line )
 	// TODO: modules???
 	// accept builtins
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
-//		constants.insert( Object( obj_symbol_name, name ) );
 		return;
+	// if we're on the rhs of 'self' we need to add symbols referenced
+	if( rhs_of_self )
+	{
+		DefineVar( name, line );
+	}
 	// look up the variable in the current scope
 	else if( !current_scope->Resolve( name, sym_end ) )
 	{
@@ -125,27 +129,12 @@ void Semantics::ResolveVar( char* name, int line )
 // define a function in the current scope
 void Semantics::DefineFun( char* name, char* classname, int line )
 {
-	char* fcn_name;
-//	if( classname )
-//	{
-//		int namelen = strlen( name );
-//		int len = namelen + strlen( classname );
-//		fcn_name = new char[len + 2]; // room for name, '@', classname and null-terminator
-//		memset( fcn_name, 0, len + 2 ); // zero fill
-//		strcpy( fcn_name, name );
-//		fcn_name[namelen] = '@';
-//		strcat( fcn_name, classname );
-//	}
-//	else
-	{
-		fcn_name = name;
-	}
-	Symbol *sym = new Symbol( fcn_name, sym_function, mod_none );
+	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
 	}
-	// add the name to the constant pool (the 'short' name, not the method name)
+	// add the name to the constant pool
 	constants.insert( Object( obj_symbol_name, name ) );
 }
 
@@ -155,12 +144,8 @@ void Semantics::ResolveFun( char* name, int line )
 	// TODO: modules???
 	// if it is a builtin fcn, add it to the constants pool
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
-	{
 		return;
-//		constants.insert( Object( obj_symbol_name, name ) );
-	}
 	// otherwise, look up the function in the current scope
-//	else if( !current_scope->Resolve( name, sym_function ) )
 	else if( !current_scope->Resolve( name, sym_end ) )
 	{
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
@@ -203,7 +188,9 @@ void Semantics::AddString( char* arg )
 		Symbol *sym = new Symbol( s, sym_variable );
 		current_scope->Define( sym );
 		// symbol stores a copy of s, free s now
-		delete [] s;
+//		delete [] s;
+		// add it to the constant pool as a symbol, not a string
+		constants.insert( Object( obj_symbol_name, arg ) );
 	}
 	constants.insert( Object( arg ) );
 }
@@ -468,9 +455,15 @@ void Semantics::CheckConditional( pANTLR3_BASE_TREE condition )
 // validate key expressions (slices)
 void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= NULL*/, pANTLR3_BASE_TREE idx3 /*= NULL*/ )
 {
-	// nothing to validate for non-slices
+	// for non-slices, if the index is a string, it can be accessed via '.',
+	// so we need to add it as a symbol as well as a string
 	if( idx2 == NULL )
+	{
+		unsigned int idx_type = idx1->getType( idx1 );
+		if( idx_type == STRING )
+			constants.insert( Object( obj_symbol_name, (char*)idx1->getText( idx1 )->chars ) );
 		return;
+	}
 
 	// idx1 and idx2 can be END_OP ('$') or anything resulting in a number
 	unsigned int idx1_type = idx1->getType( idx1 );

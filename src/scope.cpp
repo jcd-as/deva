@@ -63,12 +63,11 @@ bool LocalScope::Define( const Symbol* const s )
 		if( i != local_map.end() )
 			return false;
 	}
-	// if it's a const, disallow re-def
-	else if( s->IsConst() )
-	{
-		if( data.count( s->Name() ) != 0 )
-			return false;
-	}
+
+	// disallow re-def ('data' is a map, the item won't be added and would leak)
+	if( data.count( s->Name() ) != 0 )
+		return false;
+
 	// ensure it's added to the list of names for this scope
 	data[s->Name()] = const_cast<Symbol*>( s );
 

@@ -116,6 +116,10 @@ private:
 	vector<size_t> patchstack;
 	vector<size_t> labelstack;
 
+	// have new/delete methods been added to the current class?
+	bool has_new;
+	bool has_delete;
+
 public:
 	int num_locals;	// number of locals in the current scope
 

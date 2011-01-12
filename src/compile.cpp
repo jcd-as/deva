@@ -55,6 +55,8 @@ static vector<dword> fcn_scope_stack;
 
 Compiler::Compiler( Semantics* sem, Executor* ex ) : 
 	max_scope_idx( 0 ),
+	has_new( false ),
+	has_delete( false ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
 	in_class( false ),
@@ -68,13 +70,13 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	// the sorted collections will invalidate the indices already used
 
 	// add names that always exist
-	ex->AddConstant( copystr( "__name__" ) );
-	ex->AddConstant( copystr( "__class__" ) );
-	ex->AddConstant( copystr( "__bases__" ) );
-	ex->AddConstant( copystr( "__module__" ) );
-	ex->AddConstant( copystr( "new" ) );
-	ex->AddConstant( copystr( "delete" ) );
-	ex->AddConstant( copystr( "self" ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "__name__" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "__class__" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "__bases__" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "__module__" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "new" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "delete" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "self" ) ) );
 
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
@@ -96,7 +98,11 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 		}
 		else if( i->type == obj_symbol_name )
 		{
-			char* s = copystr( i->s );
+			// strip quotes and unescape
+			string str( i->s );
+			str = unescape( strip_quotes( str ) );
+			char* s = new char[str.length()+1];
+			strcpy( s, str.c_str() );
 			// try to add the symbol name, if we aren't allowed to (because
 			// it's a duplicate), free the string
 			if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
@@ -144,7 +150,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 		if( s->IsLocal() || s->IsArg() || s->IsConst() )
 			f->local_names.Add( s->Name() );
 	}
-	ex->AddFunction( f );
+	ex->AddFunction( "@main", f );
 
 	// set-up the scope stack to match
 	AddScope();
@@ -201,6 +207,11 @@ void Compiler::ExitBlock()
 // define a function
 void Compiler::DefineFun( char* name, char* classname, int line )
 {
+	if( strcmp( name, "new" ) == 0 )
+		has_new = true;
+	if( strcmp( name, "delete" ) == 0 )
+		has_delete = true;
+
 	// TODO: new/delete methods need code added that calls the base-class
 	// new/delete methods
 
@@ -220,13 +231,9 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->name = string( name );
 	if( classname )
 	{
-//		fcn->name += "@";
-//		fcn->name += classname;
-//		fcn->is_method = true;
 		fcn->classname = string( classname );
 	}
 	else
-//		fcn->is_method = false;
 		fcn->classname = string( "" );
 	fcn->filename = string( current_file );
 	fcn->first_line = line;
@@ -234,9 +241,6 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn->addr = is->Length();
-
-	// add the function name to the constants pool
-	ex->AddConstant( Object( obj_symbol_name, copystr( fcn->name.c_str() ) ) );
 
 	// add the global names for this (function) scope and its local scope children
 	for( int i = 0; i < scope->GetNames().Size(); i++ )
@@ -267,7 +271,10 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	}
 
 	// add to the list of fcn objects
-	ex->AddFunction( fcn );
+	string n = name;
+	n += "@";
+	n += classname;
+	ex->AddFunction( n.c_str(), fcn );
 }
 
 void Compiler::EndFun()
@@ -289,22 +296,94 @@ void Compiler::EndFun()
 // define a class
 void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 {
+	// get the number of base classes and emit the new_class instruction
+	int num_bases = bases->getChildCount( bases );
+
 	// get the name of the class on the stack
 	int idx = GetConstant( Object( name ) );
 	if( idx < 0 )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+
+	// TODO:
+	// - if new and delete methods aren't defined for this class, we need to add them 
+//	if( !has_new )
+//	{
+//		// generate jump around fcn so 'main' (or module 'global' as the case
+//		// may be) doesn't execute its body inline
+//		// emit the jump over fcn body
+//		Emit( op_jmp, (dword)-1 );
+//		AddPatchLoc();
+//
+//		// create a new Function object
+//		Function* fcn = new Function();
+//		fcn->name = string( "new" );
+//		fcn->classname = string( name );
+//		fcn->filename = string( current_file );
+//		fcn->first_line = -1;
+//		fcn->num_args = 0;
+//		fcn->num_locals = 0;
+//
+//		// set the code address for this function
+//		fcn->addr = is->Length();
+//
+//		// add to the list of fcn objects
+//		string n( "new@" );
+//		n += name;
+//		ex->AddFunction( n.c_str(), fcn );
+//
+//
+//		// emit the code, calling 'new' for each parent in order
+//		Emit( op_enter );
+//
+////		// for each parent
+////		for( int i = 0; i < num_bases; i++ )
+////		{
+////			pANTLR3_BASE_TREE base = (pANTLR3_BASE_TREE)bases->getChild( bases, i );
+////			char* base_name = (char*)base->getText( base )->chars;
+////			// push the base class name
+////			int idx_base = GetConstant( Object( obj_symbol_name, base_name ) );
+////			if( idx_base < 0 )
+////				throw ICE( "Cannot find base class name constant for constructor generation." );
+////			Emit( op_pushconst, (dword)idx_base );
+////			// push 'self' for the base constructor
+////			int idx_self = GetConstant( Object( obj_symbol_name, "self" ) );
+////			if( idx_self < 0 )
+////				throw ICE( "Cannot find constant 'self'." );
+////			Emit( op_pushconst, (dword)idx_self );
+////			// load 'self' from the base class
+////			Emit( op_tbl_load );
+////			// generate the call to the base constructor
+////			int idx_new = GetConstant( Object( obj_symbol_name, "new" ) );
+////			if( idx_new < 0 )
+////				throw ICE( "Cannot find constant 'new'." );
+////			Emit( op_pushconst, (dword)idx_new );
+////			Emit( op_call, 0 );
+////			// pop the unused return value (null)
+////			Emit( op_pop );
+////		}
+//
+//		Emit( op_leave );
+//
+//		Emit( op_push_null );
+//		Emit( op_return, 0 );
+//
+//		// back-patch the jump over fcn body
+//		BackpatchToCur();
+//	}
+//	if( !has_delete )
+//	{
+//	}
+
+	// emit the new_class op
 	Emit( op_pushconst, (dword)idx );
-	// get the number of base classes and emit the new_class instruction
-	int num_bases = bases->getChildCount( bases );
 	Emit( op_new_class, num_bases );
 
 	// store the new class into the appropriate local (to 'main')
 	LocalVar( name );
 
-	// TODO:
-	// - if new and delete methods aren't defined for this class, we need to add
-	// them and generate code for them (that calls the base-class new/delete
-	// methods) here or in the execution engine??
+	// reset flags
+	has_new = false;
+	has_delete = false;
 }
 
 // constants
@@ -361,7 +440,7 @@ void Compiler::String( char* name )
 	if( idx < 0 )
 	{
 		delete s;
-		throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 	}
 	// emit op to push it onto the stack
 	Emit( op_pushconst, (dword)idx );

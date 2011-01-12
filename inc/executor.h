@@ -117,7 +117,8 @@ public:
 	// helpers
 	// TODO: adding a fcn whose name already exists should *override* the
 	// existing fcn (map's behaviour is to not accept the new value)
-	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
+//	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
+	inline void AddFunction( const char* name, Function* f ) { functions.insert( pair<string, Object*>( string(name), new Object( f ) ) ); }
 	inline Object* FindFunction( string name ) { map<string, Object*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
 
 	// constant pool handling methods
@@ -127,10 +128,12 @@ public:
 	inline size_t NumConstants() { return constants.Size(); }
 
 	// code execution methods:
+	void CallConstructors( Object o, Object instance, int num_args = 0 );
+	void CallDestructors( Object o );
 	void ExecuteCode( const Code & code );
 	Opcode ExecuteInstruction();
-	void ExecuteToReturn();
-	void ExecuteFunction( Function* f, int num_args );
+	void ExecuteToReturn( bool is_destructor = false );
+	void ExecuteFunction( Function* f, int num_args, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args );
 
 	// debug and output methods:

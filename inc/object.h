@@ -98,7 +98,6 @@ class MapBase;
 // types needed by Object class
 typedef RefCounted<VectorBase> Vector;
 typedef RefCounted<MapBase> Map;
-//typedef void (*NativeFunction)(Frame*);
 typedef void (*NativeFunctionPtr)(Frame*);
 struct NativeFunction
 {
@@ -136,6 +135,8 @@ struct Object
 	Object( void* n ) : type( obj_native_obj ), no( n ) {}
 	Object( size_t n ) : type( obj_size ), sz( n ) {}
 	Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
+	{ /*assert( t == obj_symbol_name );*/ }
+	Object( ObjectType t, const char* n ) : type( obj_symbol_name ), s( const_cast<char*>(n) )
 	{ /*assert( t == obj_symbol_name );*/ }
 
 	// creation functions for classes & instances
@@ -257,8 +258,6 @@ struct Function
 	string filename;
 	// starting line
 	dword first_line;
-	// is this a method (does it have an extra implicit arg for 'this')
-//	bool is_method;
 	// classname, empty if not method
 	string classname;
 	// number of arguments
@@ -275,6 +274,7 @@ struct Function
 	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
+	inline int NumDefaultArgs() { return default_args.Size(); }
 
 	bool operator == ( const Function & rhs ) const
 	{

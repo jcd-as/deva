@@ -66,6 +66,78 @@ Executor::~Executor()
 	for( map<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
 		delete i->second->f;
+		delete i->second;
+	}
+}
+
+// recursively call constructors on an object and its base classes
+// given a class object and the instance we're creating
+// (only the first constructor call (most derived class) can pass arguments)
+void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/ )
+{
+	// get the base classes collection
+	Map::iterator i = o.m->find( Object( obj_symbol_name, "__bases__" ) );
+	if( i == o.m->end() )
+		throw ICE( "Unable to find '__bases__' member in class object." );
+	if( i->second.type != obj_vector )
+		throw ICE( "Type of '__bases__' member is not a vector." );
+	Vector* bases = i->second.v;
+	// call each base class' constructor (in reverse order)
+	for( Vector::reverse_iterator iv = bases->rbegin(); iv != bases->rend(); ++iv )
+	{
+		if( iv->type != obj_class )
+			throw ICE( "Base class object in '__bases__' member is not a class." );
+
+		// recur
+		CallConstructors( *iv, instance, 0 );
+	}
+	// call the constructor for this (most derived) class
+	// push the new instance onto the stack
+	stack.push_back( instance );
+	// get the 'new' method (constructor) of this class and call it
+	Map::iterator it = o.m->find( Object( obj_symbol_name, const_cast<char*>("new") ) );
+	if( it != instance.m->end() )
+	{
+		if( it->second.type != obj_function )
+			throw RuntimeException( "'new' method of instance object is not a function." );
+		ExecuteFunction( it->second.f, num_args );
+		// pop the (null) return value
+		stack.pop_back();
+	}
+}
+
+// recursively call destructors on an object and its base classes
+void Executor::CallDestructors( Object o )
+{
+	// call the destructor for this (most derived) class
+	// push the instance onto the stack
+	stack.push_back( o );
+	// get the 'delete' method (destructor) of this class and call it
+	Map::iterator it = o.m->find( Object( obj_symbol_name, const_cast<char*>("delete") ) );
+	if( it != o.m->end() )
+	{
+		if( it->second.type != obj_function )
+			throw RuntimeException( "'delete' method of instance object is not a function." );
+		ExecuteFunction( it->second.f, 0, true );
+		// pop the (null) return value
+		stack.pop_back();
+	}
+
+	// get the base classes collection
+	Map::iterator i = o.m->find( Object( obj_symbol_name, "__bases__" ) );
+	if( i == o.m->end() )
+		throw ICE( "Unable to find '__bases__' member in class object." );
+	if( i->second.type != obj_vector )
+		throw ICE( "Type of '__bases__' member is not a vector." );
+	Vector* bases = i->second.v;
+	// call each base class' destructor
+	for( Vector::iterator iv = bases->begin(); iv != bases->end(); ++iv )
+	{
+		if( iv->type != obj_class )
+			throw ICE( "Base class object in '__bases__' member is not a class." );
+
+		// recur
+		CallDestructors( *iv );
 	}
 }
 
@@ -112,7 +184,7 @@ void Executor::ExecuteCode( const Code & code )
 	PopFrame();
 }
 
-void Executor::ExecuteToReturn()
+void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
 {
 	Opcode op = op_nop;
 
@@ -120,12 +192,10 @@ void Executor::ExecuteToReturn()
 	while( op != op_return )
 	{
 		op = ExecuteInstruction();
-		// if end, error
-		if( ip >= end || op == op_halt )
+		// if end, error, unless this is a destructor
+		if( !is_destructor && (ip >= end || op == op_halt ) )
 			throw ICE( "End of code encounted before function returned." );
 	}
-	// execute the return op too
-//	ExecuteInstruction();
 }
 
 Opcode Executor::ExecuteInstruction()
@@ -545,7 +615,7 @@ Opcode Executor::ExecuteInstruction()
 		// set its name
 		Object name = stack.back();
 		stack.pop_back();
-		Object _name = GetConstant( FindConstant( Object( "__name__" ) ) );
+		Object _name = GetConstant( FindConstant( Object( obj_symbol_name, "__name__" ) ) );
 		m.m->insert( pair<Object, Object>( _name, name ) );
 		// build the bases list
 		Vector* v = CreateVector();
@@ -557,7 +627,7 @@ Opcode Executor::ExecuteInstruction()
 				throw ICE( "Base class expected. Bad code gen? Corrupt stack?" );
 			v->push_back( base );
 		}
-		Object _bases = GetConstant( FindConstant( Object( "__bases__" ) ) );
+		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
 		m.m->insert( pair<Object, Object>( _bases, Object( v ) ) );
 		// add all of the methods for this class
 		for( map<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
@@ -588,7 +658,7 @@ Opcode Executor::ExecuteInstruction()
 //		// - create a copy of it
 //		Map* inst = CreateMap( *pclass->m );
 //		// - add the __class__ member to it
-//		Object _class = GetConstant( FindConstant( Object( "__class__" ) ) );
+//		Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
 //		inst->insert( pair<Object, Object>( _class, classname ) );
 //		// push the new instance onto the stack
 //		stack.push_back( Object( inst ) );
@@ -1041,17 +1111,22 @@ Opcode Executor::ExecuteInstruction()
 		{
 			// - create a copy of the class object
 			Map* inst = CreateMap( *o.m );
+
 			// - add the __class__ member to it
-			Object _class = GetConstant( FindConstant( Object( "__class__" ) ) );
-			Map::iterator i = o.m->find( Object( "__name__" ) );
-			if( i == lhs.m->end() )
+			Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
+			Map::iterator i = o.m->find( Object( obj_symbol_name, "__name__" ) );
+			if( i == o.m->end() )
 				throw ICE( "Unable to find '__name__' member in class object." );
 			inst->insert( pair<Object, Object>( _class, i->second ) );
-			// push the new instance onto the stack
+
+			// create our instance
 			Object instance;
 			instance.MakeInstance( inst );
+
+			// recursively call the constructors on this object and its base classes
+			CallConstructors( o, instance, arg );
+
 			stack.push_back( instance );
-			// TODO: get the 'new' method of this class and call it
 		}
 		// is it a const we need to look up?
 		else if( o.type == obj_symbol_name )
@@ -1069,17 +1144,18 @@ Opcode Executor::ExecuteInstruction()
 				{
 					ExecuteFunction( nf, arg );
 				}
+				// TODO: can this ever happen?
 				// class name?
-				else
-				{
-					Object* _class = scopes->FindSymbol( o.s );
-					if( _class && _class->type == obj_class )
-					{
-						// TODO: get the 'new' method of this class and call it
-					}
-					else
-						throw RuntimeException( boost::format( "Invalid function name '%1%'." ) % o.s );
-				}
+//				else
+//				{
+//					Object* _class = scopes->FindSymbol( o.s );
+//					if( _class && _class->type == obj_class )
+//					{
+//						// get the 'new' method of this class and call it
+//					}
+//					else
+//						throw RuntimeException( boost::format( "Invalid function name '%1%'." ) % o.s );
+//				}
 			}
 		}
 		else
@@ -1277,7 +1353,26 @@ Opcode Executor::ExecuteInstruction()
 			Map::iterator i = lhs.m->find( rhs );
 			if( i == lhs.m->end() )
 			{
-				if( rhs.type == obj_string || rhs.type == obj_symbol_name )
+				// if this was a symbol name, try looking for it as a string,
+				// since 'a.b;' is syntactic sugar for 'a["b"];'
+				if( rhs.type == obj_symbol_name )
+				{
+					Map::iterator it = lhs.m->find( Object( rhs.s ) );
+					if( it != lhs.m->end() )
+					{
+						Object obj = it->second;
+						if( obj.type == obj_function || obj.type == obj_native_function )
+						{
+							// push the class/instance ('this') for instances
+							if( lhs.type == obj_instance )
+								stack.push_back( lhs );
+						}
+						// push the object
+						stack.push_back( obj );
+						break;
+					}
+				}
+				else if( rhs.type == obj_string || rhs.type == obj_symbol_name )
 				{
 					// TODO: should builtins be looked for _last_, so they can
 					// be overridden by user methods??
@@ -1291,7 +1386,7 @@ Opcode Executor::ExecuteInstruction()
 						stack.push_back( lhs );
 						stack.push_back( Object( nf ) );
 					}
-					// TODO: check for class/instance method
+					// check for class/instance method
 					else if( lhs.type == obj_class || lhs.type == obj_instance )
 					{
 						// find the object by name in the map
@@ -1301,11 +1396,12 @@ Opcode Executor::ExecuteInstruction()
 							Object obj = i->second;
 							if( obj.type != obj_function )
 								throw RuntimeException( boost::format( "Invalid method: '%1%'." ) % rhs.s );
-							// push the class/instance ('this') for instances
-							if( lhs.type == obj_instance )
+							// push the class/instance ('this')
+							if( lhs.type == obj_instance || lhs.type == obj_class )
 								stack.push_back( lhs );
 							// push the function
 							stack.push_back( obj );
+							break;
 						}
 						else
 							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
@@ -1322,12 +1418,10 @@ Opcode Executor::ExecuteInstruction()
 				// class/instance method object?
 				if( i->second.type == obj_function )
 				{
-					// if this is an instance, push 'self'
-					if( lhs.type == obj_instance )
+					// if this is an instance or class, push 'self'
+					if( lhs.type == obj_instance || lhs.type == obj_class )
 						stack.push_back( lhs );
 				}
-				else
-					throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs );
 			}
 			stack.push_back( i->second );
 		}
@@ -1450,8 +1544,13 @@ Opcode Executor::ExecuteInstruction()
 	return op;
 }
 
-void Executor::ExecuteFunction( Function* f, int num_args )
+void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*= false*/ )
 {
+	if( num_args > f->num_args )
+		throw RuntimeException( boost::format( "Too many arguments passed to function '%1%'." ) % f->name );
+	if( (f->num_args - num_args) > f->NumDefaultArgs() )
+		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
+
 	// if this is a method there's an extra arg for 'this'
 	if( f->IsMethod() )
 		num_args++;
@@ -1483,7 +1582,7 @@ void Executor::ExecuteFunction( Function* f, int num_args )
 	// jump to the function
 	ip = (byte*)(bp + f->addr);
 	// execute until it returns
-	ExecuteToReturn();
+	ExecuteToReturn( is_destructor );
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args )

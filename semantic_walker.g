@@ -91,7 +91,6 @@ func_decl[char* classname]
 class_decl 
 	:	^(Class id=ID 
 		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
-//		(^(Base_classes ID+))? func_decl[(char*)$id.text->chars]*)
 		(^(Base_classes ID*)) func_decl[(char*)$id.text->chars]*)
 	;
 
@@ -183,11 +182,13 @@ exp[bool invert]
 	|	^(Negate in=exp[true]) { semantics->CheckNegateOp( $in.start ); }
 	|	^(NOT_OP in=exp[false]) { semantics->CheckNotOp( $in.start ); }
 	|	^(Key exp[false] key_exp)
-	|	^(DOT_OP exp[false] exp[false])
+	|	^(DOT_OP lhs=exp[false] 
+			{ if( string( (char*)$lhs.start->getText($lhs.start)->chars ) == string( "self" ) ) semantics->rhs_of_self = true; }
+			exp[false])
+			{ semantics->rhs_of_self = false; }
 	|	call_exp
 	|	(map_op | vec_op)
 	|	value[invert]
-// TODO: map key items need to be added as variables
 // TODO: this calls ResolveFun on every ID in, for example, 'a.b.c()'
 	|	ID  { if( semantics->making_call ) semantics->ResolveFun( (char*)$ID.text->chars, $ID->getLine($ID) ); else semantics->ResolveVar( (char*)$ID.text->chars, $ID->getLine($ID) ); }
 	;

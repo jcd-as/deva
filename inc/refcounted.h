@@ -58,8 +58,9 @@ public:
 	// 'slice' creation fcn
 	static RefCounted<T>* Create( T & v, size_t start, size_t end ) { return new RefCounted<T>( v, start, end ); }
 
-	void IncRef() { refcount++; }
-	int DecRef() { refcount--; int r = refcount; if( refcount == 0 ) delete this; return r; }
+	inline void IncRef() { refcount++; }
+	inline int DecRef() { refcount--; int r = refcount; if( refcount == 0 ) delete this; return r; }
+	inline int GetRefCount() { return refcount; }
 };
 
 

@@ -26,6 +26,8 @@
 // created by jcs, december 18, 2010 
 
 #include "object.h"
+#include "exceptions.h"
+#include "executor.h"
 
 
 namespace deva
@@ -70,6 +72,11 @@ int DecRef( Object & o )
 	}
 	else if( IsMapType( o.type ) )
 	{
+		// if we're deleting an instance, we need to call the destructor and base class destructors
+		if( o.m->GetRefCount() == 1 && o.type == obj_instance )
+		{
+			ex->CallDestructors( o );
+		}
 		// walk the map's contents
 		for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
 		{

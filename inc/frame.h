@@ -81,7 +81,7 @@ public:
 		is_native( false ), 
 		num_args( args_passed ), 
 		addr( loc )
-		{ locals = new Object[f->num_locals]; }
+		{ locals = new Object[f->IsMethod() ? f->num_locals+1 : f->num_locals]; }
 	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
 		parent( p ),
 		scopes( s ),
