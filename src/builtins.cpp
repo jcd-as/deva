@@ -128,13 +128,28 @@ void do_print( Frame* frame )
 	Object* o = helper.GetLocalN( 0 );
 
 	string s;
-	// TODO:
 	// if this is an instance object, see if there is a 'repr' method
 	// and use the string returned from it, if it exists
-//	if( o->type == obj_string )
-//	{
-//	}
-//	else
+	if( o->type == obj_instance )
+	{
+		Map::iterator it = o->m->find( Object( obj_symbol_name, "repr" ) );
+		if( it != o->m->end() )
+		{
+			if( it->second.type == obj_function )
+			{
+				// push the object ("self")
+				ex->PushStack( *o );
+				// call the function (takes no args)
+				ex->ExecuteFunction( it->second.f, 0 );
+				// get the result (return value)
+				Object retval = ex->PopStack();
+				if( retval.type != obj_string )
+					throw RuntimeException( "The 'repr' method on a class did not return a string value." );
+				s = retval.s;
+			}
+		}
+	}
+	else
 		s = obj_to_str( o );
 
 	cout << s << separator;
@@ -144,54 +159,33 @@ void do_print( Frame* frame )
 
 void do_str( Frame *frame )
 {
-//	// if this is an instance object, see if there is a 'repr' method
-//	// and use the string returned from it, if it exists
-//	if( o->Type() == sym_instance )
-//	{
-//		// look for the '__class__' member, which holds the class name
-//		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__class__" ) ) );
-//		if( it == o->map_val->end() )
-//			throw DevaRuntimeException( "Invalid instance, doesn't contain '__class__' member!" );
-//		string cls( "@" );
-//		cls += it->second.str_val;
-//		string str( "str" );
-//		str += cls;
-//		// append "@class" to the method name
-//		it = o->map_val->find( DevaObject( "", str ) );
-//		if( it != o->map_val->end() )
-//		{
-//			if( it->second.Type() == sym_address )
-//			{
-//				// push the object ("self")
-//				ex->stack.push_back( *o );
-//				// call the function (takes no args)
-//				ex->ExecuteDevaFunction( str, 1 );
-//				// get the result (return value)
-//				DevaObject retval = ex->stack.back();
-//				ex->stack.pop_back();
-//				if( retval.Type() != sym_string )
-//					throw DevaRuntimeException( "The 'str' method on a class did not return a string value" );
-//				s = retval.str_val;
-//			}
-//			else
-//				s = obj_to_str( o );
-//		}
-//		else
-//			s = obj_to_str( o );
-//	}
-
 	BuiltinHelper helper( NULL, "str", frame );
 	helper.CheckNumberOfArguments( 1 );
 	Object* o = helper.GetLocalN( 0 );
 
 	string s;
-	// TODO:
-	// if this is an instance object, see if there is a 'repr' method
+	// if this is an instance object, see if there is a 'str' method
 	// and use the string returned from it, if it exists
-//	if( o->type == obj_instance )
-//	{
-//	}
-//	else
+	if( o->type == obj_instance )
+	{
+		Map::iterator it = o->m->find( Object( obj_symbol_name, "str" ) );
+		if( it != o->m->end() )
+		{
+			if( it->second.type == obj_function )
+			{
+				// push the object ("self")
+				ex->PushStack( *o );
+				// call the function (takes no args)
+				ex->ExecuteFunction( it->second.f, 0 );
+				// get the result (return value)
+				Object retval = ex->PopStack();
+				if( retval.type != obj_string )
+					throw RuntimeException( "The 'str' method on a class did not return a string value." );
+				s = retval.s;
+			}
+		}
+	}
+	else
 		s = obj_to_str( o );
 
 	const char* str = frame->GetParent()->AddString( s );
@@ -302,18 +296,16 @@ void do_name( Frame *frame )
 	Object* o = helper.GetLocalN( 0 );
 
 	const char* name;
-	// TODO: if this is a class, get the name attribute
+	// if this is a class, get the __name__ attribute
 	if( o->type == obj_class )
 	{
-//		DOMap::iterator it = o->map_val->find( DevaObject( "", string( "__name__" ) ) );
-//		if( it != o->map_val->end() )
-//		{
-//			if( it->second.Type() != sym_string )
-//				throw DevaICE( "__name__ attribute on a class object is not of type 'string'." );
-//			name = it->second.str_val;
-//		}
-//		else
-//			throw DevaICE( "__name__ attribute not found on a class object." );
+		Map::iterator it = o->m->find( Object( obj_symbol_name, "__name__" ) );
+		if( it != o->m->end() )
+		{
+			if( it->second.type != obj_string )
+				throw RuntimeException( "The '__name__' attribute on a class object did not return a string value." );
+			name = it->second.s;
+		}
 	}
 	else
 	{

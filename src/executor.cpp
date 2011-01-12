@@ -95,8 +95,8 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 	// push the new instance onto the stack
 	stack.push_back( instance );
 	// get the 'new' method (constructor) of this class and call it
-	Map::iterator it = o.m->find( Object( obj_symbol_name, const_cast<char*>("new") ) );
-	if( it != instance.m->end() )
+	Map::iterator it = o.m->find( Object( obj_symbol_name, "new" ) );
+	if( it != o.m->end() )
 	{
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'new' method of instance object is not a function." );
@@ -113,7 +113,7 @@ void Executor::CallDestructors( Object o )
 	// push the instance onto the stack
 	stack.push_back( o );
 	// get the 'delete' method (destructor) of this class and call it
-	Map::iterator it = o.m->find( Object( obj_symbol_name, const_cast<char*>("delete") ) );
+	Map::iterator it = o.m->find( Object( obj_symbol_name, "delete" ) );
 	if( it != o.m->end() )
 	{
 		if( it->second.type != obj_function )
@@ -635,7 +635,7 @@ Opcode Executor::ExecuteInstruction()
 			Function* f = i->second->f;
 			if( f->classname == name.s )
 			{
-				int idx = FindConstant( Object( obj_symbol_name, const_cast<char*>(f->name.c_str()) ) );
+				int idx = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
 				if( idx == -1 )
 					throw ICE( "Function name not found in constants pool." );
 				Object fcnname = GetConstant( idx );
@@ -645,23 +645,6 @@ Opcode Executor::ExecuteInstruction()
 		// push the new class object onto the stack (it will be consumed by a
 		// following 'def_local' instruction)
 		stack.push_back( m );
-		}
-		break;
-	case op_new_instance:
-		{
-		// 1 arg: size = constant idx of class name
-//		arg = *((dword*)ip);
-//		ip += sizeof( dword );
-//		// - find the class object
-//		Object classname = GetConstant( arg );
-//		Object* pclass = scopes->FindSymbol( classname.s );
-//		// - create a copy of it
-//		Map* inst = CreateMap( *pclass->m );
-//		// - add the __class__ member to it
-//		Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
-//		inst->insert( pair<Object, Object>( _class, classname ) );
-//		// push the new instance onto the stack
-//		stack.push_back( Object( inst ) );
 		}
 		break;
 	case op_jmp:
@@ -1760,12 +1743,6 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		ret = sizeof( dword );
 		break;
 	case op_new_class:
-		// 1 arg: size
-		arg = *((dword*)p);
-		cout << "\t" << arg;
-		ret = sizeof( dword );
-		break;
-	case op_new_instance:
 		// 1 arg: size
 		arg = *((dword*)p);
 		cout << "\t" << arg;

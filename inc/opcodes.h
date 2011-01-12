@@ -142,7 +142,6 @@ enum Opcode
 	op_new_map,		// create a new map object and push onto tos. <Op0> has count of items on stack
 	op_new_vec,		// create a new vector object and push onto tos. <Op0> has count of items on stack
 	op_new_class,	// create a new class object and push onto the tos. <Op0> has count of items on stack
-	op_new_instance,// create a new instance of a class and push onto the tos. <Op0> has count of items on stack
 	op_jmp,			// unconditional jump to the address on the tos
 	op_jmpf,		// jump on tos evaluating to false 
 	op_eq,			// == compare tos and tos1
@@ -204,7 +203,7 @@ enum Opcode
 
 	op_import,
 
-	// 114 (update as opcodes are added above)
+	// 113 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -264,7 +263,6 @@ static const char* opcodeNames[] =
 	"new_map",
 	"new_vec",
 	"new_class",
-	"new_instance",
 	"jmp",
 	"jmpf",
 	"eq",
