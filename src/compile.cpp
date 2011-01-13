@@ -55,8 +55,6 @@ static vector<dword> fcn_scope_stack;
 
 Compiler::Compiler( Semantics* sem, Executor* ex ) : 
 	max_scope_idx( 0 ),
-	has_new( false ),
-	has_delete( false ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
 	in_class( false ),
@@ -77,6 +75,8 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	ex->AddConstant( Object( obj_symbol_name, copystr( "new" ) ) );
 	ex->AddConstant( Object( obj_symbol_name, copystr( "delete" ) ) );
 	ex->AddConstant( Object( obj_symbol_name, copystr( "self" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "rewind" ) ) );
+	ex->AddConstant( Object( obj_symbol_name, copystr( "next" ) ) );
 
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
@@ -143,12 +143,10 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	f->num_locals = scope->NumLocals();
 	f->classname = string( "" );
 	f->addr = 0;
-	// add the global names for the global scope
-	for( int i = 0; i < scope->GetNames().Size(); i++ )
+	// add the locals
+	for( int i = 0; i < scope->GetLocals().size(); i++ )
 	{
-		Symbol* s = scope->GetNames().At( i );
-		if( s->IsLocal() || s->IsArg() || s->IsConst() )
-			f->local_names.Add( s->Name() );
+		f->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
 	ex->AddFunction( "@main", f );
 
@@ -207,14 +205,6 @@ void Compiler::ExitBlock()
 // define a function
 void Compiler::DefineFun( char* name, char* classname, int line )
 {
-	if( strcmp( name, "new" ) == 0 )
-		has_new = true;
-	if( strcmp( name, "delete" ) == 0 )
-		has_delete = true;
-
-	// TODO: new/delete methods need code added that calls the base-class
-	// new/delete methods
-
 	// generate jump around fcn so 'main' (or module 'global' as the case
 	// may be) doesn't execute its body inline
 	// emit the jump over fcn body
@@ -237,17 +227,15 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		fcn->classname = string( "" );
 	fcn->filename = string( current_file );
 	fcn->first_line = line;
-	fcn->num_args = scope->NumArgs();
+	fcn->num_args = classname ? scope->NumArgs() + 1 : scope->NumArgs();
 	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn->addr = is->Length();
 
-	// add the global names for this (function) scope and its local scope children
-	for( int i = 0; i < scope->GetNames().Size(); i++ )
+	// add the locals
+	for( int i = 0; i < scope->GetLocals().size(); i++ )
 	{
-		Symbol* s = scope->GetNames().At( i );
-		if( s->IsLocal() || s->IsArg() || s->IsConst() )
-			fcn->local_names.Add( s->Name() );
+		fcn->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
 	// add the default arg indices for this (function) scope
 	for( int i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
@@ -272,8 +260,11 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 	// add to the list of fcn objects
 	string n = name;
-	n += "@";
-	n += classname;
+	if( classname )
+	{
+		n += "@";
+		n += classname;
+	}
 	ex->AddFunction( n.c_str(), fcn );
 }
 
@@ -304,86 +295,12 @@ void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 	if( idx < 0 )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 
-	// TODO:
-	// - if new and delete methods aren't defined for this class, we need to add them 
-//	if( !has_new )
-//	{
-//		// generate jump around fcn so 'main' (or module 'global' as the case
-//		// may be) doesn't execute its body inline
-//		// emit the jump over fcn body
-//		Emit( op_jmp, (dword)-1 );
-//		AddPatchLoc();
-//
-//		// create a new Function object
-//		Function* fcn = new Function();
-//		fcn->name = string( "new" );
-//		fcn->classname = string( name );
-//		fcn->filename = string( current_file );
-//		fcn->first_line = -1;
-//		fcn->num_args = 0;
-//		fcn->num_locals = 0;
-//
-//		// set the code address for this function
-//		fcn->addr = is->Length();
-//
-//		// add to the list of fcn objects
-//		string n( "new@" );
-//		n += name;
-//		ex->AddFunction( n.c_str(), fcn );
-//
-//
-//		// emit the code, calling 'new' for each parent in order
-//		Emit( op_enter );
-//
-////		// for each parent
-////		for( int i = 0; i < num_bases; i++ )
-////		{
-////			pANTLR3_BASE_TREE base = (pANTLR3_BASE_TREE)bases->getChild( bases, i );
-////			char* base_name = (char*)base->getText( base )->chars;
-////			// push the base class name
-////			int idx_base = GetConstant( Object( obj_symbol_name, base_name ) );
-////			if( idx_base < 0 )
-////				throw ICE( "Cannot find base class name constant for constructor generation." );
-////			Emit( op_pushconst, (dword)idx_base );
-////			// push 'self' for the base constructor
-////			int idx_self = GetConstant( Object( obj_symbol_name, "self" ) );
-////			if( idx_self < 0 )
-////				throw ICE( "Cannot find constant 'self'." );
-////			Emit( op_pushconst, (dword)idx_self );
-////			// load 'self' from the base class
-////			Emit( op_tbl_load );
-////			// generate the call to the base constructor
-////			int idx_new = GetConstant( Object( obj_symbol_name, "new" ) );
-////			if( idx_new < 0 )
-////				throw ICE( "Cannot find constant 'new'." );
-////			Emit( op_pushconst, (dword)idx_new );
-////			Emit( op_call, 0 );
-////			// pop the unused return value (null)
-////			Emit( op_pop );
-////		}
-//
-//		Emit( op_leave );
-//
-//		Emit( op_push_null );
-//		Emit( op_return, 0 );
-//
-//		// back-patch the jump over fcn body
-//		BackpatchToCur();
-//	}
-//	if( !has_delete )
-//	{
-//	}
-
 	// emit the new_class op
 	Emit( op_pushconst, (dword)idx );
 	Emit( op_new_class, num_bases );
 
 	// store the new class into the appropriate local (to 'main')
 	LocalVar( name );
-
-	// reset flags
-	has_new = false;
-	has_delete = false;
 }
 
 // constants
@@ -457,72 +374,82 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 
 	// emit op to push it onto the stack
 
-	// is it a local?
-	int idx = CurrentScope()->ResolveLocalToIndex( s );
-
-	// no? look it up as a non-local
-	if( idx == -1 )
+	// are we the rhs of a dot-op? don't try to look for the name as a local, we
+	// need it to remain a symbol
+	if( is_dot_rhs )
 	{
 		// get the constant pool index for this identifier
-		idx = GetConstant( Object( obj_symbol_name, s ) );
+		int idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx < 0 )
 		{
-			// if we're on the right hand side of a dot op, try looking for it
-			// as a string too, as it could be a map/class/instance member 
+			// try looking for it as a string too, as it could be a 
+			// map/class/instance member 
 			// (where 'a.b' is just short-hand for 'a["b"]')
-			if( is_dot_rhs )
-			{
-				idx = GetConstant( Object( s ) );
-			}
-
+			idx = GetConstant( Object( s ) );
 			if( idx < 0 )
 				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 		}
 
 		Emit( op_pushconst, (dword)idx );
 	}
-	// local
 	else
 	{
-		// index under 10: use the short instructions
-		if( idx < 10 )
+		// is it a local?
+		int idx = CurrentScope()->ResolveLocalToIndex( s );
+
+		// no? look it up as a non-local
+		if( idx == -1 )
 		{
-			switch( idx )
-			{
-			case 0:
-				Emit( op_pushlocal0 );
-				break;
-			case 1:
-				Emit( op_pushlocal1 );
-				break;
-			case 2:
-				Emit( op_pushlocal2 );
-				break;
-			case 3:
-				Emit( op_pushlocal3 );
-				break;
-			case 4:
-				Emit( op_pushlocal4 );
-				break;
-			case 5:
-				Emit( op_pushlocal5 );
-				break;
-			case 6:
-				Emit( op_pushlocal6 );
-				break;
-			case 7:
-				Emit( op_pushlocal7 );
-				break;
-			case 8:
-				Emit( op_pushlocal8 );
-				break;
-			case 9:
-				Emit( op_pushlocal9 );
-				break;
-			}
+			// get the constant pool index for this identifier
+			idx = GetConstant( Object( obj_symbol_name, s ) );
+			if( idx < 0 )
+				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+
+			Emit( op_pushconst, (dword)idx );
 		}
+		// local
 		else
-			Emit( op_pushlocal, (dword)idx );
+		{
+			// index under 10: use the short instructions
+			if( idx < 10 )
+			{
+				switch( idx )
+				{
+				case 0:
+					Emit( op_pushlocal0 );
+					break;
+				case 1:
+					Emit( op_pushlocal1 );
+					break;
+				case 2:
+					Emit( op_pushlocal2 );
+					break;
+				case 3:
+					Emit( op_pushlocal3 );
+					break;
+				case 4:
+					Emit( op_pushlocal4 );
+					break;
+				case 5:
+					Emit( op_pushlocal5 );
+					break;
+				case 6:
+					Emit( op_pushlocal6 );
+					break;
+				case 7:
+					Emit( op_pushlocal7 );
+					break;
+				case 8:
+					Emit( op_pushlocal8 );
+					break;
+				case 9:
+					Emit( op_pushlocal9 );
+					break;
+				}
+			}
+			else
+				Emit( op_pushlocal, (dword)idx );
+		}
 	}
 }
 
@@ -892,14 +819,7 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 // 'new'
 void Compiler::NewOp()
 {
-	// no-op??
-
-	// generate a new_instance op for the call to 'new' to use
-	// get the name of the class on the stack
-//	int idx = GetConstant( Object( name ) );
-//	if( idx < 0 )
-//		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
-//	Emit( op_new_instance, 0 );
+	// no-op
 }
 
 // vector and map creation ops
@@ -992,7 +912,7 @@ void Compiler::WhileOpEnd()
 
 void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 {
-	// if 'val' is NULL this is a vector
+	// if 'val' is NULL this is a vector/single-loop-var iteration
 
 	// is the key a local?
 	int key_idx = CurrentScope()->ResolveLocalToIndex( key );
@@ -1028,7 +948,10 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 	AddLabel();
 
 	// generate the for_iter instruction
-	Emit( op_for_iter, (dword)-1 );
+	if( !val )
+		Emit( op_for_iter, (dword)-1 );
+	else
+		Emit( op_for_iter_pair, (dword)-1 );
 
 	// mark it for back-patching
 	AddPatchLoc();

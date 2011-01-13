@@ -101,7 +101,6 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
-		throw SemanticException( str( boost::format( "Symbol '%1%' already defined." ) % name).c_str(), line );
 	}
 	// add the var name to the constant pool
 	constants.insert( Object( obj_symbol_name, name ) );
@@ -136,6 +135,10 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 	}
 	// add the name to the constant pool
 	constants.insert( Object( obj_symbol_name, name ) );
+
+	// if this is a method, add the 'self' arg
+	if( in_class )
+		AddArg( const_cast<char*>("self"), line );
 }
 
 // resolve a function, in the current scope

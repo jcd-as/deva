@@ -148,6 +148,8 @@ void do_print( Frame* frame )
 				s = retval.s;
 			}
 		}
+		else
+			s = obj_to_str( o );
 	}
 	else
 		s = obj_to_str( o );

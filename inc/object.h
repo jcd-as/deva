@@ -246,9 +246,9 @@ inline Map* CreateMap( Map & m ) { return Map::Create( m ); }
 
 
 // helper functions for reference counting
+extern bool last_op_was_return;
 void IncRef( Object & o );
 int DecRef( Object & o );
-
 
 struct Function
 {
@@ -267,7 +267,7 @@ struct Function
 	// number of locals
 	dword num_locals;
 	// local names (for debugging & reflection)
-	OrderedSet<string> local_names;
+	vector<string> local_names;
 	// offset in code section of the code for this function
 	dword addr;
 

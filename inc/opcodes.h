@@ -174,7 +174,8 @@ enum Opcode
 	op_exit_loop,	// break/continue loop, jumping to <Op0>, executing <Op1> leave ops
 	op_enter,		// enter (non-function) scope
 	op_leave,		// leave (non-function) scope
-	op_for_iter,	// tos has iterable object, call next() on it & push value onto tos
+	op_for_iter,	// tos has iterable object, call next() on it & push value onto tos - for single loop var loops (e.g. 'for( i in k)')
+	op_for_iter_pair,// tos has iterable object, call next() on it & push value onto tos - for double loop var loops (e.g. 'for( i,j in k)')
 
 	op_tbl_load,	// tos = tos1[tos]
 	op_loadslice2,	// tos = tos2[tos1:tos]
@@ -203,7 +204,7 @@ enum Opcode
 
 	op_import,
 
-	// 113 (update as opcodes are added above)
+	// 114 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -296,6 +297,7 @@ static const char* opcodeNames[] =
 	"enter",
 	"leave",
 	"for_iter",
+	"for_iter_pair",
 	"tbl_load",
 	"loadslice2",
 	"loadslice3",

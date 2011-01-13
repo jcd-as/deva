@@ -89,6 +89,8 @@ func_decl[char* classname]
 	;
 	
 class_decl 
+@init { semantics->in_class = true; }
+@after { semantics->in_class = false; }
 	:	^(Class id=ID 
 		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
 		(^(Base_classes ID*)) func_decl[(char*)$id.text->chars]*)

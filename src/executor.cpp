@@ -228,6 +228,10 @@ Opcode Executor::ExecuteInstruction()
 	case op_nop:
 		break;
 	case op_pop:
+		// (pop is the only op that can follow a return op and *doesn't* IncRef
+		// the returned value - in all other cases the IncRef call will reset
+		// the flag)
+		last_op_was_return = false;
 		stack.pop_back();
 		break;
 	case op_push:
@@ -461,7 +465,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( arg, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( arg ), CurrentFrame()->GetLocalRef( arg ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( arg ), CurrentFrame()->GetLocalRef( arg ) );
 		ip += sizeof( dword );
 		}
 		break;
@@ -473,7 +477,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 0, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 0 ), CurrentFrame()->GetLocalRef( 0 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 0 ), CurrentFrame()->GetLocalRef( 0 ) );
 		break;
 	case op_def_local1:
 		rhs = stack.back();
@@ -483,7 +487,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 1, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 1 ), CurrentFrame()->GetLocalRef( 1 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 1 ), CurrentFrame()->GetLocalRef( 1 ) );
 		break;
 	case op_def_local2:
 		rhs = stack.back();
@@ -493,7 +497,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 2, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 2 ), CurrentFrame()->GetLocalRef( 2 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 2 ), CurrentFrame()->GetLocalRef( 2 ) );
 		break;
 	case op_def_local3:
 		rhs = stack.back();
@@ -503,7 +507,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 3, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 3 ), CurrentFrame()->GetLocalRef( 3 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 3 ), CurrentFrame()->GetLocalRef( 3 ) );
 		break;
 	case op_def_local4:
 		rhs = stack.back();
@@ -513,7 +517,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 4, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 4 ), CurrentFrame()->GetLocalRef( 4 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 4 ), CurrentFrame()->GetLocalRef( 4 ) );
 		break;
 	case op_def_local5:
 		rhs = stack.back();
@@ -523,7 +527,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 5, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 5 ), CurrentFrame()->GetLocalRef( 5 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 5 ), CurrentFrame()->GetLocalRef( 5 ) );
 		break;
 	case op_def_local6:
 		rhs = stack.back();
@@ -533,7 +537,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 6, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 6 ), CurrentFrame()->GetLocalRef( 6 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 6 ), CurrentFrame()->GetLocalRef( 6 ) );
 		break;
 	case op_def_local7:
 		rhs = stack.back();
@@ -543,7 +547,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 7, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 7 ), CurrentFrame()->GetLocalRef( 7 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 7 ), CurrentFrame()->GetLocalRef( 7 ) );
 		break;
 	case op_def_local8:
 		rhs = stack.back();
@@ -553,7 +557,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 8, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 8 ), CurrentFrame()->GetLocalRef( 8 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 8 ), CurrentFrame()->GetLocalRef( 8 ) );
 		break;
 	case op_def_local9:
 		rhs = stack.back();
@@ -563,7 +567,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 9, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.At( 9 ), CurrentFrame()->GetLocalRef( 9 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 9 ), CurrentFrame()->GetLocalRef( 9 ) );
 		break;
 	case op_new_map:
 		{
@@ -1155,6 +1159,12 @@ Opcode Executor::ExecuteInstruction()
 			const char* str = CurrentFrame()->GetParent()->AddString( string( o.s ) );
 			stack.push_back( Object( str ) );
 		}
+		// inc ref the object being returned so that it leaving the fcn
+		// scope won't delete it...
+		IncRef( stack.back() );
+		// set the var indicating the last op was a return so that the next op
+		// won't inc ref again
+		last_op_was_return = true;
 		// 1 arg: number of scopes to leave
 		arg = *((dword*)ip);
 		// leave the scopes
@@ -1166,6 +1176,7 @@ Opcode Executor::ExecuteInstruction()
 		PopScope();
 		// ... and the current frame
 		PopFrame();
+		// TODO: how???
 		break;
 	case op_exit_loop:
 		// 2 args: jump target address, number of scopes to leave
@@ -1186,8 +1197,8 @@ Opcode Executor::ExecuteInstruction()
 		PopScope();
 		break;
 	case op_for_iter:
+	case op_for_iter_pair:
 		{
-		bool is_map = false;
 		// 1 arg: size/address to jump to if done looping
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
@@ -1196,7 +1207,6 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
-		// TODO: ensure lhs is an iterable type if it's a class/instance
 		// call 'next':
 		if( IsVecType( lhs.type ) )
 		{
@@ -1206,32 +1216,25 @@ Opcode Executor::ExecuteInstruction()
 				throw ICE( "Vector builtin 'next' not found." );
 			if( !nf.is_method )
 				throw ICE( "Vector builtin not marked as a method." );
+			// dup the TOS (vector)
+			stack.push_back( stack.back() );
 			// call 'next'
-			// this is a method, so there's an extra arg for 'this'
-			int args = 1;
-			// create a frame for the fcn
-			Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, 1, nf );
-			Scope* scope = new Scope();
-			// set the arg for the frame
-			frame->SetLocal( 0, lhs );
-			// push the frame onto the callstack
-			PushFrame( frame );
-			PushScope( scope );
-			// call 'next' vector builtin
-			nf.p( frame );
-			PopScope();
-			PopFrame();
+			ExecuteFunction( nf, 0 );
 		}
 		else if( IsMapType( lhs.type ) )
 		{
-			is_map = true;
+			// handle classes and instances
 			if( lhs.type == obj_class || lhs.type == obj_instance )
 			{
-				// TODO: handle classes and instances
-//					Object next( "next" );
-				// do a tbl_load to get the fcn object for 'next' on the stack
+				// get the iteration fcns & ensure lhs is an iterable type
+				Map::iterator it = lhs.m->find( Object( obj_symbol_name, "next" ) );
+				if( it == lhs.m->end() || it->second.type != obj_function )
+					throw RuntimeException( "Class used in 'for' loop does not support iteration: missing 'next' method." );
+				// dup the TOS (class/instance)
+				stack.push_back( stack.back() );
+				ExecuteFunction( it->second.f, 0 );
 			}
-			// TODO: handle maps
+			// handle maps
 			else
 			{
 				// get map 'next' method
@@ -1240,21 +1243,10 @@ Opcode Executor::ExecuteInstruction()
 					throw ICE( "Map builtin 'next' not found." );
 				if( !nf.is_method )
 					throw ICE( "Map builtin not marked as a method." );
+				// dup the TOS (map)
+				stack.push_back( stack.back() );
 				// call 'next'
-				// this is a method, so there's an extra arg for 'this'
-				int args = 1;
-				// create a frame for the fcn
-				Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, 1, nf );
-				Scope* scope = new Scope();
-				// set the arg for the frame
-				frame->SetLocal( 0, lhs );
-				// push the frame onto the callstack
-				PushFrame( frame );
-				PushScope( scope );
-				// call 'next' map builtin
-				nf.p( frame );
-				PopScope();
-				PopFrame();
+				ExecuteFunction( nf, 0 );
 			}
 		}
 		// 'next' has put a two-item vector on the stack, with a bool
@@ -1275,9 +1267,9 @@ Opcode Executor::ExecuteInstruction()
 		// otherwise push the item(s) onto the stack
 		else
 		{
-			// a map will have returned the second item as a vector
+			// a map/two var loop will have returned the second item as a vector
 			// (key/value pair)
-			if( is_map )
+			if( op == op_for_iter_pair )
 			{
 				Object ov = o.v->operator[]( 1 );
 				if( ov.type != obj_vector )
@@ -1355,7 +1347,7 @@ Opcode Executor::ExecuteInstruction()
 						break;
 					}
 				}
-				else if( rhs.type == obj_string || rhs.type == obj_symbol_name )
+				if( rhs.type == obj_string || rhs.type == obj_symbol_name )
 				{
 					// TODO: should builtins be looked for _last_, so they can
 					// be overridden by user methods??
@@ -1453,8 +1445,99 @@ Opcode Executor::ExecuteInstruction()
 		// TODO:
 	case op_storeslice3:
 		// TODO:
-	case op_add_tbl_store:
+	case op_add_tbl_store:	// tos2[tos1] += tos
 		// TODO:
+		o = stack.back();
+		stack.pop_back();
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// vector:
+		if( IsVecType( lhs.type ) )
+		{
+			if( rhs.type != obj_number )
+				throw RuntimeException( "Vectors can only be indexed with numeric values." );
+			// error if arguments aren't integral numbers...
+			double intpart;
+			if( modf( rhs.d, &intpart ) != 0.0 )
+				throw RuntimeException( "Index to a vector must be an integral value." );
+			int idx = (int)rhs.d;
+			// out-of-bounds check
+			if( lhs.v->size() <= idx || idx < 0 )
+				throw RuntimeException( "Out-of-bounds error indexing vector." );
+
+			Object lhsob = lhs.v->operator[]( idx );
+			if( lhsob.type != obj_number && lhsob.type != obj_string )
+				throw RuntimeException( "left-hand side of '+=' operator must be a number or a string." );
+			if( o.type != obj_number && o.type != obj_string )
+				throw RuntimeException( "right-hand side of '+=' operator must be a number or a string." );
+			if( o.type != lhsob.type )
+				throw RuntimeException( "left-hand and right-hand sides of '+=' operator must be the same type." );
+			if( o.type == obj_number )
+			{
+				double d = o.d + lhsob.d;
+				lhs.v->operator[]( idx ) = Object( d );
+			}
+			else
+			{
+				size_t len = strlen( lhsob.s ) + strlen( o.s ) + 1;
+				char* ret = new char[len];
+				memset( ret, 0, len );
+				strcpy( ret, lhsob.s );
+				strcat( ret, o.s );
+				CurrentFrame()->AddString( ret );
+				lhs.v->operator[]( idx ) = Object( ret );
+			}
+//			lhs.v->operator[]( idx ) = o;
+			// IncRef stored item
+			IncRef( o );
+		}
+		// map/class/instance:
+		else
+		{
+			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+			// keys... ???
+			Map::iterator it = lhs.m->find( rhs );
+			if( it == lhs.m->end() )
+			{
+				if( rhs.type == obj_symbol_name )
+				{
+					// rhs is a symbol, convert it to a string
+					rhs = Object( rhs.s );
+					it = lhs.m->find( Object( rhs.s ) );
+				}
+				if( it == lhs.m->end() )
+					throw RuntimeException( boost::format( "Invalid index into map: '%1%'." ) % rhs );
+			}
+			Object lhsob = it->second;
+			if( lhsob.type != obj_number && lhsob.type != obj_string )
+				throw RuntimeException( "left-hand side of '+=' operator must be a number or a string." );
+			if( o.type != obj_number && o.type != obj_string )
+				throw RuntimeException( "right-hand side of '+=' operator must be a number or a string." );
+			if( o.type != lhsob.type )
+				throw RuntimeException( "left-hand and right-hand sides of '+=' operator must be the same type." );
+			if( o.type == obj_number )
+			{
+				double d = o.d + lhsob.d;
+				lhs.m->operator[]( rhs ) = Object( d );
+			}
+			else
+			{
+				size_t len = strlen( lhsob.s ) + strlen( o.s ) + 1;
+				char* ret = new char[len];
+				memset( ret, 0, len );
+				strcpy( ret, lhsob.s );
+				strcat( ret, o.s );
+				CurrentFrame()->AddString( ret );
+				lhs.m->operator[]( rhs ) = Object( ret );
+			}
+			// IncRef stored item
+			IncRef( o );
+		}
+		break;
 	case op_sub_tbl_store:
 		// TODO:
 	case op_mul_tbl_store:
@@ -1529,14 +1612,15 @@ Opcode Executor::ExecuteInstruction()
 
 void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*= false*/ )
 {
+	// if this is a method there's an extra arg for 'this'
+	if( f->IsMethod() )
+		num_args++;
+
 	if( num_args > f->num_args )
 		throw RuntimeException( boost::format( "Too many arguments passed to function '%1%'." ) % f->name );
 	if( (f->num_args - num_args) > f->NumDefaultArgs() )
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
-	// if this is a method there's an extra arg for 'this'
-	if( f->IsMethod() )
-		num_args++;
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, num_args, f );
 	Scope* scope = new Scope();
@@ -1898,8 +1982,8 @@ void Executor::DumpFunctions()
 		for( int j = 0; j < f->default_args.Size(); j++ )
 			cout << f->default_args.At( j ) << " ";
 		cout << endl << f->num_locals << " local(s): ";
-		for( int j = 0; j < f->local_names.Size(); j++ )
-			cout << f->local_names.At( j ) << " ";
+		for( int j = 0; j < f->local_names.size(); j++ )
+			cout << f->local_names.operator[]( j ) << " ";
 		cout << endl << "code address: " << f->addr << endl;
 	}
 }

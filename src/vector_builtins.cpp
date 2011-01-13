@@ -560,9 +560,6 @@ void do_vector_map( Frame *frame )
 	Vector* ret = CreateVector();
 	ret->reserve( self->v->size() );
 
-	// TODO:
-	// handle instance and class methods 
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -575,12 +572,12 @@ void do_vector_map( Frame *frame )
 	{
 		// push the item
 		ex->PushStack( *i );
-		// TODO: push 'self', for methods
-//		if( is_method )
-//		{
-//			// push the object ("self") first
-//			ex->PushStack( *self );
-//		}
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->PushStack( *self );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
@@ -618,9 +615,6 @@ void do_vector_filter( Frame *frame )
 	Vector* ret = CreateVector();
 	ret->reserve( self->v->size() );
 
-	// TODO:
-	// handle instance and class methods 
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -633,12 +627,12 @@ void do_vector_filter( Frame *frame )
 	{
 		// push the item
 		ex->PushStack( *i );
-		// TODO: push 'self', for methods
-//		if( is_method )
-//		{
-//			// push the object ("self") first
-//			ex->PushStack( *self );
-//		}
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->PushStack( *self );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
@@ -680,9 +674,6 @@ void do_vector_reduce( Frame *frame )
 	Vector* ret = CreateVector();
 	ret->reserve( self->v->size() );
 
-	// TODO:
-	// handle instance and class methods 
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -690,15 +681,16 @@ void do_vector_reduce( Frame *frame )
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
-	// first iteration uses the first two items in the vector
-	ex->PushStack( self->v->operator[]( 1 ) );
-	ex->PushStack( self->v->operator[]( 0 ) );
-	// TODO: push 'self'
-//	if( is_method )
-//	{
-//		// push the object ("self") first
-//		ex->stack.push_back( *ob_ptr );
-//	}
+	size_t sz = self->v->size();
+	// first iteration uses the last two items in the vector
+	ex->PushStack( self->v->operator[]( sz-2 ) );
+	ex->PushStack( self->v->operator[]( sz-1 ) );
+	// push 'self', for methods
+	if( is_method )
+	{
+		// push the object ("self") first
+		ex->PushStack( *self );
+	}
 	// call the function
 	if( o->type == obj_function )
 		ex->ExecuteFunction( o->f, 2 );
@@ -708,18 +700,18 @@ void do_vector_reduce( Frame *frame )
 	// walk the rest of the items in the vector
 	if( self->v->size() > 2 )
 	{
-		for( Vector::iterator i = self->v->begin()+2; i != self->v->end(); ++i )
+		for( int i = sz-3; i >= 0; i-- )
 		{
 			// push the item
-			ex->PushStack( *i );
+			ex->PushStack( self->v->operator[]( i ) );
 			// use the retval from the previous iteration as the first arg to the fcn
 			ex->PushStack( retval );
-			// TODO: push 'self'
-//			if( is_method )
-//			{
-//				// push the object ("self") first
-//				ex->stack.push_back( *ob_ptr );
-//			}
+			// push 'self', for methods
+			if( is_method )
+			{
+				// push the object ("self") first
+				ex->PushStack( *self );
+			}
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
 			if( o->type == obj_function )
@@ -757,9 +749,6 @@ void do_vector_any( Frame *frame )
 	Vector* ret = CreateVector();
 	ret->reserve( self->v->size() );
 
-	// TODO:
-	// handle instance and class methods 
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -774,12 +763,12 @@ void do_vector_any( Frame *frame )
 	{
 		// push the item
 		ex->PushStack( *i );
-		// TODO: push 'self', for methods
-//		if( is_method )
-//		{
-//			// push the object ("self") first
-//			ex->PushStack( *self );
-//		}
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->PushStack( *self );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
@@ -815,9 +804,6 @@ void do_vector_all( Frame *frame )
 	Vector* ret = CreateVector();
 	ret->reserve( self->v->size() );
 
-	// TODO:
-	// handle instance and class methods 
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -832,12 +818,12 @@ void do_vector_all( Frame *frame )
 	{
 		// push the item
 		ex->PushStack( *i );
-		// TODO: push 'self', for methods
-//		if( is_method )
-//		{
-//			// push the object ("self") first
-//			ex->PushStack( *self );
-//		}
+		// push 'self', for methods
+		if( is_method )
+		{
+			// push the object ("self") first
+			ex->PushStack( *self );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )

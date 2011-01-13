@@ -111,9 +111,8 @@ protected:
 	OrderedMultiSet<Symbol*, SB_ptr_lt> names;
 
 	// locals (incl args), for determining local indices
-	// (since locals with the same name can't exist simultaneously, prevent
-	// duplicate names here)
-	OrderedSet<string> locals;
+	// stored in a first-in order (so that arguments are at the beginning)
+	vector<string> locals;
 
 	// default argument values
 	OrderedSet<Object> default_arg_values;
@@ -136,10 +135,10 @@ public:
 
 	// function scope methods
 	inline const int NumArgs() const { return numArgs; }
-	inline const int NumLocals() const { return locals.Size(); }
+	inline const int NumLocals() const { return locals.size(); }
 	inline OrderedMultiSet<Symbol*, SB_ptr_lt> & GetNames() { return names; }
 	inline OrderedSet<Object> & GetDefaultArgVals() { return default_arg_values; }
-	inline OrderedSet<string> & GetLocals() { return locals; }
+	inline vector<string> & GetLocals() { return locals; }
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
 	// add a defalt arg value

@@ -31,6 +31,10 @@
 #ifndef __REFCOUNTED_H__
 #define __REFCOUNTED_H__
 
+#include <vector>
+
+using namespace std;
+
 
 namespace deva
 {
@@ -48,6 +52,10 @@ template<typename T> class RefCounted : public T
 	RefCounted( size_t n ) : T( n ), refcount( 0 ) {}
 	// 'slice' copy constructor
 	RefCounted( T & v, size_t start, size_t end ) : T( v, start, end ), refcount( 0 ) {}
+
+	// collection 'pool' of all items to be deleted
+	static vector<T*> dead_pool;
+
 public:
 	// creation fcn
 	static RefCounted<T>* Create() { return new RefCounted<T>(); }
@@ -59,8 +67,36 @@ public:
 	static RefCounted<T>* Create( T & v, size_t start, size_t end ) { return new RefCounted<T>( v, start, end ); }
 
 	inline void IncRef() { refcount++; }
-	inline int DecRef() { refcount--; int r = refcount; if( refcount == 0 ) delete this; return r; }
+	inline int DecRef()
+	{
+		refcount--;
+		int r = refcount;
+		if( refcount == 0 )
+		{
+			dead_pool.push_back( this );
+		}
+		return r;
+	}
 	inline int GetRefCount() { return refcount; }
+
+	// clear the dead pool (delete all dead items collected)
+	static void ClearDeadPool()
+	{
+		// this won't compile, not sure why... something about the 'vector<T*>'...
+//		for( vector<T*>::iterator i = dead_pool.begin(); i != dead_pool.end(); ++i )
+//		{
+//			T* p = *i;
+//			dead_pool.erase( i );
+//			delete p;
+//		}
+		// ...so do this instead
+		for( int i = 0; i < dead_pool.size(); i++ )
+		{
+			T* p = *(dead_pool.begin() + i);
+			delete p;
+		}
+		dead_pool.clear();
+	}
 };
 
 

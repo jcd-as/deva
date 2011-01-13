@@ -95,16 +95,6 @@ public:
 	bool IsUndeclared() const { return modifier == mod_none; }
 };
 
-// TODO: is this needed? 
-//class FunSymbol : public SymbolBase
-//{
-//public:
-//	Symbol() {}
-//	Symbol( const char* const n ) : Symbol( n ) {}
-//	Symbol( const char* const n, SymbolType t ) : Symbol( n, t ) {}
-//
-//	const string & Name() const { return name; }
-//};
 
 } // namespace deva_compile
 

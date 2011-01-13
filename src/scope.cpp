@@ -63,8 +63,15 @@ bool LocalScope::Define( const Symbol* const s )
 		if( i != local_map.end() )
 			return false;
 	}
+	// disallow re-def of consts
+	else if( s->IsConst() )
+	{
+		if( data.count( s->Name() ) != 0 )
+			return false;
+	}
 
-	// disallow re-def ('data' is a map, the item won't be added and would leak)
+	// data is a map, repeated items won't be added
+	// and will leak if 'false' isn't returned
 	if( data.count( s->Name() ) != 0 )
 		return false;
 
@@ -78,8 +85,8 @@ bool LocalScope::Define( const Symbol* const s )
 	if( s->IsLocal() || s->IsConst() || s->IsArg() )
 	{
 		FunctionScope* fun = getParentFun();
-		fun->GetLocals().Add( string( s->Name() ) );
-		int idx = fun->GetLocals().Find( string( s->Name() ) );
+		fun->GetLocals().push_back( string( s->Name() ) );
+		int idx = fun->ResolveLocalToIndex( string( s->Name() ) );
 		local_map.insert( pair<string, int>( s->Name(), idx ) );
 	}
 
@@ -201,7 +208,12 @@ bool FunctionScope::Define( const Symbol* const  s )
 // resolve a local to an index
 int FunctionScope::ResolveLocalToIndex( const string & name )
 {
-	return locals.Find( name );
+	for( int i = 0; i < locals.size(); i++ )
+	{
+		if( locals[i] == name )
+			return i;
+	}
+	return -1;
 }
 
 void FunctionScope::Print()

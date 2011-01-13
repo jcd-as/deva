@@ -65,6 +65,9 @@ public:
 			else
 				*(i->second) = Object();
 		}
+		// clear the map & vector 'dead pools' (items to be deleted)
+		Map::ClearDeadPool();
+		Vector::ClearDeadPool();
 	}
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
 	void AddSymbol( string name, Object* ob )

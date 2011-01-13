@@ -66,6 +66,9 @@ struct Semantics
 	// constants (numbers, strings & symbol names)
 	set<Object> constants;
 
+	// classes
+	bool in_class;
+
 	// function calls
 	bool making_call;
 
@@ -82,6 +85,7 @@ struct Semantics
 	Semantics() : //show_warnings( warn ),
 	   	global_scope( NULL ), current_scope( NULL ),
 		first_default_arg( -1 ),
+		in_class( false ),
 		making_call( false ),
 		in_map_key( false ),
 		rhs_of_self( false ),

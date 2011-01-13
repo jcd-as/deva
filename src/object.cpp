@@ -28,14 +28,29 @@
 #include "object.h"
 #include "exceptions.h"
 #include "executor.h"
+#include <set>
+
+using namespace std;
 
 
 namespace deva
 {
 
+
+template<typename T> vector<T*> RefCounted<T>::dead_pool = vector<T*>();
+
+bool last_op_was_return = false;
+
 // helper fcns for reference counting. recursively IncRef/DecRef objects
 void IncRef( Object & o )
 {
+	// if the last op was a return, don't inc ref, the return op took care of
+	// that
+	if( last_op_was_return )
+	{
+		last_op_was_return = false;
+		return;
+	}
 	if( IsVecType( o.type ) )
 	{
 		// walk the vector's contents too
@@ -62,16 +77,23 @@ int DecRef( Object & o )
 {
 	if( IsVecType( o.type ) )
 	{
+		if( !o.v )
+			return 0;
 		// walk the vector's contents too
 		for( int i = 0; i < o.v->size(); i++ )
 		{
 			Object obj = o.v->operator[]( i );
 			DecRef( obj );
 		}
-		return o.v->DecRef();
+		int ret = o.v->DecRef();
+		if( ret == 0 )
+			o.v = NULL;
+		return ret;
 	}
 	else if( IsMapType( o.type ) )
 	{
+		if( !o.m )
+			return 0;
 		// if we're deleting an instance, we need to call the destructor and base class destructors
 		if( o.m->GetRefCount() == 1 && o.type == obj_instance )
 		{
@@ -83,7 +105,10 @@ int DecRef( Object & o )
 			DecRef( const_cast<Object&>(it->first) );
 			DecRef( it->second );
 		}
-		return o.m->DecRef();
+		int ret = o.m->DecRef();
+		if( ret == 0 )
+			o.m = NULL;
+		return ret;
 	}
 }
 
