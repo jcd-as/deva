@@ -7,7 +7,7 @@ VPATH = src
 DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp object.cpp api.cpp builtins.cpp vector_builtins.cpp builtins_helpers.cpp map_builtins.cpp frame.cpp
 DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c compile_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
-DEVA_C_OBJS=$(patsubst %.cpp, %.o, ${DEVA_C_SOURCES})
+DEVA_C_OBJS=$(patsubst %.c, %.o, ${DEVA_C_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 DEVA_DEP_C_FILES=$(patsubst %.c, %.dep, ${DEVA_C_SOURCES})
 
@@ -15,7 +15,9 @@ CXXFLAGS = -c -g -I inc -I "." -I /usr/local/include -DDEVA_VERSION=\"0.0.1\" -D
 #-O2
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-LDFLAGS = -g -L /usr/local/lib -lantlr3c -lboost_program_options -lboost_filesystem 
+LDADD = -lantlr3c -lboost_program_options-mt -lboost_filesystem-mt -lboost_system-mt
+#LDADD = -lantlr3c -lboost_program_options -lboost_filesystem 
+LDFLAGS = -g -L /usr/local/lib
 #LDFLAGS = -g -undefined dynamic_lookup
 
 all : tags ID deva
@@ -27,17 +29,17 @@ ID : deva
 	mkid -i "C++" --prune=deva1 --prune=tests --prune=antlr
 
 deva : ${DEVA_OBJS} ${DEVA_C_OBJS}
-	g++ ${LDFLAGS} -lboost_filesystem -o deva ${DEVA_OBJS} ${DEVA_C_OBJS}
-	#g++ ${LDFLAGS} -lboost_filesystem-mt -o deva ${DEVA_OBJS} ${DEVA_C_OBJS}
+	g++ ${LDFLAGS} -o deva ${DEVA_OBJS} ${DEVA_C_OBJS} ${LDADD} 
+	#g++ ${LDFLAGS} -lboost_filesystem-mt -o deva ${DEVA_OBJS} ${DEVA_C_OBJS} ${LDADD}
 
 devaParser.c devaLexer.c devaLexer.h devaParser.h deva.tokens : deva.g
-	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu deva.g
+	java org.antlr.Tool -message-format gnu deva.g
 
 semantic_walker.c semantic_walker.h semantic_walker.tokens : semantic_walker.g deva.tokens
-	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu semantic_walker.g
+	java org.antlr.Tool -message-format gnu semantic_walker.g
 
 compile_walker.c compile_walker.h compile_walker.tokens : compile_walker.g deva.tokens
-	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar:./" org.antlr.Tool -message-format gnu compile_walker.g
+	java org.antlr.Tool -message-format gnu compile_walker.g
 
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<

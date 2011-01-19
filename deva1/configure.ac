@@ -12,6 +12,7 @@ AX_BOOST_BASE([1.40])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
+AX_BOOST_SYSTEM
 #if [ test -z "$HAVE_BOOST_PROGRAM_OPTIONS" ] ; then
 #	echo "Boost program options library is required. You can find Boost at www.boost.org."
 #	exit
@@ -20,7 +21,7 @@ AX_BOOST_REGEX
 #	echo "Boost filesystem library is required. You can find Boost at www.boost.org."
 #	exit
 #fi
-PKG_CHECK_MODULES(LIBEDIT, libedit)
+#PKG_CHECK_MODULES(LIBEDIT, libedit)
 AC_SUBST(MY_CXXFLAGS)
 AC_SUBST(MY_LDFLAGS)
 AX_CXX_CHECK_FLAG(-fno-inline-small-functions,,,export MY_CXXFLAGS=-fno-inline-small-functions,)
