@@ -4,18 +4,33 @@
 VPATH = src
 
 # sources/objs for test executable
-DEVA_SOURCES=deva.cpp scope.cpp semantics.cpp util.cpp error.cpp compile.cpp executor.cpp object.cpp api.cpp builtins.cpp vector_builtins.cpp builtins_helpers.cpp map_builtins.cpp frame.cpp
+DEVA_SOURCES= \
+deva.cpp \
+scope.cpp \
+semantics.cpp \
+util.cpp \
+error.cpp \
+compile.cpp \
+executor.cpp \
+object.cpp \
+api.cpp \
+builtins.cpp \
+vector_builtins.cpp \
+builtins_helpers.cpp \
+map_builtins.cpp \
+frame.cpp \
+scopetable.cpp
 DEVA_C_SOURCES=devaLexer.c devaParser.c semantic_walker.c compile_walker.c
 DEVA_OBJS=$(patsubst %.cpp, %.o, ${DEVA_SOURCES})
 DEVA_C_OBJS=$(patsubst %.c, %.o, ${DEVA_C_SOURCES})
 DEVA_DEP_FILES=$(patsubst %.cpp, %.dep, ${DEVA_SOURCES})
 DEVA_DEP_C_FILES=$(patsubst %.c, %.dep, ${DEVA_C_SOURCES})
 
-CXXFLAGS = -c -g -I inc -I "." -I /usr/local/include -DDEVA_VERSION=\"0.0.1\" -DDEBUG
+CXXFLAGS = -c -g -I inc -I "." -I /usr/local/include -DDEVA_VERSION=\"0.0.1\" -DDEBUG -DREFCOUNT_TRACE
 #-O2
 
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-LDADD = -lantlr3c -lboost_program_options-mt -lboost_filesystem-mt -lboost_system-mt
+LDADD = -lantlr3c -lboost_program_options -lboost_filesystem -lboost_system
 #LDADD = -lantlr3c -lboost_program_options -lboost_filesystem 
 LDFLAGS = -g -L /usr/local/lib
 #LDFLAGS = -g -undefined dynamic_lookup

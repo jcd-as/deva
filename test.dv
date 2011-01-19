@@ -1,0 +1,964 @@
+#local v = [0,1];
+#v[1] += 42;
+##[0,43]
+#print( v );
+#v[0] -= 11;
+##[-11,43]
+#print( v );
+#v[0] *= -10;
+##[110,43]
+#print( v );
+#v[0] /= 5;
+##[22,43]
+#print( v );
+#v[1] %= 10;
+##[22,3]
+#print( v );
+
+#local m = {"a":0, "b":"foo"};
+#m.a += 32;
+#print( m.a );
+#m.b += "bar";
+#print( m.b );
+#print( m );
+
+# BUG: v leaks:
+#def foo( v ){ print( v ); }
+#foo( [255] );
+
+# self.v doesn't leak here...
+#class C
+#{
+#	def foo()
+#	{
+#		self.v = [];
+#	}
+#}
+#local c = new C();
+#c.foo();
+
+# BUG: self.v leaks here
+class C
+{
+	def new()
+	{
+		self.v = [];
+	}
+}
+local c = new C();
+
+# BUG: v leaks:
+#class C
+#{
+#	def fcn()
+#	{
+#		local v = [255];
+#		self.v = v;
+#		return v;
+#	}
+#}
+#local c = new C();
+#c.fcn();
+#print( c );
+#local r = c.fcn();
+#print( r );
+
+# BUG: self.v leaks
+#class C
+#{
+#	def new(){ self.index = 0; self.v = [0,1,2,4,8,16]; }
+#	def next()
+#	{
+#		local ret = null;
+#		if( self.index < length( self.v ) ) ret = [true, self.v[self.index]];
+#		else ret = [false, null];
+#		return ret;
+#	}
+#}
+#local c = new C();
+#local n = c.next();
+#print( n );
+
+#def fcn()
+#{
+#	local v = [255];
+#	return v;
+#}
+#
+#local r = fcn();
+#print( r );
+
+# BUG: leaks
+#class C
+#{
+#	def new(){ self.index = 0; self.v = [0,1,2,4,8,16]; }
+#	def rewind(){ self.index = 0; }
+#	def next()
+#	{
+#		local ret = null;
+#		if( self.index < length( self.v ) ) ret = [true, self.v[self.index]];
+#		else ret = [false, null];
+##		self.index += 1;
+#		self.index = self.index + 1;
+#		return ret;
+#	}
+#}
+#local c = new C();
+#for( i in c )
+#	print( i );
+
+#def fcn( b, a )
+#{
+#	local la = a;
+#	local lb = b;
+#	print( a );
+#	print( b );
+#	print( la );
+#	print( lb );
+#}
+#fcn( "b", "a" );
+
+#class C
+#{
+#	def fcn()
+#	{
+#		local r = null;
+#		self.n = 1;
+#		print( self );
+#	}
+#}
+#local c = new C();
+#c.fcn();
+
+#class C
+#{
+#	def fcn()
+#	{
+#		local r = null;
+#		if( self.n ) r = 0;
+#		self.n += 1;
+#	}
+#}
+
+#local v = range( 0, 3 );
+#for( i in v ) print( i );
+#local m = {"a": 0, "b": 1, "c": 2};
+#for( i in m ) print( i );
+#for( i,j in m ) print( str(i) + ":" + str(j) );
+
+#class C
+#{
+#	def is_number( n ){ return type( n ) == "number"; }
+#	def concat( a, b ){ return str(a) + str(b); }
+#	def to_string( n ){ return str( n ); }
+#}
+#local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
+#local c = new C();
+## method
+#print( v.filter( c.is_number ) );
+## 'class method'
+#print( v.filter( C.is_number ) );
+#print( v.map( c.to_string ) );
+#print( v.reduce( c.concat ) );
+#print( v.any( c.is_number ) );
+#print( v.all( c.is_number ) );
+
+#class C
+#{
+#	def repr(){ return "i am a C"; }
+#	def str(){ return "i am an instance of C"; }
+#}
+#local c = new C();
+#print( name( C ) );
+#print( name( c ) );
+#print( c );
+#print( str( c ) );
+
+#class A1
+#{
+#	def new(){ print( "A1 created" ); }
+#	def delete(){ print( "A1 destroyed" ); }
+#}
+#class A : A1
+#{
+#	def new(){ print( "A created" ); }
+#	def delete(){ print( "A destroyed" ); }
+#}
+#class B1
+#{
+#	def new(){ print( "B1 created" ); }
+#	def delete(){ print( "B1 destroyed" ); }
+#}
+#class B : B1
+#{
+#	def new(){ print( "B created" ); }
+#	def delete(){ print( "B destroyed" ); }
+#}
+#class C : A, B
+#{
+#	def new(){ print( "C created" ); }
+#	def delete(){ print( "C destroyed" ); }
+#}
+#local c = new C();
+
+
+#class A
+#{
+#	def new(){ print( "A created" ); }
+#	def delete(){ print( "A destroyed" ); }
+#}
+#class B
+#{
+#	def new(){ print( "B created" ); }
+#	def delete(){ print( "B destroyed" ); }
+#}
+#class C : A, B
+#{
+#	def new(){ print( "C created" ); }
+#	def delete(){ print( "C destroyed" ); }
+#}
+#local c = new C();
+
+
+#class B
+#{
+#	def new(){ print( "B created" ); }
+#	def delete(){ print( "B destroyed" ); }
+#}
+#class C : B
+#{
+#	def new(){ print( "C created" ); }
+#	def delete(){ print( "C destroyed" ); }
+#}
+#local c = new C();
+
+#class C
+#{
+#	def new(){ self.foo = 42; self.bar = null; }
+#	def fcn(){ print( self.foo ); print( self.bar ); }
+#}
+#local c = new C();
+#c.fcn();
+
+#class C
+#{
+#	def foo(){ print( self ); }
+#}
+#C.foo();
+
+#class B
+#{
+#	def new(){ self.x = -1; self.y = 32; print( "B.new()" ); }
+#}
+#class C : B
+#{
+#	def new( a ){ self.x = a; print( "C.new()" ); }
+#}
+#local c = new C( 42 );
+#print( c );
+
+#class C
+#{
+#	def new(){ self.x = 42; }
+#	def foo(){ print( self.x ); print( self ); }
+#}
+##print( C );
+#local c = new C();
+##print( c );
+#c.foo();
+
+#class A{}
+#class B{}
+#class C : A, B
+#{
+#	def foo(){ print( self ); }
+#}
+#print( C );
+#local c = new C();
+#print( c );
+#c.foo();
+
+#print( !!null );
+
+#local a = {};
+#a["b"] = str;
+#print( a.b( a ) );
+
+#local a = {"b":str};
+#print( a.b( a ) );
+
+#def fcn( s ){ return "foo" + s; }
+#def test( n ){ return !(!n); }
+#def add( a, b ){ return a + b; }
+#def is_three( n ){ return n == 3; }
+#local v = [0,1,2,3,4];
+#local v2 = v.map( str );
+#print( v );
+#print( v2 );
+#local v3 = v2.map( fcn );
+#print( v3 );
+#local v4 = v.filter( test );
+#print( v4 );
+#local v5 = v4.reduce( add );
+#print( v5 );
+#print( v.any( is_three ) );
+#print( v.all( test ) );
+#print( v4.all( test ) );
+
+#local m = {"a": 0, "b": 1};
+#print( m );
+#local m2 = m.copy();
+#print( m2 );
+#m["c"] = 2;
+#print( m );
+#print( m2 );
+#m2.remove( "b" );
+#print( m2 );
+#local val = m.find( "c" );
+#print( val );
+#print( m.keys() );
+#print( m.values() );
+#print( m2.keys() );
+#print( m2.values() );
+#print( m2 );
+#m2.merge( m );
+#print( m2 );
+
+#local v = ["a","b","c","x","y","z"];
+#print( v );
+#v.reverse( 1, 5 );
+#print( v );
+#v.sort( 1, 5 );
+#print( v );
+#v.reverse();
+#print( v );
+#v.sort();
+#print( v );
+#local s = v.join();
+#print( s );
+#s = v.join( "\n" );
+#print( s );
+## slice
+#local v2 = v.slice( 1, 4 );
+#print( v2 );
+#v2 = v.slice( 1, 4, 2 );
+#print( v2 );
+
+#local v = ["a","x","b","c","x","y","z"];
+#local i = v.find( "x" );
+#print( i );
+#i = v.find( "foo" );
+#print( i );
+#i = v.find( "x", 2 );
+#print( i );
+#i = v.rfind( "x" );
+#print( i );
+#i = v.rfind( "x", 0, 3 );
+#print( i );
+#i = v.count( "x" );
+#print( i );
+#i = v.count( "z" );
+#print( i );
+#i = v.count( "foo" );
+#print( i );
+#i = v.count( "x", 3 );
+#print( i );
+
+#local v = [3,1,2];
+#print( v );
+#local o = v.pop();
+#print( o );
+#print( v );
+#v.insert( 1, "foo" );
+#v.insert( 2, "bar" );
+#print( v );
+#v.remove( 1, 2 );
+#print( v );
+#v.remove( 1 );
+#print( v );
+
+
+#local v = [3,1,2];
+#print( v.min() );
+#print( v.max() );
+#local v2 = ["y","z","x"];
+#print( v2.min() );
+#print( v2.max() );
+#local v3 = [true, false];
+#print( v3.min() );
+#print( v3.max() );
+
+#local v = [1,2,3];
+#print( v );
+#local v2 = ["x","y","z"];
+## TODO: bug: segfault when concat'ing v2 after append'ing it first:
+## because this is creating an infinite loop? deva1 exhibits this as well
+#v.append( v2 );
+#print( v );
+#v2.concat( v );
+#print( v2 );
+
+#local v = [1,2,3];
+#print( v );
+#local v2 = ["x","y","z"];
+#v.append( v2 );
+#print( v );
+#v.concat( v2 );
+#print( v );
+
+#{
+#	local v = [1,2,3];
+#	print( v );
+#}
+#{
+#	local v = ["x","y","z"];
+#	print( v );
+#}
+
+#local v = ["a", "b", "c"];
+#print( name( v ) );
+#print( v );
+#print( name( v ) );
+#{
+#	local v2 = v.copy();
+#	print( name( v2 ) );
+#	print( v2 );
+#	v[0] = 255;
+#	print( v2 );
+#	v2[0] = 0;
+#	print( v2 );
+#	print( name( v2 ) );
+#}
+#print( v );
+
+#local v = range( 5, 11, 3 );
+#for( i in v )
+#	print( i );
+
+#local s = "100";
+#print( num( s ) );
+#local b = true;
+#print( num( b ) );
+#local n = null;
+#print( num( n ) );
+
+#local n = 0;
+#while( true )
+#{
+#	if( n > 3 ) exit( -1 );
+#	print( n );
+#	n += 1;
+#}
+
+#local n = 16;
+#print( type( n ) );
+#local s = "foo";
+#print( type( s ) );
+#local v = [3];
+#print( type( v ) );
+
+#local n = 16;
+#print( name( n ) );
+
+#local n = 16;
+#local s = name( n );
+#print( s );
+
+#local v = [3];
+#print( v );
+
+#local v = ["a", "b", "c"];
+#	local v2 = copy( v );
+
+#print( "======" );
+#local v3 = ["a", "b", "c"];
+#print( name( v3 ) );
+#print( v3 );
+#print( name( v3 ) );
+#{
+#	local v2 = copy( v3 );
+#	print( name( v2 ) );
+#	print( v2 );
+#	v3[0] = 255;
+#	print( v2 );
+#	v2[0] = 0;
+#	print( v2 );
+#	print( name( v2 ) );
+#}
+#print( v3 );
+
+#local m = {"a":0, "b":1, "c":2};
+#print( m );
+#
+#{
+#	local m2 = copy( m );
+#	print( m2 );
+#	m["a"] = 255;
+#	print( m2 );
+#}
+#print( m );
+
+
+#local a = [];
+#append( a, 0 );
+#append( a, 1 );
+#append( a, 2 );
+#append( a, 3 );
+#for( i in a )
+#{
+#	print( i );
+#}
+#print( length( a ) );
+
+#print( chr( 117 ) );
+
+#local a = [];
+#a.append( 0 );
+#a.append( 1 );
+#a.append( 2 );
+#a.append( 3 );
+#for( i in a )
+#{
+#	print( i );
+#}
+
+#local m = {"a":0, "b":1, "c":2};
+#
+##for( i in m )
+##	print( i );
+#
+#for( i,k in m )
+#{
+#	print( i, "\t" );
+#	print( k );
+##	print( str( i ) + str( k ) );
+#}
+
+#local v = ["a", "b", "c"];
+#
+#for( i in v )
+#	print( i );
+
+#local v = ["255",["256"],"257"];
+#v.length( );
+
+#local v = ["255",["256"],"257"];
+#print( v );
+#print( v.length( ) );
+#v.append( "foo" );
+#print( v );
+#print( v.length( ) );
+
+# TODO: get this working (classes and maps)
+#class C{ def fcn(){ print( "fcn" ); } }
+#local c = new C();
+#local a = { "b" : { "c" : c } };
+#a.b.c.fcn();
+
+#def foo( s ) { print( s ); }
+#local m = { "fcn" : foo, "a" : null };
+#m.fcn( m.a );
+
+#local v = ["255",["256"],"257"];
+#print( str( v ) );
+#print( v );
+#print( v.length( ), " " );
+#print( "" );
+
+#def foo( a ) { print( a ); }
+#foo( 25 );
+
+# check for pop after unused return values
+#def foo(){}
+#foo( foo() );
+#foo();
+
+#def foo( input ){ print( input ); }
+#local f = foo;
+#f( "bar" );
+
+
+#print( {"foo" : "bar"} );
+
+#local v = [0];
+#local v2 = ["a", v];
+
+#local m = {"a" : 0.11, "b" : 1};
+#local lm = {"ab" : m};
+#print( m.a );
+#
+#print( m );
+#def foo( map )
+#{
+#	print( map );
+#	local lm = {"ab" : map};
+#	print( lm );
+#}
+#
+#foo( m );
+#foo( {1 : "foo"} );
+
+#def foo( vec )
+#{
+#	print( vec );
+#	local lv = ["a", "b", vec];
+#	print( lv );
+#}
+#
+#local v = [0];
+#foo( v );
+#foo( [1] );
+
+#local v = [0];
+#local v2 = ["a"];
+#v[0] = v2;
+#print( v );
+
+#def foo( vec )
+#{
+#	print( vec );
+#}
+#
+#local v = [0];
+#foo( v );
+#foo( [1] );
+
+#print( [0] );
+
+#local v = [0, 1, 2, 3];
+#local v1 = v[0];
+#print( v1 );
+#v1 = v[1];
+#print( v1 );
+#v1 = v[2];
+#print( v1 );
+#v1 = v[3];
+#print( v1 );
+#
+#print( v );
+#
+#local vv = v;
+
+# test 'op_push'
+#local a = 33;
+#local b = 66;
+#print( a + b);
+
+#local i = 0;
+#local v = ["a", "b", "c"];
+#while( i < 3 )
+#{
+#	print( v[i] );
+#	i += 1;
+#}
+
+#local global = "foobar";
+#
+#def Foo()
+#{
+#	if( true )
+#	{
+#		print( global );
+#		local a = true;
+#		print( a );
+#		if( a )
+#		{
+#			return;
+#		}
+#	}
+#}
+#
+#Foo();
+
+#local a = "foo";
+#print( a );
+#local a = "foo";
+#a += "bar";
+#print( a );
+
+# TODO: default args only work if all args have defaults:
+#def Foo( a, b = "b" )
+#{
+#	print( a );
+#	print( b );
+#}
+#
+#Foo( 1 );
+
+#def Foo( a="a", b = "b", c = "c" )
+#{
+#	local x = a;
+#	local y = b;
+#	local z = c;
+#	print( a, " " );
+#	print( b, " " );
+#	print( c );
+#	print( x );
+#	print( y );
+#	print( z );
+#}
+#
+#Foo( 1,2,3 ); 	# 1 2 3
+#Foo( 1,2 );		# 1 2 c
+#Foo( 1 );		# 1 b c
+#Foo();			# a b c
+
+#def Foo()
+#{
+#	print( "entering foo" );
+#	local n = 0;
+#	while( n < 10 )
+#	{
+#		print( n );
+#		if( n > 4 )
+#			break;
+#		n = n + 1;
+#	}
+#}
+#Foo();
+#print( "done" );
+
+#while( 1 )
+#{
+#	while( 0 )
+#		break;
+#	break;
+#}
+#while( x < 100 )
+#{
+#	if( true )
+#		A();
+#	else
+#		break;
+#}
+#if( true )
+#{
+#	local a = 0;
+#}
+#else
+#{
+#	local b = 255;
+#}
+
+
+#a = -255;
+#a = {"foo" : 255};
+#a = [0, 1, [2, 3], 4 ];
+#a = [0];
+
+#foo( 255 );		# call_n
+#foo.bar( 255 );	# call
+
+#const a0 = 0xa;
+#append( m, a0 );
+
+#C = 0;
+#def C(){}
+#{
+#local c = C;
+#a = new c(); 		# new class C
+#}
+
+#local a = new C(); 		# new class C
+#b = new A.B();		# new module A, class B
+
+#extern a;
+#extern a = 255;
+#import foo/bar;
+#return;
+#a[0] -= 1;
+#a[0:1] += 1; # disallowed
+#local a = 0;
+#local b = 0;
+#local c = 0;
+#def foo()
+#{
+#	a[0]( a, b, c );
+#a.b[0].c = "foo\tbar";
+#a.b[c] = "foo\tbar";
+#a[b][c] = 0;
+#a.b.c = 0;
+#a[b] = "foo\tbar";
+#a.b = "foo\tbar";
+#a = 0;
+#}
+
+#local n = 100;
+#class C
+#{
+#def foo( a, b = false )
+#{
+#	b = 42;
+##	c = new C();
+#	def bar(){}
+#	n = "zed";
+#	bar();
+#}
+#}
+#foo( 9 );
+#local a = 100;
+#local b = 42;
+#local n = a + b;
+
+#local a = ("foo" + "bar");
+#local bad = -1;
+#def Foo( x , y, z = -1 )
+#	local b = "b";
+#	while( true )
+#	{
+#		local c = 42;
+#		a = 4;
+#	}
+#}
+
+#def foo( a, b, c )
+#{
+#	local w = "w";
+#	while( true )
+#	{
+#		local x = 0;
+#		if( false )
+#		{
+#			local y = 1;
+#			extern z;
+#			def foo( aa, bb )
+#			{
+#				local cc = 3.14;
+#				while( false )
+#				{
+#					local never = true;
+#				}
+#			}
+#			z = "z";
+#		}
+#	}
+#}
+#{
+#	local a = 0;
+#}
+#a = 1;
+
+#if( foo )
+#{
+#	while( true )
+#		for( i in x )
+#			#x;
+#			continue; #break;
+#}
+#local stuff = new Stuff();
+#stuff = new Stuff();
+#x = y = 0;
+#x += y;
+
+#extern io;
+#local n = new A.B.c[0]();
+#local a =0;
+#a[0] = "foo";
+#local m = a[0];
+#m = a[0:1];
+#m = a[0:$:1];
+
+#import foo/bar;
+#class foo
+#{
+#	def foo( a, b )
+#	{
+#		a += 1;
+#	}
+#}
+#def foo( a, b )
+#{
+#	a += 1;
+#}
+#
+#local f = 0;
+#f.a();
+
+#local a = 0; local c = 0;
+#if(( a.b[0] == c + 66 )){}
+#if(( !(a.b[0] + "foo" ) )){}
+
+#local z = 1;
+#z.a.b.c = "foo";
+#x.y[0] = returna;
+#extern a ;
+#def foo()
+#{
+#	extern a;
+#	local b = true;
+#	a = !b;
+#	local c = 1; #{"d" : 0};
+#	c.d = b;
+#}
+#a += 1;
+#a.b += 0;
+#m[ $ : 0 : 1 ] %= 1;
+#y.x = a().b[0] = x.x = a;
+#a = b < c = 0;
+#local g = -1;
+#def Foo( a, b, c )
+#{
+#	local a = 0;
+#	{
+#		# okay, a defined in Foo()
+#		a = 1;
+#		local b = 1;
+#	}
+#	def Bar( a, b, c )
+#	{
+#		local c = 2;
+#		# TODO: lhs is exp, not an id
+#		c.a = 1;
+#		c = 1;
+#		const pi = 3.1415;
+#		# error, b not defined in Bar()
+##		b = 2;
+#		# error, g not defined in Bar()
+##		g = 2;
+#		{
+#			pi = 2;
+#		}
+#	}
+#}
+
+#local global = -1;
+#{
+#	local a = 0;
+#	local x = new foo();
+#	local n = 0;
+#	extern foo = "foo";
+#	{
+#		const bar = "bar";
+#		local b = { "a" : c };
+#		# okay, n is defined above
+#		n = 4;
+#		# fail, m is not
+#		m = 2;
+#		extern d = [ 0, 1, "a", c ];
+#		{
+#			local c = 2;
+#			extern d = new D();
+#			local a = 1;
+#		}
+#	}
+#}
+
+#class C : B
+#{
+#	def fcn( x = 3.1415, y )
+#	{
+#		local b = foo + bar;
+#		{ local c = b; }
+#		for( i in v )
+#		{
+#			def nester()
+#			{ 
+#				local n = 0;
+#				while( n < 10 )
+#					n = n + 1;
+#			}
+#		}
+#	}
+#}
+#a( x > );
+#a = false < 0;

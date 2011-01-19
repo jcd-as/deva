@@ -59,6 +59,9 @@ void IncRef( Object & o )
 			Object obj = o.v->operator[]( i );
 			IncRef( obj );
 		}
+#ifdef REFCOUNT_TRACE
+		cout << "IncRef: vector: " << o.v << endl;
+#endif 
 		o.v->IncRef();
 	}
 	else if( IsMapType( o.type ) )
@@ -69,6 +72,9 @@ void IncRef( Object & o )
 			IncRef( const_cast<Object&>(it->first) );
 			IncRef( it->second );
 		}
+#ifdef REFCOUNT_TRACE
+		cout << "IncRef: map: " << o.m << endl;
+#endif 
 		o.m->IncRef();
 	}
 }
@@ -85,6 +91,9 @@ int DecRef( Object & o )
 			Object obj = o.v->operator[]( i );
 			DecRef( obj );
 		}
+#ifdef REFCOUNT_TRACE
+		cout << "DecRef: vector: " << o.v << endl;
+#endif 
 		int ret = o.v->DecRef();
 		if( ret == 0 )
 			o.v = NULL;
@@ -105,6 +114,9 @@ int DecRef( Object & o )
 			DecRef( const_cast<Object&>(it->first) );
 			DecRef( it->second );
 		}
+#ifdef REFCOUNT_TRACE
+		cout << "DecRef: map: " << o.m << endl;
+#endif 
 		int ret = o.m->DecRef();
 		if( ret == 0 )
 			o.m = NULL;

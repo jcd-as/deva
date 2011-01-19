@@ -331,7 +331,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	else if( d <= INT_MAX && modf( d, &intpart ) == 0.0 )
 	{
 		// use op_push to push an integer value directly
-		Emit( op_push, (dword)((int)intpart) );
+		Emit( op_push, (int)intpart );
 	}
 	else
 	{

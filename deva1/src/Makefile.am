@@ -30,8 +30,8 @@ deva_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
 # configure handles this, but for the record:
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
 
-deva_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
-deva_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
+deva_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
+deva_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g 
 #deva_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
 devac_SOURCES = \
@@ -48,8 +48,8 @@ devac_SOURCES = \
 	dobject.cpp \
 	util.cpp
 devac_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
-devac_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
-devac_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
+devac_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
+devac_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g 
 #devac_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt
 
 devadb_SOURCES= \
@@ -75,10 +75,8 @@ devadb_SOURCES= \
 	module_math.cpp \
 	module_re.cpp
 devadb_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
+devadb_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-# -missing LIBEDIT autoconf macros on cygwin...
-devadb_LDADD = -ledit $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
-#devadb_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
 devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
 #devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
@@ -106,14 +104,13 @@ devash_SOURCES= \
 	module_re.cpp
 devash_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
 # -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-# -missing LIBEDIT autoconf macros on cygwin...
-devash_LDADD = -ledit $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
-# devash_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB)
+devash_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
 devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
 #devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
 
 test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
 test_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
-test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)
+test_LDADD = $(BOOST_FILESYSTEM_LIB)
+test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
 #test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) #-lboost_filesystem-mt
 

@@ -53,45 +53,11 @@ class Scope
 
 public:
 	Scope() {}
-	~Scope()
-	{
-		// release-ref the vectors/maps and
-		// 'zero' out the locals non-ref types, to error out in case they get 
-		// accidentally used after they should be gone
-		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
-		{
-			if( IsRefType( i->second->type ) )
-				DecRef( *(i->second) );
-			else
-				*(i->second) = Object();
-		}
-		// clear the map & vector 'dead pools' (items to be deleted)
-		Map::ClearDeadPool();
-		Vector::ClearDeadPool();
-	}
+	~Scope();
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
-	void AddSymbol( string name, Object* ob )
-	{
-		data.insert( pair<string, Object*>(string(name), ob) );
-	}
-	Object* FindSymbol( const char* name ) const
-	{
-		// check locals
-		map<string, Object*>::const_iterator i = data.find( string(name) );
-		if( i != data.end() )
-			return i->second;
-		return NULL;
-	}
-	const char* FindSymbolName( Object* o )
-	{
-		// check locals
-		for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
-		{
-			if( *(i->second) == *o )
-				return i->first.c_str();
-		}
-		return NULL;
-	}
+	void AddSymbol( string name, Object* ob );
+	Object* FindSymbol( const char* name ) const;
+	const char* FindSymbolName( Object* o );
 };
 
 class ScopeTable
@@ -99,42 +65,13 @@ class ScopeTable
 	vector<Scope*> data;
 
 public:
-	~ScopeTable()
-	{
-		// more than one scope (global scope)??
-		if( data.size() > 1 )
-			throw ICE( "Scope table not empty at exit." );
-		if( data.size() == 1 )
-			delete data.back();
-	}
+	~ScopeTable();
 	inline void PushScope( Scope* s ) { data.push_back( s ); }
 	inline void PopScope() { delete data.back(); data.pop_back(); }
 	inline Scope* CurrentScope() const { return data.back(); }
 	inline Scope* At( size_t idx ) const { return data[idx]; }
-	Object* FindSymbol( const char* name ) const
-	{
-		// look in each scope
-		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
-		{
-			// check for the symbol
-			Object* o = (*i)->FindSymbol( name );
-			if( o )
-				return o;
-		}
-		return NULL;
-	}
-	const char* FindSymbolName( Object* o )
-	{
-		// look in each scope
-		for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
-		{
-			// check for the symbol
-			const char* n = (*i)->FindSymbolName( o );
-			if( n )
-				return n;
-		}
-		return NULL;
-	}
+	Object* FindSymbol( const char* name ) const;
+	const char* FindSymbolName( Object* o );
 };
 
 

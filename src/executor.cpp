@@ -238,7 +238,7 @@ Opcode Executor::ExecuteInstruction()
 		// push an integer value directly
 		// 1 arg
 		arg = *((dword*)ip);
-		stack.push_back( Object( (double)arg ) );
+		stack.push_back( Object( (double)(int)arg ) );
 		ip += sizeof( dword );
 		break;
 	case op_push_true:
@@ -613,9 +613,6 @@ Opcode Executor::ExecuteInstruction()
 		// create the map and turn it into a class
 		Object m;
 		m.MakeClass( CreateMap() );
-		// TODO: 
-		// - generate new/delete fcns if they don't exist? (w/ calls to base
-		// new/deletes)
 		// set its name
 		Object name = stack.back();
 		stack.pop_back();
@@ -1112,6 +1109,8 @@ Opcode Executor::ExecuteInstruction()
 
 			// recursively call the constructors on this object and its base classes
 			CallConstructors( o, instance, arg );
+			// ensure we IncRef the upcoming store op...
+			last_op_was_return = false;
 
 			stack.push_back( instance );
 		}
@@ -1446,7 +1445,6 @@ Opcode Executor::ExecuteInstruction()
 	case op_storeslice3:
 		// TODO:
 	case op_add_tbl_store:	// tos2[tos1] += tos
-		// TODO:
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
@@ -1478,7 +1476,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "left-hand and right-hand sides of '+=' operator must be the same type." );
 			if( o.type == obj_number )
 			{
-				double d = o.d + lhsob.d;
+				double d = lhsob.d + o.d;
 				lhs.v->operator[]( idx ) = Object( d );
 			}
 			else
@@ -1491,9 +1489,6 @@ Opcode Executor::ExecuteInstruction()
 				CurrentFrame()->AddString( ret );
 				lhs.v->operator[]( idx ) = Object( ret );
 			}
-//			lhs.v->operator[]( idx ) = o;
-			// IncRef stored item
-			IncRef( o );
 		}
 		// map/class/instance:
 		else
@@ -1521,7 +1516,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "left-hand and right-hand sides of '+=' operator must be the same type." );
 			if( o.type == obj_number )
 			{
-				double d = o.d + lhsob.d;
+				double d = lhsob.d + o.d;
 				lhs.m->operator[]( rhs ) = Object( d );
 			}
 			else
@@ -1534,18 +1529,252 @@ Opcode Executor::ExecuteInstruction()
 				CurrentFrame()->AddString( ret );
 				lhs.m->operator[]( rhs ) = Object( ret );
 			}
-			// IncRef stored item
-			IncRef( o );
 		}
 		break;
-	case op_sub_tbl_store:
-		// TODO:
-	case op_mul_tbl_store:
-		// TODO:
-	case op_div_tbl_store:
-		// TODO:
-	case op_mod_tbl_store:
-		// TODO:
+	case op_sub_tbl_store:	// tos2[tos1] -= tos
+		o = stack.back();
+		stack.pop_back();
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// vector:
+		if( IsVecType( lhs.type ) )
+		{
+			if( rhs.type != obj_number )
+				throw RuntimeException( "Vectors can only be indexed with numeric values." );
+			// error if arguments aren't integral numbers...
+			double intpart;
+			if( modf( rhs.d, &intpart ) != 0.0 )
+				throw RuntimeException( "Index to a vector must be an integral value." );
+			int idx = (int)rhs.d;
+			// out-of-bounds check
+			if( lhs.v->size() <= idx || idx < 0 )
+				throw RuntimeException( "Out-of-bounds error indexing vector." );
+
+			Object lhsob = lhs.v->operator[]( idx );
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '-=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '-=' operator must be a number." );
+
+			double d = lhsob.d - o.d;
+			lhs.v->operator[]( idx ) = Object( d );
+		}
+		// map/class/instance:
+		else
+		{
+			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+			// keys... ???
+			Map::iterator it = lhs.m->find( rhs );
+			if( it == lhs.m->end() )
+			{
+				if( rhs.type == obj_symbol_name )
+				{
+					// rhs is a symbol, convert it to a string
+					rhs = Object( rhs.s );
+					it = lhs.m->find( Object( rhs.s ) );
+				}
+				if( it == lhs.m->end() )
+					throw RuntimeException( boost::format( "Invalid index into map: '%1%'." ) % rhs );
+			}
+			Object lhsob = it->second;
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '-=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '-=' operator must be a number." );
+
+			double d = lhsob.d - o.d;
+			lhs.m->operator[]( rhs ) = Object( d );
+		}
+		break;
+	case op_mul_tbl_store:	// tos2[tos1] *= tos
+		o = stack.back();
+		stack.pop_back();
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// vector:
+		if( IsVecType( lhs.type ) )
+		{
+			if( rhs.type != obj_number )
+				throw RuntimeException( "Vectors can only be indexed with numeric values." );
+			// error if arguments aren't integral numbers...
+			double intpart;
+			if( modf( rhs.d, &intpart ) != 0.0 )
+				throw RuntimeException( "Index to a vector must be an integral value." );
+			int idx = (int)rhs.d;
+			// out-of-bounds check
+			if( lhs.v->size() <= idx || idx < 0 )
+				throw RuntimeException( "Out-of-bounds error indexing vector." );
+
+			Object lhsob = lhs.v->operator[]( idx );
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '*=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '*=' operator must be a number." );
+
+			double d = lhsob.d * o.d;
+			lhs.v->operator[]( idx ) = Object( d );
+		}
+		// map/class/instance:
+		else
+		{
+			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+			// keys... ???
+			Map::iterator it = lhs.m->find( rhs );
+			if( it == lhs.m->end() )
+			{
+				if( rhs.type == obj_symbol_name )
+				{
+					// rhs is a symbol, convert it to a string
+					rhs = Object( rhs.s );
+					it = lhs.m->find( Object( rhs.s ) );
+				}
+				if( it == lhs.m->end() )
+					throw RuntimeException( boost::format( "Invalid index into map: '%1%'." ) % rhs );
+			}
+			Object lhsob = it->second;
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '*=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '*=' operator must be a number." );
+
+			double d = lhsob.d * o.d;
+			lhs.m->operator[]( rhs ) = Object( d );
+		}
+		break;
+	case op_div_tbl_store:	// tos2[tos1] /= tos
+		o = stack.back();
+		stack.pop_back();
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// vector:
+		if( IsVecType( lhs.type ) )
+		{
+			if( rhs.type != obj_number )
+				throw RuntimeException( "Vectors can only be indexed with numeric values." );
+			// error if arguments aren't integral numbers...
+			double intpart;
+			if( modf( rhs.d, &intpart ) != 0.0 )
+				throw RuntimeException( "Index to a vector must be an integral value." );
+			int idx = (int)rhs.d;
+			// out-of-bounds check
+			if( lhs.v->size() <= idx || idx < 0 )
+				throw RuntimeException( "Out-of-bounds error indexing vector." );
+
+			Object lhsob = lhs.v->operator[]( idx );
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '/=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '/=' operator must be a number." );
+
+			double d = lhsob.d / o.d;
+			lhs.v->operator[]( idx ) = Object( d );
+		}
+		// map/class/instance:
+		else
+		{
+			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+			// keys... ???
+			Map::iterator it = lhs.m->find( rhs );
+			if( it == lhs.m->end() )
+			{
+				if( rhs.type == obj_symbol_name )
+				{
+					// rhs is a symbol, convert it to a string
+					rhs = Object( rhs.s );
+					it = lhs.m->find( Object( rhs.s ) );
+				}
+				if( it == lhs.m->end() )
+					throw RuntimeException( boost::format( "Invalid index into map: '%1%'." ) % rhs );
+			}
+			Object lhsob = it->second;
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '/=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '/=' operator must be a number." );
+
+			double d = lhsob.d / o.d;
+			lhs.m->operator[]( rhs ) = Object( d );
+		}
+		break;
+	case op_mod_tbl_store:	// tos2[tos1] %= tos
+		o = stack.back();
+		stack.pop_back();
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// vector:
+		if( IsVecType( lhs.type ) )
+		{
+			if( rhs.type != obj_number )
+				throw RuntimeException( "Vectors can only be indexed with numeric values." );
+			// error if arguments aren't integral numbers...
+			double intpart;
+			if( modf( rhs.d, &intpart ) != 0.0 )
+				throw RuntimeException( "Index to a vector must be an integral value." );
+			int idx = (int)rhs.d;
+			// out-of-bounds check
+			if( lhs.v->size() <= idx || idx < 0 )
+				throw RuntimeException( "Out-of-bounds error indexing vector." );
+
+			Object lhsob = lhs.v->operator[]( idx );
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '%=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '%=' operator must be a number." );
+
+			// ensure integral arguments
+			if( modf( o.d, &intpart ) != 0.0 || modf( lhsob.d, &intpart ) != 0.0 )
+				throw RuntimeException( "arguments to '%=' must be integral values." );
+
+			double d = (int)lhsob.d % (int)o.d;
+			lhs.v->operator[]( idx ) = Object( d );
+		}
+		// map/class/instance:
+		else
+		{
+			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
+			// keys... ???
+			Map::iterator it = lhs.m->find( rhs );
+			if( it == lhs.m->end() )
+			{
+				if( rhs.type == obj_symbol_name )
+				{
+					// rhs is a symbol, convert it to a string
+					rhs = Object( rhs.s );
+					it = lhs.m->find( Object( rhs.s ) );
+				}
+				if( it == lhs.m->end() )
+					throw RuntimeException( boost::format( "Invalid index into map: '%1%'." ) % rhs );
+			}
+			Object lhsob = it->second;
+			if( lhsob.type != obj_number )
+				throw RuntimeException( "left-hand side of '%=' operator must be a number." );
+			if( o.type != obj_number )
+				throw RuntimeException( "right-hand side of '%=' operator must be a number." );
+
+			// ensure integral arguments
+			double intpart;
+			if( modf( o.d, &intpart ) != 0.0 || modf( lhsob.d, &intpart ) != 0.0 )
+				throw RuntimeException( "arguments to '%=' must be integral values." );
+
+			double d = (int)lhsob.d % (int)o.d;
+			lhs.m->operator[]( rhs ) = Object( d );
+		}
 		break;
 	case op_dup:
 		// 1 arg:
