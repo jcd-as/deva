@@ -79,12 +79,12 @@ block
 
 func_decl[char* classname]
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->LeaveScope(); compiler->EndFun(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); } }
 	:	^(Def id=ID 
 		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
 		arg_list_decl block) 
 	|	^(Def id='new' 
-		{ compiler->AddScope(); compiler->DefineFun( const_cast<char*>("new"), classname, $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->in_constructor = true; compiler->DefineFun( const_cast<char*>("new"), classname, $id->getLine($id) ); }
 		arg_list_decl block)
 	;
 	

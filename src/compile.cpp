@@ -58,6 +58,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
 	in_class( false ),
+	in_constructor( false ),
 	is_dot_rhs( false )
 {
 	// create the instruction stream
@@ -613,8 +614,22 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 		int num_children = lhs_node->getChildCount( lhs_node );
 		if( num_children == 2 )
 		{
-			// simple index
-			Emit( op_tbl_store );
+			// if we're in a constructor and the lhs' first child is 'self'
+			if( in_constructor )
+			{
+				pANTLR3_BASE_TREE lhs_dot = (pANTLR3_BASE_TREE)lhs_node->getChild( lhs_node, 0 );
+				char* lhs_dot_name = (char*)lhs_dot->getText( lhs_dot )->chars;
+				if( strcmp( lhs_dot_name, "self" ) == 0 )
+					Emit( op_self_store );
+				else
+					// simple index
+					Emit( op_tbl_store );
+			}
+			else
+			{
+				// simple index
+				Emit( op_tbl_store );
+			}
 		}
 		else if( num_children == 3 )
 		{

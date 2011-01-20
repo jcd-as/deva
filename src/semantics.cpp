@@ -128,6 +128,12 @@ void Semantics::ResolveVar( char* name, int line )
 // define a function in the current scope
 void Semantics::DefineFun( char* name, char* classname, int line )
 {
+	// 'new' method (constructor) is disallowed outside of classes
+	if( strcmp( name, "new" ) == 0 && !classname )
+	{
+		throw SemanticException( "'new' method is not allowed outside of a class definition.", line );
+	}
+
 	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !current_scope->Define( sym ) )
 	{

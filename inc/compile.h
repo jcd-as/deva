@@ -129,6 +129,8 @@ public:
 	// classes
 	bool in_class;
 
+	bool in_constructor;
+
 	// dot op
 	bool is_dot_rhs;
 

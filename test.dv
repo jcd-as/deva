@@ -44,6 +44,10 @@ class C
 	{
 		self.v = [];
 	}
+	def foo()
+	{
+		self.v = [];
+	}
 }
 local c = new C();
 

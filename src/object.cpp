@@ -49,6 +49,9 @@ void IncRef( Object & o )
 	if( last_op_was_return )
 	{
 		last_op_was_return = false;
+#ifdef REFCOUNT_TRACE
+		cout << "last op was return: IncRef prevented" << endl;
+#endif 
 		return;
 	}
 	if( IsVecType( o.type ) )

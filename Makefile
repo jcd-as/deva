@@ -48,13 +48,16 @@ deva : ${DEVA_OBJS} ${DEVA_C_OBJS}
 	#g++ ${LDFLAGS} -lboost_filesystem-mt -o deva ${DEVA_OBJS} ${DEVA_C_OBJS} ${LDADD}
 
 devaParser.c devaLexer.c devaLexer.h devaParser.h deva.tokens : deva.g
-	java org.antlr.Tool -message-format gnu deva.g
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar" org.antlr.Tool -message-format gnu deva.g
+	#java org.antlr.Tool -message-format gnu deva.g
 
 semantic_walker.c semantic_walker.h semantic_walker.tokens : semantic_walker.g deva.tokens
-	java org.antlr.Tool -message-format gnu semantic_walker.g
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar" org.antlr.Tool -message-format gnu semantic_walker.g
+	#java org.antlr.Tool -message-format gnu semantic_walker.g
 
 compile_walker.c compile_walker.h compile_walker.tokens : compile_walker.g deva.tokens
-	java org.antlr.Tool -message-format gnu compile_walker.g
+	java -cp "/home/jcs/bin/antlrworks-1.4.1.jar" org.antlr.Tool -message-format gnu compile_walker.g
+	#java org.antlr.Tool -message-format gnu compile_walker.g
 
 %.o : %.cpp
 	g++ ${CXXFLAGS} -o $@ $<

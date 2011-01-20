@@ -1405,6 +1405,7 @@ Opcode Executor::ExecuteInstruction()
 	case op_loadslice3:
 		// TODO:
 	case op_tbl_store:// tos2[tos1] = tos
+	case op_self_store: // same but does NOT inc ref tos2 (which should always be 'self' in a constructor!)
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
@@ -1428,7 +1429,8 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 			lhs.v->operator[]( idx ) = o;
 			// IncRef stored item
-			IncRef( o );
+			if( op == op_tbl_store )
+				IncRef( o );
 		}
 		// map/class/instance:
 		else
@@ -1437,7 +1439,8 @@ Opcode Executor::ExecuteInstruction()
 			// keys... ???
 			lhs.m->operator[]( rhs ) = o;
 			// IncRef stored item
-			IncRef( o );
+			if( op == op_tbl_store )
+				IncRef( o );
 		}
 		break;
 	case op_storeslice2:
@@ -2146,6 +2149,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_loadslice2:
 	case op_loadslice3:
 	case op_tbl_store:
+	case op_self_store:
 	case op_storeslice2:
 	case op_storeslice3:
 	case op_add_tbl_store:
