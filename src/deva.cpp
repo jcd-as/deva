@@ -54,6 +54,9 @@ const char* deva::current_file;
 int _argc;
 char** _argv;
 
+// global to enable tracing refcounts
+bool deva::reftrace;
+
 /////////////////////////////////////////////////////////////////////////////
 // functions
 /////////////////////////////////////////////////////////////////////////////
@@ -68,8 +71,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// declare the command line options
 	bool debug_dump = false;
 	bool trace = false;
-	bool no_dvc = false;
+	reftrace = false;
 	bool show_ast = false;
+	bool no_dvc = false;
 	bool disasm = false;
 	bool compile_only = false;
 	string output;
@@ -82,9 +86,12 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		( "no-dvc", "do NOT write a .dvc compiled byte-code file to disk" )
 		( "compile-only,c", "compile only, do not execute" )
 		( "disasm", "disassemble" )
+#ifdef DEBUG
 		( "trace", "show execution trace" )
+		( "reftrace", "show refcount trace" )
 		( "show-ast,a", "show the AST" )
 		( "debug-dump", "turn internal debug output on" )
+#endif
 		( "input", po::value<string>( &input ), "input filename" )
 		( "options", po::value<vector<string> >( &inputs )->composing(), "options to pass to the deva program" )
 		;
@@ -124,9 +131,14 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	{
 		disasm = true;
 	}
+#ifdef DEBUG
 	if( vm.count( "trace" ) )
 	{
 		trace = true;
+	}
+	if( vm.count( "reftrace" ) )
+	{
+		reftrace = true;
 	}
 	if( vm.count( "show-ast" ) )
 	{
@@ -136,6 +148,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	{
 		debug_dump = true;
 	}
+#endif
 	if( vm.count( "compile-only" ) )
 	{
 		compile_only = true;
@@ -211,6 +224,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			PassTwo( p1rv, p2f );
 
 			// debug dumps
+#ifdef DEBUG
 			if( debug_dump /*&& verbosity == 3*/ )
 			{
 				// dump the symbol tables...
@@ -220,6 +234,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				// dump the function objects
 				ex->DumpFunctions();
 			}
+#endif
 
 			if( disasm )
 			{

@@ -185,9 +185,9 @@ exp[bool invert]
 	|	^(NOT_OP in=exp[false]) { semantics->CheckNotOp( $in.start ); }
 	|	^(Key exp[false] key_exp)
 	|	^(DOT_OP lhs=exp[false] 
-			{ if( string( (char*)$lhs.start->getText($lhs.start)->chars ) == string( "self" ) ) semantics->rhs_of_self = true; }
+			{ semantics->rhs_of_dot = true; }
 			exp[false])
-			{ semantics->rhs_of_self = false; }
+			{ semantics->rhs_of_dot = false; }
 	|	call_exp
 	|	(map_op | vec_op)
 	|	value[invert]

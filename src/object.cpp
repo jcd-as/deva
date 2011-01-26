@@ -37,33 +37,46 @@ namespace deva
 {
 
 
+// static member of RefCounted
 template<typename T> vector<T*> RefCounted<T>::dead_pool = vector<T*>();
-
-bool last_op_was_return = false;
 
 // helper fcns for reference counting. recursively IncRef/DecRef objects
 void IncRef( Object & o )
 {
-	// if the last op was a return, don't inc ref, the return op took care of
-	// that
-	if( last_op_was_return )
-	{
-		last_op_was_return = false;
-#ifdef REFCOUNT_TRACE
-		cout << "last op was return: IncRef prevented" << endl;
-#endif 
-		return;
-	}
 	if( IsVecType( o.type ) )
 	{
-		// walk the vector's contents too
+#ifdef DEBUG
+		if( reftrace )
+			cout << "IncRef: vector: " << o.v << " prior refcount: " << o.v->GetRefCount() << endl;
+#endif 
+		o.v->IncRef();
+	}
+	else if( IsMapType( o.type ) )
+	{
+#ifdef DEBUG
+		if( reftrace )
+			cout << "IncRef: map: " << o.m << " prior refcount: " << o.m->GetRefCount() << endl;
+#endif 
+		o.m->IncRef();
+	}
+}
+
+// inc ref all this object's children, recursively
+// for use when creating a copy of a reference type object
+// (e.g. when creating an instance from a class object)
+void IncRefChildren( Object & o )
+{
+	if( IsVecType( o.type ) )
+	{
+		// walk the vector's contents
 		for( int i = 0; i < o.v->size(); i++ )
 		{
 			Object obj = o.v->operator[]( i );
-			IncRef( obj );
+			IncRefChildren( obj );
 		}
-#ifdef REFCOUNT_TRACE
-		cout << "IncRef: vector: " << o.v << endl;
+#ifdef DEBUG
+		if( reftrace )
+			cout << "IncRef: vector: " << o.v << " prior refcount: " << o.v->GetRefCount() << endl;
 #endif 
 		o.v->IncRef();
 	}
@@ -72,11 +85,12 @@ void IncRef( Object & o )
 		// walk the map's contents
 		for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
 		{
-			IncRef( const_cast<Object&>(it->first) );
-			IncRef( it->second );
+			IncRefChildren( const_cast<Object&>(it->first) );
+			IncRefChildren( it->second );
 		}
-#ifdef REFCOUNT_TRACE
-		cout << "IncRef: map: " << o.m << endl;
+#ifdef DEBUG
+		if( reftrace )
+			cout << "IncRef: map: " << o.m << " prior refcount: " << o.m->GetRefCount() << endl;
 #endif 
 		o.m->IncRef();
 	}
@@ -88,14 +102,18 @@ int DecRef( Object & o )
 	{
 		if( !o.v )
 			return 0;
-		// walk the vector's contents too
-		for( int i = 0; i < o.v->size(); i++ )
+		// if the vector is about to be destroyed, release its refs on its contents
+		if( o.v->GetRefCount() == 1 )
 		{
-			Object obj = o.v->operator[]( i );
-			DecRef( obj );
+			for( int i = 0; i < o.v->size(); i++ )
+			{
+				Object obj = o.v->operator[]( i );
+				DecRef( obj );
+			}
 		}
-#ifdef REFCOUNT_TRACE
-		cout << "DecRef: vector: " << o.v << endl;
+#ifdef DEBUG
+		if( reftrace )
+			cout << "DecRef: vector: " << o.v << " prior refcount: " << o.v->GetRefCount() << endl;
 #endif 
 		int ret = o.v->DecRef();
 		if( ret == 0 )
@@ -106,19 +124,23 @@ int DecRef( Object & o )
 	{
 		if( !o.m )
 			return 0;
-		// if we're deleting an instance, we need to call the destructor and base class destructors
-		if( o.m->GetRefCount() == 1 && o.type == obj_instance )
+		// if the object is going to be destroyed
+		if( o.m->GetRefCount() == 1 )
 		{
-			ex->CallDestructors( o );
+			// if we're deleting an instance, we need to call the destructor and base class destructors
+			if( o.type == obj_instance )
+				ex->CallDestructors( o );
+
+			// release its refs on its contents
+			for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
+			{
+				DecRef( const_cast<Object&>(it->first) );
+				DecRef( it->second );
+			}
 		}
-		// walk the map's contents
-		for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
-		{
-			DecRef( const_cast<Object&>(it->first) );
-			DecRef( it->second );
-		}
-#ifdef REFCOUNT_TRACE
-		cout << "DecRef: map: " << o.m << endl;
+#ifdef DEBUG
+		if( reftrace )
+			cout << "DecRef: map: " << o.m << " prior refcount: " << o.m->GetRefCount() << endl;
 #endif 
 		int ret = o.m->DecRef();
 		if( ret == 0 )

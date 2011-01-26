@@ -47,6 +47,19 @@ Frame::~Frame()
 	{
 		delete [] *i;
 	}
+	// dec ref the args
+	int i = 0;
+//	if( is_native )
+//	{
+//		if( native_function.is_method )
+//			i++;
+//	}
+//	else if( function->IsMethod() )
+//			i++;
+	for( ; i < num_args; i++ )
+	{
+		DecRef( locals[i] );
+	}
 	// free the locals array storage
 	delete [] locals;
 }

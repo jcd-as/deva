@@ -75,8 +75,8 @@ struct Semantics
 	// map key
 	bool in_map_key;
 
-	// setting/getting a prop on 'self'?
-	bool rhs_of_self;
+	// setting/getting a prop on a map/class/instance
+	bool rhs_of_dot;
 
 	// loop tracking
 	int in_loop;
@@ -88,7 +88,7 @@ struct Semantics
 		in_class( false ),
 		making_call( false ),
 		in_map_key( false ),
-		rhs_of_self( false ),
+		rhs_of_dot( false ),
 		in_loop( false )
 	{
 		// setup the global scope (a fcn scope called "@main")

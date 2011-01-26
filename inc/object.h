@@ -47,6 +47,10 @@ using namespace std;
 namespace deva
 {
 
+
+// global flag to turn ref-count tracing on/off
+extern bool reftrace;
+
 // object type for tagged union object type
 enum ObjectType
 {
@@ -248,6 +252,7 @@ inline Map* CreateMap( Map & m ) { return Map::Create( m ); }
 // helper functions for reference counting
 extern bool last_op_was_return;
 void IncRef( Object & o );
+void IncRefChildren( Object & o );
 int DecRef( Object & o );
 
 struct Function

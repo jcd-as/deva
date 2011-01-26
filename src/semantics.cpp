@@ -114,7 +114,7 @@ void Semantics::ResolveVar( char* name, int line )
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 		return;
 	// if we're on the rhs of 'self' we need to add symbols referenced
-	if( rhs_of_self )
+	if( rhs_of_dot )
 	{
 		DefineVar( name, line );
 	}
@@ -192,6 +192,7 @@ void Semantics::AddString( char* arg )
 		// strip the string of quotes and unescape it
 		string str( arg );
 		str = unescape( strip_quotes( str ) );
+		// TODO: this leaks 's'. what to do???
 		char* s = new char[str.length()+1];
 		strcpy( s, str.c_str() );
 		Symbol *sym = new Symbol( s, sym_variable );

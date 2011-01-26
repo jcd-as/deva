@@ -181,7 +181,6 @@ enum Opcode
 	op_loadslice2,	// tos = tos2[tos1:tos]
 	op_loadslice3,	// tos = tos3[tos2:tos1:tos]
 	op_tbl_store,	// tos2[tos1] = tos
-	op_self_store,	// tos2[tos1] = tos, where tos2 is 'self' during construction only (does NOT inc ref tos1!)
 	op_storeslice2,	// 
 	op_storeslice3,
 	// augmented assignment for table stores
@@ -205,7 +204,7 @@ enum Opcode
 
 	op_import,
 
-	// 115 (update as opcodes are added above)
+	// 114 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -303,7 +302,6 @@ static const char* opcodeNames[] =
 	"loadslice2",
 	"loadslice3",
 	"tbl_store",
-	"self_store",
 	"storeslice2",
 	"storeslice3",
 	"add_tbl_store",

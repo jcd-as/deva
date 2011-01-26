@@ -92,17 +92,22 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 		CallConstructors( *iv, instance, 0 );
 	}
 	// call the constructor for this (most derived) class
-	// push the new instance onto the stack
-	stack.push_back( instance );
 	// get the 'new' method (constructor) of this class and call it
 	Map::iterator it = o.m->find( Object( obj_symbol_name, "new" ) );
 	if( it != o.m->end() )
 	{
+		// push the new instance onto the stack
+		stack.push_back( instance );
+		IncRef( instance );
+
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'new' method of instance object is not a function." );
 		ExecuteFunction( it->second.f, num_args );
 		// pop the (null) return value
 		stack.pop_back();
+
+		// decref the instance
+		DecRef( instance );
 	}
 }
 
@@ -110,17 +115,22 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 void Executor::CallDestructors( Object o )
 {
 	// call the destructor for this (most derived) class
-	// push the instance onto the stack
-	stack.push_back( o );
 	// get the 'delete' method (destructor) of this class and call it
 	Map::iterator it = o.m->find( Object( obj_symbol_name, "delete" ) );
 	if( it != o.m->end() )
 	{
+		// push the instance onto the stack
+		stack.push_back( o );
+		IncRef( o );
+
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'delete' method of instance object is not a function." );
 		ExecuteFunction( it->second.f, 0, true );
 		// pop the (null) return value
 		stack.pop_back();
+
+		// decref the instance
+		DecRef( o );
 	}
 
 	// get the base classes collection
@@ -231,7 +241,7 @@ Opcode Executor::ExecuteInstruction()
 		// (pop is the only op that can follow a return op and *doesn't* IncRef
 		// the returned value - in all other cases the IncRef call will reset
 		// the flag)
-		last_op_was_return = false;
+		DecRef( stack.back() );
 		stack.pop_back();
 		break;
 	case op_push:
@@ -269,38 +279,52 @@ Opcode Executor::ExecuteInstruction()
 		stack.push_back( GetConstant( 3 ) );
 		break;
 	case op_pushlocal:
+		// TODO: implement!
 		// 1 arg
+		arg = *((dword*)ip);
 		ip += sizeof( dword );
+		stack.push_back( CurrentFrame()->GetLocal( arg ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal0:
 		stack.push_back( CurrentFrame()->GetLocal( 0 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal1:
 		stack.push_back( CurrentFrame()->GetLocal( 1 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal2:
 		stack.push_back( CurrentFrame()->GetLocal( 2 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal3:
 		stack.push_back( CurrentFrame()->GetLocal( 3 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal4:
 		stack.push_back( CurrentFrame()->GetLocal( 4 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal5:
 		stack.push_back( CurrentFrame()->GetLocal( 5 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal6:
 		stack.push_back( CurrentFrame()->GetLocal( 6 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal7:
 		stack.push_back( CurrentFrame()->GetLocal( 7 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal8:
 		stack.push_back( CurrentFrame()->GetLocal( 8 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushlocal9:
 		stack.push_back( CurrentFrame()->GetLocal( 9 ) );
+		IncRef( stack.back() );
 		break;
 	case op_pushconst:
 		// 1 arg: index to constant
@@ -320,7 +344,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *plhs );
-		IncRef( rhs );
 		*plhs = rhs;
 		ip += sizeof( dword );
 		break;
@@ -369,7 +392,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( arg ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( arg, rhs );
 		ip += sizeof( dword );
@@ -378,7 +400,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 0 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 0, rhs );
 		break;
@@ -386,7 +407,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 1 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 1, rhs );
 		break;
@@ -394,7 +414,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 2 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 2, rhs );
 		break;
@@ -402,7 +421,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 3 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 3, rhs );
 		break;
@@ -410,7 +428,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 4 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 4, rhs );
 		break;
@@ -418,7 +435,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 5 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 5, rhs );
 		break;
@@ -426,7 +442,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 6 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 6, rhs );
 		break;
@@ -434,7 +449,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 7 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 7, rhs );
 		break;
@@ -442,7 +456,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 8 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 8, rhs );
 		break;
@@ -450,7 +463,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		DecRef( *CurrentFrame()->GetLocalRef( 9 ) );
-		IncRef( rhs );
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 9, rhs );
 		break;
@@ -461,7 +473,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( arg, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -473,7 +484,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 0, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -483,7 +493,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 1, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -493,7 +502,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 2, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -503,7 +511,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 3, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -513,7 +520,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 4, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -523,7 +529,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 5, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -533,7 +538,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 6, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -543,7 +547,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 7, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -553,7 +556,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 8, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -563,7 +565,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		// set the local in the current frame
-		IncRef( rhs );
 		CurrentFrame()->SetLocal( 9, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
@@ -585,6 +586,7 @@ Opcode Executor::ExecuteInstruction()
 			stack.pop_back();
 			m.m->insert( pair<Object, Object>( lhs, rhs ) );
 		}
+		IncRef( m );
 		stack.push_back( m );
 		}
 		break;
@@ -602,6 +604,7 @@ Opcode Executor::ExecuteInstruction()
 			stack.pop_back();
 			v.v->operator[]( arg-i-1 ) = o;
 		}
+		IncRef( v );
 		stack.push_back( v );
 		}
 		break;
@@ -628,8 +631,10 @@ Opcode Executor::ExecuteInstruction()
 				throw ICE( "Base class expected. Bad code gen? Corrupt stack?" );
 			v->push_back( base );
 		}
+		Object basesObj( v );
+		IncRef( basesObj );
 		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
-		m.m->insert( pair<Object, Object>( _bases, Object( v ) ) );
+		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
 		// add all of the methods for this class
 		for( map<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 		{
@@ -645,6 +650,7 @@ Opcode Executor::ExecuteInstruction()
 		}
 		// push the new class object onto the stack (it will be consumed by a
 		// following 'def_local' instruction)
+		IncRef( m );
 		stack.push_back( m );
 		}
 		break;
@@ -665,8 +671,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_eq:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Equality operator used on operands of different types." );
@@ -689,8 +697,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_neq:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Inequality operator used on operands of different types." );
@@ -713,8 +723,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_lt:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Less-than operator used on operands of different types." );
@@ -727,8 +739,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_lte:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Less-than-or-equals operator used on operands of different types." );
@@ -741,8 +755,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_gt:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Greater-than operator used on operands of different types." );
@@ -755,8 +771,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_gte:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
 			throw RuntimeException( "Greater-than-or-equals operator used on operands of different types." );
@@ -769,15 +787,19 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_or:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		stack.push_back( Object( lhs.CoerceToBool() || rhs.CoerceToBool() ) );
 		break;
 	case op_and:
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		stack.push_back( Object( lhs.CoerceToBool() && rhs.CoerceToBool() ) );
 		break;
@@ -790,6 +812,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_not:
 		o = stack.back();
+		DecRef( o );
 		stack.pop_back();
 		stack.push_back( Object( !o.CoerceToBool() ) );
 		break;
@@ -878,6 +901,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number && plhs->type != obj_string )
 			throw RuntimeException( "Left-hand side of addition assignment operator must be a number or a string." );
@@ -1077,6 +1101,7 @@ Opcode Executor::ExecuteInstruction()
 		ip += sizeof( dword );
 		// get the fcn
 		o = stack.back();
+		DecRef( o );
 		stack.pop_back();
 		// TODO: if addr relative to another code block (module)??
 		//
@@ -1107,10 +1132,11 @@ Opcode Executor::ExecuteInstruction()
 			Object instance;
 			instance.MakeInstance( inst );
 
+			// inc ref it before we do anything with it
+			IncRefChildren( instance );
+
 			// recursively call the constructors on this object and its base classes
 			CallConstructors( o, instance, arg );
-			// ensure we IncRef the upcoming store op...
-			last_op_was_return = false;
 
 			stack.push_back( instance );
 		}
@@ -1158,12 +1184,6 @@ Opcode Executor::ExecuteInstruction()
 			const char* str = CurrentFrame()->GetParent()->AddString( string( o.s ) );
 			stack.push_back( Object( str ) );
 		}
-		// inc ref the object being returned so that it leaving the fcn
-		// scope won't delete it...
-		IncRef( stack.back() );
-		// set the var indicating the last op was a return so that the next op
-		// won't inc ref again
-		last_op_was_return = true;
 		// 1 arg: number of scopes to leave
 		arg = *((dword*)ip);
 		// leave the scopes
@@ -1253,6 +1273,7 @@ Opcode Executor::ExecuteInstruction()
 		// if there aren't
 		// get the vector off the stack
 		o = stack.back();
+		DecRef( o );
 		stack.pop_back();
 		if( o.type != obj_vector )
 			throw ICE( "Non-vector returned from 'next' in op_for_iter." );
@@ -1274,18 +1295,23 @@ Opcode Executor::ExecuteInstruction()
 				if( ov.type != obj_vector )
 					throw RuntimeException( "map 'next' builtin method did not return a vector with a vector key/value pair as its second item." );
 				stack.push_back( ov.v->operator[]( 0 ) );
+				IncRef( stack.back() );
 				stack.push_back( ov.v->operator[]( 1 ) );
+				IncRef( stack.back() );
 			}
 			// a vector will just be the value we want
 			else
 				stack.push_back( o.v->operator[]( 1 ) );
+				IncRef( stack.back() );
 		}
 		}
 		break;
 	case op_tbl_load:// tos = tos1[tos]
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1301,6 +1327,7 @@ Opcode Executor::ExecuteInstruction()
 					if( !nf.is_method )
 						throw ICE( "Vector builtin not marked as a method." );
 					stack.push_back( lhs );
+					IncRef( lhs );
 					stack.push_back( Object( nf ) );
 				}
 				else
@@ -1318,6 +1345,7 @@ Opcode Executor::ExecuteInstruction()
 			if( lhs.v->size() <= idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 			Object obj = lhs.v->operator[]( idx );
+			IncRef( obj );
 			stack.push_back( obj );
 		}
 		// map/class/instance:
@@ -1339,7 +1367,10 @@ Opcode Executor::ExecuteInstruction()
 						{
 							// push the class/instance ('this') for instances
 							if( lhs.type == obj_instance )
+							{
 								stack.push_back( lhs );
+								IncRef( lhs );
+							}
 						}
 						// push the object
 						stack.push_back( obj );
@@ -1358,6 +1389,7 @@ Opcode Executor::ExecuteInstruction()
 						if( !nf.is_method )
 							throw ICE( "Map builtin not marked as a method." );
 						stack.push_back( lhs );
+						IncRef( lhs );
 						stack.push_back( Object( nf ) );
 					}
 					// check for class/instance method
@@ -1372,7 +1404,10 @@ Opcode Executor::ExecuteInstruction()
 								throw RuntimeException( boost::format( "Invalid method: '%1%'." ) % rhs.s );
 							// push the class/instance ('this')
 							if( lhs.type == obj_instance || lhs.type == obj_class )
+							{
 								stack.push_back( lhs );
+								IncRef( lhs );
+							}
 							// push the function
 							stack.push_back( obj );
 							break;
@@ -1394,7 +1429,10 @@ Opcode Executor::ExecuteInstruction()
 				{
 					// if this is an instance or class, push 'self'
 					if( lhs.type == obj_instance || lhs.type == obj_class )
+					{
 						stack.push_back( lhs );
+						IncRef( lhs );
+					}
 				}
 			}
 			stack.push_back( i->second );
@@ -1405,12 +1443,13 @@ Opcode Executor::ExecuteInstruction()
 	case op_loadslice3:
 		// TODO:
 	case op_tbl_store:// tos2[tos1] = tos
-	case op_self_store: // same but does NOT inc ref tos2 (which should always be 'self' in a constructor!)
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1427,20 +1466,20 @@ Opcode Executor::ExecuteInstruction()
 			// out-of-bounds check
 			if( lhs.v->size() <= idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
+			// dec ref the current tos2[tos1], as we're assigning into it
+			DecRef( lhs.v->operator[]( idx ) );
+			// set the new value
 			lhs.v->operator[]( idx ) = o;
-			// IncRef stored item
-			if( op == op_tbl_store )
-				IncRef( o );
 		}
 		// map/class/instance:
 		else
 		{
 			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
 			// keys... ???
+			// dec ref the current tos2[tos1], as we're assigning into it
+			DecRef( lhs.m->operator[]( rhs ) );
+			// set the new value
 			lhs.m->operator[]( rhs ) = o;
-			// IncRef stored item
-			if( op == op_tbl_store )
-				IncRef( o );
 		}
 		break;
 	case op_storeslice2:
@@ -1451,8 +1490,10 @@ Opcode Executor::ExecuteInstruction()
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1538,8 +1579,10 @@ Opcode Executor::ExecuteInstruction()
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1597,8 +1640,10 @@ Opcode Executor::ExecuteInstruction()
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1656,8 +1701,10 @@ Opcode Executor::ExecuteInstruction()
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1715,8 +1762,10 @@ Opcode Executor::ExecuteInstruction()
 		o = stack.back();
 		stack.pop_back();
 		rhs = stack.back();
+		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1784,19 +1833,28 @@ Opcode Executor::ExecuteInstruction()
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
 		for( int i = 0; i < arg; i++ )
+		{
 			stack.push_back( stack.back() );
+			IncRef( stack.back() );
+		}
 		break;
 	case op_dup1:
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		break;
 	case op_dup2:
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		break;
 	case op_dup3:
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		stack.push_back( stack.back() );
+		IncRef( stack.back() );
 		break;
 	case op_dup_top_n:
 //			stack.push_back( stack[stack.size()-2] );
@@ -2149,7 +2207,6 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_loadslice2:
 	case op_loadslice3:
 	case op_tbl_store:
-	case op_self_store:
 	case op_storeslice2:
 	case op_storeslice3:
 	case op_add_tbl_store:

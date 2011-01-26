@@ -1,3 +1,83 @@
+# no refcount leaks
+#class C
+#{
+#	def fcn()
+#	{
+#		self.v = [];
+#		self.v = "b";
+#	}
+#}
+#local c = new C();
+#c.fcn();
+
+# no refcount leaks
+def fcn( m )
+{
+	# BUG: this line produces a "Symbol 'a' not defined" error
+	m.a = 16;
+#	m["a"] = 16;
+}
+local m = {"a" : [] };
+fcn( m );
+
+# no refcount leaks
+#local m = {"a" : [] };
+#m.a = 16;
+
+# no refcount leaks
+#local m = {};
+#m = 4;
+
+# no refcount leaks
+# BUG: string leaks
+#def fcn( map )
+#{
+#	map["v"] = [];
+#}
+#local m = {};
+#fcn( m );
+#print( m );
+
+# no refcount leaks
+# BUG: string leaks
+#local m = {};
+#m["a"] = [];
+#print( m );
+
+# no refcount leaks
+# BUG: n not set to 12 (outside of foo() anyway)
+#local n = 0;
+#def foo()
+#{
+#	extern n;
+#	n = 12;
+#}
+#print( n );
+
+# no refcount leaks
+#def foo()
+#{
+#	return [];
+#}
+#local v = foo();
+#v.append( ["foo"] );
+#print( v );
+
+# no refcount leaks
+#class C
+#{
+#}
+#local c = new C();
+
+# no refcount leaks
+#def foo()
+#{
+#	return [];
+#}
+#local v = foo();
+#print( v );
+
+# no refcount leaks
 #local v = [0,1];
 #v[1] += 42;
 ##[0,43]
@@ -15,6 +95,8 @@
 ##[22,3]
 #print( v );
 
+# no refcount leaks
+# BUG: leaks a string from semantic_walker value(), Semantics::AddString()
 #local m = {"a":0, "b":"foo"};
 #m.a += 32;
 #print( m.a );
@@ -22,11 +104,18 @@
 #print( m.b );
 #print( m );
 
-# BUG: v leaks:
+# no refcount leaks
 #def foo( v ){ print( v ); }
 #foo( [255] );
 
-# self.v doesn't leak here...
+# no refcount leaks
+#print( [255] );
+
+# no refcount leaks
+#local v = [];
+#print( v );
+
+# no refcount leaks
 #class C
 #{
 #	def foo()
@@ -37,36 +126,44 @@
 #local c = new C();
 #c.foo();
 
-# BUG: self.v leaks here
-class C
-{
-	def new()
-	{
-		self.v = [];
-	}
-	def foo()
-	{
-		self.v = [];
-	}
-}
-local c = new C();
+# no refcount leaks
+#class C
+#{
+#	def new()
+#	{
+#	}
+#}
+#local c = new C();
 
-# BUG: v leaks:
+# no refcount leaks
+#class C
+#{
+#	def new()
+#	{
+#		self.v = [];
+#	}
+##	def foo()
+##	{
+##		self.v = [];
+##	}
+#}
+#local c = new C();
+
 #class C
 #{
 #	def fcn()
 #	{
-#		local v = [255];
-#		self.v = v;
-#		return v;
+#		self.v = [];
 #	}
 #}
 #local c = new C();
 #c.fcn();
 #print( c );
+## BUG: leaks:
 #local r = c.fcn();
 #print( r );
 
+# BUG: segfault
 # BUG: self.v leaks
 #class C
 #{
@@ -83,6 +180,7 @@ local c = new C();
 #local n = c.next();
 #print( n );
 
+# no refcount leaks
 #def fcn()
 #{
 #	local v = [255];
@@ -92,7 +190,7 @@ local c = new C();
 #local r = fcn();
 #print( r );
 
-# BUG: leaks
+# BUG: runtime error (__bases__ deleted?)
 #class C
 #{
 #	def new(){ self.index = 0; self.v = [0,1,2,4,8,16]; }
@@ -110,6 +208,10 @@ local c = new C();
 #local c = new C();
 #for( i in c )
 #	print( i );
+
+#######################################
+# ref-leak checked to here
+#######################################
 
 #def fcn( b, a )
 #{
