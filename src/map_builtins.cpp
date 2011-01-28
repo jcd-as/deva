@@ -171,7 +171,9 @@ void do_map_next( Frame *frame )
 		key_val->push_back( p.first );
 		key_val->push_back( p.second );
 		ret->push_back( Object( true ) );
-		ret->push_back( Object( key_val ) );
+		Object keyobj( key_val );
+		IncRef( keyobj );
+		ret->push_back( keyobj );
 	}
 	// otherwise return false and null
 	else
@@ -188,31 +190,6 @@ void do_map_next( Frame *frame )
 
 void do_map_copy( Frame* frame )
 {
-//	if( Executor::args_on_stack != 0 )
-//		throw DevaRuntimeException( "Incorrect number of arguments to map 'copy' built-in method." );
-//
-//	// get the map object off the top of the stack
-//	DevaObject mp = ex->stack.back();
-//	ex->stack.pop_back();
-//
-//	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-//		throw DevaICE( "Map, class or instance expected in map built-in method 'copy'." );
-//
-//	DevaObject copy;
-//	// create a new map object that is a copy of the one we received,
-//	DOMap* m = new DOMap( *(mp.map_val) );
-//	if( mp.Type() == sym_map )
-//		copy = DevaObject( "", m );
-//	else if( mp.Type() == sym_class )
-//		copy = DevaObject::ClassFromMap( "", m );
-//	else if( mp.Type() == sym_instance )
-//		copy = DevaObject::InstanceFromMap( "", m );
-//
-//	// pop the return address
-//	ex->stack.pop_back();
-//
-//	// return the copy
-//	ex->stack.push_back( copy );
 	BuiltinHelper helper( "map", "copy", frame );
 
 	helper.CheckNumberOfArguments( 1 );
@@ -314,34 +291,6 @@ void do_map_merge( Frame* frame )
 //
 //	// get the map object off the top of the stack
 //	DevaObject mp = ex->stack.back();
-//	ex->stack.pop_back();
-//
-//	// val is next on stack
-//	DevaObject val = ex->stack.back();
-//	ex->stack.pop_back();
-//	
-//	// map
-//	if( mp.Type() != sym_map && mp.Type() != sym_class && mp.Type() != sym_instance )
-//		throw DevaICE( "Map, class or instance expected in map built-in method 'merge'." );
-//
-//	// val (map to merge in)
-//	DevaObject* o;
-//	if( val.Type() == sym_unknown )
-//	{
-//		o = ex->find_symbol( val );
-//		if( !o )
-//			throw DevaRuntimeException( "Symbol not found for the 'source' argument in map built-in method 'merge'." );
-//	}
-//	else
-//		o = &val;
-//
-//	mp.map_val->insert( o->map_val->begin(), o->map_val->end() );
-//
-//	// pop the return address
-//	ex->stack.pop_back();
-//
-//	// all fcns return *something*
-//	ex->stack.push_back( DevaObject( "", sym_null ) );
 	BuiltinHelper helper( "map", "merge", frame );
 
 	helper.CheckNumberOfArguments( 2 );

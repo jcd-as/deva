@@ -70,7 +70,7 @@ public:
 
 	// argument/data handling
 	Object* GetLocalN( int local_num );
-	inline void ReturnVal( Object o ) { ex->PushStack( o ); }
+	inline void ReturnVal( Object o ) { IncRef( o ); ex->PushStack( o ); }
 };
 
 

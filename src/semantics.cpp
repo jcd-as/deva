@@ -113,10 +113,15 @@ void Semantics::ResolveVar( char* name, int line )
 	// accept builtins
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 		return;
-	// if we're on the rhs of 'self' we need to add symbols referenced
+
+	// inside a method, always accept 'self'
+	if( in_class && strcmp( name, "self" ) == 0 )
+		return;
+
+	// if we're on the rhs of a dot-op we need to add symbols referenced
 	if( rhs_of_dot )
 	{
-		DefineVar( name, line );
+		AddString( name );
 	}
 	// look up the variable in the current scope
 	else if( !current_scope->Resolve( name, sym_end ) )
@@ -151,11 +156,18 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 void Semantics::ResolveFun( char* name, int line )
 {
 	// TODO: modules???
+	// if we're on the rhs of a dot-op we need to add symbols referenced
+	if( rhs_of_dot )
+	{
+		AddString( name );
+	}
+
 	// if it is a builtin fcn, add it to the constants pool
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 		return;
-	// otherwise, look up the function in the current scope
-	else if( !current_scope->Resolve( name, sym_end ) )
+
+	// look up the function in the current scope
+	if( !current_scope->Resolve( name, sym_end ) )
 	{
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
@@ -186,22 +198,6 @@ void Semantics::AddNumber( double arg )
 // add string constant
 void Semantics::AddString( char* arg )
 {
-	// if we're in a map key, add this as a symbol (as well as a string)
-	if( in_map_key )
-	{
-		// strip the string of quotes and unescape it
-		string str( arg );
-		str = unescape( strip_quotes( str ) );
-		// TODO: this leaks 's'. what to do???
-		char* s = new char[str.length()+1];
-		strcpy( s, str.c_str() );
-		Symbol *sym = new Symbol( s, sym_variable );
-		current_scope->Define( sym );
-		// symbol stores a copy of s, free s now
-//		delete [] s;
-		// add it to the constant pool as a symbol, not a string
-		constants.insert( Object( obj_symbol_name, arg ) );
-	}
 	constants.insert( Object( arg ) );
 }
 

@@ -106,8 +106,8 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 		// pop the (null) return value
 		stack.pop_back();
 
-		// decref the instance
-		DecRef( instance );
+		// if a constructor was actually called, the return op will dec
+		// ref the 'self' arg, so we don't need to decref the instance
 	}
 }
 
@@ -129,8 +129,8 @@ void Executor::CallDestructors( Object o )
 		// pop the (null) return value
 		stack.pop_back();
 
-		// decref the instance
-		DecRef( o );
+		// if a constructor was actually called, the return op will dec
+		// ref the 'self' arg, so we don't need to decref the instance
 	}
 
 	// get the base classes collection
@@ -1237,6 +1237,7 @@ Opcode Executor::ExecuteInstruction()
 				throw ICE( "Vector builtin not marked as a method." );
 			// dup the TOS (vector)
 			stack.push_back( stack.back() );
+			IncRef( stack.back() );
 			// call 'next'
 			ExecuteFunction( nf, 0 );
 		}
@@ -1251,6 +1252,7 @@ Opcode Executor::ExecuteInstruction()
 					throw RuntimeException( "Class used in 'for' loop does not support iteration: missing 'next' method." );
 				// dup the TOS (class/instance)
 				stack.push_back( stack.back() );
+				IncRef( stack.back() );
 				ExecuteFunction( it->second.f, 0 );
 			}
 			// handle maps
@@ -1264,6 +1266,7 @@ Opcode Executor::ExecuteInstruction()
 					throw ICE( "Map builtin not marked as a method." );
 				// dup the TOS (map)
 				stack.push_back( stack.back() );
+				IncRef( stack.back() );
 				// call 'next'
 				ExecuteFunction( nf, 0 );
 			}
@@ -1273,7 +1276,6 @@ Opcode Executor::ExecuteInstruction()
 		// if there aren't
 		// get the vector off the stack
 		o = stack.back();
-		DecRef( o );
 		stack.pop_back();
 		if( o.type != obj_vector )
 			throw ICE( "Non-vector returned from 'next' in op_for_iter." );
@@ -1304,6 +1306,7 @@ Opcode Executor::ExecuteInstruction()
 				stack.push_back( o.v->operator[]( 1 ) );
 				IncRef( stack.back() );
 		}
+		DecRef( o );
 		}
 		break;
 	case op_tbl_load:// tos = tos1[tos]
@@ -1359,25 +1362,38 @@ Opcode Executor::ExecuteInstruction()
 				// since 'a.b;' is syntactic sugar for 'a["b"];'
 				if( rhs.type == obj_symbol_name )
 				{
-					Map::iterator it = lhs.m->find( Object( rhs.s ) );
-					if( it != lhs.m->end() )
+					// check for map built-in method
+					NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
+					if( nf.p )
 					{
-						Object obj = it->second;
-						if( obj.type == obj_function || obj.type == obj_native_function )
-						{
-							// push the class/instance ('this') for instances
-							if( lhs.type == obj_instance )
-							{
-								stack.push_back( lhs );
-								IncRef( lhs );
-							}
-						}
-						// push the object
-						stack.push_back( obj );
-						break;
+						if( !nf.is_method )
+							throw ICE( "Map builtin not marked as a method." );
+						stack.push_back( lhs );
+						IncRef( lhs );
+						stack.push_back( Object( nf ) );
 					}
+					else
+					{
+						Map::iterator it = lhs.m->find( Object( rhs.s ) );
+						if( it != lhs.m->end() )
+						{
+							Object obj = it->second;
+							if( obj.type == obj_function || obj.type == obj_native_function )
+							{
+								// push the class/instance ('this') for instances
+								if( lhs.type == obj_instance )
+								{
+									stack.push_back( lhs );
+									IncRef( lhs );
+								}
+							}
+							// push the object
+							stack.push_back( obj );
+						}
+					}
+					break;
 				}
-				if( rhs.type == obj_string || rhs.type == obj_symbol_name )
+				else if( rhs.type == obj_string ) //|| rhs.type == obj_symbol_name )
 				{
 					// TODO: should builtins be looked for _last_, so they can
 					// be overridden by user methods??
@@ -1397,6 +1413,10 @@ Opcode Executor::ExecuteInstruction()
 					{
 						// find the object by name in the map
 						Map::iterator i = lhs.m->find( Object( rhs.s ) );
+						// not found as a string, try as a symbol name 
+						// (for methods, which won't be entered as strings)
+						if( i == lhs.m->end() )
+							i = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
 						if( i != lhs.m->end() )
 						{
 							Object obj = i->second;

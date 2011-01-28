@@ -380,16 +380,13 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 	if( is_dot_rhs )
 	{
 		// get the constant pool index for this identifier
-		int idx = GetConstant( Object( obj_symbol_name, s ) );
+		int idx = -1;
+		// try looking for it as a string too, as it could be a 
+		// map/class/instance member 
+		// (where 'a.b' is just short-hand for 'a["b"]')
+		idx = GetConstant( Object( s ) );
 		if( idx < 0 )
-		{
-			// try looking for it as a string too, as it could be a 
-			// map/class/instance member 
-			// (where 'a.b' is just short-hand for 'a["b"]')
-			idx = GetConstant( Object( s ) );
-			if( idx < 0 )
-				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
-		}
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
 		Emit( op_pushconst, (dword)idx );
 	}
@@ -401,6 +398,9 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		// no? look it up as a non-local
 		if( idx == -1 )
 		{
+			// TODO: this is INCORRECT! it should push the *value* of the var,
+			// not the const that is the var's name
+			//
 			// get the constant pool index for this identifier
 			idx = GetConstant( Object( obj_symbol_name, s ) );
 			if( idx < 0 )

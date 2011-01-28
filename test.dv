@@ -1,3 +1,55 @@
+class C
+{
+	def new()
+	{
+		self.a = 12;
+	}
+	def fcn( ){ self.a = [self.a]; }
+}
+local c = new C();
+print( c );
+c.fcn();
+print( c );
+
+# no refcount leaks
+#local m = {"a" : 3, "b" : 2, "c":1};
+#for( i,j in m )
+#	print( i + " : " + str( j ) );
+
+# no refcount leaks
+#local v = [3,2,1,0];
+#for( i in v )
+#	print( i );
+
+# no refcount leaks
+#local m = {};
+#print( m );
+#m.a = 32;
+#print( m );
+
+# no refcount leaks
+#local m = {};
+#print( m );
+#m["a"] = 32;
+#print( m );
+#m.a = 16;
+#print( m );
+
+# no refcount leaks
+#local m = {};
+#print( m );
+#m.a = 16;
+#print( m );
+#m["a"] = 32;
+#print( m );
+
+#local m = {"a" : [] };
+#print( m );
+#m["a"] = 16;
+#print( m );
+#m.a = 32;
+#print( m );
+
 # no refcount leaks
 #class C
 #{
@@ -11,14 +63,15 @@
 #c.fcn();
 
 # no refcount leaks
-def fcn( m )
-{
-	# BUG: this line produces a "Symbol 'a' not defined" error
-	m.a = 16;
+#def fcn( m )
+#{
+#	# BUG: this line produces a "Symbol 'a' not defined" error
+##	m.a = 16;
 #	m["a"] = 16;
-}
-local m = {"a" : [] };
-fcn( m );
+#}
+#local m = {"a" : [] };
+#fcn( m );
+#print( m );
 
 # no refcount leaks
 #local m = {"a" : [] };
@@ -29,7 +82,6 @@ fcn( m );
 #m = 4;
 
 # no refcount leaks
-# BUG: string leaks
 #def fcn( map )
 #{
 #	map["v"] = [];
@@ -96,7 +148,6 @@ fcn( m );
 #print( v );
 
 # no refcount leaks
-# BUG: leaks a string from semantic_walker value(), Semantics::AddString()
 #local m = {"a":0, "b":"foo"};
 #m.a += 32;
 #print( m.a );
@@ -149,6 +200,7 @@ fcn( m );
 #}
 #local c = new C();
 
+# no refcount leaks
 #class C
 #{
 #	def fcn()
@@ -157,12 +209,30 @@ fcn( m );
 #	}
 #}
 #local c = new C();
+#print( c );
 #c.fcn();
 #print( c );
-## BUG: leaks:
 #local r = c.fcn();
 #print( r );
 
+# no refcount leaks
+#class C
+#{
+#	def fcn()
+#	{
+#		local v = [];
+#		self.v = v;
+#		return v;
+#	}
+#}
+#local c = new C();
+#print( c );
+#c.fcn();
+#print( c );
+#local r = c.fcn();
+#print( r );
+
+##########################
 # BUG: segfault
 # BUG: self.v leaks
 #class C
@@ -170,8 +240,14 @@ fcn( m );
 #	def new(){ self.index = 0; self.v = [0,1,2,4,8,16]; }
 #	def next()
 #	{
+##		print( self.index );
+##		print( self.v );
 #		local ret = null;
-#		if( self.index < length( self.v ) ) ret = [true, self.v[self.index]];
+#		if( self.index < length( self.v ) )
+#		{
+#			ret = [true, self.v[self.index]];
+##			print( ret );
+#		}
 #		else ret = [false, null];
 #		return ret;
 #	}
