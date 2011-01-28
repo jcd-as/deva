@@ -66,7 +66,7 @@ class Frame
 	int num_args;
 
 	// return address
-	dword addr;
+	byte* addr;
 	
 	// pointer at the scopes so symbols can be resolved from the frame object
 	ScopeTable* scopes;
@@ -74,7 +74,7 @@ class Frame
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, Function* f/*, void* self = NULL*/ ) : 
+	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, Function* f/*, void* self = NULL*/ ) : 
 		parent( p ),
 		scopes( s ),
 		function( f ), 
@@ -82,7 +82,7 @@ public:
 		num_args( args_passed ), 
 		addr( loc )
 		{ locals = new Object[f->IsMethod() ? f->num_locals+1 : f->num_locals]; }
-	Frame( Frame* p, ScopeTable* s, dword loc, int args_passed, NativeFunction f ) : 
+	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, NativeFunction f ) : 
 		parent( p ),
 		scopes( s ),
 		native_function( f ), 
@@ -98,7 +98,7 @@ public:
 	inline Object GetLocal( int i ) const { return locals[i]; }
 	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
 	inline void SetLocal( int i, Object o ) { locals[i] = o; }
-	inline dword GetReturnAddress() const { return addr; }
+	inline byte* GetReturnAddress() const { return addr; }
 	inline int NumArgsPassed() const { return num_args; }
 	inline void AddString( char* s ) { strings.push_back( s ); }
 	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }

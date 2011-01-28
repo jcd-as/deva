@@ -315,7 +315,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	if( type == NUMBER )
 	{
 		// check for negate flag from pass one
-		if( (int)(node->u) == 0x1 )
+		if( (long)(node->u) == 0x1 )
 			d *= -1.0;
 	}
 	else
@@ -463,7 +463,7 @@ void Compiler::NegateOp( pANTLR3_BASE_TREE node )
 	if( type == NUMBER )
 	{
 		// check for negate flag from pass one
-		if( (int)(node->u) == 0x1 )
+		if( (long)(node->u) == 0x1 )
 			is_negative_number = true;
 	}
 
@@ -900,13 +900,13 @@ void Compiler::WhileOpEnd()
 
 	// back-patch any 'break' statements
 	// pop the loop from the loop stack
-	vector<size_t>* breaks = loop_break_locations.back();
+	vector<dword>* breaks = loop_break_locations.back();
 	loop_break_locations.pop_back();
-	for( vector<size_t>::iterator it = breaks->begin(); it != breaks->end(); ++it )
+	for( vector<dword>::iterator it = breaks->begin(); it != breaks->end(); ++it )
 	{
 		// back-patch the instruction at the break to point to the current
 		// location in the instruction stream (end of this loop)
-		is->Set( *it, (size_t)is->Length() );
+		is->Set( *it, (dword)is->Length() );
 	}
 	delete breaks;
 }

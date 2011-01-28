@@ -11,14 +11,14 @@
 #c.fcn();
 
 # no refcount leaks
-def fcn( m )
-{
-	# BUG: this line produces a "Symbol 'a' not defined" error
-	m.a = 16;
-#	m["a"] = 16;
-}
-local m = {"a" : [] };
-fcn( m );
+#def fcn( m )
+#{
+#	# BUG: this line produces a "Symbol 'a' not defined" error
+#	m.a = 16;
+##	m["a"] = 16;
+#}
+#local m = {"a" : [] };
+#fcn( m );
 
 # no refcount leaks
 #local m = {"a" : [] };
@@ -30,13 +30,13 @@ fcn( m );
 
 # no refcount leaks
 # BUG: string leaks
-#def fcn( map )
-#{
-#	map["v"] = [];
-#}
-#local m = {};
-#fcn( m );
-#print( m );
+def fcn( map )
+{
+	map["v"] = [];
+}
+local m = {};
+fcn( m );
+print( m );
 
 # no refcount leaks
 # BUG: string leaks
