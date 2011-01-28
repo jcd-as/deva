@@ -172,7 +172,7 @@ void Executor::ExecuteCode( const Code & code )
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ) );
-	Frame* frame = new Frame( NULL, scopes, (dword)bp, 0, main->f );
+	Frame* frame = new Frame( NULL, scopes, bp, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
@@ -1932,7 +1932,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, f );
 	Scope* scope = new Scope();
 	// set the args for the frame
 	for( int i = 0; i < num_args; i++ )
@@ -1968,7 +1968,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args )
 	if( nf.is_method )
 		num_args++;
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, (dword)ip, num_args, nf );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
 	for( int i = 0; i < num_args; i++ )
