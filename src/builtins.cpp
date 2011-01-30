@@ -138,6 +138,7 @@ void do_print( Frame* frame )
 			if( it->second.type == obj_function )
 			{
 				// push the object ("self")
+				IncRef( *o );
 				ex->PushStack( *o );
 				// call the function (takes no args)
 				ex->ExecuteFunction( it->second.f, 0 );
@@ -176,6 +177,7 @@ void do_str( Frame *frame )
 			if( it->second.type == obj_function )
 			{
 				// push the object ("self")
+				IncRef( *o );
 				ex->PushStack( *o );
 				// call the function (takes no args)
 				ex->ExecuteFunction( it->second.f, 0 );
@@ -286,6 +288,10 @@ void do_copy( Frame *frame )
 		Vector* v = CreateVector( *(o->v) );
 		copy = Object( v );
 	}
+
+	// it's a (shallow) copy, all the children have been copied, so need to
+	// inc-ref children
+	IncRefChildren( copy );
 
 	helper.ReturnVal( copy );
 }

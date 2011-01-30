@@ -97,7 +97,7 @@ public:
 	inline const NativeFunction GetNativeFunction() const { NativeFunction nf; nf.p=NULL; nf.is_method=false; return (is_native ? native_function : nf ); }
 	inline Object GetLocal( int i ) const { return locals[i]; }
 	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
-	inline void SetLocal( int i, Object o ) { locals[i] = o; }
+	inline void SetLocal( int i, Object o ) { DecRef( locals[i] ); locals[i] = o; }
 	inline byte* GetReturnAddress() const { return addr; }
 	inline int NumArgsPassed() const { return num_args; }
 	inline void AddString( char* s ) { strings.push_back( s ); }

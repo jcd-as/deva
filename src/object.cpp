@@ -61,7 +61,7 @@ void IncRef( Object & o )
 	}
 }
 
-// inc ref all this object's children, recursively
+// inc ref this object's children
 // for use when creating a copy of a reference type object
 // (e.g. when creating an instance from a class object)
 void IncRefChildren( Object & o )
@@ -72,27 +72,41 @@ void IncRefChildren( Object & o )
 		for( int i = 0; i < o.v->size(); i++ )
 		{
 			Object obj = o.v->operator[]( i );
-			IncRefChildren( obj );
+			IncRef( obj );
 		}
-#ifdef DEBUG
-		if( reftrace )
-			cout << "IncRef: vector: " << o.v << " prior refcount: " << o.v->GetRefCount() << endl;
-#endif 
-		o.v->IncRef();
 	}
 	else if( IsMapType( o.type ) )
 	{
 		// walk the map's contents
 		for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
 		{
-			IncRefChildren( const_cast<Object&>(it->first) );
-			IncRefChildren( it->second );
+			IncRef( const_cast<Object&>(it->first) );
+			IncRef( it->second );
 		}
-#ifdef DEBUG
-		if( reftrace )
-			cout << "IncRef: map: " << o.m << " prior refcount: " << o.m->GetRefCount() << endl;
-#endif 
-		o.m->IncRef();
+	}
+}
+
+// dec ref this object's children
+// for use when destroying an object
+void DecRefChildren( Object & o )
+{
+	if( IsVecType( o.type ) )
+	{
+		// walk the vector's contents
+		for( int i = 0; i < o.v->size(); i++ )
+		{
+			Object obj = o.v->operator[]( i );
+			DecRef( obj );
+		}
+	}
+	else if( IsMapType( o.type ) )
+	{
+		// walk the map's contents
+		for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
+		{
+			DecRef( const_cast<Object&>(it->first) );
+			DecRef( it->second );
+		}
 	}
 }
 
@@ -105,11 +119,7 @@ int DecRef( Object & o )
 		// if the vector is about to be destroyed, release its refs on its contents
 		if( o.v->GetRefCount() == 1 )
 		{
-			for( int i = 0; i < o.v->size(); i++ )
-			{
-				Object obj = o.v->operator[]( i );
-				DecRef( obj );
-			}
+			DecRefChildren( o );
 		}
 #ifdef DEBUG
 		if( reftrace )
@@ -132,11 +142,7 @@ int DecRef( Object & o )
 				ex->CallDestructors( o );
 
 			// release its refs on its contents
-			for( Map::iterator it = o.m->begin(); it != o.m->end(); ++it )
-			{
-				DecRef( const_cast<Object&>(it->first) );
-				DecRef( it->second );
-			}
+			DecRefChildren( o );
 		}
 #ifdef DEBUG
 		if( reftrace )

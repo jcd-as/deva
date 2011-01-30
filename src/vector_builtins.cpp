@@ -626,12 +626,20 @@ void do_vector_filter( Frame *frame )
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
+		IncRef( *i );
 		ex->PushStack( *i );
 		// push 'self', for methods
 		if( is_method )
 		{
+			// TODO:
+			// if this is a method, 'self' for the method is on the stack
+			// the item and 'self' are now in reverse order and need to be swapped
+			// 'self' also needs to be pushed and inc ref'd for each additional time through the
+			// loop... (beyond the first, when 'self' is already there)
+
 			// push the object ("self") first
-			ex->PushStack( *self );
+//			IncRef( *self );
+//			ex->PushStack( *self );
 		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
@@ -651,8 +659,10 @@ void do_vector_filter( Frame *frame )
 				const char* str = frame->GetParent()->AddString( string( i->s ) );
 				i->s = const_cast<char*>(str);
 			}
+			IncRef( *i );
 			ret->push_back( *i );
 		}
+		DecRef( retval );
 	}
 
 	helper.ReturnVal( Object( ret ) );

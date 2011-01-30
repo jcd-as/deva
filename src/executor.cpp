@@ -391,79 +391,79 @@ Opcode Executor::ExecuteInstruction()
 		arg = *((dword*)ip);
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( arg ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( arg, rhs );
 		ip += sizeof( dword );
 		break;
 	case op_storelocal0:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 0 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 0, rhs );
 		break;
 	case op_storelocal1:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 1 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 1, rhs );
 		break;
 	case op_storelocal2:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 2 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 2, rhs );
 		break;
 	case op_storelocal3:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 3 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 3, rhs );
 		break;
 	case op_storelocal4:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 4 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 4, rhs );
 		break;
 	case op_storelocal5:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 5 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 5, rhs );
 		break;
 	case op_storelocal6:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 6 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 6, rhs );
 		break;
 	case op_storelocal7:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 7 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 7, rhs );
 		break;
 	case op_storelocal8:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 8 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 8, rhs );
 		break;
 	case op_storelocal9:
 		rhs = stack.back();
 		stack.pop_back();
-		DecRef( *CurrentFrame()->GetLocalRef( 9 ) );
 		// set the local in the current frame
+		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 9, rhs );
 		break;
 	case op_def_local:
@@ -630,6 +630,8 @@ Opcode Executor::ExecuteInstruction()
 			if( base.type != obj_class )
 				throw ICE( "Base class expected. Bad code gen? Corrupt stack?" );
 			v->push_back( base );
+			// don't dec ref the base class here, because we're adding it to our
+			// bases vector, which is another ref on it
 		}
 		Object basesObj( v );
 		IncRef( basesObj );
@@ -1133,6 +1135,8 @@ Opcode Executor::ExecuteInstruction()
 			instance.MakeInstance( inst );
 
 			// inc ref it before we do anything with it
+			IncRef( instance );
+			// and its children, which we just copied
 			IncRefChildren( instance );
 
 			// recursively call the constructors on this object and its base classes
@@ -1174,7 +1178,9 @@ Opcode Executor::ExecuteInstruction()
 			throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % o );
 		break;
 	case op_return:
-		// TODO: better way??
+		// TODO: better way: add a Frame::MoveString() method that moves the
+		// string ownership from one scope to another
+		//
 		// if a string is being returned, it needs to be copied to the calling
 		// frame! (string mem in a frame is freed on frame exit)
 		if( stack.back().type == obj_string )
@@ -1195,7 +1201,6 @@ Opcode Executor::ExecuteInstruction()
 		PopScope();
 		// ... and the current frame
 		PopFrame();
-		// TODO: how???
 		break;
 	case op_exit_loop:
 		// 2 args: jump target address, number of scopes to leave
@@ -1311,10 +1316,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_tbl_load:// tos = tos1[tos]
 		rhs = stack.back();
-		DecRef( rhs );
+//		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
-		DecRef( lhs );
+//		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1335,6 +1340,8 @@ Opcode Executor::ExecuteInstruction()
 				}
 				else
 					throw RuntimeException( "Invalid vector index or method." );
+				DecRef( lhs );
+				DecRef( rhs );
 				break;
 			}
 			if( rhs.type != obj_number )
@@ -1362,54 +1369,52 @@ Opcode Executor::ExecuteInstruction()
 				// since 'a.b;' is syntactic sugar for 'a["b"];'
 				if( rhs.type == obj_symbol_name )
 				{
-					// check for map built-in method
-					NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
-					if( nf.p )
+					// look for it in the map first...
+					Map::iterator it = lhs.m->find( Object( rhs.s ) );
+					if( it != lhs.m->end() )
 					{
-						if( !nf.is_method )
-							throw ICE( "Map builtin not marked as a method." );
-						stack.push_back( lhs );
-						IncRef( lhs );
-						stack.push_back( Object( nf ) );
+						Object obj = it->second;
+						if( obj.type == obj_function || obj.type == obj_native_function )
+						{
+							if( obj.type == obj_function && !obj.f->IsMethod() )
+								throw ICE( "class/instance method not marked as a method." );
+							if( obj.type == obj_native_function && !obj.nf.is_method )
+								throw ICE( "class/instance native method not marked as a method." );
+							// push the class/instance ('this') for instances
+							if( lhs.type == obj_instance )
+							{
+								IncRef( lhs );
+								stack.push_back( lhs );
+							}
+						}
+						// push the object
+						stack.push_back( obj );
 					}
+					// try it as a built-in method
 					else
 					{
-						Map::iterator it = lhs.m->find( Object( rhs.s ) );
-						if( it != lhs.m->end() )
+						// check for map built-in method
+						NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
+						if( nf.p )
 						{
-							Object obj = it->second;
-							if( obj.type == obj_function || obj.type == obj_native_function )
-							{
-								// push the class/instance ('this') for instances
-								if( lhs.type == obj_instance )
-								{
-									stack.push_back( lhs );
-									IncRef( lhs );
-								}
-							}
-							// push the object
-							stack.push_back( obj );
+							if( !nf.is_method )
+								throw ICE( "Map builtin not marked as a method." );
+							stack.push_back( lhs );
+							IncRef( lhs );
+							stack.push_back( Object( nf ) );
 						}
+						else
+							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
+
 					}
+					DecRef( lhs );
+					DecRef( rhs );
 					break;
 				}
 				else if( rhs.type == obj_string ) //|| rhs.type == obj_symbol_name )
 				{
-					// TODO: should builtins be looked for _last_, so they can
-					// be overridden by user methods??
-					//
-					// check for map built-in method
-					NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
-					if( nf.p )
-					{
-						if( !nf.is_method )
-							throw ICE( "Map builtin not marked as a method." );
-						stack.push_back( lhs );
-						IncRef( lhs );
-						stack.push_back( Object( nf ) );
-					}
 					// check for class/instance method
-					else if( lhs.type == obj_class || lhs.type == obj_instance )
+					if( lhs.type == obj_class || lhs.type == obj_instance )
 					{
 						// find the object by name in the map
 						Map::iterator i = lhs.m->find( Object( rhs.s ) );
@@ -1425,18 +1430,35 @@ Opcode Executor::ExecuteInstruction()
 							// push the class/instance ('this')
 							if( lhs.type == obj_instance || lhs.type == obj_class )
 							{
-								stack.push_back( lhs );
 								IncRef( lhs );
+								stack.push_back( lhs );
 							}
 							// push the function
 							stack.push_back( obj );
+							DecRef( lhs );
+							DecRef( rhs );
 							break;
 						}
 						else
 							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
 					}
 					else
-						throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
+					{
+						// check for map built-in method
+						NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
+						if( nf.p )
+						{
+							if( !nf.is_method )
+								throw ICE( "Map builtin not marked as a method." );
+							stack.push_back( lhs );
+							IncRef( lhs );
+							stack.push_back( Object( nf ) );
+						}
+						else
+							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
+					}
+					DecRef( lhs );
+					DecRef( rhs );
 					break;
 				}
 				else 
@@ -1455,8 +1477,11 @@ Opcode Executor::ExecuteInstruction()
 					}
 				}
 			}
+			IncRef( i->second );
 			stack.push_back( i->second );
 		}
+		DecRef( lhs );
+		DecRef( rhs );
 		break;
 	case op_loadslice2:
 		// TODO:
@@ -1923,6 +1948,7 @@ Opcode Executor::ExecuteInstruction()
 void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*= false*/ )
 {
 	// if this is a method there's an extra arg for 'this'
+	int args_passed = num_args;
 	if( f->IsMethod() )
 		num_args++;
 
@@ -1935,7 +1961,14 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, f );
 	Scope* scope = new Scope();
 	// set the args for the frame
-	for( int i = 0; i < num_args; i++ )
+	if( f->IsMethod() )
+	{
+		// set local 0 to 'self'
+		Object ob = stack.back();
+		frame->SetLocal( 0, ob );
+		stack.pop_back();
+	}
+	for( int i = 0; i < args_passed; i++ )
 	{
 		Object ob = stack.back();
 		frame->SetLocal( num_args-i-1, ob );

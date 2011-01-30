@@ -381,11 +381,14 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 	{
 		// get the constant pool index for this identifier
 		int idx = -1;
+		// try as a symbol name first (for builtins)
+		idx = GetConstant( Object( obj_symbol_name, s ) );
 		// try looking for it as a string too, as it could be a 
 		// map/class/instance member 
 		// (where 'a.b' is just short-hand for 'a["b"]')
-		idx = GetConstant( Object( s ) );
-		if( idx < 0 )
+		if( idx == -1 )
+			idx = GetConstant( Object( s ) );
+		if( idx == -1 )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
 		Emit( op_pushconst, (dword)idx );
@@ -398,8 +401,8 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		// no? look it up as a non-local
 		if( idx == -1 )
 		{
-			// TODO: this is INCORRECT! it should push the *value* of the var,
-			// not the const that is the var's name
+			// TODO: is this correct? pushconst will push the object for a const
+			// pool object onto the stack, but is this right for an 'extern' var?
 			//
 			// get the constant pool index for this identifier
 			idx = GetConstant( Object( obj_symbol_name, s ) );
