@@ -1,16 +1,15 @@
-# BUG / TODO: tbl_load will incorrectly push an instance on the stack
-# when called to load a method as an object (i.e. *not* being called)
+# BUG: default args broken with methods:
 #class C
 #{
-##	def fcn(){ print( "fcn called" ); }
-#	def fcn(){ print( self ); }
+#	def f( x, y, z = "z" )
+#	{
+#		print( x );
+#		print( y );
+#		print( z );
+#	}
 #}
 #local c = new C();
-## this line results in 'c' being left on the stack
-#local f = c.fcn;
-## which happens to work great if we call f(); right here, otherwise we just have
-## junk on the stack
-##f();
+#c.f( "a", "b" );
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -35,6 +34,209 @@
 ##print( v.reduce( c.concat ) );
 ##print( v.any( c.is_number ) );
 ##print( v.all( c.is_number ) );
+
+# BUG: vector built-ins broken with methods/class methods
+#class C
+#{
+#	def is_number( n ){ print( "is_number()" ); return type( n ) == "number"; }
+#	def concat( a, b ){ return str(a) + str(b); }
+#	def to_string( n ){ return str( n ); }
+#}
+#local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
+#local c = new C();
+## method
+#print( v.filter( c.is_number ) );
+## 'class method'
+#print( v.filter( C.is_number ) );
+#print( v.map( c.to_string ) );
+#print( v.reduce( c.concat ) );
+#print( v.any( c.is_number ) );
+#print( v.all( c.is_number ) );
+
+# BUG: doesn't compile 
+#local a = {};
+#a["b"] = str;
+## BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+#print( a.b( a ) );
+
+# BUG: doesn't compile 
+#local a = {"b":str};
+### BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+#print( a.b( a ) );
+
+# BUG: ref count leaks from vector builtins:
+#def fcn( s ){ return "foo" + s; }
+#def test( n ){ return !(!n); }
+#def add( a, b ){ return a + b; }
+#def is_three( n ){ return n == 3; }
+#local v = [0,1,2,3,4];
+#local v2 = v.map( str );
+#print( v );
+#print( v2 );
+#local v3 = v2.map( fcn );
+#print( v3 );
+#local v4 = v.filter( test );
+#print( v4 );
+#local v5 = v4.reduce( add );
+#print( v5 );
+#print( v.any( is_three ) );
+#print( v.all( test ) );
+#print( v4.all( test ) );
+
+# BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
+#local n = 0;
+#while( true )
+#{
+#	if( n > 3 ) exit( -1 );
+#	print( n );
+#	n += 1;
+#}
+
+# BUG: fails to compile
+#class C{ def fcn(){ print( "fcn" ); } }
+#local c = new C();
+#local a = { "b" : { "c" : c } };
+## compiler errors here: "Symbol 'b' not defined.":
+#a.b.c.fcn();
+
+# BUG: fails to compile
+#def foo( s ) { print( s ); }
+#local m = { "fcn" : foo, "a" : null };
+## compiler errors here: "Symbol 'fcn' not defined.":
+#m.fcn( m.a );
+
+###########################################
+# END BUG SECTION
+###########################################
+
+# no refcount leaks
+#local v = [];
+#local f = v.append;
+#f( v, 100 );
+#v.append( 200 );
+#print( v );
+
+# no refcount leaks
+#class C{ def fcn( a ){ print( self ); print( a ); } }
+#local c = new C();
+#local f = c.fcn;
+#f( c, "z" );
+#c.fcn( "z" );
+
+#no refcount leaks
+#class C{ def f(){ print( "f" ); } }
+#local m = new C();
+#local n = m.f;
+#m.f();
+#n( m );
+## error: not enough args passed to fcn:
+##n();
+
+# no refcount leaks
+#def foo( a ){ print( "foo" ); return a; }
+#class C{ def fcn( a ){ print( a ); } }
+#local c = new C();
+#c.fcn( foo( 0 ) );
+## foo
+## 0
+#foo( c.fcn( 0 ) );
+## 0
+## foo
+#c.fcn( c.fcn( 0 ) );
+## 0
+## null
+
+# no refcount leaks
+#local m = {};
+#print( m );
+#m["a"] = 32;
+#print( m );
+#m.a = 16;
+#print( m );
+
+# no refcount leaks
+#local m = {};
+#print( m );
+#m.a = 16;
+#print( m );
+#m["a"] = 32;
+#print( m );
+
+# no refcount leaks
+# BUG: results in m being '{'a' : 32, a : 16}'
+#local m = {"a" : [] };
+#print( m );
+#m["a"] = 16;
+#print( m );
+#m.a = 32;
+#print( m );
+
+# no refcount leaks
+#def fcn( a ){ print( a ); }
+#local v = [0,1,fcn];
+#v[2]( "foobar" );
+
+# no refcount leaks
+# test nested fcns and unused fcn return values
+#def foo()
+#{
+#	return "foo";
+#}
+#def bar()
+#{
+#	def goo()
+#	{
+#		return foo();
+#	}
+#	goo();
+#	def jam()
+#	{
+#		foo();
+#	}
+#	jam();
+#}
+#bar();
+
+# no refcount leaks
+#local n = 0;
+#def foo()
+#{
+#	extern n;
+#	n = 12;
+#}
+#print( n );
+#foo();
+#print( n );
+
+# no refcount leaks
+# test push ops beyond 10
+#def f( a, b, c, d, e, f, g, h, i, j )
+#{
+#	local x = 0;
+#	local y = 1;
+#	local z = 2;
+#	print( x );
+#	print( y );
+#	print( z );
+#}
+#f( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+
+# no refcount leaks
+#class C
+#{
+##	def fcn(){ print( "fcn called" ); }
+#	def fcn(){ print( self ); }
+#}
+#local c = new C();
+#local f = c.fcn;
+### causes segfault:
+##f();
+
+# no refcount leaks
+#class C{ def f(){ print( "f" ); } }
+#local c = new C();
+#local v = [c];
+#v[0].f();
 
 # no refcount leaks
 #local v = [255];
@@ -227,33 +429,6 @@
 #print( m );
 
 # no refcount leaks
-# BUG: results in m being '{'a' : 32, a : 16}'
-#local m = {};
-#print( m );
-#m["a"] = 32;
-#print( m );
-#m.a = 16;
-#print( m );
-
-# no refcount leaks
-# BUG: results in m being '{'a' : 32, a : 16}'
-#local m = {};
-#print( m );
-#m.a = 16;
-#print( m );
-#m["a"] = 32;
-#print( m );
-
-# no refcount leaks
-# BUG: results in m being '{'a' : 32, a : 16}'
-#local m = {"a" : [] };
-#print( m );
-#m["a"] = 16;
-#print( m );
-#m.a = 32;
-#print( m );
-
-# no refcount leaks
 #class C
 #{
 #	def fcn()
@@ -296,16 +471,6 @@
 #local m = {};
 #m["a"] = [];
 #print( m );
-
-# no refcount leaks
-# BUG: n not set to 12 (outside of foo() anyway)
-#local n = 0;
-#def foo()
-#{
-#	extern n;
-#	n = 12;
-#}
-#print( n );
 
 # no refcount leaks
 #def foo()
@@ -527,24 +692,6 @@
 #for( i in m ) print( i );
 #for( i,j in m ) print( str(i) + ":" + str(j) );
 
-# BUG: vector built-ins broken with methods/class methods
-#class C
-#{
-#	def is_number( n ){ print( "is_number()" ); return type( n ) == "number"; }
-#	def concat( a, b ){ return str(a) + str(b); }
-#	def to_string( n ){ return str( n ); }
-#}
-#local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
-#local c = new C();
-## method
-#print( v.filter( c.is_number ) );
-## 'class method'
-#print( v.filter( C.is_number ) );
-#print( v.map( c.to_string ) );
-#print( v.reduce( c.concat ) );
-#print( v.any( c.is_number ) );
-#print( v.all( c.is_number ) );
-
 # no refcount leaks
 #class C
 #{
@@ -670,36 +817,6 @@
 # no refcount leaks
 # '!!' operates as a convertion to bool
 #print( !!null );
-
-# BUG: doesn't compile 
-#local a = {};
-#a["b"] = str;
-## BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
-#print( a.b( a ) );
-
-# BUG: doesn't compile 
-#local a = {"b":str};
-### BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
-#print( a.b( a ) );
-
-# BUG: ref count leaks from vector builtins:
-#def fcn( s ){ return "foo" + s; }
-#def test( n ){ return !(!n); }
-#def add( a, b ){ return a + b; }
-#def is_three( n ){ return n == 3; }
-#local v = [0,1,2,3,4];
-#local v2 = v.map( str );
-#print( v );
-#print( v2 );
-#local v3 = v2.map( fcn );
-#print( v3 );
-#local v4 = v.filter( test );
-#print( v4 );
-#local v5 = v4.reduce( add );
-#print( v5 );
-#print( v.any( is_three ) );
-#print( v.all( test ) );
-#print( v4.all( test ) );
 
 # no refcount leaks
 #local m = {"a": 0, "b": 1};
@@ -847,15 +964,6 @@
 #local n = null;
 #print( num( n ) );
 
-# BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
-#local n = 0;
-#while( true )
-#{
-#	if( n > 3 ) exit( -1 );
-#	print( n );
-#	n += 1;
-#}
-
 # no refcount leaks
 #local n = 16;
 #print( type( n ) );
@@ -963,19 +1071,6 @@
 #v.append( "foo" );
 #print( v );
 #print( v.length( ) );
-
-# BUG: fails to compile
-#class C{ def fcn(){ print( "fcn" ); } }
-#local c = new C();
-#local a = { "b" : { "c" : c } };
-## compiler errors here: "Symbol 'b' not defined.":
-#a.b.c.fcn();
-
-# BUG: fails to compile
-#def foo( s ) { print( s ); }
-#local m = { "fcn" : foo, "a" : null };
-## compiler errors here: "Symbol 'fcn' not defined.":
-#m.fcn( m.a );
 
 # no refcount leaks
 #local v = ["255",["256"],"257"];
@@ -1190,10 +1285,11 @@
 #local a = new C(); 		# new class C
 #b = new A.B();		# new module A, class B
 
+# does not compile (should not compile):
 #extern a;
 #extern a = 255;
 #import foo/bar;
-#return;
+#return; # return outside of fcn, disallowed
 #a[0] -= 1;
 #a[0:1] += 1; # disallowed
 #local a = 0;

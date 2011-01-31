@@ -108,9 +108,9 @@ void do_vector_append( Frame *frame )
 	BuiltinHelper helper( "vector", "append", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* vec = helper.GetLocalN( 1 );
+	Object* vec = helper.GetLocalN( 0 );
 	helper.ExpectType( vec, obj_vector );
-	Object* po = helper.GetLocalN( 0 );
+	Object* po = helper.GetLocalN( 1 );
 
 	vec->v->push_back( *po );
 	// inc ref the item being appended
@@ -151,9 +151,9 @@ void do_vector_concat( Frame *frame )
 	BuiltinHelper helper( "vector", "concat", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-	Object* in = helper.GetLocalN( 0 );
+	Object* in = helper.GetLocalN( 1 );
 	helper.ExpectType( in, obj_vector );
 
 	// nothing in <algorithm> to help us with this...
@@ -241,11 +241,11 @@ void do_vector_insert( Frame *frame )
 	BuiltinHelper helper( "vector", "insert", frame );
 
 	helper.CheckNumberOfArguments( 3 );
-	Object* self = helper.GetLocalN( 2 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-	Object* pos = helper.GetLocalN( 0 );
+	Object* pos = helper.GetLocalN( 1 );
 	helper.ExpectIntegralNumber( pos );
-	Object* val = helper.GetLocalN( 1 );
+	Object* val = helper.GetLocalN( 2 );
 
 	int i = (int)pos->d;
 	if( i > self->v->size() )
@@ -262,9 +262,9 @@ void do_vector_remove( Frame *frame )
 	BuiltinHelper helper( "vector", "remove", frame );
 
 	helper.CheckNumberOfArguments( 2, 3 );
-	Object* self = helper.GetLocalN( frame->NumArgsPassed() - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-	Object* startobj = helper.GetLocalN( 0 );
+	Object* startobj = helper.GetLocalN( 1 );
 
 	helper.ExpectIntegralNumber( startobj );
 
@@ -272,7 +272,7 @@ void do_vector_remove( Frame *frame )
 	int end = -1;
 	if( frame->NumArgsPassed() == 3 )
 	{
-		Object* endobj = helper.GetLocalN( 1 );
+		Object* endobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
 	}
@@ -304,22 +304,22 @@ void do_vector_find( Frame *frame )
 
 	helper.CheckNumberOfArguments( 2, 4 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* value = helper.GetLocalN( 0 );
+	Object* value = helper.GetLocalN( 1 );
 
 	int start = 0;
 	int end = -1;
 	if( num_args > 2 )
 	{
-		Object* startobj = helper.GetLocalN( 1 );
+		Object* startobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
 	{
-		Object* endobj = helper.GetLocalN( 2 );
+		Object* endobj = helper.GetLocalN( 3 );
 		helper.ExpectIntegralNumber( endobj );
 		start = (int)endobj->d;
 	}
@@ -362,22 +362,22 @@ void do_vector_rfind( Frame *frame )
 
 	helper.CheckNumberOfArguments( 2, 4 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* value = helper.GetLocalN( 0 );
+	Object* value = helper.GetLocalN( 1 );
 
 	int start = 0;
 	int end = -1;
 	if( num_args > 2 )
 	{
-		Object* startobj = helper.GetLocalN( 1 );
+		Object* startobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
 	{
-		Object* endobj = helper.GetLocalN( 2 );
+		Object* endobj = helper.GetLocalN( 3 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
 	}
@@ -420,22 +420,22 @@ void do_vector_count( Frame *frame )
 
 	helper.CheckNumberOfArguments( 2, 4 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* value = helper.GetLocalN( 0 );
+	Object* value = helper.GetLocalN( 1 );
 
 	int start = 0;
 	int end = -1;
 	if( num_args > 2 )
 	{
-		Object* startobj = helper.GetLocalN( 1 );
+		Object* startobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
 	{
-		Object* endobj = helper.GetLocalN( 2 );
+		Object* endobj = helper.GetLocalN( 3 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
 	}
@@ -464,9 +464,8 @@ void do_vector_reverse( Frame *frame )
 
 	helper.CheckNumberOfArguments( 1, 3 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-	Object* startobj = helper.GetLocalN( 0 );
 
 	int start = 0;
 	int end = -1;
@@ -507,21 +506,20 @@ void do_vector_sort( Frame *frame )
 
 	helper.CheckNumberOfArguments( 1, 3 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-	Object* startobj = helper.GetLocalN( 0 );
 
 	int start = 0;
 	int end = -1;
 	if( num_args > 1 )
 	{
-		Object* startobj = helper.GetLocalN( 0 );
+		Object* startobj = helper.GetLocalN( 1 );
 		helper.ExpectIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 2 )
 	{
-		Object* endobj = helper.GetLocalN( 1 );
+		Object* endobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
 	}
@@ -549,10 +547,10 @@ void do_vector_map( Frame *frame )
 	BuiltinHelper helper( "vector", "map", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
@@ -567,23 +565,27 @@ void do_vector_map( Frame *frame )
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
+	// TODO: allow methods
+	if( is_method )
+		throw RuntimeException( "Cannot pass methods to vector built-in method 'map'." );
+
 	// walk each item in the vector
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
 	{
 		// push the item
 		ex->PushStack( *i );
 		// push 'self', for methods
-		if( is_method )
-		{
-			// push the object ("self") first
-			ex->PushStack( *self );
-		}
+//		if( is_method )
+//		{
+//			// push the object ("self") first
+//			ex->PushStack( *self );
+//		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1 );
+			ex->ExecuteFunction( o->f, 1, false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1 );
+			ex->ExecuteFunction( o->nf, 1, false );
 		// get the result (return value) and push it onto our return collection
 		Object retval = ex->PopStack();
 		// if we got a string back, we need to allocate a copy in our parent's
@@ -604,10 +606,10 @@ void do_vector_filter( Frame *frame )
 	BuiltinHelper helper( "vector", "filter", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
@@ -621,6 +623,10 @@ void do_vector_filter( Frame *frame )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
+
+	// TODO: allow methods
+	if( is_method )
+		throw RuntimeException( "Cannot pass methods to vector built-in method 'filter'." );
 
 	// walk each item in the vector
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
@@ -644,9 +650,9 @@ void do_vector_filter( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1 );
+			ex->ExecuteFunction( o->f, 1, false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1 );
+			ex->ExecuteFunction( o->nf, 1, false );
 		// get the result (return value), but only add this item to the returned 
 		// vector if the function returned a 'true' value
 		Object retval = ex->PopStack();
@@ -673,10 +679,10 @@ void do_vector_reduce( Frame *frame )
 	BuiltinHelper helper( "vector", "reduce", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
@@ -691,6 +697,10 @@ void do_vector_reduce( Frame *frame )
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
+	// TODO: allow methods
+	if( is_method )
+		throw RuntimeException( "Cannot pass methods to vector built-in method 'reduce'." );
+
 	size_t sz = self->v->size();
 	// first iteration uses the last two items in the vector
 	ex->PushStack( self->v->operator[]( sz-2 ) );
@@ -703,9 +713,9 @@ void do_vector_reduce( Frame *frame )
 	}
 	// call the function
 	if( o->type == obj_function )
-		ex->ExecuteFunction( o->f, 2 );
+		ex->ExecuteFunction( o->f, 2, false );
 	else if( o->type == obj_native_function )
-		ex->ExecuteFunction( o->nf, 2 );
+		ex->ExecuteFunction( o->nf, 2, false );
 	Object retval = ex->PopStack();
 	// walk the rest of the items in the vector
 	if( self->v->size() > 2 )
@@ -725,9 +735,9 @@ void do_vector_reduce( Frame *frame )
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
 			if( o->type == obj_function )
-				ex->ExecuteFunction( o->f, 2 );
+				ex->ExecuteFunction( o->f, 2, false );
 			else if( o->type == obj_native_function )
-				ex->ExecuteFunction( o->nf, 2 );
+				ex->ExecuteFunction( o->nf, 2, false );
 			// get the result (return value) and push it onto our return collection
 			retval = ex->PopStack();
 		}
@@ -748,10 +758,10 @@ void do_vector_any( Frame *frame )
 	BuiltinHelper helper( "vector", "any", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
@@ -765,6 +775,10 @@ void do_vector_any( Frame *frame )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
+
+	// TODO: allow methods
+	if( is_method )
+		throw RuntimeException( "Cannot pass methods to vector built-in method 'any'." );
 
 	bool value = false;
 
@@ -782,9 +796,9 @@ void do_vector_any( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1 );
+			ex->ExecuteFunction( o->f, 1, false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1 );
+			ex->ExecuteFunction( o->nf, 1, false );
 		// get the result (return value)
 		Object retval = ex->PopStack();
 		// if it evaluates to true, bail
@@ -803,10 +817,10 @@ void do_vector_all( Frame *frame )
 	BuiltinHelper helper( "vector", "all", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
@@ -820,6 +834,10 @@ void do_vector_all( Frame *frame )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
+
+	// TODO: allow methods
+	if( is_method )
+		throw RuntimeException( "Cannot pass methods to vector built-in method 'all'." );
 
 	bool value = true;
 
@@ -837,9 +855,9 @@ void do_vector_all( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1 );
+			ex->ExecuteFunction( o->f, 1, false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1 );
+			ex->ExecuteFunction( o->nf, 1, false );
 		// get the result (return value)
 		Object retval = ex->PopStack();
 		// if it evaluates to false, bail
@@ -871,26 +889,24 @@ void do_vector_slice( Frame *frame )
 
 	helper.CheckNumberOfArguments( 3, 4 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
-
-	Object* value = helper.GetLocalN( 0 );
 
 	int start = 0;
 	int end = -1;
 	int step = 1;
 
-	Object* startobj = helper.GetLocalN( 0 );
+	Object* startobj = helper.GetLocalN( 1 );
 	helper.ExpectIntegralNumber( startobj );
 	start = (int)startobj->d;
 
-	Object* endobj = helper.GetLocalN( 1 );
+	Object* endobj = helper.GetLocalN( 2 );
 	helper.ExpectIntegralNumber( endobj );
 	end = (int)endobj->d;
 	
 	if( num_args > 3 )
 	{
-		Object* stepobj = helper.GetLocalN( 2 );
+		Object* stepobj = helper.GetLocalN( 3 );
 		helper.ExpectIntegralNumber( stepobj );
 		step = (int)stepobj->d;
 	}
@@ -938,13 +954,13 @@ void do_vector_join( Frame *frame )
 
 	helper.CheckNumberOfArguments( 1, 2 );
 	int num_args = frame->NumArgsPassed();
-	Object* self = helper.GetLocalN( num_args - 1 );
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
 	const char* separator = "";
 	if( num_args == 2 )
 	{
-		Object* sep = helper.GetLocalN( 0 );
+		Object* sep = helper.GetLocalN( 1 );
 		helper.ExpectType( sep, obj_string );
 		separator = sep->s;
 	}

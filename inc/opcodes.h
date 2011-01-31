@@ -170,6 +170,7 @@ enum Opcode
 	op_div_assign_local,// divide local #<Op0> and tos and store back into local #<Op0>
 	op_mod_assign_local,// modulus local #<Op0> and tos and store back into local #<Op0>
 	op_call,		// call function with <Op0> args on stack, fcn on stack after args
+	op_call_method,		// call function with <Op0> args on stack, fcn on stack after args
 	op_return,		// execute <Op0> leave ops, pop the return address from the frame stack and jump to it, tos holds return value
 	op_exit_loop,	// break/continue loop, jumping to <Op0>, executing <Op1> leave ops
 	op_enter,		// enter (non-function) scope
@@ -178,6 +179,7 @@ enum Opcode
 	op_for_iter_pair,// tos has iterable object, call next() on it & push value onto tos - for double loop var loops (e.g. 'for( i,j in k)')
 
 	op_tbl_load,	// tos = tos1[tos]
+	op_method_load,	// load method from a tbl. tos = tos1[tos], but leaves tos1 ('self') on the stack
 	op_loadslice2,	// tos = tos2[tos1:tos]
 	op_loadslice3,	// tos = tos3[tos2:tos1:tos]
 	op_tbl_store,	// tos2[tos1] = tos
@@ -204,7 +206,7 @@ enum Opcode
 
 	op_import,
 
-	// 114 (update as opcodes are added above)
+	// 116 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };
@@ -292,6 +294,7 @@ static const char* opcodeNames[] =
 	"div_assign_local",
 	"mod_assign_local",
 	"call",
+	"call_method",
 	"return",
 	"exit_loop",
 	"enter",
@@ -299,6 +302,7 @@ static const char* opcodeNames[] =
 	"for_iter",
 	"for_iter_pair",
 	"tbl_load",
+	"method_load",
 	"loadslice2",
 	"loadslice3",
 	"tbl_store",

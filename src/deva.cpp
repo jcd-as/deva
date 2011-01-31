@@ -89,7 +89,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 #ifdef DEBUG
 		( "trace", "show execution trace" )
 		( "reftrace", "show refcount trace" )
-		( "show-ast,a", "show the AST" )
+		( "show-ast", "show the AST" )
 		( "debug-dump", "turn internal debug output on" )
 #endif
 		( "input", po::value<string>( &input ), "input filename" )

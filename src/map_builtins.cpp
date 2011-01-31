@@ -213,9 +213,9 @@ void do_map_remove( Frame* frame )
 	BuiltinHelper helper( "map", "remove", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	// remove the value
 	self->m->erase( *o );
@@ -228,9 +228,9 @@ void do_map_find( Frame* frame )
 	BuiltinHelper helper( "map", "find", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	Object ret;
 	Map::iterator it = self->m->find( *o );
@@ -247,7 +247,7 @@ void do_map_keys( Frame* frame )
 	BuiltinHelper helper( "map", "keys", frame );
 
 	helper.CheckNumberOfArguments( 1 );
-	Object* self = helper.GetLocalN( 0 ); // self = (frame->NumArgsPassed() - 1)th local
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
 
 	size_t sz = self->m->size();
@@ -268,7 +268,7 @@ void do_map_values( Frame* frame )
 	BuiltinHelper helper( "map", "values", frame );
 
 	helper.CheckNumberOfArguments( 1 );
-	Object* self = helper.GetLocalN( 0 ); // self = (frame->NumArgsPassed() - 1)th local
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
 
 	size_t sz = self->m->size();
@@ -294,9 +294,9 @@ void do_map_merge( Frame* frame )
 	BuiltinHelper helper( "map", "merge", frame );
 
 	helper.CheckNumberOfArguments( 2 );
-	Object* self = helper.GetLocalN( 1 ); // self = (frame->NumArgsPassed() - 1)th local
+	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
-	Object* o = helper.GetLocalN( 0 );
+	Object* o = helper.GetLocalN( 1 );
 
 	self->m->insert( o->m->begin(), o->m->end() );
 

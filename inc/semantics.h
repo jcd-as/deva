@@ -71,6 +71,7 @@ struct Semantics
 
 	// function calls
 	bool making_call;
+	bool in_fcn;
 
 	// map key
 	bool in_map_key;
@@ -87,6 +88,7 @@ struct Semantics
 		first_default_arg( -1 ),
 		in_class( false ),
 		making_call( false ),
+		in_fcn( false ),
 		in_map_key( false ),
 		rhs_of_dot( false ),
 		in_loop( false )
@@ -175,6 +177,9 @@ struct Semantics
 
 	// validate break/continue
 	void CheckBreakContinue( pANTLR3_BASE_TREE node );
+
+	// validate return
+	void CheckReturn( pANTLR3_BASE_TREE node );
 
 	// check statement for no effect (e.g. 'a;')
 	void CheckForNoEffect( pANTLR3_BASE_TREE node );

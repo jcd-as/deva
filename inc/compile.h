@@ -125,6 +125,7 @@ public:
 
 	// functions
 	int fcn_nesting;
+	bool is_method;
 
 	// classes
 	bool in_class;
@@ -218,8 +219,11 @@ public:
 	// function call
 	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent );
 
-	// Key ('[]') and Dot ('.') ops
-	void KeyOp( pANTLR3_BASE_TREE key_exp, bool is_lhs_of_assign );
+	// Key ('[]') op
+	void KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent );
+
+	// Dot ('.') op
+	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent );
 
 	// return, continue, break ops
 	void ReturnOp( bool no_val = false );

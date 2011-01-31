@@ -57,6 +57,7 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	max_scope_idx( 0 ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
+	is_method( false ),
 	in_class( false ),
 	in_constructor( false ),
 	is_dot_rhs( false )
@@ -381,13 +382,12 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 	{
 		// get the constant pool index for this identifier
 		int idx = -1;
-		// try as a symbol name first (for builtins)
-		idx = GetConstant( Object( obj_symbol_name, s ) );
-		// try looking for it as a string too, as it could be a 
-		// map/class/instance member 
-		// (where 'a.b' is just short-hand for 'a["b"]')
+		// try as a string first
+		// ('a.b' is just short-hand for 'a["b"]')
+		idx = GetConstant( Object( s ) );
+		// then try as a symbol name (for builtins)
 		if( idx == -1 )
-			idx = GetConstant( Object( s ) );
+			idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx == -1 )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
@@ -638,7 +638,15 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 {
 	// how many args are being pushed?
 	int num_children = args->getChildCount( args );
-	Emit( op_call, (dword)num_children );
+	// if we generated a method_load to match this call
+	if( is_method )
+	{
+		Emit( op_call_method, (dword)num_children );
+		// reset method_load flag
+		is_method = false;
+	}
+	else
+		Emit( op_call, (dword)num_children );
 	// if the return value is unused, a pop instruction needs to be generated
 	if( parent )
 	{
@@ -757,16 +765,40 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 	}
 }
 
-// Key ('[]') and Dot ('.') ops
-void Compiler::KeyOp( pANTLR3_BASE_TREE key_exp, bool is_lhs_of_assign )
+// Key ('[]') op
+void Compiler::KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
 {
 	// do nothing for left-hand side of assign,
 	// assignment op will take care of generating the tbl_store
 	if( is_lhs_of_assign )
 		return;
 
-	// TODO: handle slices...
+	// Key ops never generate method_load ops
 	Emit( op_tbl_load );
+	// TODO: handle slices...
+}
+
+// Dot ('.') op
+void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
+{
+	// do nothing for left-hand side of assign,
+	// assignment op will take care of generating the tbl_store
+	if( is_lhs_of_assign )
+		return;
+
+	// if the parent is a call op, generate a method_load op
+	unsigned int type = 0;
+	if( parent )
+		type = parent->getType( parent );
+	if( type == Call )
+	{
+		Emit( op_method_load );
+		// mark as method for the following call op generation
+		is_method = true;
+	}
+	// otherwise a tbl_load op
+	else
+		Emit( op_tbl_load );
 }
 
 void Compiler::ReturnOp( bool no_val /*= false*/ )
@@ -942,7 +974,7 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 	if( rewind_idx == -1 )
 		throw ICE( "Non-local symbol 'rewind' not found in Compiler::InOp()." );
 	Emit( op_pushconst, (dword)rewind_idx );
-	Emit( op_tbl_load );
+	Emit( op_method_load );
 	Emit( op_call, 0 );
 	Emit( op_pop );	// pop the unused return value from 'rewind'
 

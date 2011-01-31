@@ -532,6 +532,14 @@ void Semantics::CheckBreakContinue( pANTLR3_BASE_TREE node )
 		throw SemanticException( "Invalid 'break' or 'continue': must be inside a loop.", node->getLine(node) );
 }
 
+// validate return
+void Semantics::CheckReturn( pANTLR3_BASE_TREE node )
+{
+	// TODO: this reports the wrong line num (0):
+	if( !in_fcn )
+		throw SemanticException( "Invalid 'return': must be inside a function.", node->getLine(node) );
+}
+
 // check statement for no effect (e.g. 'a;')
 void Semantics::CheckForNoEffect( pANTLR3_BASE_TREE node )
 {

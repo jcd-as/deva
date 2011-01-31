@@ -194,25 +194,26 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp(); }
 	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start ); }
 	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start ); }
-	|	^(Key exp[false,NULL] key=key_exp) { compiler->KeyOp( $key.start, is_lhs_of_assign ); } // TODO: slices??
-	|	dot_exp[is_lhs_of_assign]
+	|	^(Key exp[false,NULL] key=key_exp) { compiler->KeyOp( is_lhs_of_assign, parent ); } // TODO: slices??
+	|	dot_exp[is_lhs_of_assign,$parent]
 	|	call_exp[$parent]
 	|	(map_op | vec_op)
 	|	value
 	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign ); }
 	;
 
-dot_exp[bool is_lhs_of_assign]
+dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 @after { compiler->is_dot_rhs = false; }
 	:	^(
 			DOT_OP 
 			exp[false,NULL] {compiler->is_dot_rhs=true;} 
-			exp[false,NULL]
-		) { compiler->KeyOp( NULL, is_lhs_of_assign ); }
+			exp[false,$parent]
+		) { compiler->DotOp( is_lhs_of_assign, $parent ); }
 	;
 
 call_exp[pANTLR3_BASE_TREE parent]
-	:	^(Call args id=exp[false,NULL]) { compiler->CallOp( $id.start, $args.start, $parent ); }
+@init { compiler->is_method = false; }
+	:	^(Call args id=exp[false,$call_exp.start]) { compiler->CallOp( $id.start, $args.start, $parent ); }
 	;
 
 args

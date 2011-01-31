@@ -102,7 +102,7 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'new' method of instance object is not a function." );
-		ExecuteFunction( it->second.f, num_args );
+		ExecuteFunction( it->second.f, num_args, true );
 		// pop the (null) return value
 		stack.pop_back();
 
@@ -338,7 +338,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = CurrentScope()->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1098,6 +1098,7 @@ Opcode Executor::ExecuteInstruction()
 		ip += sizeof( dword );
 		break;
 	case op_call: // call function with <Op0> args on on stack, fcn after args
+	case op_call_method: // call function with <Op0> args on on stack, fcn after args
 		// 1 arg: number of args passed
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
@@ -1110,12 +1111,16 @@ Opcode Executor::ExecuteInstruction()
 		// if it's a fcn, build a frame for it
 		if( o.type == obj_function )
 		{
-			ExecuteFunction( o.f, arg );
+			if( op == op_call_method && !o.f->IsMethod() )
+				throw RuntimeException( "Call to a method expected but call to a non-method found." );
+			ExecuteFunction( o.f, arg, op == op_call_method );
 		}
 		// is it a native fcn?
 		else if( o.type == obj_native_function )
 		{
-			ExecuteFunction( o.nf, arg );
+			if( op == op_call_method && !o.nf.is_method )
+				throw RuntimeException( "Call to a method expected but call to a non-method found." );
+			ExecuteFunction( o.nf, arg, op == op_call_method );
 		}
 		// is it a class object (i.e. a constructor call)
 		else if( o.type == obj_class )
@@ -1151,14 +1156,18 @@ Opcode Executor::ExecuteInstruction()
 			Object* f = FindFunction( o.s );
 			if( f && f->f )
 			{
-				ExecuteFunction( f->f, arg );
+				if( op == op_call_method && !f->f->IsMethod() )
+					throw RuntimeException( "Call to a method expected but call to a non-method found." );
+				ExecuteFunction( f->f, arg, op == op_call_method );
 			}
 			else
 			{
 				NativeFunction nf = GetBuiltin( o.s );
 				if( nf.p )
 				{
-					ExecuteFunction( nf, arg );
+					if( op == op_call_method && !nf.is_method )
+						throw RuntimeException( "Call to a method expected but call to a non-method found." );
+					ExecuteFunction( nf, arg, op == op_call_method );
 				}
 				// TODO: can this ever happen?
 				// class name?
@@ -1244,7 +1253,7 @@ Opcode Executor::ExecuteInstruction()
 			stack.push_back( stack.back() );
 			IncRef( stack.back() );
 			// call 'next'
-			ExecuteFunction( nf, 0 );
+			ExecuteFunction( nf, 0, true );
 		}
 		else if( IsMapType( lhs.type ) )
 		{
@@ -1258,7 +1267,7 @@ Opcode Executor::ExecuteInstruction()
 				// dup the TOS (class/instance)
 				stack.push_back( stack.back() );
 				IncRef( stack.back() );
-				ExecuteFunction( it->second.f, 0 );
+				ExecuteFunction( it->second.f, 0, true );
 			}
 			// handle maps
 			else
@@ -1273,7 +1282,7 @@ Opcode Executor::ExecuteInstruction()
 				stack.push_back( stack.back() );
 				IncRef( stack.back() );
 				// call 'next'
-				ExecuteFunction( nf, 0 );
+				ExecuteFunction( nf, 0, true );
 			}
 		}
 		// 'next' has put a two-item vector on the stack, with a bool
@@ -1316,10 +1325,8 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_tbl_load:// tos = tos1[tos]
 		rhs = stack.back();
-//		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
-//		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1334,8 +1341,6 @@ Opcode Executor::ExecuteInstruction()
 				{
 					if( !nf.is_method )
 						throw ICE( "Vector builtin not marked as a method." );
-					stack.push_back( lhs );
-					IncRef( lhs );
 					stack.push_back( Object( nf ) );
 				}
 				else
@@ -1367,10 +1372,109 @@ Opcode Executor::ExecuteInstruction()
 			{
 				// if this was a symbol name, try looking for it as a string,
 				// since 'a.b;' is syntactic sugar for 'a["b"];'
+				// conversely, if this was a string, try looking for it as a
+				// symbol name
+				if( rhs.type == obj_symbol_name || rhs.type == obj_string )
+				{
+					// look for it in the map first...
+					Map::iterator it = lhs.m->find( Object( rhs.s ) );
+					if( it != lhs.m->end() )
+					{
+						Object obj = it->second;
+						if( obj.type == obj_function || obj.type == obj_native_function )
+						{
+							if( obj.type == obj_function && !obj.f->IsMethod() )
+								throw ICE( "class/instance method not marked as a method." );
+							if( obj.type == obj_native_function && !obj.nf.is_method )
+								throw ICE( "class/instance native method not marked as a method." );
+						}
+						// push the object
+						stack.push_back( obj );
+					}
+					// try it as a symbol name
+					it = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
+					if( it != lhs.m->end() )
+					{
+						Object obj = it->second;
+						// push the object
+						stack.push_back( obj );
+					}
+					// else try it as a built-in method
+					else
+					{
+						// check for map built-in method
+						NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
+						if( nf.p )
+						{
+							if( !nf.is_method )
+								throw ICE( "Map builtin not marked as a method." );
+							stack.push_back( Object( nf ) );
+						}
+						else
+							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
+
+					}
+					DecRef( lhs );
+					DecRef( rhs );
+					break;
+				}
+				else 
+					throw RuntimeException( "Invalid key value. Item not found." );
+			}
+			IncRef( i->second );
+			stack.push_back( i->second );
+		}
+		DecRef( lhs );
+		DecRef( rhs );
+		break;
+	case op_method_load:// tos = tos1[tos], but leaves tos1 ('self') on the stack
+		{
+		rhs = stack.back();
+		stack.pop_back();
+		lhs = stack.back();
+		stack.pop_back();
+		if( !IsRefType( lhs.type ) )
+			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (vector, map, class or instance)." ) % lhs );
+
+		if( lhs.type == obj_vector )
+		{
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+				throw RuntimeException( boost::format( "Expected method name, found '%1%'." ) % rhs );
+
+			// check for vector built-in method
+			NativeFunction nf = GetVectorBuiltin( string( rhs.s ) );
+			if( nf.p )
+			{
+				if( !nf.is_method )
+					throw ICE( "Vector builtin not marked as a method." );
+				stack.push_back( lhs );
+				IncRef( lhs );
+				stack.push_back( Object( nf ) );
+			}
+			else
+				throw RuntimeException( "Invalid vector method." );
+
+			DecRef( lhs );
+			DecRef( rhs );
+			break;
+		}
+		else
+		{
+			// find the rhs (key in the lhs (map)
+			Map::iterator i = lhs.m->find( rhs );
+			if( i == lhs.m->end() )
+			{
+				// if this was a symbol name, try looking for it as a string,
+				// since 'a.b;' is syntactic sugar for 'a["b"];'
+				// conversely, if it is a string, try looking for it as a symbol
+				// name 
 				if( rhs.type == obj_symbol_name )
 				{
 					// look for it in the map first...
 					Map::iterator it = lhs.m->find( Object( rhs.s ) );
+					// try it as a symbol name
+					if( it == lhs.m->end() )
+						it = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
 					if( it != lhs.m->end() )
 					{
 						Object obj = it->second;
@@ -1480,8 +1584,10 @@ Opcode Executor::ExecuteInstruction()
 			IncRef( i->second );
 			stack.push_back( i->second );
 		}
+
 		DecRef( lhs );
 		DecRef( rhs );
+		}
 		break;
 	case op_loadslice2:
 		// TODO:
@@ -1945,12 +2051,21 @@ Opcode Executor::ExecuteInstruction()
 	return op;
 }
 
-void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*= false*/ )
+void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
 {
 	// if this is a method there's an extra arg for 'this'
 	int args_passed = num_args;
 	if( f->IsMethod() )
-		num_args++;
+	{
+		// if this was called via op_method_call, 'self' was passed implicitly
+		// and should not be included in the num_args counter
+		if( method_call_op )
+			num_args++;
+		// (if this was *not* called via op_method_call, but *is* a method, then
+		// num_args must contain 'self' explicitly, do *not* increment
+		else
+			args_passed--;
+	}
 
 	if( num_args > f->num_args )
 		throw RuntimeException( boost::format( "Too many arguments passed to function '%1%'." ) % f->name );
@@ -1960,8 +2075,11 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, f );
 	Scope* scope = new Scope();
+
 	// set the args for the frame
-	if( f->IsMethod() )
+
+	// for op_method_call, 'self' is on top of stack
+	if( method_call_op && f->IsMethod() )
 	{
 		// set local 0 to 'self'
 		Object ob = stack.back();
@@ -1974,6 +2092,15 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*
 		frame->SetLocal( num_args-i-1, ob );
 		stack.pop_back();
 	}
+	// but for op_call, 'self' is the last arg on the stack
+	if( !method_call_op && f->IsMethod() )
+	{
+		// set local 0 to 'self'
+		Object ob = stack.back();
+		frame->SetLocal( 0, ob );
+		stack.pop_back();
+	}
+
 	// default arg vals...
 	int num_defaults = f->num_args - num_args;
 	if( num_defaults != 0 )
@@ -1995,21 +2122,50 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool is_destructor /*
 	ExecuteToReturn( is_destructor );
 }
 
-void Executor::ExecuteFunction( NativeFunction nf, int num_args )
+void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )
 {
 	// if this is a method there's an extra arg for 'this'
+	int args_passed = num_args;
 	if( nf.is_method )
-		num_args++;
+	{
+		// if this was called via op_method_call, 'self' was passed implicitly
+		// and should not be included in the num_args counter
+		if( method_call_op )
+			num_args++;
+		// (if this was *not* called via op_method_call, but *is* a method, then
+		// num_args must contain 'self' explicitly, do *not* increment
+		else
+			args_passed--;
+	}
+
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
-	for( int i = 0; i < num_args; i++ )
+
+	// for op_method_call, 'self' is on top of stack
+	if( method_call_op && nf.is_method )
+	{
+		// set local 0 to 'self'
+		Object ob = stack.back();
+		frame->SetLocal( 0, ob );
+		stack.pop_back();
+	}
+	for( int i = 0; i < args_passed; i++ )
 	{
 		Object ob = stack.back();
 		frame->SetLocal( num_args-i-1, ob );
 		stack.pop_back();
 	}
+	// but for op_call, 'self' is the last arg on the stack
+	if( !method_call_op && nf.is_method )
+	{
+		// set local 0 to 'self'
+		Object ob = stack.back();
+		frame->SetLocal( 0, ob );
+		stack.pop_back();
+	}
+
 	// push the frame onto the callstack
 	PushFrame( frame );
 	PushScope( scope );
@@ -2071,6 +2227,8 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		break;
 	case op_pushlocal:
 		// 1 arg
+		arg = *((dword*)p);
+		cout << "\t" << arg;
 		ret = sizeof( dword );
 		break;
 	case op_pushlocal0:
@@ -2227,6 +2385,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		ret = sizeof( dword );
 		break;
 	case op_call:
+	case op_call_method:
 		// 1 arg: number of args passed
 		arg = *((dword*)p);
 		cout << "\t" << arg;
@@ -2257,6 +2416,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		ret = sizeof( dword );
 		break;
 	case op_tbl_load:
+	case op_method_load:
 	case op_loadslice2:
 	case op_loadslice3:
 	case op_tbl_store:

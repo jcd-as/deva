@@ -77,13 +77,13 @@ block
 	;
 
 func_decl[char* classname]
-@after { semantics->PopScope(); }
+@after { semantics->in_fcn = false; semantics->PopScope(); }
 	:	^(Def id=ID 
-		{ semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		{ semantics->in_fcn = true; semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
 		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block) 
 	|	^(Def id='new' 
-		{ semantics->DefineFun( (char*)"new", classname, $id->getLine($id) ); semantics->PushScope( (char*)"new", classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		{ semantics->in_fcn = true; semantics->DefineFun( (char*)"new", classname, $id->getLine($id) ); semantics->PushScope( (char*)"new", classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
 		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block)
 	;
@@ -135,8 +135,8 @@ continue_statement
 	;
 
 return_statement 
-	:	^(Return exp[false])
-	|	Return
+	:	^(Return exp[false]) { semantics->CheckReturn( $Return ); }
+	|	Return { semantics->CheckReturn( $Return ); }
 	;
 
 assign_statement

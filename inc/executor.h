@@ -133,8 +133,8 @@ public:
 	void ExecuteCode( const Code & code );
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
-	void ExecuteFunction( Function* f, int num_args, bool is_destructor = false );
-	void ExecuteFunction( NativeFunction f, int num_args );
+	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
+	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream
