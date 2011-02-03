@@ -125,7 +125,7 @@ void Executor::CallDestructors( Object o )
 
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'delete' method of instance object is not a function." );
-		ExecuteFunction( it->second.f, 0, true );
+		ExecuteFunction( it->second.f, 0, true, true );
 		// pop the (null) return value
 		stack.pop_back();
 
@@ -279,7 +279,6 @@ Opcode Executor::ExecuteInstruction()
 		stack.push_back( GetConstant( 3 ) );
 		break;
 	case op_pushlocal:
-		// TODO: implement!
 		// 1 arg
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
@@ -1169,18 +1168,8 @@ Opcode Executor::ExecuteInstruction()
 						throw RuntimeException( "Call to a method expected but call to a non-method found." );
 					ExecuteFunction( nf, arg, op == op_call_method );
 				}
-				// TODO: can this ever happen?
-				// class name?
-//				else
-//				{
-//					Object* _class = scopes->FindSymbol( o.s );
-//					if( _class && _class->type == obj_class )
-//					{
-//						// get the 'new' method of this class and call it
-//					}
-//					else
-//						throw RuntimeException( boost::format( "Invalid function name '%1%'." ) % o.s );
-//				}
+				else 
+					throw RuntimeException( boost::format( "Invalid function name '%1%'." ) % o.s );
 			}
 		}
 		else
@@ -2083,6 +2072,9 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	{
 		// set local 0 to 'self'
 		Object ob = stack.back();
+		// ensure it is a class or an instance!
+		if( ob.type != obj_class && ob.type != obj_instance )
+			throw RuntimeException( boost::format( "Class or instance expected as 'self' argument to method, found '%1%'." ) % ob );
 		frame->SetLocal( 0, ob );
 		stack.pop_back();
 	}
@@ -2097,6 +2089,8 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	{
 		// set local 0 to 'self'
 		Object ob = stack.back();
+		if( ob.type != obj_class && ob.type != obj_instance )
+			throw RuntimeException( boost::format( "Class or instance expected as 'self' argument to method, found '%1%'." ) % ob );
 		frame->SetLocal( 0, ob );
 		stack.pop_back();
 	}
@@ -2108,8 +2102,8 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		int non_defaults = f->num_args - f->default_args.Size();
 		for( int i = 0; i < num_defaults; i++ )
 		{
-			int idx = f->default_args.At( num_args+i-non_defaults );
-			Object o = GetConstant( num_args );
+			int idx = f->default_args.At( num_args + i - non_defaults );
+			Object o = GetConstant( idx );
 			frame->SetLocal( num_args+i, o );
 		}
 	}

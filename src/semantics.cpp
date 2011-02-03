@@ -97,6 +97,14 @@ void Semantics::PopScope()
 // define a variable in the current scope
 void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/ )
 {
+	// disallow non-keyword "keywords":
+	if( strcmp( name, "delete" ) == 0 )
+		throw SemanticException( "Syntax error: keyword used as identifier.", line );
+
+	// disallow 'self' outside of a method
+	if( strcmp( name, "self" ) == 0 && !(in_class && in_fcn) )
+		throw SemanticException( "Syntax error: 'self' only allowed inside methods.", line );
+
 	Symbol *sym = new Symbol( name, sym_variable, mod );
 	if( !current_scope->Define( sym ) )
 	{
@@ -133,10 +141,14 @@ void Semantics::ResolveVar( char* name, int line )
 // define a function in the current scope
 void Semantics::DefineFun( char* name, char* classname, int line )
 {
-	// 'new' method (constructor) is disallowed outside of classes
+	// 'new' & 'delete' methods (constructor/destructor) disallowed outside of classes
 	if( strcmp( name, "new" ) == 0 && !classname )
 	{
 		throw SemanticException( "'new' method is not allowed outside of a class definition.", line );
+	}
+	if( strcmp( name, "delete" ) == 0 && !classname )
+	{
+		throw SemanticException( "'delete' method is not allowed outside of a class definition.", line );
 	}
 
 	Symbol *sym = new Symbol( name, sym_function, mod_none );
@@ -160,11 +172,14 @@ void Semantics::ResolveFun( char* name, int line )
 	if( rhs_of_dot )
 	{
 		AddString( name );
+		DefineVar( name, line );
 	}
 
 	// if it is a builtin fcn, add it to the constants pool
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
+	{
 		return;
+	}
 
 	// look up the function in the current scope
 	if( !current_scope->Resolve( name, sym_end ) )

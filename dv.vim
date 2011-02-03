@@ -31,7 +31,6 @@ syn keyword devaFunction	append
 syn keyword devaFunction	copy
 syn keyword devaFunction	length
 syn keyword devaFunction	eval
-syn keyword devaFunction	delete
 syn keyword devaFunction	concat
 syn keyword devaFunction	min
 syn keyword devaFunction	max
@@ -55,7 +54,7 @@ syn keyword devaFunction	name
 syn keyword devaFunction	type
 syn keyword devaBool		true false
 syn keyword devaStatement	null
-syn keyword devaObj		class new self
+syn keyword devaObj		class new delete self
 
 syn keyword devaConditional	if else
 syn keyword devaRepeat	while for in

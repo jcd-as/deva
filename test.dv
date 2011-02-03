@@ -1,15 +1,78 @@
-# BUG: default args broken with methods:
-#class C
+# leaks the nested 'foo'
+#def foo( a )
 #{
-#	def f( x, y, z = "z" )
+#	def foo( b )
 #	{
-#		print( x );
-#		print( y );
-#		print( z );
 #	}
 #}
-#local c = new C();
-#c.f( "a", "b" );
+# leaks the second 'foo'
+def foo( a )
+{
+}
+{
+def foo( b )
+{
+}
+}
+
+# BUG: valgrind memory errors (non-leak):
+#local n = 100;
+#class C
+#{
+#def foo( a, b = false )
+#{
+#	b = 42;
+##	c = new C();
+#	def bar(){}
+#	n = "zed";
+#	bar();
+#}
+#}
+#C.foo( 9 );
+#local a = 100;
+#local b = 42;
+#local n = a + b;
+
+# BUG: weird error: "Object '0' is not a function."
+#local C = 0;
+#def C(){}
+#{
+#local c = C;
+#local a = new c(); 		# new class C
+#}
+
+# BUG: ICE 
+#def foo( n ){ print( n ); }
+#foo( 255 );		# call_n
+## BUG: ICE here: "Cannot locate local symbol 'foo'."
+#local f = foo;
+#local foo = {"bar":f};
+
+#foo.bar( 255 );	# call
+# BUG: second def of fcn doesn't override the first
+# (runtime error on 2nd call: "too many arguments"
+#def fcn( a )
+#{
+#	print( a );
+#}
+#fcn( "foo" );
+#def fcn( a, b )
+#{
+#	print( a, " " );
+#	print( b );
+#}
+#fcn( "foo", "bar" );
+
+# BUG: doesn't compile 
+#local a = {};
+#a["b"] = str;
+## BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+#print( a.b( a ) );
+
+# BUG: doesn't compile 
+#local a = {"b":str};
+### BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+#print( a.b( a ) );
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -52,17 +115,6 @@
 #print( v.reduce( c.concat ) );
 #print( v.any( c.is_number ) );
 #print( v.all( c.is_number ) );
-
-# BUG: doesn't compile 
-#local a = {};
-#a["b"] = str;
-## BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
-#print( a.b( a ) );
-
-# BUG: doesn't compile 
-#local a = {"b":str};
-### BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
-#print( a.b( a ) );
 
 # BUG: ref count leaks from vector builtins:
 #def fcn( s ){ return "foo" + s; }
@@ -108,6 +160,40 @@
 ###########################################
 # END BUG SECTION
 ###########################################
+
+# no refcount leaks
+#def fcn( a, b, c = "C", d="D" )
+#{
+#	print( a, " " );
+#	print( b, " " );
+#	print( c, " " );
+#	print( d );
+#}
+## a b C D
+#fcn( "a", "b" );
+## a b c D
+#fcn( "a", "b", "c" );
+## a b c d
+#fcn( "a", "b", "c", "d" );
+
+# no refcount leaks
+#class C
+#{
+#	def fcn( a, b, c = "C", d="D" )
+#	{
+#		print( a, " " );
+#		print( b, " " );
+#		print( c, " " );
+#		print( d );
+#	}
+#}
+#local c = new C();
+## a b C D
+#c.fcn( "a", "b" );
+## a b c D
+#c.fcn( "a", "b", "c" );
+## a b c d
+#c.fcn( "a", "b", "c", "d" );
 
 # no refcount leaks
 #local v = [];
@@ -163,7 +249,6 @@
 #print( m );
 
 # no refcount leaks
-# BUG: results in m being '{'a' : 32, a : 16}'
 #local m = {"a" : [] };
 #print( m );
 #m["a"] = 16;
@@ -229,7 +314,7 @@
 #}
 #local c = new C();
 #local f = c.fcn;
-### causes segfault:
+## causes error: not enough args passed to 'fcn'
 ##f();
 
 # no refcount leaks
@@ -366,8 +451,7 @@
 #		local ret = null;
 #		if( self.index < length( self.v ) ) ret = [true, self.v[self.index]];
 #		else ret = [false, null];
-##		self.index += 1;
-#		self.index = self.index + 1;
+#		self.index += 1;
 #		return ret;
 #	}
 #}
@@ -1100,12 +1184,7 @@
 #local v = [0];
 #local v2 = ["a", v];
 
-
-#######################################
-# ref-leak checked to here
-#######################################
-
-
+# no refcount leaks
 #local m = {"a" : 0.11, "b" : 1};
 #local lm = {"ab" : m};
 #print( m.a );
@@ -1121,33 +1200,34 @@
 #foo( m );
 #foo( {1 : "foo"} );
 
+# no refcount leaks
 #def foo( vec )
 #{
 #	print( vec );
 #	local lv = ["a", "b", vec];
 #	print( lv );
 #}
-#
 #local v = [0];
 #foo( v );
 #foo( [1] );
 
+# no refcount leaks
 #local v = [0];
 #local v2 = ["a"];
 #v[0] = v2;
 #print( v );
 
+# no refcount leaks
 #def foo( vec )
 #{
 #	print( vec );
 #}
-#
 #local v = [0];
 #foo( v );
 #foo( [1] );
-
 #print( [0] );
 
+# no refcount leaks
 #local v = [0, 1, 2, 3];
 #local v1 = v[0];
 #print( v1 );
@@ -1157,16 +1237,16 @@
 #print( v1 );
 #v1 = v[3];
 #print( v1 );
-#
 #print( v );
-#
 #local vv = v;
 
+# no refcount leaks
 # test 'op_push'
 #local a = 33;
 #local b = 66;
 #print( a + b);
 
+# no refcount leaks
 #local i = 0;
 #local v = ["a", "b", "c"];
 #while( i < 3 )
@@ -1175,8 +1255,8 @@
 #	i += 1;
 #}
 
+# no refcount leaks
 #local global = "foobar";
-#
 #def Foo()
 #{
 #	if( true )
@@ -1190,9 +1270,9 @@
 #		}
 #	}
 #}
-#
 #Foo();
 
+# no refcount leaks
 #local a = "foo";
 #print( a );
 #local a = "foo";
@@ -1241,12 +1321,15 @@
 #Foo();
 #print( "done" );
 
+# no refcount leaks
 #while( 1 )
 #{
 #	while( 0 )
 #		break;
 #	break;
 #}
+#local x = 0;
+#def A(){ extern x; x += 1; }
 #while( x < 100 )
 #{
 #	if( true )
@@ -1263,27 +1346,39 @@
 #	local b = 255;
 #}
 
-
-#a = -255;
+# no refcount leaks
+#local a = -255;
 #a = {"foo" : 255};
 #a = [0, 1, [2, 3], 4 ];
 #a = [0];
 
-#foo( 255 );		# call_n
-#foo.bar( 255 );	# call
-
+# no refcount leaks
+#local m = [];
 #const a0 = 0xa;
 #append( m, a0 );
 
-#C = 0;
-#def C(){}
+# no refcount leaks
+#class A{ def B(){} }
+#class C{}
+#local a = new C(); 		# new class C
+#local b = new A.B();		# new module A, class B
+
+# no refcount leaks
+#local a = ("foo" + "bar");
+#local bad = -1;
+#def Foo( x , y, z = -1 )
 #{
-#local c = C;
-#a = new c(); 		# new class C
+#	local b = "b";
+#	while( true )
+#	{
+#		local c = 42;
+#		a = 4;
+#	}
 #}
 
-#local a = new C(); 		# new class C
-#b = new A.B();		# new module A, class B
+#######################################
+# ref-leak checked to here
+#######################################
 
 # does not compile (should not compile):
 #extern a;
@@ -1307,34 +1402,7 @@
 #a = 0;
 #}
 
-#local n = 100;
-#class C
-#{
-#def foo( a, b = false )
-#{
-#	b = 42;
-##	c = new C();
-#	def bar(){}
-#	n = "zed";
-#	bar();
-#}
-#}
-#foo( 9 );
-#local a = 100;
-#local b = 42;
-#local n = a + b;
-
-#local a = ("foo" + "bar");
-#local bad = -1;
-#def Foo( x , y, z = -1 )
-#	local b = "b";
-#	while( true )
-#	{
-#		local c = 42;
-#		a = 4;
-#	}
-#}
-
+# leaks function
 #def foo( a, b, c )
 #{
 #	local w = "w";
@@ -1360,7 +1428,7 @@
 #{
 #	local a = 0;
 #}
-#a = 1;
+##a = 1;
 
 #if( foo )
 #{

@@ -975,7 +975,7 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 		throw ICE( "Non-local symbol 'rewind' not found in Compiler::InOp()." );
 	Emit( op_pushconst, (dword)rewind_idx );
 	Emit( op_method_load );
-	Emit( op_call, 0 );
+	Emit( op_call_method, 0 );
 	Emit( op_pop );	// pop the unused return value from 'rewind'
 
 	// vector to iterate is now on top of the stack again

@@ -471,13 +471,13 @@ void do_vector_reverse( Frame *frame )
 	int end = -1;
 	if( num_args > 1 )
 	{
-		Object* startobj = helper.GetLocalN( 0 );
+		Object* startobj = helper.GetLocalN( 1 );
 		helper.ExpectIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 2 )
 	{
-		Object* endobj = helper.GetLocalN( 1 );
+		Object* endobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
 	}
