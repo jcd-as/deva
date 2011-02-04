@@ -1111,8 +1111,28 @@ Opcode Executor::ExecuteInstruction()
 		if( o.type == obj_function )
 		{
 			if( op == op_call_method && !o.f->IsMethod() )
-				throw RuntimeException( "Call to a method expected but call to a non-method found." );
-			ExecuteFunction( o.f, arg, op == op_call_method );
+			{
+				// if the number of arguments including 'self' is correct,
+				// continue ahead
+				if( o.f->num_args == arg + 1 )
+					ExecuteFunction( o.f, arg + 1, false );
+				// if there are one too many args, pop 'self', it was pushed
+				// because we couldn't tell if this was a fcn or method at
+				// compile time
+				else if( o.f->num_args == arg )
+				{
+					if( stack.size() > 0 )
+						stack.pop_back();
+					else
+						throw RuntimeException( "Call to a method expected but call to a non-method found." );
+
+					ExecuteFunction( o.f, arg, false );
+				}
+				else
+					throw RuntimeException( "Call to a method expected but call to a non-method found." );
+			}
+			else
+				ExecuteFunction( o.f, arg, op == op_call_method );
 		}
 		// is it a native fcn?
 		else if( o.type == obj_native_function )
@@ -1156,7 +1176,27 @@ Opcode Executor::ExecuteInstruction()
 			if( f && f->f )
 			{
 				if( op == op_call_method && !f->f->IsMethod() )
-					throw RuntimeException( "Call to a method expected but call to a non-method found." );
+				{
+//					throw RuntimeException( "Call to a method expected but call to a non-method found." );
+					// if the number of arguments including 'self' is correct,
+					// continue ahead
+					if( f->f->num_args == arg + 1 )
+						ExecuteFunction( f->f, arg + 1, false );
+					// if there are one too many args, pop 'self', it was pushed
+					// because we couldn't tell if this was a fcn or method at
+					// compile time
+					else if( f->f->num_args == arg )
+					{
+						if( stack.size() > 0 )
+							stack.pop_back();
+						else
+							throw RuntimeException( "Call to a method expected but call to a non-method found." );
+
+						ExecuteFunction( f->f, arg, false );
+					}
+					else
+						throw RuntimeException( "Call to a method expected but call to a non-method found." );
+				}
 				ExecuteFunction( f->f, arg, op == op_call_method );
 			}
 			else

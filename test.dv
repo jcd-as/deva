@@ -1,3 +1,9 @@
+def foo( a ){ print( a ); }
+local a = {};
+a["b"] = foo;
+# runtime error: 'Call to a method expected but call to a non-method found'
+print( a.b( a ) );
+
 # leaks the nested 'foo'
 #def foo( a )
 #{
@@ -6,14 +12,12 @@
 #	}
 #}
 # leaks the second 'foo'
-def foo( a )
-{
-}
-{
-def foo( b )
-{
-}
-}
+#def foo( a )
+#{
+#}
+#def foo( b )
+#{
+#}
 
 # BUG: valgrind memory errors (non-leak):
 #local n = 100;
@@ -63,16 +67,22 @@ def foo( b )
 #}
 #fcn( "foo", "bar" );
 
-# BUG: doesn't compile 
+# BUG: ???
 #local a = {};
 #a["b"] = str;
-## BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+## runtime error: 'Call to a method expected but call to a non-method found'
 #print( a.b( a ) );
 
-# BUG: doesn't compile 
+# BUG: ???
 #local a = {"b":str};
-### BUG: doesn't compile - complains that "Symbol 'b' is not defined" here:
+## runtime error: 'Call to a method expected but call to a non-method found'
 #print( a.b( a ) );
+
+# BUG: ???
+#def foo( s ) { print( s ); }
+#local m = { "fcn" : foo, "a" : null };
+## runtime error: 'Call to a method expected but call to a non-method found'
+#m.fcn( m.a );
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -144,22 +154,15 @@ def foo( b )
 #	n += 1;
 #}
 
-# BUG: fails to compile
-#class C{ def fcn(){ print( "fcn" ); } }
-#local c = new C();
-#local a = { "b" : { "c" : c } };
-## compiler errors here: "Symbol 'b' not defined.":
-#a.b.c.fcn();
-
-# BUG: fails to compile
-#def foo( s ) { print( s ); }
-#local m = { "fcn" : foo, "a" : null };
-## compiler errors here: "Symbol 'fcn' not defined.":
-#m.fcn( m.a );
-
 ###########################################
 # END BUG SECTION
 ###########################################
+
+# no refcount leaks
+#class C{ def fcn(){ print( "fcn" ); } }
+#local c = new C();
+#local a = { "b" : { "c" : c } };
+#a.b.c.fcn();
 
 # no refcount leaks
 #def fcn( a, b, c = "C", d="D" )

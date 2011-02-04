@@ -223,7 +223,7 @@ public:
 	void KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent );
 
 	// Dot ('.') op
-	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent );
+	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent );
 
 	// return, continue, break ops
 	void ReturnOp( bool no_val = false );

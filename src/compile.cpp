@@ -779,20 +779,34 @@ void Compiler::KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
 }
 
 // Dot ('.') op
-void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
+//void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
+void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent )
 {
 	// do nothing for left-hand side of assign,
 	// assignment op will take care of generating the tbl_store
 	if( is_lhs_of_assign )
 		return;
 
-	// if the parent is a call op, generate a method_load op
+	// if the parent is a call op to what might be a method, 
+	// generate a method_load op
 	unsigned int type = 0;
 	if( parent )
 		type = parent->getType( parent );
 	if( type == Call )
 	{
-		Emit( op_method_load );
+		// if the rhs is an identifier we can try to tell more
+		unsigned int rhs_type = rhs->getType( rhs );
+		if( rhs_type == ID )
+		{
+			char* rhs_text = (char*)rhs->getText( rhs )->chars;
+			// if it is a builtin, not a method: tbl_load
+			if( IsBuiltin( string( rhs_text ) ) )
+				Emit( op_tbl_load );
+			else
+				Emit( op_method_load );
+		}
+		else
+			Emit( op_method_load );
 		// mark as method for the following call op generation
 		is_method = true;
 	}

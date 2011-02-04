@@ -118,7 +118,7 @@ public:
 	// TODO: ???
 	// adding a fcn whose name already exists should *override* the
 	// existing fcn (map's behaviour is to not accept the new value)
-	// problem is that the v1 deva behvariour was to define the fcns as they
+	// problem is that the v1 deva behaviour was to define the fcns as they
 	// occurred in the code, not at compile time, so at any point in the code
 	// the most recently defined fcn of a given name was called. v2 is defining
 	// them at compile time, and by the time the code executes there will only

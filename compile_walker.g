@@ -207,8 +207,8 @@ dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	:	^(
 			DOT_OP 
 			exp[false,NULL] {compiler->is_dot_rhs=true;} 
-			exp[false,$parent]
-		) { compiler->DotOp( is_lhs_of_assign, $parent ); }
+			rhs=exp[false,$parent]
+		) { compiler->DotOp( is_lhs_of_assign, $rhs.start, $parent ); }
 	;
 
 call_exp[pANTLR3_BASE_TREE parent]
