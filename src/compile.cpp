@@ -70,6 +70,9 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	// the sorted collections will invalidate the indices already used
 
 	// add names that always exist
+	ex->AddConstant( Object( true ) );
+	ex->AddConstant( Object( false ) );
+	ex->AddConstant( Object( obj_null ) );
 	ex->AddConstant( Object( obj_symbol_name, copystr( "__name__" ) ) );
 	ex->AddConstant( Object( obj_symbol_name, copystr( "__class__" ) ) );
 	ex->AddConstant( Object( obj_symbol_name, copystr( "__bases__" ) ) );
@@ -257,6 +260,8 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		}
 		else
 			idx = GetConstant( obj );
+		if( idx == -1 )
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % obj );
 		fcn->default_args.Add( idx );
 	}
 

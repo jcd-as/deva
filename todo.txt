@@ -40,3 +40,5 @@ TODO 2011-02-01 @deva +high un-entangle compiler and execution engine
 	so that executor can read .dvc files and execute them without needing to compile the .dv file
 
 TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
+
+TODO 2011-02-04 @deva +high fix error messages - prevent things like "Missing <invalid>"

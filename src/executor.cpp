@@ -1137,8 +1137,8 @@ Opcode Executor::ExecuteInstruction()
 		// is it a native fcn?
 		else if( o.type == obj_native_function )
 		{
-			if( op == op_call_method && !o.nf.is_method )
-				throw RuntimeException( "Call to a method expected but call to a non-method found." );
+//			if( op == op_call_method && !o.nf.is_method )
+//				throw RuntimeException( "Call to a method expected but call to a non-method found." );
 			ExecuteFunction( o.nf, arg, op == op_call_method );
 		}
 		// is it a class object (i.e. a constructor call)
@@ -1187,25 +1187,26 @@ Opcode Executor::ExecuteInstruction()
 					// compile time
 					else if( f->f->num_args == arg )
 					{
-						if( stack.size() > 0 )
-							stack.pop_back();
-						else
-							throw RuntimeException( "Call to a method expected but call to a non-method found." );
+//						if( stack.size() > 0 )
+//							stack.pop_back();
+//						else
+//							throw RuntimeException( "Call to a method expected but call to a non-method found." );
 
 						ExecuteFunction( f->f, arg, false );
 					}
 					else
 						throw RuntimeException( "Call to a method expected but call to a non-method found." );
 				}
-				ExecuteFunction( f->f, arg, op == op_call_method );
+				else
+					ExecuteFunction( f->f, arg, op == op_call_method );
 			}
 			else
 			{
 				NativeFunction nf = GetBuiltin( o.s );
 				if( nf.p )
 				{
-					if( op == op_call_method && !nf.is_method )
-						throw RuntimeException( "Call to a method expected but call to a non-method found." );
+//					if( op == op_call_method && !nf.is_method )
+//						throw RuntimeException( "Call to a method expected but call to a non-method found." );
 					ExecuteFunction( nf, arg, op == op_call_method );
 				}
 				else 
@@ -1610,6 +1611,7 @@ Opcode Executor::ExecuteInstruction()
 					}
 				}
 			}
+			// push the object
 			IncRef( i->second );
 			stack.push_back( i->second );
 		}

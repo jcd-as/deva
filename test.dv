@@ -1,8 +1,16 @@
-def foo( a ){ print( a ); }
-local a = {};
-a["b"] = foo;
-# runtime error: 'Call to a method expected but call to a non-method found'
-print( a.b( a ) );
+# BUG: valgrind memory errors (non-leak):
+# CAUSED by using 'false' as a default arg value
+# BECAUSE 'false' isn't in the constant pool!
+# ('true', and 'null' should all cause the same problem!)
+class C
+{
+	def foo( a, b = true )
+#	def foo( a, b = false )
+#	def foo( a, b = null )
+	{
+	}
+}
+C.foo( 9 );
 
 # leaks the nested 'foo'
 #def foo( a )
@@ -26,7 +34,6 @@ print( a.b( a ) );
 #def foo( a, b = false )
 #{
 #	b = 42;
-##	c = new C();
 #	def bar(){}
 #	n = "zed";
 #	bar();
@@ -66,23 +73,6 @@ print( a.b( a ) );
 #	print( b );
 #}
 #fcn( "foo", "bar" );
-
-# BUG: ???
-#local a = {};
-#a["b"] = str;
-## runtime error: 'Call to a method expected but call to a non-method found'
-#print( a.b( a ) );
-
-# BUG: ???
-#local a = {"b":str};
-## runtime error: 'Call to a method expected but call to a non-method found'
-#print( a.b( a ) );
-
-# BUG: ???
-#def foo( s ) { print( s ); }
-#local m = { "fcn" : foo, "a" : null };
-## runtime error: 'Call to a method expected but call to a non-method found'
-#m.fcn( m.a );
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -157,6 +147,26 @@ print( a.b( a ) );
 ###########################################
 # END BUG SECTION
 ###########################################
+
+# no refcount leaks
+#def foo( a ){ print( a ); }
+#local a = {};
+#a["b"] = foo;
+#print( a.b( a ) );
+
+# no refcount leaks
+#def foo( s ) { print( s ); }
+#local m = { "fcn" : foo, "a" : null };
+#m.fcn( m.a );
+
+# no refcount leaks
+#local a = {};
+#a["b"] = str;
+#print( a.b( a ) );
+
+# no refcount leaks
+#local a = {"b":str};
+#print( a.b( a ) );
 
 # no refcount leaks
 #class C{ def fcn(){ print( "fcn" ); } }

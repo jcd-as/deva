@@ -223,7 +223,7 @@ bool Object::operator < ( const Object & rhs ) const
 		switch( type )
 		{
 		case obj_null:
-			return true; // ???
+			return false;
 		case obj_number:
 			return d < rhs.d;
 		case obj_string:
