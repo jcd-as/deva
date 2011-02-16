@@ -151,6 +151,9 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 		throw SemanticException( "'delete' method is not allowed outside of a class definition.", line );
 	}
 
+	// TODO: functions need to be entered as locals (op_def_fcn instruction?)
+	// so this will work:
+//	Symbol *sym = new Symbol( name, sym_function, mod_local );
 	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !current_scope->Define( sym ) )
 	{
@@ -175,7 +178,7 @@ void Semantics::ResolveFun( char* name, int line )
 		DefineVar( name, line );
 	}
 
-	// if it is a builtin fcn, add it to the constants pool
+	// if it is a builtin fcn, nothing to do
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
 	{
 		return;

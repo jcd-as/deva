@@ -82,8 +82,10 @@ class Executor
 	// scope table
 	ScopeTable* scopes;
 
+	// TODO: this needs to be a multi-map so that dups are allowed,
+	// and be referenced from the scopes
 	// set of function objects
-	map<string, Object*> functions;
+	multimap<string, Object*> functions;
 
 	// set of constants (including all names)
 	OrderedSet<Object> constants;
@@ -127,7 +129,10 @@ public:
 	// of the same name
 	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
 	inline void AddFunction( const char* name, Function* f ) { functions.insert( pair<string, Object*>( string( name ), new Object( f ) ) ); }
-	inline Object* FindFunction( string name ) { map<string, Object*>::iterator i = functions.find( name ); return (i == functions.end() ? NULL : i->second); }
+private:
+	Object* FindFunction( string name, size_t offset );
+
+public:
 
 	// constant pool handling methods
 	inline bool AddConstant( Object o ) { return constants.Add( o ); }

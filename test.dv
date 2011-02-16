@@ -1,62 +1,26 @@
-# BUG: valgrind memory errors (non-leak):
-# CAUSED by using 'false' as a default arg value
-# BECAUSE 'false' isn't in the constant pool!
-# ('true', and 'null' should all cause the same problem!)
-class C
-{
-	def foo( a, b = true )
-#	def foo( a, b = false )
-#	def foo( a, b = null )
-	{
-	}
-}
-C.foo( 9 );
-
-# leaks the nested 'foo'
+# no refcount leaks
+# BUG: the FIRST foo() is found when foo() is called
 #def foo( a )
 #{
-#	def foo( b )
-#	{
-#	}
-#}
-# leaks the second 'foo'
-#def foo( a )
-#{
+#	print( "a: " + str( a ) );
 #}
 #def foo( b )
 #{
+#	print( "b: " + str( b ) );
 #}
+#foo( null );
 
-# BUG: valgrind memory errors (non-leak):
-#local n = 100;
-#class C
-#{
-#def foo( a, b = false )
-#{
-#	b = 42;
-#	def bar(){}
-#	n = "zed";
-#	bar();
-#}
-#}
-#C.foo( 9 );
-#local a = 100;
-#local b = 42;
-#local n = a + b;
-
-# BUG: weird error: "Object '0' is not a function."
-#local C = 0;
-#def C(){}
-#{
-#local c = C;
-#local a = new c(); 		# new class C
-#}
+def foo( n ){ print( n ); }
+# BUG: ICE here: "Cannot locate local symbol 'foo'."
+# because the symbol 'foo' is entered once by the fcn def?
+local foo = 34;
 
 # BUG: ICE 
 #def foo( n ){ print( n ); }
 #foo( 255 );		# call_n
-## BUG: ICE here: "Cannot locate local symbol 'foo'."
 #local f = foo;
+#f( 255 );
+# BUG: ICE here: "Cannot locate local symbol 'foo'."
 #local foo = {"bar":f};
 
 #foo.bar( 255 );	# call
@@ -147,6 +111,39 @@ C.foo( 9 );
 ###########################################
 # END BUG SECTION
 ###########################################
+
+# no refcount leaks
+#def foo( a )
+#{
+#	def foo( b )
+#	{
+#	}
+#}
+
+# no refcount leaks
+#def foo(){ print( "foo1" ); }
+#{
+#	def foo(){ print( "foo2" ); }
+#	foo();
+#}
+#foo();
+
+# no refcount leaks
+#local n = 100;
+#class C
+#{
+#def foo( a, b = false )
+#{
+#	b = 42;
+#	def bar(){}
+#	n = "zed";
+#	bar();
+#}
+#}
+#C.foo( 9 );
+#local a = 100;
+#local b = 42;
+#local n = a + b;
 
 # no refcount leaks
 #def foo( a ){ print( a ); }
@@ -1567,3 +1564,14 @@ C.foo( 9 );
 #}
 #a( x > );
 #a = false < 0;
+
+# error: "Object '0' is not a function."
+# (deva1 gave a much better: "Invalid class type for new object.")
+# (fcn 'C' _correctly_ doesn't override local 'C')
+#local C = 0;
+#def C(){}
+#{
+#local c = C;
+#local a = new c(); 		# new class C
+#}
+

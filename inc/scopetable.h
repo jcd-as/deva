@@ -51,13 +51,18 @@ class Scope
 	// TODO: switch to boost unordered map (hash table)??
 	map<string, Object*> data;
 
+	// functions defined in this scope
+	map<string, Object*> functions;
+
 public:
 	Scope() {}
 	~Scope();
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
-	void AddSymbol( string name, Object* ob );
+	inline void AddSymbol( string name, Object* ob ){ data.insert( pair<string, Object*>(name, ob) ); }
+	inline void AddFunction( string name, Object* fcn ){ functions.insert( pair<string, Object*>(name, fcn ) ); }
 	Object* FindSymbol( const char* name ) const;
 	const char* FindSymbolName( Object* o );
+	Object* FindFunction( const char* name ) const;
 };
 
 class ScopeTable
@@ -72,6 +77,7 @@ public:
 	inline Scope* At( size_t idx ) const { return data[idx]; }
 	Object* FindSymbol( const char* name ) const;
 	const char* FindSymbolName( Object* o );
+	Object* FindFunction( const char* name ) const;
 };
 
 

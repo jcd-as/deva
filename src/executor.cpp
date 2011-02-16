@@ -70,6 +70,29 @@ Executor::~Executor()
 	}
 }
 
+Object* Executor::FindFunction( string name, size_t offset )
+{
+	multimap<string, Object*>::iterator i = functions.find( name );
+	for( ; i != functions.end(); ++i )
+	{
+		if( i->second->type == obj_function )
+		{
+			Object* o = i->second;
+			if( (size_t)i->second->f->addr == offset )
+				return i->second;
+		}
+		else if( i->second->type == obj_native_function )
+		{
+			Object* o = i->second;
+			if( (size_t)i->second->nf.p == offset )
+				return i->second;
+		}
+		else
+			throw ICE( "Non-function found in Executor's function table." );
+	}
+	return NULL;
+}
+
 // recursively call constructors on an object and its base classes
 // given a class object and the instance we're creating
 // (only the first constructor call (most derived class) can pass arguments)
@@ -171,7 +194,7 @@ void Executor::ExecuteCode( const Code & code )
 	// it go??)
 
 	// a starting ('global') frame
-	Object *main = FindFunction( string( "@main" ) );
+	Object *main = FindFunction( string( "@main" ), 0 );
 	Frame* frame = new Frame( NULL, scopes, bp, 0, main->f );
 	PushFrame( frame );
 
@@ -568,6 +591,25 @@ Opcode Executor::ExecuteInstruction()
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
 		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 9 ), CurrentFrame()->GetLocalRef( 9 ) );
+		break;
+	case op_def_function:
+		{
+		// 1 arg: address of fcn
+		arg = *((dword*)ip);
+		ip += sizeof( dword );
+		o = stack.back();
+		stack.pop_back();
+//		if( o.type != obj_symbol_name )
+		if( o.type != obj_string && o.type != obj_symbol_name )
+			throw ICE( "def_function instruction called with an object that is not a function name." );
+		string name( o.s );
+		// find the function
+		Object* objf = ex->FindFunction( name, (size_t)arg );
+		if( !objf )
+			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
+		// add the function to the local scope's fcn collection
+		CurrentScope()->AddFunction( name, objf );
+		}
 		break;
 	case op_new_map:
 		{
@@ -1172,7 +1214,7 @@ Opcode Executor::ExecuteInstruction()
 		else if( o.type == obj_symbol_name )
 		{
 			// find the function
-			Object* f = FindFunction( o.s );
+			Object* f = CurrentScope()->FindFunction( o.s );
 			if( f && f->f )
 			{
 				if( op == op_call_method && !f->f->IsMethod() )
@@ -2350,6 +2392,12 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_def_local8:
 	case op_def_local9:
 		cout << "\t" << " ";
+		break;
+	case op_def_function:
+		// 1 arg: address
+		arg = *((dword*)p);
+		cout << "\t" << arg;
+		ret = sizeof( dword );
 		break;
 	case op_new_map:
 		// 1 arg: size

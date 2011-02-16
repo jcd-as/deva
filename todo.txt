@@ -1,10 +1,12 @@
 TODO 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
 	adding a fcn whose name already exists should *override* the existing fcn (map's behaviour is to not accept the new value) problem is that the v1 deva behvariour was to define the fcns as they occurred in the code, not at compile time, so at any point in the code the most recently defined fcn of a given name was called. v2 is defining them at compile time, and by the time the code executes there will only be ONE function of any given name currently this not only behaves incorrectly, but *leaks* subsequent fcns of the same name (see executor.h, line 119)
 		SOLUTION: 
-		store in an indexable collection that allows duplicates (OrderedMultiMap)
+		store in an indexable collection that allows duplicates (multi-map)
 		as each function is encountered, generate a "make_function" instruction (ala python) which takes 1 arg (the index of the function in the collection) and gets the fcn address from the tos
 		execution of the make_function instruction stores this function in the local scope
 		change the fcn call code gen to reference the function's index instead of its name as a constant
+		===
+		functions are currently stored in a map in the Executor, which has a method FindFunction() used to locate them. this needs to become a multi-map and the Find functionality moved to Scope/ScopeTable, which need to have local pointers to the function objects stored in Executor
 
 TODO 2011-02-01 @deva +veryhigh slices!!
 	codegen to generate slice ops

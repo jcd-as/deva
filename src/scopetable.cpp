@@ -53,11 +53,6 @@ Scope::~Scope()
 	Vector::ClearDeadPool();
 }
 
-void Scope::AddSymbol( string name, Object* ob )
-{
-	data.insert( pair<string, Object*>(string(name), ob) );
-}
-
 Object* Scope::FindSymbol( const char* name ) const
 {
 	// check locals
@@ -78,6 +73,15 @@ const char* Scope::FindSymbolName( Object* o )
 	return NULL;
 }
 
+Object* Scope::FindFunction( const char* name ) const
+{
+	// check for function
+	map<string, Object*>::const_iterator i = functions.find( string( name ) );
+	if( i == functions.end() )
+		return NULL;
+	else
+		return i->second;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // ScopeTable methods:
@@ -114,6 +118,19 @@ const char* ScopeTable::FindSymbolName( Object* o )
 		const char* n = (*i)->FindSymbolName( o );
 		if( n )
 			return n;
+	}
+	return NULL;
+}
+
+Object* ScopeTable::FindFunction( const char* name ) const
+{
+	// look in each scope
+	for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+	{
+		// check for the function
+		Object* o = (*i)->FindFunction( name );
+		if( o )
+			return o;
 	}
 	return NULL;
 }

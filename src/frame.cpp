@@ -81,7 +81,7 @@ Object* Frame::FindSymbol( const char* name ) const
 		return GetMapBuiltinObjectRef( string( name ) );
 	else
 	{
-		o = ex->FindFunction( string( name ) );
+		o = scopes->FindFunction( name );
 		if( o )
 			return o;
 	}

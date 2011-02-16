@@ -118,19 +118,21 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	}
 
 	// add the builtins, vector builtins and map builtins to the constant pool
+	// builtins
 	for( int i = 0; i < num_of_builtins; i++ )
 	{
 		char* s = copystr( builtin_names[i].c_str() );
 		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
 	}
+	// vector builtins
 	for( int i = 0; i < num_of_vector_builtins; i++ )
 	{
 		char* s = copystr( vector_builtin_names[i].c_str() );
 		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
 	}
-	// add map builtins
+	// map builtins
 	for( int i = 0; i < num_of_map_builtins; i++ )
 	{
 		char* s = copystr( map_builtin_names[i].c_str() );
@@ -210,6 +212,17 @@ void Compiler::ExitBlock()
 // define a function
 void Compiler::DefineFun( char* name, char* classname, int line )
 {
+	// generate def_function op
+	//int i = GetConstant( Object( name ) );
+	int i = GetConstant( Object( obj_symbol_name, name ) );
+	if( i == -1 )
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+	Emit( op_pushconst, i );
+	// TODO: this address is wrong, needs to be back-patched
+	// add the size of op_def_function <Op0> and jmp <Op0>
+	int sz = sizeof( dword ) * 2 + 2;
+	Emit( op_def_function, is->Length() + sz );
+	
 	// generate jump around fcn so 'main' (or module 'global' as the case
 	// may be) doesn't execute its body inline
 	// emit the jump over fcn body
