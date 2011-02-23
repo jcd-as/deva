@@ -213,15 +213,26 @@ void Compiler::ExitBlock()
 void Compiler::DefineFun( char* name, char* classname, int line )
 {
 	// generate def_function op
+	
+	// get the local slot for this function def
+//	int local_idx = CurrentScope()->ResolveLocalToIndex( name );
+	int local_idx = ParentScope()->ResolveLocalToIndex( name );
+	if( local_idx == -1 )
+		throw ICE( boost::format( "Cannot locate local function symbol '%1%'." ) % name );
+
+	// get the constant index of this function
 	//int i = GetConstant( Object( name ) );
 	int i = GetConstant( Object( obj_symbol_name, name ) );
 	if( i == -1 )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
-	Emit( op_pushconst, i );
+	//Emit( op_pushconst, i );
 	// TODO: this address is wrong, needs to be back-patched
+//	// add the size of op_def_function <Op0> and jmp <Op0>
+//	int sz = sizeof( dword ) * 2 + 2;
+	// add the size of 'op_def_function <Op0> <Op1> <Op2>' and 'jmp <Op0>'
+	int sz = sizeof( dword ) * 4 + 2;
 	// add the size of op_def_function <Op0> and jmp <Op0>
-	int sz = sizeof( dword ) * 2 + 2;
-	Emit( op_def_function, is->Length() + sz );
+	Emit( op_def_function, local_idx, i, is->Length() + sz );
 	
 	// generate jump around fcn so 'main' (or module 'global' as the case
 	// may be) doesn't execute its body inline

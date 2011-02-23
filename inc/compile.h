@@ -159,6 +159,7 @@ public:
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
 	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }
+	inline void Emit( Opcode o, dword op1, dword op2, dword op3 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); }
 
 	// mostly for debugging purposes
 	void Decode();
@@ -167,6 +168,7 @@ public:
 	inline void AddScope() { scopestack.push_back( max_scope_idx ); max_scope_idx++; }
 	inline void LeaveScope() { scopestack.pop_back(); }
 	inline Scope* CurrentScope() { return semantics->scopes[scopestack.back()]; }
+	inline Scope* ParentScope() { if( scopestack.size() < 2 ) throw ICE( "Invalid scope stack: No parent scope." ); return semantics->scopes[scopestack[scopestack.size()-2]]; }
 
 	// node handling functions
 	/////////////////////////////////////////////////////////////////////////

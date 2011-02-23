@@ -1,5 +1,4 @@
 # no refcount leaks
-# BUG: the FIRST foo() is found when foo() is called
 #def foo( a )
 #{
 #	print( "a: " + str( a ) );
@@ -10,22 +9,15 @@
 #}
 #foo( null );
 
-def foo( n ){ print( n ); }
-# BUG: ICE here: "Cannot locate local symbol 'foo'."
-# because the symbol 'foo' is entered once by the fcn def?
-local foo = 34;
-
-# BUG: ICE 
+# no refcount leaks
 #def foo( n ){ print( n ); }
-#foo( 255 );		# call_n
-#local f = foo;
-#f( 255 );
-# BUG: ICE here: "Cannot locate local symbol 'foo'."
-#local foo = {"bar":f};
+#foo( 25 );
+#local foo = 34;
+## error: can't call '34'
+##foo( 25 );
+#print( foo );
 
-#foo.bar( 255 );	# call
-# BUG: second def of fcn doesn't override the first
-# (runtime error on 2nd call: "too many arguments"
+# no refcount leaks
 #def fcn( a )
 #{
 #	print( a );
@@ -37,6 +29,18 @@ local foo = 34;
 #	print( b );
 #}
 #fcn( "foo", "bar" );
+
+# no refcount leaks
+#def foo( n ){ print( n ); }
+#foo( 255 );		# call_n
+#local f = foo;
+#f( 255 );
+#local jam = {"bar":f};
+#jam.bar( 255 );	# call
+# BUG: crash on invalid free (from RefCounted::ClearDeadPool (map))
+#local foo = {"bar":f};
+#foo.bar( 255 );	# call
+# BUG: crash on invalid free (from RefCounted::ClearDeadPool (map))
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -61,24 +65,6 @@ local foo = 34;
 ##print( v.reduce( c.concat ) );
 ##print( v.any( c.is_number ) );
 ##print( v.all( c.is_number ) );
-
-# BUG: vector built-ins broken with methods/class methods
-#class C
-#{
-#	def is_number( n ){ print( "is_number()" ); return type( n ) == "number"; }
-#	def concat( a, b ){ return str(a) + str(b); }
-#	def to_string( n ){ return str( n ); }
-#}
-#local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
-#local c = new C();
-## method
-#print( v.filter( c.is_number ) );
-## 'class method'
-#print( v.filter( C.is_number ) );
-#print( v.map( c.to_string ) );
-#print( v.reduce( c.concat ) );
-#print( v.any( c.is_number ) );
-#print( v.all( c.is_number ) );
 
 # BUG: ref count leaks from vector builtins:
 #def fcn( s ){ return "foo" + s; }
@@ -127,6 +113,13 @@ local foo = 34;
 #	foo();
 #}
 #foo();
+local b = 44;
+if( true )
+{
+	local b = 32;
+#	print( b );
+}
+print( b );
 
 # no refcount leaks
 #local n = 100;

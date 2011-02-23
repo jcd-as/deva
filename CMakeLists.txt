@@ -17,7 +17,7 @@ find_library( ANTLR antlr3c )
 
 # TODO: configure for debug and release builds
 # configure defines
-add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
+add_definitions( -ggdb -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
 #add_definitions( -DDEVA_VERSION="2.0.0-alpha" )
 #set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
 #set( CMAKE_CXX_FLAGS_RELEASE "-O2" )

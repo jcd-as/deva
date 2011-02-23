@@ -77,13 +77,13 @@ Object* Executor::FindFunction( string name, size_t offset )
 	{
 		if( i->second->type == obj_function )
 		{
-			Object* o = i->second;
+//			Object* o = i->second;
 			if( (size_t)i->second->f->addr == offset )
 				return i->second;
 		}
 		else if( i->second->type == obj_native_function )
 		{
-			Object* o = i->second;
+//			Object* o = i->second;
 			if( (size_t)i->second->nf.p == offset )
 				return i->second;
 		}
@@ -233,7 +233,7 @@ void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
 
 Opcode Executor::ExecuteInstruction()
 {
-	dword arg, arg2;
+	dword arg, arg2, arg3;
 	Object o, lhs, rhs, *plhs;
 	double intpart; // for modf() calls
 
@@ -594,21 +594,35 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_function:
 		{
-		// 1 arg: address of fcn
+		// 3 args: local index for fcn, constant index of fcn name, address of fcn
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
-		o = stack.back();
-		stack.pop_back();
+		arg2 = *((dword*)ip);
+		ip += sizeof( dword );
+		arg3 = *((dword*)ip);
+		ip += sizeof( dword );
+//		o = stack.back();
+//		stack.pop_back();
 //		if( o.type != obj_symbol_name )
-		if( o.type != obj_string && o.type != obj_symbol_name )
+//		if( o.type != obj_string && o.type != obj_symbol_name )
+//			throw ICE( "def_function instruction called with an object that is not a function name." );
+//		string name( o.s );
+		// find the constant
+		Object fcnname = GetConstant( arg2 );
+		if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
 			throw ICE( "def_function instruction called with an object that is not a function name." );
-		string name( o.s );
+		string name( fcnname.s );
 		// find the function
-		Object* objf = ex->FindFunction( name, (size_t)arg );
+		Object* objf = ex->FindFunction( name, (size_t)arg3 );
 		if( !objf )
 			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
 		// add the function to the local scope's fcn collection
 		CurrentScope()->AddFunction( name, objf );
+		// set the local in the current frame
+		CurrentFrame()->SetLocal( arg, *objf );
+		// define the local in the current scope
+		// (this frame cannot be native fcn, obviously)
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( arg ), CurrentFrame()->GetLocalRef( arg ) );
 		}
 		break;
 	case op_new_map:
@@ -2394,10 +2408,16 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "\t" << " ";
 		break;
 	case op_def_function:
-		// 1 arg: address
+		// 3 args: local index, constant index of name, fcn address
 		arg = *((dword*)p);
-		cout << "\t" << arg;
-		ret = sizeof( dword );
+		cout << arg;
+		arg = *((dword*)(p + sizeof( dword ) ) );
+		// look-up the constant
+		o = GetConstant( arg );
+		cout << ", " << arg << " (" << o << ")";
+		arg = *((dword*)( p + (2* sizeof( dword ) ) ) );
+		cout << ", " << arg;
+		ret = sizeof( dword ) * 3;
 		break;
 	case op_new_map:
 		// 1 arg: size

@@ -82,8 +82,6 @@ class Executor
 	// scope table
 	ScopeTable* scopes;
 
-	// TODO: this needs to be a multi-map so that dups are allowed,
-	// and be referenced from the scopes
 	// set of function objects
 	multimap<string, Object*> functions;
 
@@ -117,16 +115,6 @@ public:
 	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
 	// helpers
-	// TODO: ???
-	// adding a fcn whose name already exists should *override* the
-	// existing fcn (map's behaviour is to not accept the new value)
-	// problem is that the v1 deva behaviour was to define the fcns as they
-	// occurred in the code, not at compile time, so at any point in the code
-	// the most recently defined fcn of a given name was called. v2 is defining
-	// them at compile time, and by the time the code executes there will only
-	// be ONE function of any given name
-	// currently this not only behaves incorrectly, but *leaks* subsequent fcns
-	// of the same name
 	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
 	inline void AddFunction( const char* name, Function* f ) { functions.insert( pair<string, Object*>( string( name ), new Object( f ) ) ); }
 private:

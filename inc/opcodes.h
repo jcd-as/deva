@@ -139,7 +139,7 @@ enum Opcode
 	// no-operand shortcuts to define local 0-9 (& store tos into it)
 	op_def_local0, op_def_local1, op_def_local2, op_def_local3, op_def_local4,
 	op_def_local5, op_def_local6, op_def_local7, op_def_local8, op_def_local9,
-	op_def_function,// create a new function object. <Op0> has address. tos has <constant index of> function name
+	op_def_function,// create a new local function object. <Op0> has local slot, <Op1> has <constant index of> function name, <Op2> has address
 	op_new_map,		// create a new map object and push onto tos. <Op0> has count of items on stack
 	op_new_vec,		// create a new vector object and push onto tos. <Op0> has count of items on stack
 	op_new_class,	// create a new class object and push onto the tos. <Op0> has count of items on stack

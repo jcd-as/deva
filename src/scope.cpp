@@ -82,7 +82,8 @@ bool LocalScope::Define( const Symbol* const s )
 	AddName( const_cast<Symbol*>(s) );
 
 	// is this a local? add it to this scope and to the fcn scope
-	if( s->IsLocal() || s->IsConst() || s->IsArg() )
+//	if( s->IsLocal() || s->IsConst() || s->IsArg() )
+	if( s->IsFunction() || s->IsLocal() || s->IsConst() || s->IsArg() )
 	{
 		FunctionScope* fun = getParentFun();
 		fun->GetLocals().push_back( string( s->Name() ) );
