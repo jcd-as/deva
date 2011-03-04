@@ -1358,6 +1358,12 @@ Opcode Executor::ExecuteInstruction()
 			const char* str = CurrentFrame()->GetParent()->AddString( string( o.s ) );
 			stack.push_back( Object( str ) );
 		}
+		// inc ref any returned object!
+		{
+			Object tmp = ResolveSymbol( stack.back() );
+			IncRef( tmp );
+		}
+
 		// 1 arg: number of scopes to leave
 		arg = *((dword*)ip);
 		// leave the scopes
