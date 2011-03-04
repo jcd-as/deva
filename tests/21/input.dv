@@ -1,0 +1,10 @@
+def foo()
+{
+	print( "foo" );
+	local x = 100;
+}
+local a = {};
+#a.b = foo;
+a["b"] = foo;
+a.b();
+

@@ -82,12 +82,11 @@ bool LocalScope::Define( const Symbol* const s )
 	AddName( const_cast<Symbol*>(s) );
 
 	// is this a local? add it to this scope and to the fcn scope
-//	if( s->IsLocal() || s->IsConst() || s->IsArg() )
-	if( s->IsFunction() || s->IsLocal() || s->IsConst() || s->IsArg() )
+	if( s->IsLocal() || s->IsConst() || s->IsArg() )
 	{
 		FunctionScope* fun = getParentFun();
 		fun->GetLocals().push_back( string( s->Name() ) );
-		int idx = fun->ResolveLocalToIndex( string( s->Name() ) );
+		int idx = fun->GetLocals().size() -1;
 		local_map.insert( pair<string, int>( s->Name(), idx ) );
 	}
 
@@ -108,20 +107,29 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 	return NULL;
 }
 
-// resolve a local to an index
-int LocalScope::ResolveLocalToIndex( const string & name )
+// resolve a local to an index IN THIS SCOPE ONLY
+int LocalScope::ResolveLocalToIndexHelper( const string & name )
 {
-	// look in this scope first
 	map<const string, int>::iterator i = local_map.find( name );
 	int idx = -1;
 	if( i != local_map.end() )
 		idx = i->second;
+	return idx;
+}
+
+// resolve a local to an index
+int LocalScope::ResolveLocalToIndex( const string & name )
+{
+	// look in this scope first
+	int idx = ResolveLocalToIndexHelper( name );
 	if( idx != -1 )
 		return idx;
 
 	// not found? pass through to the parent scope
 	if( parent )
 		return parent->ResolveLocalToIndex( name );
+	else
+		return -1;
 }
 
 void LocalScope::Print()
@@ -155,6 +163,20 @@ void LocalScope::AddName( Symbol* s )
 {
 	if( parent )
 		parent->AddName( s );
+}
+
+bool LocalScope::HasLocalBeenGenerated( int idx )
+{
+	bool generated = (generated_locals.find( idx ) != generated_locals.end());
+	// if we didn't find it in this scope, try parent scopes
+	if( !generated )
+	{
+		if( parent )
+			return parent->HasLocalBeenGenerated( idx );
+		else
+			return generated;
+	}
+	return true;
 }
 
 
@@ -209,12 +231,10 @@ bool FunctionScope::Define( const Symbol* const  s )
 // resolve a local to an index
 int FunctionScope::ResolveLocalToIndex( const string & name )
 {
-	for( int i = 0; i < locals.size(); i++ )
-	{
-		if( locals[i] == name )
-			return i;
-	}
-	return -1;
+	// call base class fcn
+	// do NOT pass any further up the scope chain 
+	// (we're looking for a _local_!)
+	return LocalScope::ResolveLocalToIndexHelper( name );
 }
 
 void FunctionScope::Print()

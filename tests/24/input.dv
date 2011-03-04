@@ -1,0 +1,65 @@
+# bubble sort test
+
+# bubble sort the array 'a'
+def bubble_sort( a )
+{
+	local len = length( a );
+	local swap = true;
+	while( swap )
+	{
+		swap = false;
+		local i = len-1;
+		while( i >= 0 )
+		{
+			local j = 1;
+			while( j <= i )
+			{
+				if( a[j-1] > a[j] )
+				{
+					local temp = a[j-1];
+					a[j-1] = a[j];
+					a[j] = temp;
+					swap = true;
+				}
+				j = j + 1;
+			}
+			i = i - 1;
+		}
+	}
+	return a;
+}
+
+local l = [];
+append( l, 2 );
+append( l, 1 );
+append( l, 4 );
+append( l, 3 );
+append( l, 6 );
+append( l, 5 );
+append( l, 8 );
+append( l, 7 );
+append( l, 10 );
+append( l, 9 );
+
+# print the un-sorted array
+print( "un-sorted:" );
+for( i in l )
+{
+	print( i );
+}
+# could also print using:
+#print( l );
+
+# sort the array
+local n = bubble_sort( l );
+#n = l;
+
+# print each item in the array
+print( "sorted:" );
+for( i in n )
+{
+	print( i );
+}
+# could also print using:
+#print( n );
+

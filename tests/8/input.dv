@@ -1,0 +1,42 @@
+# code gen test
+local a = 5;
+
+if( a == 5 )
+{
+	print( "a equals 5" );
+}
+else
+{
+	print( "a not equals 5" );
+}
+
+# works:
+a = 4;
+if( a == 5 )
+{
+	print( "a equals 5" );
+}
+else
+{
+	print( "a not equals 5" );
+}
+# works:
+a = 5;
+if( a == 5 )
+{
+	print( "a equals 5" );
+}
+# works:
+a = 4;
+if( a == 5 )
+{
+	print( "a equals 5" );
+}
+# works:
+def a( b )
+{
+	return b + 2;
+#return b + "bar"
+}
+print( a( 6 ) );
+#print( a( "foo" ) );

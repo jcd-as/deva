@@ -63,9 +63,12 @@ Executor::~Executor()
 		if( type == obj_string || type == obj_symbol_name ) delete [] constants.At( i ).s;
 	}
 	// free the function objects
-	for( map<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
+	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
-		delete i->second->f;
+		string s = i->first;
+		Object* f = i->second;
+		if( i->second->type == obj_function )
+			delete i->second->f;
 		delete i->second;
 	}
 }
@@ -77,13 +80,11 @@ Object* Executor::FindFunction( string name, size_t offset )
 	{
 		if( i->second->type == obj_function )
 		{
-//			Object* o = i->second;
 			if( (size_t)i->second->f->addr == offset )
 				return i->second;
 		}
 		else if( i->second->type == obj_native_function )
 		{
-//			Object* o = i->second;
 			if( (size_t)i->second->nf.p == offset )
 				return i->second;
 		}
@@ -91,6 +92,19 @@ Object* Executor::FindFunction( string name, size_t offset )
 			throw ICE( "Non-function found in Executor's function table." );
 	}
 	return NULL;
+}
+
+// return a resolved symbol - if sym is a symbol name, find the symbol,
+// otherwise return sym unmodified
+Object Executor::ResolveSymbol( Object sym )
+{
+	if( sym.type != obj_symbol_name )
+		return sym;
+
+	Object* obj = scopes->FindSymbol( sym.s );
+	if( !obj )
+		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
+	return *obj;
 }
 
 // recursively call constructors on an object and its base classes
@@ -244,15 +258,7 @@ Opcode Executor::ExecuteInstruction()
 	{
 		PrintOpcode( op, bp, ip );
 		// print the top five stack items
-		cout << "\t\t[";
-		int n = (stack.size() > 5 ? 5 : stack.size());
-		for( int i = n-1; i >= 0; i-- )
-		{
-			cout << stack[stack.size()-(n-i)];
-			if( i > 0 )
-				cout << ", ";
-		}
-		cout << "]" << endl;
+		DumpStackTop();
 	}
 
 	ip++;
@@ -412,6 +418,7 @@ Opcode Executor::ExecuteInstruction()
 		// 1 arg
 		arg = *((dword*)ip);
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -420,6 +427,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal0:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -427,6 +435,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal1:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -434,6 +443,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal2:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -441,6 +451,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal3:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -448,6 +459,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal4:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -455,6 +467,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal5:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -462,6 +475,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal6:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -469,6 +483,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal7:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -476,6 +491,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal8:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -483,6 +499,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_storelocal9:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		// SetLocal does the DecRef()
@@ -493,6 +510,7 @@ Opcode Executor::ExecuteInstruction()
 		// 1 arg
 		arg = *((dword*)ip);
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( arg, rhs );
@@ -504,6 +522,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local0:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 0, rhs );
@@ -513,6 +532,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local1:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 1, rhs );
@@ -522,6 +542,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local2:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 2, rhs );
@@ -531,6 +552,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local3:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 3, rhs );
@@ -540,6 +562,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local4:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 4, rhs );
@@ -549,6 +572,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local5:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 5, rhs );
@@ -558,6 +582,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local6:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 6, rhs );
@@ -567,6 +592,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local7:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 7, rhs );
@@ -576,6 +602,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local8:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 8, rhs );
@@ -585,6 +612,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_local9:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
 		CurrentFrame()->SetLocal( 9, rhs );
@@ -594,19 +622,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_function:
 		{
-		// 3 args: local index for fcn, constant index of fcn name, address of fcn
-		arg = *((dword*)ip);
-		ip += sizeof( dword );
+		// 2 args: constant index of fcn name, address of fcn
 		arg2 = *((dword*)ip);
 		ip += sizeof( dword );
 		arg3 = *((dword*)ip);
 		ip += sizeof( dword );
-//		o = stack.back();
-//		stack.pop_back();
-//		if( o.type != obj_symbol_name )
-//		if( o.type != obj_string && o.type != obj_symbol_name )
-//			throw ICE( "def_function instruction called with an object that is not a function name." );
-//		string name( o.s );
 		// find the constant
 		Object fcnname = GetConstant( arg2 );
 		if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
@@ -616,13 +636,21 @@ Opcode Executor::ExecuteInstruction()
 		Object* objf = ex->FindFunction( name, (size_t)arg3 );
 		if( !objf )
 			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
+		// is there a local of this name that we need to override?
+		Object* local_obj = CurrentScope()->FindSymbol( fcnname.s );
+		if( local_obj )
+		{
+			// get the index of the local
+			int local_idx = CurrentScope()->FindSymbolIndex( local_obj, CurrentFrame() );
+			// set the local in the current frame
+			if( local_idx != -1 )
+				CurrentFrame()->SetLocal( local_idx, *objf );
+			// define the local in the current scope
+			// (this frame cannot be native fcn, obviously)
+			CurrentScope()->AddSymbol( string( fcnname.s ), local_obj );
+		}
 		// add the function to the local scope's fcn collection
 		CurrentScope()->AddFunction( name, objf );
-		// set the local in the current frame
-		CurrentFrame()->SetLocal( arg, *objf );
-		// define the local in the current scope
-		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( arg ), CurrentFrame()->GetLocalRef( arg ) );
 		}
 		break;
 	case op_new_map:
@@ -636,8 +664,10 @@ Opcode Executor::ExecuteInstruction()
 		for( int i = 0; i < arg; i++ )
 		{
 			rhs = stack.back();
+			rhs = ResolveSymbol( rhs );
 			stack.pop_back();
 			lhs = stack.back();
+			lhs = ResolveSymbol( lhs );
 			stack.pop_back();
 			m.m->insert( pair<Object, Object>( lhs, rhs ) );
 		}
@@ -656,6 +686,7 @@ Opcode Executor::ExecuteInstruction()
 		for( int i = 0; i < arg; i++ )
 		{
 			o = stack.back();
+			o = ResolveSymbol( o );
 			stack.pop_back();
 			v.v->operator[]( arg-i-1 ) = o;
 		}
@@ -678,20 +709,48 @@ Opcode Executor::ExecuteInstruction()
 		m.m->insert( pair<Object, Object>( _name, name ) );
 		// build the bases list
 		Vector* v = CreateVector();
-		for( int i = 0; i < arg; i++ )
+		// walk in right-to-left (as seen in code) order
+		for( int i = arg; i > 0; i-- )
 		{
 			Object base = stack.back();
 			stack.pop_back();
 			if( base.type != obj_class )
 				throw ICE( "Base class expected. Bad code gen? Corrupt stack?" );
-			v->push_back( base );
 			// don't dec ref the base class here, because we're adding it to our
 			// bases vector, which is another ref on it
+
+			// merge the base class into the new class
+			for( Map::iterator i = base.m->begin(); i != base.m->end(); ++i )
+			{
+				if( i->second.type == obj_function )
+				{
+					if( i->first.type != obj_symbol_name )
+						throw RuntimeException( boost::format( "Invalid method in base class '%1%'" ) % base );
+					// don't copy 'new' or 'delete'
+					if( strcmp( "new", i->first.s ) == 0 || strcmp( "delete", i->first.s ) == 0 )
+						continue;
+					// override any existing method
+					pair<Object, Object> pr = make_pair( i->first, i->second );
+					Map::iterator fi = m.m->find( i->first );
+					if( fi != m.m->end() )
+					{
+						// exists, we need to replace it
+						m.m->erase( fi );
+						m.m->insert( pair<Object, Object>( i->first, i->second ) );
+					}
+					else
+						m.m->insert( pair<Object, Object>( i->first, i->second ) );
+				}
+			}
+
+			// add to the list of parents
+			v->push_back( base );
 		}
 		Object basesObj( v );
 		IncRef( basesObj );
 		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
 		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
+
 		// add all of the methods for this class
 		for( map<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 		{
@@ -720,6 +779,7 @@ Opcode Executor::ExecuteInstruction()
 		// 1 arg: size
 		arg = *((dword*)ip);
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		if( !o.CoerceToBool() )
 			ip = (byte*)(bp + arg);
@@ -728,9 +788,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_eq:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -739,7 +801,7 @@ Opcode Executor::ExecuteInstruction()
 		{
 		case obj_null: stack.push_back( Object( rhs.type == obj_null ) ); break;
 		case obj_boolean: stack.push_back( Object( lhs.b == rhs.b ) ); break;
-		case obj_number: stack.push_back( Object( lhs.b == rhs.b ) ); break;
+		case obj_number: stack.push_back( Object( lhs.d == rhs.d ) ); break;
 		case obj_string: stack.push_back( Object( strcmp( lhs.s, rhs.s ) == 0 ) ); break;
 		case obj_vector: stack.push_back( Object( lhs.v == rhs.v ) ); break;
 		case obj_map:
@@ -754,9 +816,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_neq:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -780,9 +844,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_lt:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -796,9 +862,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_lte:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -812,9 +880,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_gt:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -828,9 +898,11 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_gte:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
@@ -844,24 +916,29 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_or:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		stack.push_back( Object( lhs.CoerceToBool() || rhs.CoerceToBool() ) );
 		break;
 	case op_and:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		stack.push_back( Object( lhs.CoerceToBool() && rhs.CoerceToBool() ) );
 		break;
 	case op_neg:
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		if( o.type != obj_number )
 			throw RuntimeException( "Negate operator can only be used on numeric objects." );
@@ -869,14 +946,17 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_not:
 		o = stack.back();
+		o = ResolveSymbol( o );
 		DecRef( o );
 		stack.pop_back();
 		stack.push_back( Object( !o.CoerceToBool() ) );
 		break;
 	case op_add:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( lhs.type != obj_number && lhs.type != obj_string )
 			throw RuntimeException( "Left-hand side of addition operator must be a number or a string." );
@@ -899,8 +979,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_sub:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of subtraction operator must be a number." );
@@ -910,8 +992,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_mul:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of multiplication operator must be a number." );
@@ -921,8 +1005,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_div:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of division operator must be a number." );
@@ -934,8 +1020,10 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_mod:
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of modulus operator must be a number." );
@@ -958,6 +1046,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number && plhs->type != obj_string )
@@ -990,6 +1079,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number )
 			throw RuntimeException( "Left-hand side of subtraction assignment operator must be a number." );
@@ -1008,6 +1098,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number )
 			throw RuntimeException( "Left-hand side of multiplication assignment operator must be a number." );
@@ -1026,6 +1117,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number )
 			throw RuntimeException( "Left-hand side of division assignment operator must be a number." );
@@ -1046,6 +1138,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( plhs->type != obj_number )
 			throw RuntimeException( "Left-hand side of modulus assignment operator must be a number." );
@@ -1065,6 +1158,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the local
 		lhs = CurrentFrame()->GetLocal( arg );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( lhs.type != obj_number && lhs.type != obj_string )
 			throw RuntimeException( "Left-hand side of addition assignment operator must be a number or a string." );
@@ -1093,6 +1187,7 @@ Opcode Executor::ExecuteInstruction()
 		lhs = CurrentFrame()->GetLocal( arg );
 		// find the variable
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of subtraction assignment operator must be a number." );
@@ -1107,6 +1202,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the local
 		lhs = CurrentFrame()->GetLocal( arg );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of multiplication assignment operator must be a number." );
@@ -1123,8 +1219,9 @@ Opcode Executor::ExecuteInstruction()
 		if( lhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
-		if( plhs->type != obj_number )
+		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of division assignment operator must be a number." );
 		if( rhs.type != obj_number )
 			throw RuntimeException( "Right-hand side of division assignment operator must be a number." );
@@ -1139,6 +1236,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the local
 		lhs = CurrentFrame()->GetLocal( arg );
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		if( lhs.type != obj_number )
 			throw RuntimeException( "Left-hand side of modulus assignment operator must be a number." );
@@ -1154,6 +1252,7 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_call: // call function with <Op0> args on on stack, fcn after args
 	case op_call_method: // call function with <Op0> args on on stack, fcn after args
+		{
 		// 1 arg: number of args passed
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
@@ -1163,50 +1262,68 @@ Opcode Executor::ExecuteInstruction()
 		stack.pop_back();
 		// TODO: if addr relative to another code block (module)??
 		//
-		// if it's a fcn, build a frame for it
-		if( o.type == obj_function )
+		Object callable;
+		// is it a symbol name that we need to look-up?
+		if( o.type == obj_symbol_name )
 		{
-			if( op == op_call_method && !o.f->IsMethod() )
+			Object* callablePtr = scopes->FindSymbol( o.s );
+			if( !callablePtr )
+			{
+				// builtin?
+				NativeFunction nf = GetBuiltin( o.s );
+				if( nf.p )
+					callable = Object( nf );
+				else
+					throw RuntimeException( boost::format( "Invalid function or callable object name '%1%'." ) % o.s );
+			}
+			else
+				callable = *callablePtr;
+		}
+		else
+			callable = o;
+
+		// if it's a fcn, build a frame for it
+		if( callable.type == obj_function )
+		{
+			if( op == op_call_method && !callable.f->IsMethod() )
 			{
 				// if the number of arguments including 'self' is correct,
 				// continue ahead
-				if( o.f->num_args == arg + 1 )
-					ExecuteFunction( o.f, arg + 1, false );
+				if( callable.f->num_args == arg )
+					ExecuteFunction( callable.f, arg, false );
 				// if there are one too many args, pop 'self', it was pushed
 				// because we couldn't tell if this was a fcn or method at
 				// compile time
-				else if( o.f->num_args == arg )
+				else if( callable.f->num_args == arg-1 )
 				{
 					if( stack.size() > 0 )
 						stack.pop_back();
 					else
 						throw RuntimeException( "Call to a method expected but call to a non-method found." );
 
-					ExecuteFunction( o.f, arg, false );
+					ExecuteFunction( callable.f, arg, false );
 				}
 				else
 					throw RuntimeException( "Call to a method expected but call to a non-method found." );
 			}
 			else
-				ExecuteFunction( o.f, arg, op == op_call_method );
+				ExecuteFunction( callable.f, arg, op == op_call_method );
 		}
 		// is it a native fcn?
-		else if( o.type == obj_native_function )
+		else if( callable.type == obj_native_function )
 		{
-//			if( op == op_call_method && !o.nf.is_method )
-//				throw RuntimeException( "Call to a method expected but call to a non-method found." );
-			ExecuteFunction( o.nf, arg, op == op_call_method );
+			ExecuteFunction( callable.nf, arg, op == op_call_method );
 		}
 		// is it a class object (i.e. a constructor call)
-		else if( o.type == obj_class )
+		else if( callable.type == obj_class )
 		{
 			// - create a copy of the class object
-			Map* inst = CreateMap( *o.m );
+			Map* inst = CreateMap( *callable.m );
 
 			// - add the __class__ member to it
 			Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
-			Map::iterator i = o.m->find( Object( obj_symbol_name, "__name__" ) );
-			if( i == o.m->end() )
+			Map::iterator i = callable.m->find( Object( obj_symbol_name, "__name__" ) );
+			if( i == callable.m->end() )
 				throw ICE( "Unable to find '__name__' member in class object." );
 			inst->insert( pair<Object, Object>( _class, i->second ) );
 
@@ -1220,57 +1337,13 @@ Opcode Executor::ExecuteInstruction()
 			IncRefChildren( instance );
 
 			// recursively call the constructors on this object and its base classes
-			CallConstructors( o, instance, arg );
+			CallConstructors( callable, instance, arg );
 
 			stack.push_back( instance );
 		}
-		// is it a const we need to look up?
-		else if( o.type == obj_symbol_name )
-		{
-			// find the function
-			Object* f = CurrentScope()->FindFunction( o.s );
-			if( f && f->f )
-			{
-				if( op == op_call_method && !f->f->IsMethod() )
-				{
-//					throw RuntimeException( "Call to a method expected but call to a non-method found." );
-					// if the number of arguments including 'self' is correct,
-					// continue ahead
-					if( f->f->num_args == arg + 1 )
-						ExecuteFunction( f->f, arg + 1, false );
-					// if there are one too many args, pop 'self', it was pushed
-					// because we couldn't tell if this was a fcn or method at
-					// compile time
-					else if( f->f->num_args == arg )
-					{
-//						if( stack.size() > 0 )
-//							stack.pop_back();
-//						else
-//							throw RuntimeException( "Call to a method expected but call to a non-method found." );
-
-						ExecuteFunction( f->f, arg, false );
-					}
-					else
-						throw RuntimeException( "Call to a method expected but call to a non-method found." );
-				}
-				else
-					ExecuteFunction( f->f, arg, op == op_call_method );
-			}
-			else
-			{
-				NativeFunction nf = GetBuiltin( o.s );
-				if( nf.p )
-				{
-//					if( op == op_call_method && !nf.is_method )
-//						throw RuntimeException( "Call to a method expected but call to a non-method found." );
-					ExecuteFunction( nf, arg, op == op_call_method );
-				}
-				else 
-					throw RuntimeException( boost::format( "Invalid function name '%1%'." ) % o.s );
-			}
-		}
 		else
-			throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % o );
+			throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % callable );
+		}
 		break;
 	case op_return:
 		// TODO: better way: add a Frame::MoveString() method that moves the
@@ -1413,6 +1486,7 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
@@ -1518,6 +1592,7 @@ Opcode Executor::ExecuteInstruction()
 		rhs = stack.back();
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (vector, map, class or instance)." ) % lhs );
@@ -1601,7 +1676,7 @@ Opcode Executor::ExecuteInstruction()
 					DecRef( rhs );
 					break;
 				}
-				else if( rhs.type == obj_string ) //|| rhs.type == obj_symbol_name )
+				else if( rhs.type == obj_string )
 				{
 					// check for class/instance method
 					if( lhs.type == obj_class || lhs.type == obj_instance )
@@ -1682,11 +1757,14 @@ Opcode Executor::ExecuteInstruction()
 		// TODO:
 	case op_tbl_store:// tos2[tos1] = tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
@@ -1726,10 +1804,13 @@ Opcode Executor::ExecuteInstruction()
 		// TODO:
 	case op_add_tbl_store:	// tos2[tos1] += tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
+		lhs = ResolveSymbol( lhs );
 		lhs = stack.back();
 		DecRef( lhs );
 		stack.pop_back();
@@ -1815,11 +1896,14 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_sub_tbl_store:	// tos2[tos1] -= tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
@@ -1876,11 +1960,14 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_mul_tbl_store:	// tos2[tos1] *= tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
@@ -1937,11 +2024,14 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_div_tbl_store:	// tos2[tos1] /= tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
@@ -1998,11 +2088,14 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_mod_tbl_store:	// tos2[tos1] %= tos
 		o = stack.back();
+		o = ResolveSymbol( o );
 		stack.pop_back();
 		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
 		DecRef( rhs );
 		stack.pop_back();
 		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) )
@@ -2144,11 +2237,11 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	int args_passed = num_args;
 	if( f->IsMethod() )
 	{
-		// if this was called via op_method_call, 'self' was passed implicitly
+		// if this was called via op_call_method, 'self' was passed implicitly
 		// and should not be included in the num_args counter
 		if( method_call_op )
 			num_args++;
-		// (if this was *not* called via op_method_call, but *is* a method, then
+		// (if this was *not* called via op_call_method, but *is* a method, then
 		// num_args must contain 'self' explicitly, do *not* increment
 		else
 			args_passed--;
@@ -2165,7 +2258,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 
 	// set the args for the frame
 
-	// for op_method_call, 'self' is on top of stack
+	// for op_call_method, 'self' is on top of stack
 	if( method_call_op && f->IsMethod() )
 	{
 		// set local 0 to 'self'
@@ -2220,11 +2313,11 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	int args_passed = num_args;
 	if( nf.is_method )
 	{
-		// if this was called via op_method_call, 'self' was passed implicitly
+		// if this was called via op_call_method, 'self' was passed implicitly
 		// and should not be included in the num_args counter
 		if( method_call_op )
 			num_args++;
-		// (if this was *not* called via op_method_call, but *is* a method, then
+		// (if this was *not* called via op_call_method, but *is* a method, then
 		// num_args must contain 'self' explicitly, do *not* increment
 		else
 			args_passed--;
@@ -2235,7 +2328,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	Scope* scope = new Scope();
 	// set the args for the frame
 
-	// for op_method_call, 'self' is on top of stack
+	// for op_call_method, 'self' is on top of stack
 	if( method_call_op && nf.is_method )
 	{
 		// set local 0 to 'self'
@@ -2377,6 +2470,8 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		break;
 	case op_storelocal:
 		// 1 arg
+		arg = *((dword*)p);
+		cout << "\t" << arg;
 		ret = sizeof( dword );
 		break;
 	case op_storelocal0:
@@ -2393,6 +2488,8 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		break;
 	case op_def_local:
 		// 1 arg
+		arg = *((dword*)p);
+		cout << "\t" << arg;
 		ret = sizeof( dword );
 		break;
 	case op_def_local0:
@@ -2408,16 +2505,15 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "\t" << " ";
 		break;
 	case op_def_function:
-		// 3 args: local index, constant index of name, fcn address
+		// 2 args: constant index of name, fcn address
 		arg = *((dword*)p);
-		cout << arg;
-		arg = *((dword*)(p + sizeof( dword ) ) );
 		// look-up the constant
 		o = GetConstant( arg );
-		cout << ", " << arg << " (" << o << ")";
-		arg = *((dword*)( p + (2* sizeof( dword ) ) ) );
+		cout << arg << " (" << o << ")";
+		// address
+		arg = *((dword*)( p + sizeof( dword ) ) );
 		cout << ", " << arg;
-		ret = sizeof( dword ) * 3;
+		ret = sizeof( dword ) * 2;
 		break;
 	case op_new_map:
 		// 1 arg: size
@@ -2505,8 +2601,8 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 2 args: jump target address, number of scopes to leave
 		arg = *((dword*)p);
 		ret = sizeof( dword );
-		arg2 = *((dword*)p);
-		ret = sizeof( dword );
+		arg2 = *((dword*)(p + sizeof( dword ) ) );
+		ret = sizeof( dword ) * 2;
 		cout << "\t" << arg << "\t" << arg2;
 		break;
 	case op_enter:
@@ -2514,6 +2610,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "\t" << " ";
 		break;
 	case op_for_iter:
+	case op_for_iter_pair:
 		// 1 arg: iterable object
 		arg = *((dword*)p);
 		cout << "\t" << arg;
@@ -2609,6 +2706,23 @@ void Executor::DumpConstantPool()
 		else if( o.type == obj_null )
 			cout << "<null-value>" << endl;
 	}
+}
+
+void Executor::DumpStackTop()
+{
+	// print the top five stack items
+	cout << "\t\t[";
+	int n = (stack.size() > 5 ? 5 : stack.size());
+	for( int i = n-1; i >= 0; i-- )
+	{
+		cout << stack[stack.size()-(n-i)];
+		if( i > 0 )
+			cout << ", ";
+	}
+	cout << "]";
+	if( stack.size() > 5 )
+		cout << " +" << stack.size()-5 << " more";
+	cout << endl;
 }
 
 } // namespace deva

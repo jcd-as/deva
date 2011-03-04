@@ -1,0 +1,8 @@
+	original:
+key: 0 value: a
+key: 1 value: b
+key: 2 value: c
+copy:
+key: 0 value: z
+key: 1 value: b
+key: 2 value: c

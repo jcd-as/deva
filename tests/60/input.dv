@@ -1,0 +1,47 @@
+# test error-handling builtins
+def Foo()
+{
+	local m = { "msg" : "error in Foo()", "code" : 14 };
+	seterror( m );
+}
+
+def Bar()
+{
+}
+
+# false
+local err = geterror();
+print( error() );
+# null
+print( err );
+
+# 'print' resets the error flag/data, so must get both and then print
+seterror( "foobar'd" );
+local errdata = geterror();
+err = error();
+# true
+print( err );
+# foobar'd
+print( errdata );
+
+Foo();
+if( error() )
+{
+	# if we call Bar() here, the error from Foo() will be lost and the error
+	# data will be null
+	#Bar();
+	errdata = geterror();
+	# {code:14, msg:error in Foo()}
+	print( errdata );
+	# false
+	# (calling print has cleared the error flag)
+	print( error() );
+	# see? calling Bar() clears the error set by Foo()
+	Foo();
+	Bar();
+	errdata = geterror();
+	# null
+	print( errdata );
+	# false
+	print( error() );
+}

@@ -1,0 +1,34 @@
+# test map built-in methods
+
+local m = {};
+m[0] = "a";
+# length
+local len = m.length();
+print( len );
+# copy
+local n = m.copy();
+print( n.length() );
+n[1] = "b";
+print( n.length() );
+print( m );
+print( n );
+# remove
+n[2] = "c";
+print( n );
+n.remove( 1 );
+print( n );
+# find
+local i = n.find( 1 );
+print( i );
+i = n.find( 2 );
+print( i );
+# keys
+print( n.keys() );
+# values
+print( n.values() );
+# merge n and x together
+local x = {};
+x.a = "item a";
+x.b = "item b";
+n.merge( x );
+print( n );

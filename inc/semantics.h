@@ -37,6 +37,7 @@
 #include "error.h"
 #include "object.h"
 #include "builtins.h"
+#include "util.h"
 
 #include <set>
 #include <map>
@@ -71,7 +72,7 @@ struct Semantics
 
 	// function calls
 	bool making_call;
-	bool in_fcn;
+	int in_fcn;
 
 	// map key
 	bool in_map_key;
@@ -88,7 +89,7 @@ struct Semantics
 		first_default_arg( -1 ),
 		in_class( false ),
 		making_call( false ),
-		in_fcn( false ),
+		in_fcn( 0 ),
 		in_map_key( false ),
 		rhs_of_dot( false ),
 		in_loop( false )

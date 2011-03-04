@@ -1,0 +1,43 @@
+# test JSON module
+import json;
+
+local json_str =
+'{
+	"a" : 0,
+	"b"	: false,
+	"c" : true,
+	"d": null,
+	"e"		:-1.27e23,
+	"f":	[0,1,[2],[[3,4],5]],
+	"g"		:	"foobar",
+	"h" : { "nestor": "howard"},
+	"i"		:	{ "nestor":"howard", "foo": 
+		{
+			"a" :0,"b"		:false,
+			"c"	:	true,
+			"d":			null,
+				"e" : 3.14159,"f":	[0,1,[2],[[3,4],5]],
+		"g":"foobar"
+	   	}
+	},
+	"j" : 
+	{ 
+		"nestor" : "howard", 
+		"foo" : 
+		{
+			"a" : 3.14159
+		}
+	}
+}';
+
+local json_obj = json.decode( json_str );
+if( error() )
+	print( geterror() );
+else
+	print( json_obj );
+
+local obj = json.encode( json_obj );
+if( error() )
+	print( geterror() );
+else
+	print( obj );

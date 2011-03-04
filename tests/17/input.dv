@@ -1,0 +1,39 @@
+print( "starting" );
+while( true )
+{
+	local a = 1;
+	print( "entered scope 1" );
+	{
+		local b = 2;
+		local c = 3;
+		print( "entered scope 2" );
+		{
+			local d = 4;
+			local e = 5;
+			print( "entered scope 3" );
+			{
+				local f = 6;
+				local g = 7;
+				print( "entered scope 4" );
+				{
+					local h = 8;
+					local i = 9;
+					print( "entered scope 5" );
+					{
+						local j = 10;
+						print( "entered scope 6" );
+						break;
+					}
+					print( "left scope 6" );
+				}
+				print( "left scope 5" );
+			}
+			print( "left scope 4" );
+		}
+		print( "left scope 3" );
+	}
+	print( "left scope 2" );
+}
+print( "left scope 1" );
+
+print( "done" );

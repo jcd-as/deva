@@ -1,0 +1,16 @@
+
+local v = [["zappa"], "yabbo", "xavier"];
+print( v[0][0][0] );
+
+def fcn_a( n )
+{
+	return n + 1;
+}
+
+def fcn_b()
+{
+	return fcn_a;
+}
+
+print( fcn_b()( 1 ) );
+

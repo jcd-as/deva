@@ -1,0 +1,32 @@
+
+local v = [
+		[
+			[0, 1, 2], 
+			3, 
+			[4, 5, 
+				[6, 7],
+			8],
+		9],
+	10];
+
+# walk 'v' vector recursively, depth-first, left-to-right, 
+# printing the values
+def recur( v )
+{
+	local i = 0;
+	if( type( v ) == "vector" )
+	{
+		local len = v.length();
+		while( i < len )
+		{
+			local vnext = v[i];
+			recur( vnext );
+			# do something with vnext
+			i += 1;
+		}
+	}
+	else
+		print( v );
+}
+
+recur( v );

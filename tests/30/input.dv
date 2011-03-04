@@ -1,0 +1,10 @@
+def fcn( s, t )
+{
+	print( s + t );
+}
+
+# create a map and give it 'fcn' as a member 'foo'
+local a = {};
+a["foo"] = fcn;
+
+a.foo( "this is", " a string" );

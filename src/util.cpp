@@ -237,11 +237,51 @@ bool is_keyword( const string & s )
 		|| s == "class"
 		// 'new' IS a keyword, but acts as an identifier too
 //		|| s == "new"
+		// same with 'delete'
+//		|| s == "delete"
 		|| s == "const"
 		|| s == "local" )
 		return true;
 	else
 		return false;
+}
+
+// parse a number (decimal, binary, octal or hex)
+double parse_number( const char* s )
+{
+	double n;
+	// hex? octal? binary?
+	if( s[0] == '0' && strlen( s ) > 1 )
+	{
+		char* end;
+		if( s[1] == 'x' )
+		{
+			long l = strtol( s+2, &end, 16 );
+			n = l;
+			return n;
+		}
+		else if( s[1] == 'o' )
+		{
+			long l = strtol( s+2, &end, 8 );
+			n = l;
+			return n;
+		}
+		else if( s[1] == 'b' )
+		{
+			long l = strtol( s+2, &end, 2 );
+			n = l;
+			return n;
+		}
+		else
+		{
+			// or real?
+			n = atof( s );
+			return n;
+		}
+	}
+	// or real?
+	n = atof( s );
+	return n;
 }
 
 } // namespace deva

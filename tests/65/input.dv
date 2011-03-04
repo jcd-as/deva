@@ -1,0 +1,232 @@
+# 'break' tests
+for( i in range( 0, 2 ) )
+{
+	while( true )
+	{
+		print( i );
+		if( i == 0 )
+			break;
+	}
+	break;
+}
+
+for( i in range( 0, 2 ) )
+{
+	while( true )
+	{
+		if( true )
+			break;
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	for( j in range( 2, 4 ) )
+	{
+		break;
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	print( i );
+	for( j in range( 2, 4 ) )
+	{
+		print( j );
+		break;
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	local v = 1;
+	while( true )
+	{
+		if( false )
+		{
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	local v = 1;
+	print( i );
+	while( true )
+	{
+		if( false )
+		{
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+while( true )
+{
+	for( i in range( 0, 2 ) )
+	{
+		if( false )
+		{
+		}
+		else
+		{
+			break;
+		}
+	}
+	if( true )
+		break;
+}
+
+while( true )
+{
+	for( i in range( 0, 2 ) )
+	{
+		print( i );
+		if( false )
+		{
+		}
+		else
+		{
+			break;
+		}
+	}
+	if( true )
+		break;
+}
+
+while( true )
+{
+	if( false )
+	{
+	}
+	else
+		break;
+}
+
+while( true )
+{
+	while( true )
+	{
+		if( false )
+		{
+		}
+		else
+		{
+			break;
+		}
+	}
+	if( true )
+	{
+	}
+	else
+		break;
+	break;
+}
+
+for( i in range( 0, 2 ) )
+	for( j in range( 0, 2 ) )
+		if( true )
+			break;
+
+for( i in range( 0, 2 ) )
+{
+	print( i );
+	for( j in range( 0, 2 ) )
+	{
+		print( j );
+		if( true )
+			break;
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	print( i );
+	while( true )
+	{
+		for( j in range( 0, 2 ) )
+		{ 
+			if( true )
+			{
+				break;
+			}
+		}
+		if( true )
+		{
+			break;
+		}
+	}
+}
+
+for( i in range( 0, 2 ) )
+{
+	print( i );
+	while( true )
+	{
+		for( j in range( 0, 2 ) )
+		{ 
+			print( j );
+			if( true )
+			{
+				break;
+			}
+		}
+		if( true )
+		{
+			break;
+		}
+	}
+}
+
+while( true )
+{
+	if( true )
+	{
+		if( true )
+		{
+			if( true )
+			{
+				break;
+			}
+		}
+	}
+}
+
+# simple insertion sort routine
+def isort( v, compare )
+{
+    for( i in range( 1, length(v) ) )
+	{
+        local value = v[i];
+        local j = i - 1;
+        while( true )
+		{
+			if( compare( v[j], value ) )
+			{
+                v[j + 1] = v[j];
+                j = j - 1;
+                if( j < 0 )
+					break;
+			}
+            else
+				break;
+		}
+        v[j + 1] = value;
+	}
+}
+
+def compare( a, b )
+{
+	return a > b;
+}
+
+local v = [ 11, 21, 34, 9, 4, 2, 0, 45 ];
+isort( v, compare );
+print( v );

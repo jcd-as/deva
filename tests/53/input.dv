@@ -1,0 +1,20 @@
+import glob;
+import os;
+
+print( glob.glob( "./src" ) );
+print( glob.glob_to_re( "*[abc]" ) );
+# .[xyz?].*\\.dv.$
+print( glob.glob_to_re( "?[xyz?]*.dv?" ) );
+print( "\\\\\\" );
+
+local names = os.dirwalk( "." );
+names.sort();
+for( name in glob.fnmatch( names, "*.tst" ) )
+{
+	print( name );
+}
+
+print( glob.glob( "./*.tst" ) );
+print( glob.glob( "*.dv" ) );
+print( glob.glob( "d/*.[abc]" ) );
+print( glob.glob( "b?s?l?n[efg]" ) );

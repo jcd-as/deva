@@ -1,0 +1,5 @@
+#!/bin/sh
+# run the test
+../../dotest_exec $1 $2
+# delete 'foo.bar' test file
+rm foo.bar

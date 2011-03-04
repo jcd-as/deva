@@ -120,6 +120,9 @@ public:
 private:
 	Object* FindFunction( string name, size_t offset );
 
+	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
+	Object ResolveSymbol( Object sym );
+
 public:
 
 	// constant pool handling methods
@@ -146,6 +149,7 @@ public:
 
 	void DumpFunctions();
 	void DumpConstantPool();
+	void DumpStackTop();
 
 	// process exit
 	// TODO: anything needs doing here? prevent the process from exit, just the

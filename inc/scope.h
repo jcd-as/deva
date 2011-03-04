@@ -36,6 +36,7 @@
 #include "ordered_set.h"
 #include <string>
 #include <map>
+#include <set>
 
 
 using namespace std;
@@ -61,6 +62,10 @@ struct Scope
 	virtual void Print() = 0;
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s ) = 0;
+	// set a local as having been defined in code-gen
+	virtual bool SetLocalGenerated( int idx ) = 0;
+	// has a local been defined yet?
+	virtual bool HasLocalBeenGenerated( int idx ) = 0;
 
 	virtual FunctionScope* getParentFun() = 0;
 
@@ -77,12 +82,17 @@ protected:
 	map<const string, int> local_map;
 	Scope *parent;
 
-	// helper fcn
+	// locals that are defined (at any point in time) in the current scope
+	// (used at code-gen)
+	set<int> generated_locals;
+
+	// helper fcns
 	virtual FunctionScope* getParentFun();
+	// resolve a local to an index IN THIS SCOPE ONLY
+	int ResolveLocalToIndexHelper( const string & name );
 
 public:
-	LocalScope() : name( "" ), parent( NULL ) {}
-	LocalScope( string n, Scope* p = NULL ) : name( n ), parent( p ) {}
+	LocalScope( string n, Scope* p = NULL ) : name( n ), parent( p ) { }
 	virtual ~LocalScope();
 
 	// Scope "interface"
@@ -96,6 +106,10 @@ public:
 	void Print();
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
+	// set a local as having been defined in code-gen
+	bool SetLocalGenerated( int idx ){ generated_locals.insert( idx ); }
+	// has a local been generated yet?
+	bool HasLocalBeenGenerated( int idx );
 };
 
 
@@ -121,17 +135,16 @@ protected:
 	virtual FunctionScope* getParentFun();
 
 public:
-	FunctionScope() : LocalScope(), isMethod( false ), numArgs( 0 ) {}
 	FunctionScope( string n, Scope* p = NULL, bool m = false ) : LocalScope( n, p ), 
 		isMethod( m ), numArgs( 0 ) {}
 	virtual ~FunctionScope() {}
 
 	// Scope "interface" overrides
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
-	bool Define( const Symbol* const  s );
-	// resolve a local to an index
 	int ResolveLocalToIndex( const string & name );
+	bool Define( const Symbol* const  s );
 	void Print();
+	inline bool HasLocalBeenGenerated( int idx ) { return (generated_locals.find( idx ) != generated_locals.end()); }
 
 	// function scope methods
 	inline const int NumArgs() const { return numArgs; }
@@ -139,6 +152,7 @@ public:
 	inline OrderedMultiSet<Symbol*, SB_ptr_lt> & GetNames() { return names; }
 	inline OrderedSet<Object> & GetDefaultArgVals() { return default_arg_values; }
 	inline vector<string> & GetLocals() { return locals; }
+	inline bool IsMethod(){ return isMethod; }
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
 	// add a defalt arg value

@@ -1,0 +1,216 @@
+AST:
+(Def foo (Arg_list_decl (Def_arg a) (Def_arg b)) (Block (If (Condition a) (Block (Return b)) (Else (Block (If (Condition b) (Block (Return a)) (Else (Block (Return 0))))))))) (Local a Vec_init) (Call (ArgList 5) (DOT_OP a append)) (Local b Map_init) (= (Key b 0) "foo") (= (Key b "foo") foo) (Call (ArgList 0 1) (Key b "foo")) (Local x (Key b "foo")) (Call (ArgList 0 1) x) (Extern io) (For (In key value b) (Block (Call (ArgList (+ (Call (ArgList key) str) (Call (ArgList value) str))) (DOT_OP io print)))) (While (Condition (< a 10)) (Block (= a (+ a 1)) (Call (ArgList (Call (ArgList a) str)) (DOT_OP io print)))) <EOF>
+Symbol table:
+Function: @main, 0 arguments, 5 locals
+	all names: local a; local b; function foo; extern io; local key; local value; local x; 
+	argument scope vars: local a; local b; function foo; extern io; local x; 
+Function: foo, 2 arguments, 2 locals
+	all names: argument a; argument b; 
+	argument scope vars: argument a; argument b; 
+Scope: 2
+	vars: 
+Scope: 3
+	vars: 
+Scope: 4
+	vars: 
+Scope: 5
+	vars: 
+Scope: 6
+	vars: 
+Scope: 7
+	vars: local key; local value; 
+Scope: 8
+	vars: 
+Scope: 9
+	vars: 
+Constant data pool:
+<null-value>
+<boolean-false>
+<boolean-true>
+0
+1
+5
+10
+append
+foo
+print
+__bases__
+__class__
+__module__
+__name__
+a
+all
+any
+append
+b
+chr
+close
+concat
+copy
+count
+delete
+exit
+filter
+find
+flush
+foo
+format
+insert
+io
+join
+key
+keys
+length
+map
+max
+merge
+min
+name
+new
+next
+num
+open
+pop
+print
+range
+read
+readline
+readlines
+readstring
+reduce
+remove
+reverse
+rewind
+rfind
+seek
+self
+slice
+sort
+stderr
+stdin
+stdout
+str
+tell
+type
+value
+values
+write
+writeline
+writelines
+writestring
+x
+Function objects:
+function: @main, from file: input.dv, line: 0
+0 arg(s), default value indices: 
+5 local(s): a b x key value 
+code address: 0
+function: foo, from file: input.dv, line: 1
+2 arg(s), default value indices: 
+2 local(s): a b 
+code address: 14
+Instructions:
+   0: def_function	29 (foo), 14
+   9: jmp		70
+  14: enter		 
+  15: pushlocal0		 
+  16: jmpf		34
+  21: enter		 
+  22: pushlocal1		 
+  23: return		2
+  28: leave		 
+  29: jmp		63
+  34: enter		 
+  35: pushlocal1		 
+  36: jmpf		54
+  41: enter		 
+  42: pushlocal0		 
+  43: return		3
+  48: leave		 
+  49: jmp		62
+  54: enter		 
+  55: push_zero		 
+  56: return		3
+  61: leave		 
+  62: leave		 
+  63: leave		 
+  64: push_null		 
+  65: return		0
+  70: new_vec		0
+  75: def_local0		 
+  76: push		5
+  81: pushlocal0		 
+  82: pushconst		7 (append)
+  87: method_load	
+  88: call_method		1
+  93: pop		 
+  94: new_map		0
+  99: def_local1		 
+ 100: pushlocal1		 
+ 101: push_zero		 
+ 102: pushconst		8 (foo)
+ 107: tbl_store	
+ 108: pushlocal1		 
+ 109: pushconst		8 (foo)
+ 114: pushconst		29 (foo)
+ 119: tbl_store	
+ 120: push_zero		 
+ 121: push_one		 
+ 122: pushlocal1		 
+ 123: pushconst		8 (foo)
+ 128: tbl_load	
+ 129: call		2
+ 134: pop		 
+ 135: pushlocal1		 
+ 136: pushconst		8 (foo)
+ 141: tbl_load	
+ 142: def_local2		 
+ 143: push_zero		 
+ 144: push_one		 
+ 145: pushlocal2		 
+ 146: call		2
+ 151: pop		 
+ 152: pushlocal1		 
+ 153: dup1		 
+ 154: pushconst		56 (rewind)
+ 159: method_load	
+ 160: call_method		0
+ 165: pop		 
+ 166: for_iter_pair		220
+ 171: def_local4		 
+ 172: def_local3		 
+ 173: enter		 
+ 174: pushlocal3		 
+ 175: pushconst		65 (str)
+ 180: call		1
+ 185: pushlocal4		 
+ 186: pushconst		65 (str)
+ 191: call		1
+ 196: add		 
+ 197: pushconst		32 (io)
+ 202: pushconst		9 (print)
+ 207: method_load	
+ 208: call_method		1
+ 213: pop		 
+ 214: leave		 
+ 215: jmp		166
+ 220: pop		 
+ 221: pushlocal0		 
+ 222: push		10
+ 227: lt		 
+ 228: jmpf		272
+ 233: enter		 
+ 234: pushlocal0		 
+ 235: push_one		 
+ 236: add		 
+ 237: storelocal0		 
+ 238: pushlocal0		 
+ 239: pushconst		65 (str)
+ 244: call		1
+ 249: pushconst		32 (io)
+ 254: pushconst		9 (print)
+ 259: method_load	
+ 260: call_method		1
+ 265: pop		 
+ 266: leave		 
+ 267: jmp		221
+ 272: halt		 

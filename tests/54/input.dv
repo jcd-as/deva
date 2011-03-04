@@ -1,0 +1,7 @@
+# test string formatting
+local d = 3.14159;
+local s = "foobar";
+local i = 32;
+local fmt = "%+012d : %s : %i";
+print( fmt.format(  [d, s, i ] ) );
+print( format( "%+012d : %s : %i", [d, s, i ] ) );

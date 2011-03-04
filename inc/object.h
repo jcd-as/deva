@@ -145,11 +145,9 @@ struct Object
 
 	// creation functions for classes & instances
 	// (which are maps internally)
-	static Object* CreateClass( Map* n )
-	{ Object* ret = new Object(); ret->m = n; ret->type = obj_class; return ret; }
+	static Object CreateClass( Map* n );
 	void MakeClass( Map* n ){ type = obj_class; m = n; }
-	static Object* CreateInstance( Map* n )
-	{ Object* ret = new Object(); ret->m = n; ret->type = obj_instance; return ret; }
+	static Object CreateInstance( Map* n );
 	void MakeInstance( Map* n ){ type = obj_instance; m = n; }
 
 	// helper functions

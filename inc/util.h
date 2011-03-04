@@ -80,6 +80,9 @@ string unescape( const string& src );
 // is this identifier a keyword?
 bool is_keyword( const string & s );
 
+// parse a number (decimal, binary, octal or hex)
+double parse_number( const char* s );
+
 } // namespace deva
 
 #endif // __UTIL_H__

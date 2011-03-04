@@ -105,6 +105,13 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 	if( strcmp( name, "self" ) == 0 && !(in_class && in_fcn) )
 		throw SemanticException( "Syntax error: 'self' only allowed inside methods.", line );
 
+	// disallow defining builtins as non-locals... ???
+	if( mod == mod_none || mod == mod_external )
+	{
+		if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
+			return;
+	}
+
 	Symbol *sym = new Symbol( name, sym_variable, mod );
 	if( !current_scope->Define( sym ) )
 	{
@@ -151,9 +158,6 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 		throw SemanticException( "'delete' method is not allowed outside of a class definition.", line );
 	}
 
-	// TODO: functions need to be entered as locals (op_def_fcn instruction?)
-	// so this will work:
-//	Symbol *sym = new Symbol( name, sym_function, mod_local );
 	Symbol *sym = new Symbol( name, sym_function, mod_none );
 	if( !current_scope->Define( sym ) )
 	{
@@ -161,10 +165,6 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 	}
 	// add the name to the constant pool
 	constants.insert( Object( obj_symbol_name, name ) );
-
-	// if this is a method, add the 'self' arg
-	if( in_class )
-		AddArg( const_cast<char*>("self"), line );
 }
 
 // resolve a function, in the current scope

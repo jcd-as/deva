@@ -1,0 +1,118 @@
+# test vector built-in method calls
+
+# create a vector
+local a = [];
+# call the built-in append method
+a.append( "foo" );
+print( a );
+# call the built-in length method
+local len = a.length();
+print( len );
+# call the built-in append method again
+a.append( "bar" );
+print( a );
+# call the built-in length method again
+len = a.length();
+print( len );
+# create a copy
+local b = a.copy();
+# verify it is a copy, not the original
+b.append( "jam" );
+print( a );
+print( b );
+# concatenate them
+a.concat( b );
+print( a );
+print( b );
+# test min/max
+print( "min value in 'a' is:" );
+print( a.min() );
+print( "max value in 'a' is:" );
+print( a.max() );
+# pop the last item
+local last = a.pop();
+print( "the last item is: " + last  );
+print( a );
+# insert it at the beginning
+a.insert( 0, last );
+print( a );
+# insert "goo" at the fourth position ( i.e. after the third pos: [0, 1, 2, <here>] )
+a.insert( 2, "goo" );
+print( a );
+# remove the item at the third position
+a.remove( 1, 1 );
+print( a );
+# find 'goo'
+local idx = a.find( "goo", 0, -1 );
+print( idx );
+# reverse find 'bar', but not at the last place
+idx = a.rfind( "bar", 0, a.length() -1 );
+print( idx );
+# count how many times "bar" is found in 'a'
+local n = a.count( "bar", 0, -1 );
+print( "\"bar\" found " + str( n ) + " times" );
+# sort the items
+a.sort( 0, -1 );
+print( a );
+# reverse them
+a.reverse( 0, -1 );
+print( a );
+# remove all the elements
+a.remove( 0, -1 );
+print( a );
+
+# test map, filter and reduce
+def strify( n )
+{
+	return str( n );
+}
+
+def add( n, m )
+{
+	return n + m;
+}
+
+def not_zero( n )
+{
+	return n != 0;
+}
+
+a = [];
+a.append( 0 );
+a.append( 1 );
+a.append( 2 );
+a.append( 3 );
+b = a.map( strify );
+print( b );
+b = a.filter( not_zero );
+print( b );
+local sum = b.reduce( add );
+print( sum );
+
+# test 'any' and 'all'
+def test( n )
+{
+	# convert input to a boolean
+	return !(!n);
+}
+
+local v = [0,1,2,3];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [0,0,false,""];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [0,0,false,"x"];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+
+v = [1,2,true,"x"];
+print( v );
+print( v.any( test ) );
+print( v.all( test ) );
+

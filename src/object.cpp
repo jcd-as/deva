@@ -40,6 +40,20 @@ namespace deva
 // static member of RefCounted
 template<typename T> vector<T*> RefCounted<T>::dead_pool = vector<T*>();
 
+Object Object::CreateClass( Map* n )
+{
+	Object ret( n );
+	ret.type = obj_class;
+	return ret;
+}
+
+Object Object::CreateInstance( Map* n )
+{
+	Object ret( n );
+	ret.type = obj_instance;
+	return ret;
+}
+
 // helper fcns for reference counting. recursively IncRef/DecRef objects
 void IncRef( Object & o )
 {
@@ -275,6 +289,10 @@ bool Object::CoerceToBool()
 			return true;
 		break;
 	case obj_string:
+		if( strlen( s ) > 0 )
+			return true;
+		else
+			return false;
 	case obj_vector:
 	case obj_map:
 	case obj_instance:

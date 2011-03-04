@@ -1,0 +1,79 @@
+# test for loop constructs
+
+# class that supports the 'enumerable interface'
+class Foo
+{
+	def new()
+	{
+		self.items = [0, 1, 2, 3, 4, 5];
+		self.index = 0;
+	}
+	def rewind()
+	{
+		print( "entering rewind" );
+		self.index = 0;
+		print( "leaving rewind" );
+	}
+	def next()
+	{
+		print( "entering next" );
+
+		local obj = null;
+		local more = self.items.length() != self.index;
+
+		if( more )
+			obj = self.items[self.index];
+
+		# next item
+		#self.index += 1;
+		self.index = self.index + 1;
+
+		return [more, obj];
+	}
+}
+
+# test vector
+local n = [0, 1, 2, 3, 4, 5];
+for( i in n )
+{
+	print( "i = " + str( i ) );
+}
+
+# test map
+n = {0:"a", 1:"b", 2:"c", 3:"d", 4:"e", 5:"f"};
+for( i,j in n )
+{
+	print( "i = " + str( i ), "\t" );
+	print( "j = " + str( j ) );
+}
+
+# test class
+n = new Foo();
+for( i in n )
+{
+	print( "i = " + str( i ) );
+}
+
+
+# test fcn calls with for loops
+def fcn()
+{
+	local v = ["a", "b", "c", "d"];
+	for( i in v )
+	{
+		print( i );
+		if( i == "c" )
+			return v;
+	}
+	return v;
+}
+
+#def fcn()
+#{
+#	return ["a", "b", "c", "d"];
+#}
+
+for( item in fcn() )
+{
+	print( item );
+}

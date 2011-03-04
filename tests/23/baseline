@@ -1,0 +1,299 @@
+AST:
+(Def bubble_sort (Arg_list_decl (Def_arg a)) (Block (Local len (Call (ArgList a) length)) (Local swap true) (While (Condition swap) (Block (= swap false) (Local i (- len 1)) (While (Condition (>= i 0)) (Block (Local j 1) (While (Condition (<= j i)) (Block (If (Condition (> (Key a (- j 1)) (Key a j))) (Block (Local temp (Key a (- j 1))) (= (Key a (- j 1)) (Key a j)) (= (Key a j) temp) (= swap true))) (= j (+ j 1)))) (= i (- i 1)))))) (Return a))) (Local l Vec_init) (Call (ArgList l 2) append) (Call (ArgList l 1) append) (Call (ArgList l 4) append) (Call (ArgList l 3) append) (Call (ArgList l 6) append) (Call (ArgList l 5) append) (Call (ArgList l 8) append) (Call (ArgList l 7) append) (Call (ArgList l 10) append) (Call (ArgList l 9) append) (Call (ArgList "un-sorted:") print) (For (In i l) (Block (Call (ArgList i) print))) (Local n (Call (ArgList l) bubble_sort)) (Call (ArgList "sorted:") print) (For (In i n) (Block (Call (ArgList i) print))) <EOF>
+Symbol table:
+Function: @main, 0 arguments, 4 locals
+	all names: function bubble_sort; local i; local i; local l; local n; 
+	argument scope vars: function bubble_sort; local l; local n; 
+Function: bubble_sort, 1 arguments, 6 locals
+	all names: argument a; local i; local j; local len; local swap; local temp; 
+	argument scope vars: argument a; 
+Scope: 2
+	vars: local len; local swap; 
+Scope: 3
+	vars: local i; 
+Scope: 4
+	vars: local j; 
+Scope: 5
+	vars: 
+Scope: 6
+	vars: local temp; 
+Scope: 7
+	vars: local i; 
+Scope: 8
+	vars: 
+Scope: 9
+	vars: local i; 
+Scope: 10
+	vars: 
+Constant data pool:
+<null-value>
+<boolean-false>
+<boolean-true>
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+sorted:
+un-sorted:
+__bases__
+__class__
+__module__
+__name__
+a
+all
+any
+append
+bubble_sort
+chr
+close
+concat
+copy
+count
+delete
+exit
+filter
+find
+flush
+format
+i
+insert
+j
+join
+keys
+l
+len
+length
+map
+max
+merge
+min
+n
+name
+new
+next
+num
+open
+pop
+print
+range
+read
+readline
+readlines
+readstring
+reduce
+remove
+reverse
+rewind
+rfind
+seek
+self
+slice
+sort
+stderr
+stdin
+stdout
+str
+swap
+tell
+temp
+type
+values
+write
+writeline
+writelines
+writestring
+Function objects:
+function: @main, from file: input.dv, line: 0
+0 arg(s), default value indices: 
+4 local(s): l i n i 
+code address: 0
+function: bubble_sort, from file: input.dv, line: 3
+1 arg(s), default value indices: 
+6 local(s): a len swap i j temp 
+code address: 14
+Instructions:
+   0: def_function	24 (bubble_sort), 14
+   9: jmp		137
+  14: enter		 
+  15: pushlocal0		 
+  16: pushconst		43 (length)
+  21: call		1
+  26: def_local1		 
+  27: push_true		 
+  28: def_local2		 
+  29: pushlocal2		 
+  30: jmpf		124
+  35: enter		 
+  36: push_false		 
+  37: storelocal2		 
+  38: pushlocal1		 
+  39: push_one		 
+  40: sub		 
+  41: def_local3		 
+  42: pushlocal3		 
+  43: push_zero		 
+  44: gte		 
+  45: jmpf		118
+  50: enter		 
+  51: push_one		 
+  52: def_local4		 
+  53: pushlocal4		 
+  54: pushlocal3		 
+  55: lte		 
+  56: jmpf		108
+  61: enter		 
+  62: pushlocal0		 
+  63: pushlocal4		 
+  64: push_one		 
+  65: sub		 
+  66: tbl_load	
+  67: pushlocal0		 
+  68: pushlocal4		 
+  69: tbl_load	
+  70: gt		 
+  71: jmpf		98
+  76: enter		 
+  77: pushlocal0		 
+  78: pushlocal4		 
+  79: push_one		 
+  80: sub		 
+  81: tbl_load	
+  82: def_local5		 
+  83: pushlocal0		 
+  84: pushlocal4		 
+  85: push_one		 
+  86: sub		 
+  87: pushlocal0		 
+  88: pushlocal4		 
+  89: tbl_load	
+  90: tbl_store	
+  91: pushlocal0		 
+  92: pushlocal4		 
+  93: pushlocal5		 
+  94: tbl_store	
+  95: push_true		 
+  96: storelocal2		 
+  97: leave		 
+  98: pushlocal4		 
+  99: push_one		 
+ 100: add		 
+ 101: storelocal4		 
+ 102: leave		 
+ 103: jmp		53
+ 108: pushlocal3		 
+ 109: push_one		 
+ 110: sub		 
+ 111: storelocal3		 
+ 112: leave		 
+ 113: jmp		42
+ 118: leave		 
+ 119: jmp		29
+ 124: pushlocal0		 
+ 125: return		1
+ 130: leave		 
+ 131: push_null		 
+ 132: return		0
+ 137: new_vec		0
+ 142: def_local0		 
+ 143: pushlocal0		 
+ 144: push		2
+ 149: pushconst		23 (append)
+ 154: call		2
+ 159: pop		 
+ 160: pushlocal0		 
+ 161: push_one		 
+ 162: pushconst		23 (append)
+ 167: call		2
+ 172: pop		 
+ 173: pushlocal0		 
+ 174: push		4
+ 179: pushconst		23 (append)
+ 184: call		2
+ 189: pop		 
+ 190: pushlocal0		 
+ 191: push		3
+ 196: pushconst		23 (append)
+ 201: call		2
+ 206: pop		 
+ 207: pushlocal0		 
+ 208: push		6
+ 213: pushconst		23 (append)
+ 218: call		2
+ 223: pop		 
+ 224: pushlocal0		 
+ 225: push		5
+ 230: pushconst		23 (append)
+ 235: call		2
+ 240: pop		 
+ 241: pushlocal0		 
+ 242: push		8
+ 247: pushconst		23 (append)
+ 252: call		2
+ 257: pop		 
+ 258: pushlocal0		 
+ 259: push		7
+ 264: pushconst		23 (append)
+ 269: call		2
+ 274: pop		 
+ 275: pushlocal0		 
+ 276: push		10
+ 281: pushconst		23 (append)
+ 286: call		2
+ 291: pop		 
+ 292: pushlocal0		 
+ 293: push		9
+ 298: pushconst		23 (append)
+ 303: call		2
+ 308: pop		 
+ 309: pushconst		15 (un-sorted:)
+ 314: pushconst		55 (print)
+ 319: call		1
+ 324: pop		 
+ 325: pushlocal0		 
+ 326: dup1		 
+ 327: pushconst		64 (rewind)
+ 332: method_load	
+ 333: call_method		0
+ 338: pop		 
+ 339: for_iter		364
+ 344: def_local1		 
+ 345: enter		 
+ 346: pushlocal1		 
+ 347: pushconst		55 (print)
+ 352: call		1
+ 357: pop		 
+ 358: leave		 
+ 359: jmp		339
+ 364: pop		 
+ 365: pushlocal0		 
+ 366: pushconst		24 (bubble_sort)
+ 371: call		1
+ 376: def_local2		 
+ 377: pushconst		14 (sorted:)
+ 382: pushconst		55 (print)
+ 387: call		1
+ 392: pop		 
+ 393: pushlocal2		 
+ 394: dup1		 
+ 395: pushconst		64 (rewind)
+ 400: method_load	
+ 401: call_method		0
+ 406: pop		 
+ 407: for_iter		432
+ 412: def_local3		 
+ 413: enter		 
+ 414: pushlocal3		 
+ 415: pushconst		55 (print)
+ 420: call		1
+ 425: pop		 
+ 426: leave		 
+ 427: jmp		407
+ 432: pop		 
+ 433: halt		 

@@ -77,13 +77,13 @@ block
 	;
 
 func_decl[char* classname]
-@after { semantics->in_fcn = false; semantics->PopScope(); }
+@after { semantics->in_fcn--; semantics->PopScope(); }
 	:	^(Def id=ID 
-		{ semantics->in_fcn = true; semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		{ semantics->in_fcn++; semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
 		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block) 
 	|	^(Def id='new' 
-		{ semantics->in_fcn = true; semantics->DefineFun( (char*)"new", classname, $id->getLine($id) ); semantics->PushScope( (char*)"new", classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
+		{ semantics->in_fcn++; semantics->DefineFun( (char*)"new", classname, $id->getLine($id) ); semantics->PushScope( (char*)"new", classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
 		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
 		block)
 	;
@@ -252,7 +252,7 @@ vec_op
 
 value[bool invert]
 	:	BOOL | NULLVAL 
-	|	NUMBER { semantics->AddNumber( (invert ? -1.0 : 1.0) * atof( (char*)$NUMBER.text->chars ) ); $NUMBER->u = (void*)0x0; }
+	|	NUMBER { semantics->AddNumber( (invert ? -1.0 : 1.0) * parse_number( (char*)$NUMBER.text->chars ) ); $NUMBER->u = (void*)0x0; }
 		
 	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); }
 	;
@@ -260,9 +260,9 @@ value[bool invert]
 default_arg_val
 	:	BOOL { semantics->DefaultArgVal( $BOOL ); }
 	|	NULLVAL { semantics->DefaultArgVal( $NULLVAL ); }
-	|	NUMBER { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) ); semantics->DefaultArgVal( $NUMBER ); }
+	|	NUMBER { semantics->AddNumber( parse_number( (char*)$NUMBER.text->chars ) ); semantics->DefaultArgVal( $NUMBER ); }
 	|	STRING { semantics->AddString( (char*)$STRING.text->chars ); semantics->DefaultArgVal( $STRING ); } 
 	|	ID { semantics->CheckDefaultArgVal( (char*)$ID.text->chars, $ID->getLine($ID) ); }
-	|	^(Negate NUMBER) { semantics->AddNumber( atof( (char*)$NUMBER.text->chars ) * -1.0 ); semantics->DefaultArgVal( $NUMBER, true );}
+	|	^(Negate NUMBER) { semantics->AddNumber( parse_number( (char*)$NUMBER.text->chars ) * -1.0 ); semantics->DefaultArgVal( $NUMBER, true );}
 	;
 

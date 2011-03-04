@@ -98,7 +98,7 @@ private:
 		size_t new_sz = size * 2;
 		byte* new_bytes = new byte[new_sz];
 		memset( new_bytes, 0, new_sz );
-		memcpy( new_bytes, bytes, new_sz );
+		memcpy( new_bytes, bytes, (size_t)cur );
 		delete[] bytes;
 		bytes = new_bytes;
 		size = new_sz;
@@ -106,10 +106,10 @@ private:
 	}
 };
 
-struct Compiler
+class Compiler
 {
-	// scopes
 private:
+	// scopes & scope handling
 	int max_scope_idx;		// index to the highest scope num created so far
 	vector<int> scopestack;
 	// stacks for labels/back-patching
@@ -149,6 +149,9 @@ private:
 	inline void AddPatchLoc() { patchstack.push_back( is->Length() - sizeof(dword) ); }
 	inline void BackpatchToCur() { is->Set( patchstack.back(), (size_t)is->Length() ); patchstack.pop_back(); }
 	inline void BackpatchToLastLabel() { is->Set( patchstack.back(), labelstack.back() ); patchstack.pop_back(); labelstack.pop_back(); }
+
+	// clean-up loop/break tracking helper
+	void CleanupEndLoop();
 
 public:
 	// public functions
@@ -202,7 +205,7 @@ public:
 	inline void GtOp() { Emit( op_gt ); }
 	inline void LtOp() { Emit( op_lt ); }
 	inline void EqOp() { Emit( op_eq ); }
-	inline void NotEqOp() { Emit( op_neg ); }
+	inline void NotEqOp() { Emit( op_neq ); }
 	inline void AndOp() { Emit( op_and ); }
 	inline void OrOp() { Emit( op_or ); }
 

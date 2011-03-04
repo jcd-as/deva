@@ -1,0 +1,11 @@
+1
+4
+2
+5
+calling base class method 'Method1', from base class Foo
+0
+calling base class method 'Method2', from base class Jam
+1
+copying object...
+2
+1

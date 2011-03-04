@@ -1,0 +1,80 @@
+##################################
+# keyword tests
+##################################
+
+#l = ['a', 'b', 'c'];
+
+#form( i in l )
+#{
+#	print( i );
+#}
+
+#i = 0;
+#whiles( i < l.length() )
+#{
+#	print( l[i] );
+#}
+
+#if( i )
+#{
+#	print( "aye" );
+#}
+#elsee
+#	print( "nay" );
+
+#importing foo;
+
+local foobar = 0;
+local breakdance=1;
+local continueon=2;
+local returned=3;
+
+local formation = 0;
+print( formation );
+
+local trueness = 1;
+print( trueness );
+
+local falsehood = 2;
+print( falsehood );
+
+local whileaway = 3;
+print( whileaway );
+
+local breakme = 4;
+print( breakme );
+
+local continue_on = 5;
+print( continue_on );
+
+local returnofthejedi = 6;
+print( returnofthejedi );
+
+local null_ness = 7;
+print( null_ness );
+
+local definition = 8;
+print( definition );
+
+local iffy = 9;
+print( iffy );
+
+local else_what = 10;
+print( else_what );
+
+local into = 11;
+print( into );
+
+local imported = 12;
+print( imported );
+
+local classy = 13;
+print( classy );
+
+local constant = 14;
+print( constant );
+
+local locally_grown = 15;
+print( locally_grown );
+
+

@@ -1,0 +1,51 @@
+# test vector map, filter, reduce with class methods
+class C
+{
+	def new()
+	{
+		self.value = 2;
+	}
+
+	def fcn1( n )
+	{
+		return n * n;
+	}
+
+	def fcn2( n )
+	{
+		if( n > 2 )
+			return true;
+		else
+			return false;
+	}
+
+	def fcn3( n, m )
+	{
+		return (n + m);
+	}
+}
+
+local v = [0,1,2,3,4,5,6,7,8,9];
+local c = new C();
+# map
+# instance
+local u = v.map( c.fcn1 );
+print( u );
+# class
+v = v.map( C.fcn1 );
+print( v );
+# filter
+# instance
+v = v.filter( c.fcn2 );
+print( v );
+# class
+v = v.filter( C.fcn2 );
+print( v );
+# reduce
+# instance
+local x = v.reduce( c.fcn3 );
+print( x );
+# class
+x = v.reduce( C.fcn3 );
+print( x );
+

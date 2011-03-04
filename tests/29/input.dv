@@ -1,0 +1,13 @@
+# test import
+import bar/foo;
+
+def bar()
+{
+	print( "test16.dv returned to and code executing here" );
+	# second and subsequent imports of the same module have no effect
+	import bar/foo;
+}
+# we can call functions from imported modules with the module name as the
+# namespace:
+foo.foofcn();
+bar();

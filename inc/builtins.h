@@ -97,7 +97,7 @@ static const string builtin_names[] =
 	string( "exit" ),
 	string( "num" ),
 	string( "range" ),
-	string( "eval" ),
+//	string( "eval" ),
 	string( "open" ),
 	string( "close" ),
 	string( "flush" ),
@@ -116,10 +116,10 @@ static const string builtin_names[] =
 	string( "stderr" ),
 	string( "format" ),
 	string( "join" ),
-	string( "error" ),
-	string( "seterror" ),
-	string( "geterror" ),
-	string( "importmodule" ),
+//	string( "error" ),
+//	string( "seterror" ),
+//	string( "geterror" ),
+//	string( "importmodule" ),
 };
 // ...and function pointers to the executor functions for them
 static NativeFunction builtin_fcns[] = 

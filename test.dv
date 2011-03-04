@@ -1,14 +1,36 @@
-# no refcount leaks
-#def foo( a )
-#{
-#	print( "a: " + str( a ) );
-#}
-#def foo( b )
-#{
-#	print( "b: " + str( b ) );
-#}
-#foo( null );
+local n = 0;
+def Bar()
+{
+	local sum = "sum";
+	extern n = 10;
+#	print( sum + " = " + str( n ) );
+	print( str( n ) );
+}
+Bar();
 
+
+# BUG: break in nested fcn not working
+# see test 67
+#for( i in range( 0, 10 ) )
+#{
+#	def brk(){ if( i > 3 ) break; }
+#	brk();
+#	print( i );
+#}
+
+# BUG: doesn't compile
+#local a = 0;
+## this line, in trying to define fcn 'b' which it doesn't know about (but could
+## be valid, depending on what 'a' turns out to be at exec time) defines 'b' as a
+## non-local symbol (mod_none)...
+#a.b();
+## which makes this error at compile time because a local var 'b' cannot be found
+#local b = 1;
+## POSSIBLE FIX: LocalScope::Define() should check if the var it finds in
+## the locals_map has the same mods (locale etc) as what was found? locals_map
+## needs to map more than just names?
+
+# BUG: doesn't compile: "Cannot locate local symbol 'foo'"
 # no refcount leaks
 #def foo( n ){ print( n ); }
 #foo( 25 );
@@ -29,18 +51,6 @@
 #	print( b );
 #}
 #fcn( "foo", "bar" );
-
-# no refcount leaks
-#def foo( n ){ print( n ); }
-#foo( 255 );		# call_n
-#local f = foo;
-#f( 255 );
-#local jam = {"bar":f};
-#jam.bar( 255 );	# call
-# BUG: crash on invalid free (from RefCounted::ClearDeadPool (map))
-#local foo = {"bar":f};
-#foo.bar( 255 );	# call
-# BUG: crash on invalid free (from RefCounted::ClearDeadPool (map))
 
 # BUG: vector built-ins broken when passed methods/class methods
 # ('self' for the method is on the stack and the builtins don't account for it
@@ -98,6 +108,35 @@
 # END BUG SECTION
 ###########################################
 
+#no refcount leaks
+#class C
+#{
+#	def new(){ self.a = "foo"; def bar( s ){s.b="bar";} bar(self); }
+#}
+#def foo()
+#{
+#	local c = new C();
+#	print( c );
+#}
+#foo();
+
+# no refcount leaks
+#local a = [255];
+#local copy = copy( a );
+#print( copy );
+
+
+# no refcount leaks
+#def foo( a )
+#{
+#	print( "a: " + str( a ) );
+#}
+#def foo( b )
+#{
+#	print( "b: " + str( b ) );
+#}
+#foo( null );
+
 # no refcount leaks
 #def foo( a )
 #{
@@ -107,19 +146,28 @@
 #}
 
 # no refcount leaks
+#local b = 44;
+#if( true )
+#{
+#	local b = 32;
+#	print( b );
+#}
+#print( b );
+
+# no refcount leaks
 #def foo(){ print( "foo1" ); }
 #{
 #	def foo(){ print( "foo2" ); }
 #	foo();
 #}
 #foo();
-local b = 44;
-if( true )
-{
-	local b = 32;
-#	print( b );
-}
-print( b );
+
+# no refcount leaks
+#class C
+#{
+#	def foo(){ print( "foo called" ); }
+#}
+#C.foo();
 
 # no refcount leaks
 #local n = 100;
@@ -139,10 +187,23 @@ print( b );
 #local n = a + b;
 
 # no refcount leaks
+#def foo( n ){ print( n ); }
+#foo( 255 );		# call_n
+#local f = foo;
+#f( 255 );
+#local jam = {"bar":f};
+#jam.bar( 255 );	# call
+#local foo = {"bar":f};
+#foo.bar( 255 );	# call
+
+# no refcount leaks
 #def foo( a ){ print( a ); }
 #local a = {};
 #a["b"] = foo;
+#print( a.b( "foobar" ) );
+## null: return value of fcn foo is null
 #print( a.b( a ) );
+#a.b( a );
 
 # no refcount leaks
 #def foo( s ) { print( s ); }

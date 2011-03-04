@@ -1,0 +1,7 @@
+local a = {};
+a["foo"] = -1;
+a["bar"] = 255;
+print( a );
+print( "===========" );
+a["foo"] = a["bar"];
+print( a );

@@ -1,0 +1,98 @@
+# test inheritance of constructors and destructors
+# and verify call-placement and ordering
+#
+class AA
+{
+	def new()
+	{
+		self.aa = 20;
+		print( "creating AA" );
+	}
+    def delete()
+    {
+        print( "destroying AA" );
+    }
+	def AA()
+	{
+		print( "tst AA.AA() called" );
+	}
+}
+
+class A
+{
+	def new()
+	{
+		self.a = 10;
+		print( "creating A" );
+	}
+    def delete()
+    {
+        print( "destroying A" );
+    }
+	def A()
+	{
+		print( "tst A.A() called" );
+	}
+}
+
+class B : A
+{
+	def new()
+	{
+		self.b = 11;
+		print( "creating B" );
+	}
+    def delete()
+    {
+        print( "destroying B" );
+    }
+	def B()
+	{
+		print( "tst B.B() called" );
+	}
+}
+
+class C : B, AA
+{
+	def new()
+	{
+		self.c = 12;
+		print( "creating C " );
+	}
+    def delete()
+    {
+        print( "destroying C" );
+    }
+	def C()
+	{
+		print( "tst C.C() called" );
+	}
+}
+
+# creation order:
+# A
+# B
+# AA
+# C
+# destruction order:
+# C
+# AA
+# B
+# A
+
+def Foo()
+{
+    print( "Foo() called" );
+    local obj = new C();
+    print( "exiting Foo()" );
+}
+
+def Bar()
+{
+    print( "Bar() called" );
+    Foo();
+    print( "exiting Bar()" );
+}
+
+Bar();
+

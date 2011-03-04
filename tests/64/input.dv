@@ -1,0 +1,22 @@
+# test str and repr special methods
+class Foo
+{
+	def new( s )
+	{
+		self.s = s;
+	}
+
+	def str()
+	{
+		return "str: " + self.s;
+	}
+
+	def repr()
+	{
+		return "repr: " + self.s;
+	}
+}
+
+local f = new Foo( "bar" );
+print( f );
+print( str( f ) );

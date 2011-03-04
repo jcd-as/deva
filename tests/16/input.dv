@@ -1,0 +1,78 @@
+local a = 4;
+
+def x( b )
+{
+	return b + 2;
+}
+
+if( x(a) > 5 )
+{
+	print( "x(a) greater than 5" );
+}
+else
+{
+	print( "x(a) not greater than 5" );
+}
+
+if( x(a) > 10 )
+{
+	print( "x(a) greater than 10" );
+}
+else
+{
+	print( "x(a) not greater than 10" );
+}
+
+if( x(a) >= 6 )
+{
+	print( "x(a) greater or equal to 6" );
+}
+else
+{
+	print( "x(a) not greater or equal to 6" );
+}
+
+if( x(a) >= 7 )
+{
+	print( "x(a) greater or equal to 7" );
+}
+else
+{
+	print( "x(a) not greater or equal to 7" );
+}
+
+if( x(a) < 7 )
+{
+	print( "x(a) less than 7" );
+}
+else
+{
+	print( "x(a) not less than 7" );
+}
+
+if( x(a) < 5 )
+{
+	print( "x(a) less than 5" );
+}
+else
+{
+	print( "x(a) not less than 5" );
+}
+
+if( x(a) <= 6 )
+{
+	print( "x(a) less than or equal to 6" );
+}
+else
+{
+	print( "x(a) not less than or equal to 6" );
+}
+
+if( x(a) <= 4 )
+{
+	print( "x(a) less than or equal to 4" );
+}
+else
+{
+	print( "x(a) not less than or equal to 4" );
+}

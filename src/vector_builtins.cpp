@@ -321,7 +321,7 @@ void do_vector_find( Frame *frame )
 	{
 		Object* endobj = helper.GetLocalN( 3 );
 		helper.ExpectIntegralNumber( endobj );
-		start = (int)endobj->d;
+		end = (int)endobj->d;
 	}
 
 	size_t sz = self->v->size();
@@ -998,7 +998,7 @@ void do_vector_rewind( Frame *frame )
 
 void do_vector_next( Frame *frame )
 {
-	BuiltinHelper helper( "vector", "rewind", frame );
+	BuiltinHelper helper( "vector", "next", frame );
 
 	helper.CheckNumberOfArguments( 1 );
 	Object* po = helper.GetLocalN( 0 );

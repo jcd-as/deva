@@ -57,6 +57,8 @@ class Frame
 	bool is_native;
 	// array of locals (including args at front of array):
 	Object* locals;
+	// number of slots in the locals array
+	int num_locals;
 
 	// string data that the locals in this frame point to (i.e. non-constant
 	// strings that are created by actions in the executor)
@@ -79,22 +81,28 @@ public:
 		scopes( s ),
 		function( f ), 
 		is_native( false ), 
+		locals( NULL ),
 		num_args( args_passed ), 
 		addr( loc )
-		{ locals = new Object[f->IsMethod() ? f->num_locals+1 : f->num_locals]; }
+		{
+			num_locals = f->IsMethod() ? f->num_locals+1 : f->num_locals;
+			if( num_locals ) locals = new Object[num_locals];
+		}
 	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, NativeFunction f ) : 
 		parent( p ),
 		scopes( s ),
 		native_function( f ), 
 		is_native( true ), 
+		locals( NULL ),
 		num_args( args_passed ), 
 		addr( loc )
-		{ locals = new Object[args_passed]; }
+		{ num_locals = args_passed; if( num_locals ) locals = new Object[num_locals]; }
 	~Frame();
 	inline Frame* GetParent() { return parent; }
 	inline bool IsNative() const { return is_native; }
 	inline Function* GetFunction() const { return (is_native ? NULL : function ); }
 	inline const NativeFunction GetNativeFunction() const { NativeFunction nf; nf.p=NULL; nf.is_method=false; return (is_native ? native_function : nf ); }
+	inline int GetNumberOfLocals() const { return num_locals; }
 	inline Object GetLocal( int i ) const { return locals[i]; }
 	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
 	inline void SetLocal( int i, Object o ) { DecRef( locals[i] ); locals[i] = o; }

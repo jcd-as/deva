@@ -1,0 +1,131 @@
+AST:
+(Local a 0) (While (Condition true) (Block (Call ArgList (DOT_OP (DOT_OP (DOT_OP a b) c) d)))) (Call ArgList (DOT_OP (DOT_OP a b) c)) (Def x Arg_list_decl (Block (Call ArgList (DOT_OP (DOT_OP a b) c)))) <EOF>
+Symbol table:
+Function: @main, 0 arguments, 1 locals
+	all names: local a; undeclared b; undeclared b; undeclared c; undeclared c; undeclared d; function x; 
+	argument scope vars: local a; undeclared b; undeclared c; function x; 
+Scope: 1
+	vars: undeclared b; undeclared c; undeclared d; 
+Function: x, 0 arguments, 0 locals
+	all names: undeclared b; undeclared c; 
+	argument scope vars: 
+Scope: 3
+	vars: undeclared b; undeclared c; 
+Constant data pool:
+<null-value>
+<boolean-false>
+<boolean-true>
+0
+b
+c
+d
+__bases__
+__class__
+__module__
+__name__
+a
+all
+any
+append
+b
+c
+chr
+close
+concat
+copy
+count
+d
+delete
+exit
+filter
+find
+flush
+format
+insert
+join
+keys
+length
+map
+max
+merge
+min
+name
+new
+next
+num
+open
+pop
+print
+range
+read
+readline
+readlines
+readstring
+reduce
+remove
+reverse
+rewind
+rfind
+seek
+self
+slice
+sort
+stderr
+stdin
+stdout
+str
+tell
+type
+values
+write
+writeline
+writelines
+writestring
+x
+Function objects:
+function: @main, from file: input.dv, line: 0
+0 arg(s), default value indices: 
+1 local(s): a 
+code address: 0
+function: x, from file: input.dv, line: 9
+0 arg(s), default value indices: 
+0 local(s): 
+code address: 73
+Instructions:
+   0: push_zero		 
+   1: def_local0		 
+   2: push_true		 
+   3: jmpf		40
+   8: enter		 
+   9: pushlocal0		 
+  10: pushconst		4 (b)
+  15: tbl_load	
+  16: pushconst		5 (c)
+  21: tbl_load	
+  22: pushconst		6 (d)
+  27: method_load	
+  28: call_method		0
+  33: pop		 
+  34: leave		 
+  35: jmp		2
+  40: pushlocal0		 
+  41: pushconst		4 (b)
+  46: tbl_load	
+  47: pushconst		5 (c)
+  52: method_load	
+  53: call_method		0
+  58: pop		 
+  59: def_function	69 (x), 73
+  68: jmp		104
+  73: enter		 
+  74: pushconst		11 (a)
+  79: pushconst		4 (b)
+  84: tbl_load	
+  85: pushconst		5 (c)
+  90: method_load	
+  91: call_method		0
+  96: pop		 
+  97: leave		 
+  98: push_null		 
+  99: return		0
+ 104: halt		 

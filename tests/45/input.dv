@@ -1,0 +1,7 @@
+# test compile check for non-"simple types" in chained assignment
+local x = 0; local y = 0; local m = {"a":0}; local z = 255;
+x = y = m.a = z;
+print( x );
+print( y );
+print( m.a );
+print( z );

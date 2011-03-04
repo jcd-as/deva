@@ -214,25 +214,18 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 {
 	// generate def_function op
 	
-	// get the local slot for this function def
-//	int local_idx = CurrentScope()->ResolveLocalToIndex( name );
-	int local_idx = ParentScope()->ResolveLocalToIndex( name );
-	if( local_idx == -1 )
-		throw ICE( boost::format( "Cannot locate local function symbol '%1%'." ) % name );
-
-	// get the constant index of this function
-	//int i = GetConstant( Object( name ) );
-	int i = GetConstant( Object( obj_symbol_name, name ) );
-	if( i == -1 )
-		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
-	//Emit( op_pushconst, i );
-	// TODO: this address is wrong, needs to be back-patched
-//	// add the size of op_def_function <Op0> and jmp <Op0>
-//	int sz = sizeof( dword ) * 2 + 2;
-	// add the size of 'op_def_function <Op0> <Op1> <Op2>' and 'jmp <Op0>'
-	int sz = sizeof( dword ) * 4 + 2;
-	// add the size of op_def_function <Op0> and jmp <Op0>
-	Emit( op_def_function, local_idx, i, is->Length() + sz );
+	// non-methods: emit an op_def_function instruction
+	if( !classname )
+	{
+		// get the constant index of this function
+		//int i = GetConstant( Object( name ) );
+		int i = GetConstant( Object( obj_symbol_name, name ) );
+		if( i == -1 )
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+		// add the size of 'op_def_function <Op0> <Op1>' and 'jmp <Op0>'
+		int sz = sizeof( dword ) * 3 + 2;
+		Emit( op_def_function, i, is->Length() + sz );
+	}
 	
 	// generate jump around fcn so 'main' (or module 'global' as the case
 	// may be) doesn't execute its body inline
@@ -337,7 +330,7 @@ void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 // constants
 void Compiler::Number( pANTLR3_BASE_TREE node )
 {
-	double d = atof( (char*)node->getText(node)->chars );
+	double d = parse_number( (char*)node->getText(node)->chars );
 	double intpart; // for modf call
 
 	// negate numbers that should be negative
@@ -427,12 +420,34 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		// is it a local?
 		int idx = CurrentScope()->ResolveLocalToIndex( s );
 
+		// check to see if the local has been defined yet...
+		// if not, we can't use it, have to look it up as a non-local
+		// (*unless* it's an argument or 'self', which aren't 'defined' 
+		// the way the 'normal' locals are)
+		int num_args = 0;
+		if( idx != -1 )
+		{
+			bool is_self = false;
+
+			// are we inside a method or a fcn?
+			FunctionScope* scope = CurrentScope()->getParentFun();
+			if( scope->IsMethod() )
+			{
+				if( strcmp( "self", s ) == 0 )
+					is_self = true;
+				else
+					num_args = scope->NumArgs() + 1;
+			}
+			else
+				num_args = scope->NumArgs();
+
+			if( !is_self && idx >= num_args && !CurrentScope()->HasLocalBeenGenerated( idx ) )
+				idx = -1;
+		}
+
 		// no? look it up as a non-local
 		if( idx == -1 )
 		{
-			// TODO: is this correct? pushconst will push the object for a const
-			// pool object onto the stack, but is this right for an 'extern' var?
-			//
 			// get the constant pool index for this identifier
 			idx = GetConstant( Object( obj_symbol_name, s ) );
 			if( idx < 0 )
@@ -517,6 +532,9 @@ void Compiler::LocalVar( char* n )
 	int idx = CurrentScope()->ResolveLocalToIndex( n );
 	if( idx == -1 )
 		throw ICE( boost::format( "Cannot locate local symbol '%1%'." ) % n );
+	// mark the local as having been defined in this scope
+	CurrentScope()->SetLocalGenerated( idx );
+
 	// emit a 'op_def_localN' op
 	if( idx < 10 )
 	{
@@ -584,6 +602,9 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 		char* lhs = (char*)lhs_node->getText( lhs_node )->chars;
 		// is it a local?
 		int idx = CurrentScope()->ResolveLocalToIndex( lhs );
+		// has the local been generated yet?
+		if( idx != -1 && !CurrentScope()->HasLocalBeenGenerated( idx ) )
+			idx = -1;
 
 		// no? look it up as a non-local
 		if( idx == -1 )
@@ -710,6 +731,9 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 
 		// is it a local?
 		int idx = CurrentScope()->ResolveLocalToIndex( lhs );
+		// has the local been generated yet?
+		if( idx != -1 && !CurrentScope()->HasLocalBeenGenerated( idx ) )
+			idx = -1;
 
 		// no? look it up as a non-local
 		if( idx == -1 )
@@ -808,7 +832,6 @@ void Compiler::KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
 }
 
 // Dot ('.') op
-//void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
 void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent )
 {
 	// do nothing for left-hand side of assign,
@@ -827,12 +850,7 @@ void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE
 		unsigned int rhs_type = rhs->getType( rhs );
 		if( rhs_type == ID )
 		{
-			char* rhs_text = (char*)rhs->getText( rhs )->chars;
-			// if it is a builtin, not a method: tbl_load
-			if( IsBuiltin( string( rhs_text ) ) )
-				Emit( op_tbl_load );
-			else
-				Emit( op_method_load );
+			Emit( op_method_load );
 		}
 		else
 			Emit( op_method_load );
@@ -964,16 +982,8 @@ void Compiler::WhileOpConditionJump()
 	AddPatchLoc();
 }
 
-void Compiler::WhileOpEnd()
+void Compiler::CleanupEndLoop()
 {
-	// emit the jump-to-start
-	Emit( op_jmp, (dword)-1 );
-	AddPatchLoc();
-	BackpatchToLastLabel();
-			
-	// back-patch the conditional jump
-	BackpatchToCur();
-
 	loop_scope_stack.pop_back();
 
 	// back-patch any 'break' statements
@@ -989,9 +999,28 @@ void Compiler::WhileOpEnd()
 	delete breaks;
 }
 
+void Compiler::WhileOpEnd()
+{
+	// emit the jump-to-start
+	Emit( op_jmp, (dword)-1 );
+	AddPatchLoc();
+	BackpatchToLastLabel();
+			
+	// back-patch the conditional jump
+	BackpatchToCur();
+
+	CleanupEndLoop();
+}
+
 void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 {
 	// if 'val' is NULL this is a vector/single-loop-var iteration
+
+	// start a new count of scopes inside this loop
+	loop_scope_stack.push_back( 0 );
+
+	// start a new loop context for back-patching 'break' statements
+	loop_break_locations.push_back( new vector<dword>() );
 
 	// is the key a local?
 	int key_idx = CurrentScope()->ResolveLocalToIndex( key );
@@ -1040,86 +1069,93 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 	// index under 10: use the short instructions
 	if( val )
 	{
+		// mark the local as having been defined in this scope
+		CurrentScope()->SetLocalGenerated( val_idx );
+
 		if( val_idx < 10 )
 		{
 			switch( val_idx )
 			{
 			case 0:
-				Emit( op_storelocal0 );
+				Emit( op_def_local0 );
 				break;
 			case 1:
-				Emit( op_storelocal1 );
+				Emit( op_def_local1 );
 				break;
 			case 2:
-				Emit( op_storelocal2 );
+				Emit( op_def_local2 );
 				break;
 			case 3:
-				Emit( op_storelocal3 );
+				Emit( op_def_local3 );
 				break;
 			case 4:
-				Emit( op_storelocal4 );
+				Emit( op_def_local4 );
 				break;
 			case 5:
-				Emit( op_storelocal5 );
+				Emit( op_def_local5 );
 				break;
 			case 6:
-				Emit( op_storelocal6 );
+				Emit( op_def_local6 );
 				break;
 			case 7:
-				Emit( op_storelocal7 );
+				Emit( op_def_local7 );
 				break;
 			case 8:
-				Emit( op_storelocal8 );
+				Emit( op_def_local8 );
 				break;
 			case 9:
-				Emit( op_storelocal9 );
+				Emit( op_def_local9 );
 				break;
 			}
 		}
 		else
-			Emit( op_storelocal, (dword)val_idx );
+			Emit( op_def_local, (dword)val_idx );
 	}
 
 	// key:
 	// index under 10: use the short instructions
+
+	// mark the local as having been defined in this scope
+	CurrentScope()->SetLocalGenerated( key_idx );
+
 	if( key_idx < 10 )
 	{
 		switch( key_idx )
 		{
 		case 0:
-			Emit( op_storelocal0 );
+			Emit( op_def_local0 );
 			break;
 		case 1:
-			Emit( op_storelocal1 );
+			Emit( op_def_local1 );
 			break;
 		case 2:
-			Emit( op_storelocal2 );
+			Emit( op_def_local2 );
 			break;
 		case 3:
-			Emit( op_storelocal3 );
+			Emit( op_def_local3 );
 			break;
 		case 4:
-			Emit( op_storelocal4 );
+			Emit( op_def_local4 );
 			break;
 		case 5:
-			Emit( op_storelocal5 );
+			Emit( op_def_local5 );
 			break;
 		case 6:
-			Emit( op_storelocal6 );
+			Emit( op_def_local6 );
 			break;
 		case 7:
-			Emit( op_storelocal7 );
+			Emit( op_def_local7 );
 			break;
 		case 8:
-			Emit( op_storelocal8 );
+			Emit( op_def_local8 );
 			break;
 		case 9:
-			Emit( op_storelocal9 );
+			Emit( op_def_local9 );
 			break;
 		}
 	}
 	else
-		Emit( op_storelocal, (dword)key_idx );
+		Emit( op_def_local, (dword)key_idx );
 
 	// loop body here
 }
@@ -1139,6 +1175,10 @@ void Compiler::ForOpEnd()
 
 	// backpatch the for_iter instruction with this (loop complete) location
 	BackpatchToCur();
+
+	// generate break jumps to here (*prior* to the pop which removes the excess
+	// item from the stack!!)
+	CleanupEndLoop();
 
 	// pop the remaining iterable item off the stack
 	Emit( op_pop );

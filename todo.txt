@@ -1,4 +1,32 @@
-TODO 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
+DONE 2011-03-03 @deva +veryhigh need to unify run-time symbol look-ups - functions should be in the same look-up as variables/classes/etc. - need local vs 'extern' look-up methods ('extern' look-up will follow the scope chain to main, including modules, looking for the symbol)
+    CLOSED: 2011-03-03 23:38:33
+    :LOGBOOK:
+        DONE: 2011-03-03 23:38:33
+
+DONE 2011-03-02 @deva +veryhigh function defs don't override local vars, causing bad code gen (see test 8)
+    CLOSED: 2011-03-02 19:52:44
+    :LOGBOOK:
+        DONE: 2011-03-02 19:52:44
+        TODO: 2011-03-02 19:52:43
+        CANCELLED: 2011-03-02 19:52:42
+        DONE: 2011-03-02 19:52:41
+
+TODO 2011-03-02 @deva +veryhigh need to mark all locals as obj_end types to start with AND add checks whenever accessing a local so that accessing undefined local vars becomes a runtime error
+
+DONE 2011-02-26 @deva +veryhigh octal and binary numbers not handled (parsed) correctly
+    CLOSED: 2011-02-27 16:15:44
+    :LOGBOOK:
+        DONE: 2011-02-27 16:15:44
+
+TODO 2011-02-01 @deva +veryhigh get test suite running, this is starting to be a major PITA
+
+TODO 2011-02-27 @deva +veryhigh implement string builtins!!
+
+TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os et al)
+DONE 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
+    CLOSED: 2011-02-27 16:20:02
+    :LOGBOOK:
+        DONE: 2011-02-27 16:20:02
 	adding a fcn whose name already exists should *override* the existing fcn (map's behaviour is to not accept the new value) problem is that the v1 deva behvariour was to define the fcns as they occurred in the code, not at compile time, so at any point in the code the most recently defined fcn of a given name was called. v2 is defining them at compile time, and by the time the code executes there will only be ONE function of any given name currently this not only behaves incorrectly, but *leaks* subsequent fcns of the same name (see executor.h, line 119)
 		SOLUTION: 
 		store in an indexable collection that allows duplicates (multi-map)
@@ -15,8 +43,6 @@ TODO 2011-02-01 @deva +veryhigh slices!!
 TODO 2011-02-03 @deva +veryhigh functional vector builtins (map, filter, reduce etc) don't work with methods
 
 TODO 2011-02-01 @deva +veryhigh remaining builtins (eval, error fcns, importmodule)
-
-TODO 2011-02-01 @deva +high get test suite running, this is starting to be a major PITA
 
 TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;' ??
 

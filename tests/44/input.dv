@@ -1,0 +1,14 @@
+# test some file reading/writing built-ins
+
+local s = "foobar";
+local file = open( "foo.bar", "w" );
+writestring( file, s.length(), s );
+close( file );
+file = open( "foo.bar" );
+local bytes = read( file, 32 );
+print( bytes );
+for( byte in bytes )
+{
+	print( chr( byte ), "" );
+}
+print( "" );

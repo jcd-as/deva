@@ -17,7 +17,7 @@ find_library( ANTLR antlr3c )
 
 # TODO: configure for debug and release builds
 # configure defines
-add_definitions( -ggdb -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
+add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
 #add_definitions( -DDEVA_VERSION="2.0.0-alpha" )
 #set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
 #set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
@@ -97,3 +97,10 @@ add_custom_command(
 	VERBATIM
 )
 
+add_custom_command(
+	TARGET deva POST_BUILD
+	COMMAND cscope -b -I inc -s src devaParser.c
+	WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
+	COMMENT "Building cscope database"
+	VERBATIM
+)

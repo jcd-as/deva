@@ -1,0 +1,68 @@
+56
+# test file built-ins
+
+local file = open( "input.dv" );
+
+# test file built-ins
+
+local file = open( "input.dv" );
+local bytes = readstring( file, 56 );
+print( tell( file ) );
+print( bytes );
+
+seek( file, 0 );
+bytes = readline( file );
+while( bytes )
+{
+	print( bytes, "" );
+	bytes = readline( file );
+}
+
+seek( file, 0, 0 ); 	# 0 = SEEK_SET
+local lines = readlines( file );
+for( line in lines )
+{
+	print( line, "" );
+}
+close( file );
+
+# binary read
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes.length() );
+print( bytes );
+close( file );
+# test file built-ins
+
+local file = open( "input.dv" );
+local bytes = readstring( file, 56 );
+print( tell( file ) );
+print( bytes );
+
+seek( file, 0 );
+bytes = readline( file );
+while( bytes )
+{
+	print( bytes, "" );
+	bytes = readline( file );
+}
+
+seek( file, 0, 0 ); 	# 0 = SEEK_SET
+local lines = readlines( file );
+for( line in lines )
+{
+	print( line, "" );
+}
+close( file );
+
+# binary read
+file = open( "input.dv" );
+bytes = read( file, 56 );
+print( tell( file ) );
+print( bytes.length() );
+print( bytes );
+close( file );
+56
+56
+[35, 32, 116, 101, 115, 116, 32, 102, 105, 108, 101, 32, 98, 117, 105, 108, 116, 45, 105, 110, 115, 10, 10, 108, 111, 99, 97, 108, 32, 102, 105, 108, 101, 32, 61, 32, 111, 112, 101, 110, 40, 32, 34, 105, 110, 112, 117, 116, 46, 100, 118, 34, 32, 41, 59, 10]

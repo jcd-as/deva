@@ -46,23 +46,30 @@ namespace deva
 
 class Scope
 {
-	// pointers to locals (actual objects stored in the frame, but the scope
-	// controls freeing objects when they go out of scope)
+	// pointers to:
+	// - locals (actual objects stored in the frame, but the scope
+	// controls freeing objects when they go out of scope) and
+	// - functions (actual objects stored in the executor)
 	// TODO: switch to boost unordered map (hash table)??
 	map<string, Object*> data;
-
-	// functions defined in this scope
-	map<string, Object*> functions;
 
 public:
 	Scope() {}
 	~Scope();
-	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME!)
-	inline void AddSymbol( string name, Object* ob ){ data.insert( pair<string, Object*>(name, ob) ); }
-	inline void AddFunction( string name, Object* fcn ){ functions.insert( pair<string, Object*>(name, fcn ) ); }
+	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
+	// THE EXECUTOR!)
+	inline void AddSymbol( string name, Object* ob )
+	{
+		// if the symbol exists already, erase it
+		map<string, Object*>::iterator i = data.find( name );
+		if( i != data.end() )
+			data.erase( i );
+		data.insert( pair<string, Object*>(name, ob ) );
+	}
+	inline void AddFunction( string name, Object* fcn ) { AddSymbol( name, fcn ); }
 	Object* FindSymbol( const char* name ) const;
+	int FindSymbolIndex( Object* o, Frame* f ) const;
 	const char* FindSymbolName( Object* o );
-	Object* FindFunction( const char* name ) const;
 };
 
 class ScopeTable
@@ -75,9 +82,9 @@ public:
 	inline void PopScope() { delete data.back(); data.pop_back(); }
 	inline Scope* CurrentScope() const { return data.back(); }
 	inline Scope* At( size_t idx ) const { return data[idx]; }
-	Object* FindSymbol( const char* name ) const;
-	const char* FindSymbolName( Object* o );
-	Object* FindFunction( const char* name ) const;
+	Object* FindSymbol( const char* name, bool local_only = false ) const;
+	const char* FindSymbolName( Object* o, bool local_only = false );
+	Object* FindFunction( const char* name ) const { return FindSymbol( name, false ); }
 };
 
 
