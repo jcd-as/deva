@@ -196,7 +196,7 @@ enum Opcode
 	op_dup,			// tos -> tos<Op0> = tos (dup tos N times)
 	// no-operand shortcuts to dup n times:
 	op_dup1, op_dup2, op_dup3,
-	// TODO: do we need the dup_top, swap and rot ops?
+	// TODO: do we need the dup_top and rot ops?
 	op_dup_top_n,	// tos<Op0> -> tos<Op0>*2 = tos -> tos<Op0> (dup top N items once)
 	// no-operand shortcuts to dup top n:
 	op_dup_top1, op_dup_top2, op_dup_top3,

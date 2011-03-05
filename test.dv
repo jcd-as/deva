@@ -16,7 +16,7 @@
 ### which makes this error at compile time because a local var 'b' cannot be found
 ##local b = 1;
 ### POSSIBLE FIX: LocalScope::Define() should check if the var it finds in
-### the locals_map has the same mods (locale etc) as what was found? locals_map
+### the locals_map has the same mods (local etc) as what was found? locals_map
 ### needs to map more than just names?
 #
 ## BUG: doesn't compile: "Cannot locate local symbol 'foo'"
@@ -96,7 +96,45 @@
 ############################################
 ## END BUG SECTION
 ############################################
-#
+# no refcount leaks
+#local v = [ [], 1 ];
+#def fcn( v )
+#{
+#	local i = 0;
+#	local len = v.length();
+#	while( i < len )
+#	{
+#		local vnext = v[i];
+#		print( vnext );
+#		i += 1;
+#	}
+#}
+#fcn( v );
+
+# no refcount leaks
+#def foo()
+#{
+#	local v = [1];
+#	for( i in v ){ return; }
+#}
+#foo();
+#def bar()
+#{
+#	local v = [1];
+#	for( i in v ){ return i; }
+#}
+#local x = bar();
+#print( x );
+
+# no refcount leaks
+#def foo( a ){ return a; }
+#local v = [];
+#foo( v );
+#local v = [255];
+#def fcn(){ return v; }
+#print( fcn()[0] );
+#print( fcn()[0] );
+
 ##no refcount leaks
 ##class C
 ##{

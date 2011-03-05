@@ -39,20 +39,16 @@ namespace deva
 
 Scope::~Scope()
 {
-	// release-ref the vectors/maps and
-	// 'zero' out the locals non-ref types, to error out in case they get 
-	// accidentally used after they should be gone
+	// release-ref and 'zero' out the locals, to error out in case they get 
+	// accidentally used after they should be gone, and to ensure they aren't 
+	// DecRef'd again if/when a new value is assigned to them (e.g. in a loop)
 	for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
-		if( IsRefType( i->second->type ) )
-			DecRef( *(i->second) );
-		else
-		{
-			// functions aren't stored in the frame's locals, but in the executor,
-			// don't try to decref/free them
-			if( i->second->type != obj_function )
-				*(i->second) = Object();
-		}
+		DecRef( *(i->second) );
+		// functions aren't stored in the frame's locals, but in the executor,
+		// don't try to free them
+		if( i->second->type != obj_function )
+			*(i->second) = Object();
 	}
 	// clear the map & vector 'dead pools' (items to be deleted)
 	Map::ClearDeadPool();

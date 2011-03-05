@@ -135,6 +135,9 @@ public:
 	// dot op
 	bool is_dot_rhs;
 
+	// in a 'for' loop?
+	int in_for_loop;
+
 	// instruction stream
 	InstructionStream* is;
 

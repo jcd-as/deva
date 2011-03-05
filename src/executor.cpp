@@ -102,8 +102,29 @@ Object Executor::ResolveSymbol( Object sym )
 		return sym;
 
 	Object* obj = scopes->FindSymbol( sym.s );
+
 	if( !obj )
+	{
+		// builtin?
+		NativeFunction nf = GetBuiltin( sym.s );
+		if( nf.p )
+			return Object( nf );
+		// TODO: string builtin?
+//		NativeFunction nf = GetStringBuiltin( sym.s );
+//		if( nf )
+//			return Object( nf );
+		// vector builtin?
+		nf = GetVectorBuiltin( sym.s );
+		if( nf.p )
+			return Object( nf );
+		// map builtin?
+		nf = GetMapBuiltin( sym.s );
+		if( nf.p )
+			return Object( nf );
+
 		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
+	}
+
 	return *obj;
 }
 
@@ -267,10 +288,10 @@ Opcode Executor::ExecuteInstruction()
 	case op_nop:
 		break;
 	case op_pop:
-		// (pop is the only op that can follow a return op and *doesn't* IncRef
-		// the returned value - in all other cases the IncRef call will reset
-		// the flag)
-		DecRef( stack.back() );
+		{
+			Object tmp = ResolveSymbol( stack.back() );
+			DecRef( tmp );
+		}
 		stack.pop_back();
 		break;
 	case op_push:
@@ -357,7 +378,14 @@ Opcode Executor::ExecuteInstruction()
 	case op_pushconst:
 		// 1 arg: index to constant
 		arg = *((dword*)ip);
-		stack.push_back( GetConstant( arg ) );
+		{
+			// TODO: Resolve the constant sym *here* and remove all the calls to
+			// ResolveSymbol when an obj is popped off the stack ???
+			Object tmp = GetConstant( arg );
+			Object tmp2 = ResolveSymbol( tmp );
+			IncRef( tmp2 );
+			stack.push_back( tmp );
+		}
 		ip += sizeof( dword );
 		break;
 	case op_storeconst:
@@ -421,7 +449,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( arg, rhs );
 		ip += sizeof( dword );
 		break;
@@ -430,7 +457,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 0, rhs );
 		break;
 	case op_storelocal1:
@@ -438,7 +464,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 1, rhs );
 		break;
 	case op_storelocal2:
@@ -446,7 +471,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 2, rhs );
 		break;
 	case op_storelocal3:
@@ -454,7 +478,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 3, rhs );
 		break;
 	case op_storelocal4:
@@ -462,7 +485,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 4, rhs );
 		break;
 	case op_storelocal5:
@@ -470,7 +492,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 5, rhs );
 		break;
 	case op_storelocal6:
@@ -478,7 +499,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 6, rhs );
 		break;
 	case op_storelocal7:
@@ -486,7 +506,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 7, rhs );
 		break;
 	case op_storelocal8:
@@ -494,7 +513,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 8, rhs );
 		break;
 	case op_storelocal9:
@@ -502,7 +520,6 @@ Opcode Executor::ExecuteInstruction()
 		rhs = ResolveSymbol( rhs );
 		stack.pop_back();
 		// set the local in the current frame
-		// SetLocal does the DecRef()
 		CurrentFrame()->SetLocal( 9, rhs );
 		break;
 	case op_def_local:
@@ -1258,6 +1275,7 @@ Opcode Executor::ExecuteInstruction()
 		ip += sizeof( dword );
 		// get the fcn
 		o = stack.back();
+		// TODO: NEED TO RESOLVE/EVALUATE 'o' *BEFORE* DecRef'ING IT!!!???
 		DecRef( o );
 		stack.pop_back();
 		// TODO: if addr relative to another code block (module)??
@@ -1357,11 +1375,6 @@ Opcode Executor::ExecuteInstruction()
 			stack.pop_back();
 			const char* str = CurrentFrame()->GetParent()->AddString( string( o.s ) );
 			stack.push_back( Object( str ) );
-		}
-		// inc ref any returned object!
-		{
-			Object tmp = ResolveSymbol( stack.back() );
-			IncRef( tmp );
 		}
 
 		// 1 arg: number of scopes to leave
@@ -1482,8 +1495,10 @@ Opcode Executor::ExecuteInstruction()
 			}
 			// a vector will just be the value we want
 			else
+			{
 				stack.push_back( o.v->operator[]( 1 ) );
 				IncRef( stack.back() );
+			}
 		}
 		DecRef( o );
 		}
@@ -1658,6 +1673,8 @@ Opcode Executor::ExecuteInstruction()
 								stack.push_back( lhs );
 							}
 						}
+						// TODO: IncRef the object??
+						IncRef( obj );
 						// push the object
 						stack.push_back( obj );
 					}
@@ -2202,8 +2219,16 @@ Opcode Executor::ExecuteInstruction()
 		// TODO:
 	case op_dup_top3:
 		// TODO:
-	case op_swap:
-		// TODO:
+	case op_swap:	// tos = tos1; tos1 = tos
+		// verify the stack
+		{
+		int stack_size = stack.size();
+		if( stack_size < 2 )
+			throw ICE( "Stack error: not enough elements on stack for 'swap' instruction." );
+		Object tmp = stack[stack_size-1];
+		stack[stack_size-1] = stack[stack_size-2];
+		stack[stack_size-2] = tmp;
+		}
 		break;
 	case op_rot:
 		// TODO:
@@ -2309,8 +2334,13 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	PushScope( scope );
 	// jump to the function
 	ip = (byte*)(bp + f->addr);
+	int stack_size = stack.size();
+	if( stack_size < 0 )
+		throw ICE( "Stack underflow." );
 	// execute until it returns
 	ExecuteToReturn( is_destructor );
+	if( stack.size() != stack_size + 1 )
+		throw ICE( boost::format( "Function '%1%' corrupted the stack." ) % f->name );
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )
@@ -2360,7 +2390,15 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	// push the frame onto the callstack
 	PushFrame( frame );
 	PushScope( scope );
+	// save the stack depth & check for underflow
+	int stack_size = stack.size();
+	if( stack_size < 0 )
+		throw ICE( "Stack underflow." );
+	// execute the function
 	nf.p( frame );
+	// check the stack
+	if( stack.size() != stack_size + 1 )
+		throw ICE( "Native function corrupted the stack." );
 	PopScope();
 	PopFrame();
 }

@@ -109,8 +109,8 @@ while_statement
 	;
 
 for_statement 
-@init { if( PSRSTATE->backtracking == 0 ){ compiler->AddScope(); } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->LeaveScope(); } }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->in_for_loop++; compiler->AddScope(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->in_for_loop--; compiler->LeaveScope(); } }
 	:	^(For in_exp block) { if( PSRSTATE->backtracking == 0 ) compiler->ForOpEnd(); }
 	;
 

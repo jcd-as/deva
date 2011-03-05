@@ -60,7 +60,8 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 	is_method( false ),
 	in_class( false ),
 	in_constructor( false ),
-	is_dot_rhs( false )
+	is_dot_rhs( false ),
+	in_for_loop( 0 )
 {
 	// create the instruction stream
 	is = new InstructionStream();
@@ -864,8 +865,29 @@ void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE
 
 void Compiler::ReturnOp( bool no_val /*= false*/ )
 {
+	// no return value in the code? force a 'return null;'
 	if( no_val )
+	{
+		// if we're inside a 'for' loop we need to emit a pop instruction too, 
+		// as for loops have a loop collection var on the stack
+		if( in_for_loop )
+			Emit( op_pop );
 		Emit( op_push_null );
+	}
+	// code is returning a value
+	else
+	{
+		// if we're inside a 'for' loop we need to emit a pop instruction too, 
+		// as for loops have a loop collection var on the stack
+		if( in_for_loop )
+		{
+			// the code to get the return value on the stack is already generated,
+			// so we need to swap the tos and tos1 and then pop the loop
+			// collection var
+			Emit( op_swap );
+			Emit( op_pop );
+		}
+	}
 
 	dword scopecount = fcn_scope_stack.back();
 	Emit( op_return, scopecount );

@@ -686,10 +686,6 @@ void do_vector_reduce( Frame *frame )
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// return vector
-	Vector* ret = CreateVector();
-	ret->reserve( self->v->size() );
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -765,10 +761,6 @@ void do_vector_any( Frame *frame )
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// return vector
-	Vector* ret = CreateVector();
-	ret->reserve( self->v->size() );
-
 	bool is_method = false;
 
 	if( o->type == obj_function )
@@ -823,10 +815,6 @@ void do_vector_all( Frame *frame )
 	Object* o = helper.GetLocalN( 1 );
 
 	helper.ExpectTypes( o, obj_function, obj_native_function );
-
-	// return vector
-	Vector* ret = CreateVector();
-	ret->reserve( self->v->size() );
 
 	bool is_method = false;
 

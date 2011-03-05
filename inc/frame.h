@@ -76,27 +76,8 @@ class Frame
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, Function* f/*, void* self = NULL*/ ) : 
-		parent( p ),
-		scopes( s ),
-		function( f ), 
-		is_native( false ), 
-		locals( NULL ),
-		num_args( args_passed ), 
-		addr( loc )
-		{
-			num_locals = f->IsMethod() ? f->num_locals+1 : f->num_locals;
-			if( num_locals ) locals = new Object[num_locals];
-		}
-	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, NativeFunction f ) : 
-		parent( p ),
-		scopes( s ),
-		native_function( f ), 
-		is_native( true ), 
-		locals( NULL ),
-		num_args( args_passed ), 
-		addr( loc )
-		{ num_locals = args_passed; if( num_locals ) locals = new Object[num_locals]; }
+	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, Function* f );
+	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, NativeFunction f );
 	~Frame();
 	inline Frame* GetParent() { return parent; }
 	inline bool IsNative() const { return is_native; }

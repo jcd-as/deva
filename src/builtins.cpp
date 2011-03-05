@@ -599,6 +599,10 @@ void do_readstring( Frame *frame )
 	// returned will only contain up to the first null...
 	// read() should be used in this case, not readstring
 
+	// add the buffer (string) to the parent frame's string collection
+	// so that it will be freed
+	ex->CurrentFrame()->GetParent()->AddString( s );
+
 	helper.ReturnVal( Object( s ) );
 }
 
@@ -653,6 +657,10 @@ void do_readline( Frame *frame )
 		buffer = new_buf;
 	}
 
+	// add the buffer (string) to the parent frame's string collection
+	// so that it will be freed
+	ex->CurrentFrame()->GetParent()->AddString( buffer );
+
 	helper.ReturnVal( Object( buffer ) );
 }
 
@@ -706,6 +714,10 @@ void do_readlines( Frame *frame )
 			delete [] buffer;
 			buffer = new_buf;
 		}
+
+		// add the buffer (string) to the parent frame's string collection
+		// so that it will be freed
+		ex->CurrentFrame()->GetParent()->AddString( buffer );
 
 		// add this line to our output vector
 		vec->push_back( Object( buffer ) );
