@@ -37,22 +37,26 @@ if len( sys.argv ) > 1:
 # run 'dotest input.dv baseline' in each sub-dir
 tests = 0
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
+# if there is a 'disable' file, don't run this test
     if baseline in files:
-        tests += 1
         print( "processing " + root + " ..." )
-        os.chdir( root )
-        if baseline_sized in files:
-            bl = baseline_sized
+        if "disable" not in files:
+            tests += 1
+            os.chdir( root )
+            if baseline_sized in files:
+                bl = baseline_sized
+            else:
+                bl = baseline
+        #        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
+            if valgrind:
+                ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv" )
+            else:
+                ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", bl )
+            if ret != 0:
+                failed_tests.append( root )
         else:
-            bl = baseline
-#        ret = os.spawnl( os.P_WAIT, "./dotest", "dotest", "input.dv", bl )
-        if valgrind:
-            ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv" )
-        else:
-            ret = os.spawnl( os.P_WAIT, dotest, "dotest", "input.dv", bl )
-        if ret != 0:
-            failed_tests.append( root )
-        
+            print( "disabled" );
+
 os.chdir( init_dir )
 
 # re-print failures:
