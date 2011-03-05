@@ -37,9 +37,9 @@ if len( sys.argv ) > 1:
 # run 'dotest input.dv baseline' in each sub-dir
 tests = 0
 for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
-# if there is a 'disable' file, don't run this test
     if baseline in files:
         print( "processing " + root + " ..." )
+        # if there is a 'disable' file, don't run this test
         if "disable" not in files:
             tests += 1
             os.chdir( root )
@@ -55,7 +55,7 @@ for root, dir, files in os.walk( os.path.join( os.getcwd(), "tests" ) ):
             if ret != 0:
                 failed_tests.append( root )
         else:
-            print( "disabled" );
+            print( "test disabled" );
 
 os.chdir( init_dir )
 
