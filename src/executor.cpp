@@ -1275,8 +1275,8 @@ Opcode Executor::ExecuteInstruction()
 		ip += sizeof( dword );
 		// get the fcn
 		o = stack.back();
-		// TODO: NEED TO RESOLVE/EVALUATE 'o' *BEFORE* DecRef'ING IT!!!???
-		DecRef( o );
+		Object tmp = ResolveSymbol( o );
+		DecRef( tmp );
 		stack.pop_back();
 		// TODO: if addr relative to another code block (module)??
 		//

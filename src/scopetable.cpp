@@ -46,7 +46,7 @@ Scope::~Scope()
 	{
 		DecRef( *(i->second) );
 		// functions aren't stored in the frame's locals, but in the executor,
-		// don't try to free them
+		// don't try to overwrite them
 		if( i->second->type != obj_function )
 			*(i->second) = Object();
 	}
