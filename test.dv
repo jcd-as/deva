@@ -1,3 +1,12 @@
+def foo(){ print( "foo #1" ); }
+if( true )
+{
+	# new scope
+	def foo(){ print( "foo #2" ); }
+	foo();
+}
+foo();
+
 ## BUG: break in nested fcn not working
 ## see test 67
 ##for( i in range( 0, 10 ) )

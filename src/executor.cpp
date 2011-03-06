@@ -32,7 +32,6 @@
 #include "vector_builtins.h"
 #include "map_builtins.h"
 
-#include <cmath>
 #include <algorithm>
 
 using namespace std;
@@ -270,7 +269,6 @@ Opcode Executor::ExecuteInstruction()
 {
 	dword arg, arg2, arg3;
 	Object o, lhs, rhs, *plhs;
-	double intpart; // for modf() calls
 
 	// decode opcode
 	Opcode op = (Opcode)*ip;
@@ -1049,7 +1047,7 @@ Opcode Executor::ExecuteInstruction()
 		if( rhs.d == 0.0 )
 			throw RuntimeException( "Division by zero fault." );
 		// error if arguments aren't integral numbers...
-		if( modf( lhs.d, &intpart ) != 0.0 || modf( rhs.d, &intpart ) != 0.0 )
+		if( !is_integral( lhs.d ) || !is_integral( rhs.d ) )
 			throw RuntimeException( "Operands in modulus operator must be integral numbers." );
 		stack.push_back( Object( (double)((int)lhs.d % (int)rhs.d) ) );
 		break;
@@ -1164,7 +1162,7 @@ Opcode Executor::ExecuteInstruction()
 		if( rhs.d == 0.0 )
 			throw RuntimeException( "Divide-by-zero error." );
 		// error if arguments aren't integral numbers...
-		if( modf( lhs.d, &intpart ) != 0.0 || modf( rhs.d, &intpart ) != 0.0 )
+		if( !is_integral( lhs.d ) || !is_integral( rhs.d ) )
 			throw RuntimeException( "Operands in modulus operator must be integral numbers." );
 		*plhs = Object( (double)((int)plhs->d / (int)rhs.d) );
 		ip += sizeof( dword );
@@ -1262,7 +1260,7 @@ Opcode Executor::ExecuteInstruction()
 		if( rhs.d == 0.0 )
 			throw RuntimeException( "Divide-by-zero error." );
 		// error if arguments aren't integral numbers...
-		if( modf( lhs.d, &intpart ) != 0.0 || modf( rhs.d, &intpart ) != 0.0 )
+		if( !is_integral( lhs.d ) || !is_integral( rhs.d ) )
 			throw RuntimeException( "Operands in modulus operator must be integral numbers." );
 		CurrentFrame()->SetLocal( arg, Object( (double)((int)lhs.d % (int)rhs.d) ) );
 		ip += sizeof( dword );
@@ -1509,10 +1507,28 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// string:
+		if( lhs.type == obj_string )
+		{
+			// validate the indexer type
+			if( rhs.type != obj_number || !is_integral( rhs.d ) )
+				throw RuntimeException( "Argument to string indexer must be an integral number." );
+			// validate the bounds
+			if( rhs.d > strlen( lhs.s ) )
+				throw RuntimeException( boost::format( "Out-of-bounds in string index: '%1%' is greater than the length of '%2%'" ) % rhs.d % lhs.s );
+			// create a new (single-character) string of the indexed character,
+			char* c = new char[2];
+			c[0] = lhs.s[(size_t)rhs.d];
+			c[1] = '\0';
+			// add it to the current scope
+			CurrentFrame()->AddString( c );
+			// return it on the stack
+			stack.push_back( Object( c ) );
+		}
 		// vector:
-		if( IsVecType( lhs.type ) )
+		else if( IsVecType( lhs.type ) )
 		{
 			if( rhs.type == obj_string || rhs.type == obj_symbol_name )
 			{
@@ -1533,8 +1549,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Index to a vector must be a numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -1790,16 +1805,35 @@ Opcode Executor::ExecuteInstruction()
 		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
 			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		// string:
+		if( lhs.type == obj_string )
+		{
+			// validate the indexer type
+			if( rhs.type != obj_number || !is_integral( rhs.d ) )
+				throw RuntimeException( "Argument to string indexer must be an integral number." );
+			// validate the bounds
+			if( rhs.d > strlen( lhs.s ) )
+				throw RuntimeException( boost::format( "Out-of-bounds in string index: '%1%' is greater than the length of '%2%'" ) % rhs.d % lhs.s );
+
+			// strings are immutable, so we need to create a new string with the 
+			// modified contents and add it to the current scope's string collection
+			char* s = copystr( lhs.s );
+			size_t idx = (size_t)rhs.d;
+			s[idx] = lhs.s[idx];
+			// add it to the current scope
+			CurrentFrame()->AddString( s );
+			// return it on the stack
+			stack.push_back( Object( s ) );
+		}
 		// vector:
 		if( IsVecType( lhs.type ) )
 		{
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -1845,8 +1879,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -1937,8 +1970,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -2001,8 +2033,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -2065,8 +2096,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -2129,8 +2159,7 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_number )
 				throw RuntimeException( "Vectors can only be indexed with numeric values." );
 			// error if arguments aren't integral numbers...
-			double intpart;
-			if( modf( rhs.d, &intpart ) != 0.0 )
+			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
@@ -2144,7 +2173,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "right-hand side of '%=' operator must be a number." );
 
 			// ensure integral arguments
-			if( modf( o.d, &intpart ) != 0.0 || modf( lhsob.d, &intpart ) != 0.0 )
+			if( !is_integral( o.d ) || !is_integral( lhsob.d ) )
 				throw RuntimeException( "arguments to '%=' must be integral values." );
 
 			double d = (int)lhsob.d % (int)o.d;
@@ -2175,7 +2204,7 @@ Opcode Executor::ExecuteInstruction()
 
 			// ensure integral arguments
 			double intpart;
-			if( modf( o.d, &intpart ) != 0.0 || modf( lhsob.d, &intpart ) != 0.0 )
+			if( !is_integral( o.d ) || !is_integral( lhsob.d ) )
 				throw RuntimeException( "arguments to '%=' must be integral values." );
 
 			double d = (int)lhsob.d % (int)o.d;

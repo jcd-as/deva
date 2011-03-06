@@ -33,6 +33,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -82,6 +83,14 @@ bool is_keyword( const string & s );
 
 // parse a number (decimal, binary, octal or hex)
 double parse_number( const char* s );
+
+// is a double an integral value?
+inline bool is_integral( double d )
+{
+	double intpart;
+	if( modf( d, &intpart ) == 0.0 ) return true;
+	else return false;
+}
 
 } // namespace deva
 

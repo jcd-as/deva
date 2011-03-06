@@ -712,6 +712,7 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 			&& type != Const
 			&& type != Local
 			&& type != Extern
+			&& type != Call
 		  )
 			Emit( op_pop );
 	}

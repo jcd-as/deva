@@ -11,18 +11,27 @@ DONE 2011-03-02 @deva +veryhigh function defs don't override local vars, causing
         CANCELLED: 2011-03-02 19:52:42
         DONE: 2011-03-02 19:52:41
 
-TODO 2011-03-02 @deva +veryhigh need to mark all locals as obj_end types to start with AND add checks whenever accessing a local so that accessing undefined local vars becomes a runtime error
+TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 DONE 2011-02-26 @deva +veryhigh octal and binary numbers not handled (parsed) correctly
     CLOSED: 2011-02-27 16:15:44
     :LOGBOOK:
         DONE: 2011-02-27 16:15:44
 
-TODO 2011-02-01 @deva +veryhigh get test suite running, this is starting to be a major PITA
+DONE 2011-02-01 @deva +veryhigh get test suite running, this is starting to be a major PITA
+    CLOSED: 2011-03-06 13:20:25
+    :LOGBOOK:
+        DONE: 2011-03-06 13:20:25
 
 TODO 2011-02-27 @deva +veryhigh implement string builtins!!
 
-TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os et al)
+TODO 2011-02-01 @deva +veryhigh import/modules
+	better module/package architecture: allow packages (dirs) of modules? 
+	how do modules work? (each module is compiled into a separate code block, which means the 'import' op needs to create the new code block. all fcns in the module are inside this code block, just like the 'main' code block
+	BUG: module names aren't being found (ICE in compiler)
+
+TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os, re et al)
+
 DONE 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
     CLOSED: 2011-02-27 16:20:02
     :LOGBOOK:
@@ -54,13 +63,6 @@ TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebac
 
 TODO 2011-02-01 @deva +high store classes separately
 	classes need to be stored in a separate collection from other objects so that all the instances can be deleted *before* the classes (otherwise destructors won't operate properl
-
-TODO 2011-02-01 @deva +veryhigh import/modules
-	better module/package architecture: allow packages (dirs) of modules? 
-	how do modules work? (each module is compiled into a separate code block, which means the 'import' op needs to create the new code block. all fcns in the module are inside this code block, just like the 'main' code block
-	BUG: module names aren't being found (ICE in compiler)
-
-TODO 2011-02-03 @deva +veryhigh implement bit, math, os, re modules
 
 TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
 
