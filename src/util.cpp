@@ -155,6 +155,15 @@ char* copystr( const char* in )
 	return ret;
 }
 
+// allocate a concatenation of two strings
+char* catstr( const char* s1, const char* s2 )
+{
+	char* ret = new char[strlen( s1 ) + strlen( s2 ) + 1];
+	strcpy( ret, s1 );
+	strcat( ret, s2 );
+	return ret;
+}
+
 // strip the whitespace and leading comments from a string,
 // to create a valid symbol name
 string strip_symbol( const string& src, const string& c )

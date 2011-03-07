@@ -61,6 +61,8 @@ TODO 2011-02-01 @deva +high short-circuiting && and || ops ??
 
 TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
 
+TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
+
 TODO 2011-02-01 @deva +high store classes separately
 	classes need to be stored in a separate collection from other objects so that all the instances can be deleted *before* the classes (otherwise destructors won't operate properl
 

@@ -29,6 +29,7 @@
 #include "executor.h"
 #include "error.h"
 #include "builtins.h"
+#include "string_builtins.h"
 #include "vector_builtins.h"
 #include "map_builtins.h"
 
@@ -108,10 +109,10 @@ Object Executor::ResolveSymbol( Object sym )
 		NativeFunction nf = GetBuiltin( sym.s );
 		if( nf.p )
 			return Object( nf );
-		// TODO: string builtin?
-//		NativeFunction nf = GetStringBuiltin( sym.s );
-//		if( nf )
-//			return Object( nf );
+		// string builtin?
+		nf = GetStringBuiltin( sym.s );
+		if( nf.p )
+			return Object( nf );
 		// vector builtin?
 		nf = GetVectorBuiltin( sym.s );
 		if( nf.p )
@@ -1512,6 +1513,8 @@ Opcode Executor::ExecuteInstruction()
 		// string:
 		if( lhs.type == obj_string )
 		{
+			// TODO: handle string built-in methods
+			//
 			// validate the indexer type
 			if( rhs.type != obj_number || !is_integral( rhs.d ) )
 				throw RuntimeException( "Argument to string indexer must be an integral number." );
@@ -1630,10 +1633,32 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) )
-			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (vector, map, class or instance)." ) % lhs );
+		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
+			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class or instance)." ) % lhs );
 
-		if( lhs.type == obj_vector )
+		// string:
+		if( lhs.type == obj_string )
+		{
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+				throw RuntimeException( boost::format( "Expected method name, found '%1%'." ) % rhs );
+
+			// check for string built-in method
+			NativeFunction nf = GetStringBuiltin( string( rhs.s ) );
+			if( nf.p )
+			{
+				if( !nf.is_method )
+					throw ICE( "String builtin not marked as a method." );
+				stack.push_back( lhs );
+				IncRef( lhs );
+				stack.push_back( Object( nf ) );
+			}
+			else
+				throw RuntimeException( "Invalid string method." );
+
+			break;
+		}
+		// vector:
+		else if( lhs.type == obj_vector )
 		{
 			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
 				throw RuntimeException( boost::format( "Expected method name, found '%1%'." ) % rhs );
@@ -1652,9 +1677,9 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Invalid vector method." );
 
 			DecRef( lhs );
-			DecRef( rhs );
 			break;
 		}
+		// map/class/instance:
 		else
 		{
 			// find the rhs (key in the lhs (map)
@@ -1711,7 +1736,6 @@ Opcode Executor::ExecuteInstruction()
 
 					}
 					DecRef( lhs );
-					DecRef( rhs );
 					break;
 				}
 				else if( rhs.type == obj_string )
@@ -1739,7 +1763,6 @@ Opcode Executor::ExecuteInstruction()
 							// push the function
 							stack.push_back( obj );
 							DecRef( lhs );
-							DecRef( rhs );
 							break;
 						}
 						else
@@ -1761,7 +1784,6 @@ Opcode Executor::ExecuteInstruction()
 							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
 					}
 					DecRef( lhs );
-					DecRef( rhs );
 					break;
 				}
 				else 
@@ -1810,6 +1832,8 @@ Opcode Executor::ExecuteInstruction()
 		// string:
 		if( lhs.type == obj_string )
 		{
+			// TODO: handle string built-in methods
+			//
 			// validate the indexer type
 			if( rhs.type != obj_number || !is_integral( rhs.d ) )
 				throw RuntimeException( "Argument to string indexer must be an integral number." );

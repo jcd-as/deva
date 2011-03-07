@@ -69,6 +69,7 @@ add_executable( deva
 	src/api.cpp
 	src/builtins.cpp
 	src/vector_builtins.cpp
+	src/string_builtins.cpp
 	src/builtins_helpers.cpp
 	src/map_builtins.cpp
 	src/frame.cpp
