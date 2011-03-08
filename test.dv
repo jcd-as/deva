@@ -1,11 +1,14 @@
-def foo(){ print( "foo #1" ); }
-if( true )
+# BUG: leaks 's'
+class A
 {
-	# new scope
-	def foo(){ print( "foo #2" ); }
-	foo();
+	def fcn()
+	{
+		local s = [];
+		return s;
+	}
 }
-foo();
+local a = new A();
+a.fcn();
 
 ## BUG: break in nested fcn not working
 ## see test 67

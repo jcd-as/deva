@@ -1,0 +1,30 @@
+#!/bin/bash
+# do test using valgrind on deva (deva executor) to compile and execute the program
+# ONLY ensures the code is valgrind clean, doesn't ensure the test ran 
+# correctly otherwise (use the normal dotest_exec script for that)
+
+if [ $# -ne 1 ] ; then
+    echo "usage: dotest_valgrind <input_file>"
+    exit
+fi
+
+if [ -z $DEVA ] ; then
+	echo "DEVA environment variable must be set to point to the directory where 'deva' is installed"
+	exit
+fi
+
+# execute, but do not compile, the test code under valgrind
+valgrind --leak-check=yes $DEVA/deva $1 2> '$$$RESULTS$$$' > /dev/null
+
+if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
+    echo "test succeeded"
+    rm -f '$$$RESULTS$$$'
+	#rm -f *.dvc
+    exit
+else
+    echo "test failed"
+    rm -f '$$$RESULTS$$$'
+	#rm -f *.dvc
+    exit -1
+fi
+

@@ -213,7 +213,7 @@ dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 
 call_exp[pANTLR3_BASE_TREE parent]
 @init { compiler->is_method = false; }
-	:	^(Call args id=exp[false,$call_exp.start]) { compiler->CallOp( $id.start, $args.start, $parent ); }
+	:	^(Call args id=exp[false,$call_exp.start]) { compiler->CallOp( $id.start, $args.start, parent ); }
 	;
 
 args

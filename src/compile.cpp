@@ -698,23 +698,35 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 	}
 	else
 		Emit( op_call, (dword)num_children );
+
 	// if the return value is unused, a pop instruction needs to be generated
+	// (DOT_OP and Call are the only fcn nodes that pass a non-NULL 'parent' in)
 	if( parent )
 	{
-		// TODO: actually, i think anything except NULL indicates a pop...
+		unsigned int fcn_type = fcn->getType( fcn );
 		unsigned int type = parent->getType( parent );
-		if( type != ASSIGN_OP 
-			&& type != ADD_EQ_OP
-			&& type != SUB_EQ_OP
-			&& type != MUL_EQ_OP
-			&& type != DIV_EQ_OP
-			&& type != MOD_EQ_OP
-			&& type != Const
-			&& type != Local
-			&& type != Extern
-			&& type != Call
-		  )
-			Emit( op_pop );
+
+		// examples:
+		// print( foo ); => fcn_type = ID, type = Block	: POP
+		// bar()(); => fcn_type = ID, type = Call		: NO POP
+		// 			=> fcn_type = Call, type = Call		: POP
+		// a.fcn()	=> fcn_type = DOT_OP, type = Call	: POP
+
+		if( fcn_type == ID )
+		{
+			if( type != Call )
+				Emit( op_pop );
+		}
+		else if( fcn_type == Call )
+		{
+			if( type == Call )
+				Emit( op_pop );
+		}
+		else if( fcn_type == DOT_OP )
+		{
+			if( type == Call )
+				Emit( op_pop );
+		}
 	}
 }
 
