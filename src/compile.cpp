@@ -701,7 +701,11 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 
 	// if the return value is unused, a pop instruction needs to be generated
 	// (DOT_OP and Call are the only fcn nodes that pass a non-NULL 'parent' in)
-	if( parent )
+	//
+	// if the translation unit is the parent, we pass (void*)-1. kludgey, yes.
+	if( parent == (pANTLR3_BASE_TREE)-1 )
+		Emit( op_pop );
+	else if( parent )
 	{
 		unsigned int fcn_type = fcn->getType( fcn );
 		unsigned int type = parent->getType( parent );
@@ -724,7 +728,16 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 		}
 		else if( fcn_type == DOT_OP )
 		{
-			if( type == Call )
+			if( type != ASSIGN_OP 
+				&& type != ADD_EQ_OP
+				&& type != SUB_EQ_OP
+				&& type != MUL_EQ_OP
+				&& type != DIV_EQ_OP
+				&& type != MOD_EQ_OP
+				&& type != Const
+				&& type != Local
+				&& type != Extern
+			  )
 				Emit( op_pop );
 		}
 	}

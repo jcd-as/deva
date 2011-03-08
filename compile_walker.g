@@ -57,7 +57,9 @@ translation_unit
 
 top_level_statement
 	:	class_decl
-	|	statement[$top_level_statement.start]
+	// passing -1 as a pointer is a bit of a hack, but we need a special marker
+	// value besides NULL (which is already used) for CallOp()
+	|	statement[(pANTLR3_BASE_TREE)-1]
 	;
 
 statement[pANTLR3_BASE_TREE parent]
@@ -208,7 +210,7 @@ dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 			DOT_OP 
 			exp[false,NULL] {compiler->is_dot_rhs=true;} 
 			rhs=exp[false,$parent]
-		) { compiler->DotOp( is_lhs_of_assign, $rhs.start, $parent ); }
+		) { compiler->DotOp( is_lhs_of_assign, $rhs.start, parent ); }
 	;
 
 call_exp[pANTLR3_BASE_TREE parent]
