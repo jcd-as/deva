@@ -23,7 +23,10 @@ DONE 2011-02-01 @deva +veryhigh get test suite running, this is starting to be a
     :LOGBOOK:
         DONE: 2011-03-06 13:20:25
 
-TODO 2011-02-27 @deva +veryhigh implement string builtins!!
+DONE 2011-02-27 @deva +veryhigh implement string builtins!!
+    CLOSED: 2011-03-09 19:46:05
+    :LOGBOOK:
+        DONE: 2011-03-09 19:46:05
 
 TODO 2011-02-01 @deva +veryhigh import/modules
 	better module/package architecture: allow packages (dirs) of modules? 

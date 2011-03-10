@@ -67,6 +67,7 @@ public:
 	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4 );
 	void ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4, ObjectType t5 );
 	void ExpectIntegralNumber( Object* obj );
+	void ExpectPositiveIntegralNumber( Object* obj );
 
 	// argument/data handling
 	Object* GetLocalN( int local_num );

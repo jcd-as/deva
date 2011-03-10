@@ -29,6 +29,7 @@
 // * 
 
 #include "builtins_helpers.h"
+#include "util.h"
 #include <cmath>
 
 namespace deva
@@ -103,12 +104,14 @@ void BuiltinHelper::ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, Obje
 
 void BuiltinHelper::ExpectIntegralNumber( Object* obj )
 {
-	if( obj->type != obj_number )
+	if( obj->type != obj_number || !is_integral( obj->d ) )
 		throw RuntimeException( boost::format( "integral number expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+}
 
-	double intpart;
-	if( modf( obj->d, &intpart ) != 0.0 )
-		throw RuntimeException( boost::format( "integral number expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+void BuiltinHelper::ExpectPositiveIntegralNumber( Object* obj )
+{
+	if( obj->type != obj_number || !is_integral( obj->d ) || obj->d < 0.0 )
+		throw RuntimeException( boost::format( "positive integral number expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 Object* BuiltinHelper::GetLocalN( int local_num )

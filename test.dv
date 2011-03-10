@@ -1,37 +1,3 @@
-# ast:
-#(Def 
-#	foo 
-#	Arg_list_decl 
-#	(Block 
-#		(Local 
-#			v 
-#			Vec_init
-#		)
-#		(Call 
-#			(ArgList 0) 
-#			(DOT_OP v append)
-#		)
-#	)
-#)
-#(Call ArgList foo) 
-def foo()
-{
-	local v = [];
-	v.append( 0 );
-}
-foo();
-
-# BUG: leaks 's' - retval isn't popped off stack
-#class A
-#{
-#	def fcn()
-#	{
-#		local s = [];
-#		return s;
-#	}
-#}
-#local a = new A();
-#a.fcn();
 
 ## BUG: break in nested fcn not working
 ## see test 67

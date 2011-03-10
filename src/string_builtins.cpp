@@ -160,7 +160,7 @@ void do_string_insert( Frame *frame )
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_string );
 	Object* pos = helper.GetLocalN( 1 );
-	helper.ExpectIntegralNumber( pos );
+	helper.ExpectPositiveIntegralNumber( pos );
 	Object* po = helper.GetLocalN( 2 );
 	helper.ExpectType( po, obj_string );
 
@@ -181,7 +181,7 @@ void do_string_remove( Frame *frame )
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_string );
 	Object* startobj = helper.GetLocalN( 1 );
-	helper.ExpectIntegralNumber( startobj );
+	helper.ExpectPositiveIntegralNumber( startobj );
 
 	int start = (int)startobj->d;
 	// end arg defaults to -1 (same as end-of-string)
@@ -193,596 +193,574 @@ void do_string_remove( Frame *frame )
 		end = (int)endobj->d;
 	}
 
-	// remove the chars
-	// (strings are immutable. create a copy and add it to the calling frame)
 	size_t sz = strlen( self->s );
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'remove'." );
 	if( end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in string built-in method 'remove'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in string built-in method 'remove': start is greater than end." );
 
+	// remove the chars
+	// (strings are immutable. create a copy and add it to the calling frame)
 	string s( self->s );
 	s.erase( start, end );
 	const char* ret = frame->GetParent()->AddString( s );
 	
 	helper.ReturnVal( Object( ret ) );
 }
-/*
+
 void do_string_find( Frame *frame )
 {
-	if( Frame::args_on_stack > 3 || Frame::args_on_stack < 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'find' built-in method." );
+	BuiltinHelper helper( "string", "find", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "find", sym_string );
+	helper.CheckNumberOfArguments( 2, 4 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value is first on stack
-	DevaObject val = get_arg_of_type( ex, "string.find", "value", sym_string );
-	
-	size_t i_start = 0;
-	size_t i_len = -1;
-	if( Frame::args_on_stack > 1 )
+	// value to search for is first arg
+	Object* val = helper.GetLocalN( 1 );
+	helper.ExpectType( val, obj_string );
+
+	// start arg defaults to 0
+	int start = 0;
+	if( frame->NumArgsPassed() > 2 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = get_arg_of_type( ex, "string.find", "start", sym_number );
-		// TODO: start needs to be integral values. error if they aren't
-		i_start = (int)start.num_val;
-	}
-	if( Frame::args_on_stack > 2 )
-	{
-		// length of substring to find at is next on stack
-		DevaObject len = get_arg_of_type( ex, "string.find", "length", sym_number );
-		// TODO: length need to be integral values. error if they aren't
-		i_len = (int)len.num_val;
+		Object* startobj = helper.GetLocalN( 2 );
+		helper.ExpectPositiveIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
 
-	size_t sz = strlen( str.str_val );
-	size_t sz_val = strlen( val.str_val );
-
-	DevaObject ret;
-	// can't find anything in an empty string
-	if( sz == 0 )
+	// substring length arg defaults to -1 (same as end-of-string)
+	int len = -1;
+	if( frame->NumArgsPassed() > 3 )
 	{
-		ret = DevaObject( "", sym_null );
+		Object* lenobj = helper.GetLocalN( 3 );
+		helper.ExpectIntegralNumber( lenobj );
+		len = (int)lenobj->d;
+	}
+
+	size_t sz = strlen( self->s );
+	size_t sz_val = strlen( val->s );
+	// if a sub-string length wasn't passed, use the entire search string
+	if( len == -1 )
+		len = sz_val;
+	// nothing to find in an empty string, and an empty string will never be
+	// found
+	if( sz == 0 || sz_val == 0 || len == 0 )
+	{
+		helper.ReturnVal( Object( obj_null ) );
 	}
 	else
 	{
-		// default length is the entire search string
-		if( i_len == -1 )
-			i_len = sz_val;
+		if( start >= sz )
+			throw RuntimeException( "Invalid 'start' argument in string built-in method 'find'." );
+		if( len > sz_val || len < 0 )
+			throw RuntimeException( "Invalid 'length' argument in string built-in method 'find'." );
 
-		if( i_start >= sz || i_start < 0 )
-			throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'find'." );
-		if( i_len > sz_val || i_len < 0 )
-			throw DevaRuntimeException( "Invalid 'length' argument in string built-in method 'find'." );
-
-		// find the element that matches
-		string s( str.str_val );
-		size_t fpos = s.find( val.str_val, i_start, i_len );
-		if( fpos != string::npos )
-			ret = DevaObject( "", (double)fpos );
+		// find the matching sub-string
+		string s( self->s );
+		size_t fpos = s.find( val->s, start, len );
+		if( fpos == string::npos )
+			helper.ReturnVal( Object( obj_null ) );
 		else
-			ret = DevaObject( "", sym_null );
+		{
+			helper.ReturnVal( Object( (double)fpos ) );
+		}
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( ret );
 }
 
 void do_string_rfind( Frame *frame )
 {
-	if( Frame::args_on_stack > 3 || Frame::args_on_stack < 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'rfind' built-in method." );
+	BuiltinHelper helper( "string", "rfind", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "rfind", sym_string );
+	helper.CheckNumberOfArguments( 2, 4 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value is first on stack
-	DevaObject val = get_arg_of_type( ex, "string.rfind", "value", sym_string );
-	
-	size_t i_start = string::npos;
-	size_t i_len = -1;
-	if( Frame::args_on_stack > 1 )
+	// value to search for is first arg
+	Object* val = helper.GetLocalN( 1 );
+	helper.ExpectType( val, obj_string );
+
+	// start arg defaults to end-of-string
+	int start = string::npos;
+	if( frame->NumArgsPassed() > 2 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = get_arg_of_type( ex, "string.rfind", "start", sym_number );
-		// TODO: start needs to be integral values. error if they aren't
-		i_start = (int)start.num_val;
-	}
-	if( Frame::args_on_stack > 2 )
-	{
-		// length of substring to find at is next on stack
-		DevaObject len = get_arg_of_type( ex, "string.rfind", "length", sym_number );
-		// TODO: length need to be integral values. error if they aren't
-		i_len = (int)len.num_val;
+		Object* startobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
 
-	size_t sz = strlen( str.str_val );
-	size_t sz_val = strlen( val.str_val );
-
-	DevaObject ret;
-	// can't find anything in an empty string
-	if( sz == 0 )
+	// substring length arg defaults to -1 (same as end-of-string)
+	int len = -1;
+	if( frame->NumArgsPassed() > 3 )
 	{
-		ret = DevaObject( "", sym_null );
+		Object* lenobj = helper.GetLocalN( 3 );
+		helper.ExpectIntegralNumber( lenobj );
+		len = (int)lenobj->d;
+	}
+
+	size_t sz = strlen( self->s );
+	size_t sz_val = strlen( val->s );
+	// convert a start val of '-1' into end-of-string
+	if( start == -1 )
+		start = string::npos;
+	// if a sub-string length wasn't passed, use the entire search string
+	if( len == -1 )
+		len = sz_val;
+	// nothing to find in an empty string, and an empty string will never be
+	// found
+	if( sz == 0 || sz_val == 0 || len == 0 )
+	{
+		helper.ReturnVal( Object( obj_null ) );
 	}
 	else
 	{
-		// convert '-1' into end-of-string
-		if( i_start == -1 )
-			i_start = string::npos;
+		if( (start >= sz && start != string::npos) || start < -1 )
+			throw RuntimeException( "Invalid 'start' argument in string built-in method 'rfind'." );
+		if( (len > sz_val && len != string::npos) || len < 0 )
+			throw RuntimeException( "Invalid 'length' argument in string built-in method 'rfind'." );
 
-		// default length is the entire search string
-		if( i_len == -1 )
-			i_len = sz_val;
-
-		if( (i_start >= sz && i_start != string::npos) || i_start < 0 )
-			throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'rfind'." );
-		if( (i_len > sz_val && i_len != string::npos) || i_len < 0 )
-			throw DevaRuntimeException( "Invalid 'length' argument in string built-in method 'rfind'." );
-
-		// rfind the element that matches
-		string s( str.str_val );
-		size_t fpos = s.rfind( val.str_val, i_start, i_len );
-		if( fpos != string::npos )
-			ret = DevaObject( "", (double)fpos );
+		// find the matching sub-string
+		string s( self->s );
+		size_t fpos = s.rfind( val->s, start, len );
+		if( fpos == string::npos )
+			helper.ReturnVal( Object( obj_null ) );
 		else
-			ret = DevaObject( "", sym_null );
+		{
+			helper.ReturnVal( Object( (double)fpos ) );
+		}
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( ret );
 }
 
 void do_string_reverse( Frame *frame )
 {
-	if( Frame::args_on_stack > 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'reverse' built-in method." );
+	BuiltinHelper helper( "string", "reverse", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "reverse", sym_string );
+	helper.CheckNumberOfArguments( 1, 3 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	int i_start = 0;
-	int i_end = -1;
-	if( Frame::args_on_stack > 1 )
+	// start arg defaults to 0
+	int start = 0;
+	if( frame->NumArgsPassed() > 1 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = get_arg_of_type( ex, "string.reverse", "start", sym_number );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_start = (int)start.num_val;
-	}
-	if( Frame::args_on_stack > 0 )
-	{
-		// end position to insert at is next on stack
-		DevaObject end = get_arg_of_type( ex, "string.reverse", "end", sym_number );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_end = (int)end.num_val;
+		Object* startobj = helper.GetLocalN( 1 );
+		helper.ExpectPositiveIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
 
-	size_t sz = strlen( str.str_val );
+	// end arg defaults to -1 (same as end-of-string)
+	int end = -1;
+	if( frame->NumArgsPassed() > 2 )
+	{
+		Object* endobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
+	}
 
-	if( i_end == -1 )
-		i_end = sz;
+	size_t sz = strlen( self->s );
+	if( end == -1 )
+		end = sz;
 
-	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'reverse'." );
-	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'reverse'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in string built-in method 'reverse': start is greater than end." );
+	if( start >= sz )
+		throw RuntimeException( "Invalid 'start' argument in string built-in method 'reverse'." );
+	if( end > sz || end < 0 )
+		throw RuntimeException( "Invalid 'end' argument in string built-in method 'reverse'." );
+	if( end < start )
+		throw RuntimeException( "Invalid arguments in string built-in method 'reverse': start is greater than end." );
 
-	string ret( str.str_val );
-	reverse( ret.begin() + i_start, ret.begin() + i_end );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the new string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	// reverse the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	reverse( s.begin() + start, s.begin() + end );
+	const char* ret = frame->GetParent()->AddString( s );
+	
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_sort( Frame *frame )
 {
-	if( Frame::args_on_stack > 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'sort' built-in method." );
+	BuiltinHelper helper( "string", "sort", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "sort", sym_string );
+	helper.CheckNumberOfArguments( 1, 3 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	int i_start = 0;
-	int i_end = -1;
-	if( Frame::args_on_stack > 1 )
+	// start arg defaults to 0
+	int start = 0;
+	if( frame->NumArgsPassed() > 1 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = get_arg_of_type( ex, "string.sort", "start", sym_number );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_start = (int)start.num_val;
-	}
-	if( Frame::args_on_stack > 0 )
-	{
-		// end position to insert at is next on stack
-		DevaObject end = get_arg_of_type( ex, "string.sort", "end", sym_number );
-		// TODO: start and end need to be integral values. error if they aren't
-		i_end = (int)end.num_val;
+		Object* startobj = helper.GetLocalN( 1 );
+		helper.ExpectPositiveIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
 
-	size_t sz = strlen( str.str_val );
+	// end arg defaults to -1 (same as end-of-string)
+	int end = -1;
+	if( frame->NumArgsPassed() > 2 )
+	{
+		Object* endobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
+	}
 
-	if( i_end == -1 )
-		i_end = sz;
+	size_t sz = strlen( self->s );
+	if( end == -1 )
+		end = sz;
 
-	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'sort'." );
-	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'sort'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in string built-in method 'sort': start is greater than end." );
+	if( start >= sz )
+		throw RuntimeException( "Invalid 'start' argument in string built-in method 'sort'." );
+	if( end > sz || end < 0 )
+		throw RuntimeException( "Invalid 'end' argument in string built-in method 'sort'." );
+	if( end < start )
+		throw RuntimeException( "Invalid arguments in string built-in method 'sort': start is greater than end." );
 
-	string ret( str.str_val );
-	sort( ret.begin() + i_start, ret.begin() + i_end );
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the new string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	// sort the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	sort( s.begin() + start, s.begin() + end );
+	const char* ret = frame->GetParent()->AddString( s );
+	
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_slice( Frame *frame )
 {
-	if( Frame::args_on_stack > 3 || Frame::args_on_stack < 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'slice' built-in method." );
+	BuiltinHelper helper( "string", "slice", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "slice", sym_string );
+	helper.CheckNumberOfArguments( 2, 4 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	size_t i_start = 0;
-	size_t i_end = -1;
-	size_t i_step = 1;
-	if( Frame::args_on_stack > 0 )
+	// start arg defaults to 0
+	int start = 0;
+	if( frame->NumArgsPassed() > 1 )
 	{
-		// start position to insert at is next on stack
-		DevaObject start = get_arg_of_type( ex, "string.slice", "start", sym_number );
-		// TODO: start needs to be integral values. error if they aren't
-		i_start = (size_t)start.num_val;
-	}
-	if( Frame::args_on_stack > 1 )
-	{
-		// end of substring to slice
-		DevaObject end = get_arg_of_type( ex, "string.slice", "end", sym_number );
-		// TODO: length needs to be integral values. error if they aren't
-		i_end = (size_t)end.num_val;
-	}
-	if( Frame::args_on_stack > 2 )
-	{
-		// 'step' value to slice with
-		DevaObject step = get_arg_of_type( ex, "string.slice", "step", sym_number );
-		// TODO: step needs to be integral values. error if they aren't
-		i_step = (size_t)step.num_val;
+		Object* startobj = helper.GetLocalN( 1 );
+		helper.ExpectPositiveIntegralNumber( startobj );
+		start = (int)startobj->d;
 	}
 
-	size_t sz = strlen( str.str_val );
+	// end arg defaults to -1 (same as end-of-string)
+	int end = -1;
+	if( frame->NumArgsPassed() > 2 )
+	{
+		Object* endobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
+	}
 
-	// default length is the entire search string
-	if( i_end == -1 )
-		i_end = sz;
+	// step arg defaults to 1
+	int step = 1;
+	if( frame->NumArgsPassed() > 3 )
+	{
+		Object* stepobj = helper.GetLocalN( 3 );
+		helper.ExpectPositiveIntegralNumber( stepobj );
+		step = (int)stepobj->d;
+	}
 
-	if( i_start >= sz || i_start < 0 )
-		throw DevaRuntimeException( "Invalid 'start' argument in string built-in method 'slice'." );
-	if( i_end > sz || i_end < 0 )
-		throw DevaRuntimeException( "Invalid 'end' argument in string built-in method 'slice'." );
-	if( i_end < i_start )
-		throw DevaRuntimeException( "Invalid arguments in string built-in method 'slice': start is greater than end." );
+	size_t sz = strlen( self->s );
+	if( end == -1 )
+		end = sz;
+
+	if( start >= sz )
+		throw RuntimeException( "Invalid 'start' argument in string built-in method 'slice'." );
+	if( end > sz || end < 0 )
+		throw RuntimeException( "Invalid 'end' argument in string built-in method 'slice'." );
+	if( step > sz )
+		throw RuntimeException( "Invalid 'step' argument in string built-in method 'slice'." );
+	if( end < start )
+		throw RuntimeException( "Invalid arguments in string built-in method 'slice': start is greater than end." );
 
 	// slice the string
-	DevaObject ret;
-	string s( str.str_val );
-	// 'step' is '1' (the default)
-	if( i_step == 1 )
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	if( step == 1 )
 	{
-		string r = s.substr( i_start, i_end - i_start );
-		ret = DevaObject( "", r );
+		string r = s.substr( start, end - start );
+		const char* ret = frame->GetParent()->AddString( r );
+		helper.ReturnVal( Object( ret ) );
 	}
 	// otherwise the string class doesn't help us, have to do it manually
 	else
 	{
 		// first get the substring from start to end positions
-		string r = s.substr( i_start, i_end - i_start );
+		string r = s.substr( start, end - start );
 		// TODO: call 'reserve' on the string to reduce allocations?
 		// then walk it grabbing every 'nth' character
 		string slice;
-		for( int i = 0; i < r.length(); i += i_step )
+		for( int i = 0; i < r.length(); i += step )
 		{
 			slice += r[i];
 		}
-		ret = DevaObject( "", slice );
+		const char* ret = frame->GetParent()->AddString( slice );
+		helper.ReturnVal( Object( ret ) );
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	ex->stack.push_back( ret );
 }
 
 void do_string_strip( Frame *frame )
 {
-	if( Frame::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'strip' built-in method." );
+	BuiltinHelper helper( "string", "strip", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "strip", sym_string );
+	helper.CheckNumberOfArguments( 1, 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value to strip (string containing characters to strip)
+	// chars arg defaults to " \t\n" (whitespace characters)
 	string chars;
-	if( Frame::args_on_stack == 1 )
+	if( frame->NumArgsPassed() == 2 )
 	{
-		// value to strip is first on stack
-		DevaObject val = get_arg_of_type( ex, "string.strip", "value", sym_string );
-
-		chars = val.str_val;
+		Object* charobj = helper.GetLocalN( 1 );
+		helper.ExpectType( charobj, obj_string );
+		chars = charobj->s;
 	}
 	else
-		chars = string( " \t\n" );
+		chars = " \t\n";
 
-	string in( str.str_val );
-	string ret( "" );
-	
+	// strip the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	string out;
 	// left-side strip
-	size_t left = in.find_first_not_of( chars );
+	size_t left = s.find_first_not_of( chars );
 	// if there aren't any characters that aren't in our stripped list, return
 	// an empty string
 	if( left != string::npos )
 	{
 		// right-side strip
-		size_t right = in.find_last_not_of( chars );
-		ret = in.substr( left, right - left + 1 );
+		size_t right = s.find_last_not_of( chars );
+		out = s.substr( left, right - left + 1 );
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	const char* ret = frame->GetParent()->AddString( out );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_lstrip( Frame *frame )
 {
-	if( Frame::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'lstrip' built-in method." );
+	BuiltinHelper helper( "string", "lstrip", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "lstrip", sym_string );
+	helper.CheckNumberOfArguments( 1, 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value to strip (string containing characters to strip)
+	// chars arg defaults to " \t\n" (whitespace characters)
 	string chars;
-	if( Frame::args_on_stack == 1 )
+	if( frame->NumArgsPassed() == 2 )
 	{
-		// value to strip is first on stack
-		DevaObject val = get_arg_of_type( ex, "string.lstrip", "value", sym_string );
-
-		chars = val.str_val;
+		Object* charobj = helper.GetLocalN( 1 );
+		helper.ExpectType( charobj, obj_string );
+		chars = charobj->s;
 	}
 	else
-		chars = string( " \t\n" );
+		chars = " \t\n";
 
-	string in( str.str_val );
-	string ret( "" );
-	
+	// strip the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	string out;
 	// left-side strip
-	size_t left = in.find_first_not_of( chars );
+	size_t left = s.find_first_not_of( chars );
 	// if there aren't any characters that aren't in our stripped list, return
 	// an empty string
 	if( left != string::npos )
 	{
 		// right-side
-		size_t right = in.length();
-		if( right == string::npos )
-			right = in.length();
-		ret = in.substr( left, right - left + 1 );
+		size_t right = s.length();
+		out = s.substr( left, right - left + 1 );
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	const char* ret = frame->GetParent()->AddString( out );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_rstrip( Frame *frame )
 {
-	if( Frame::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'rstrip' built-in method." );
+	BuiltinHelper helper( "string", "rstrip", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "rstrip", sym_string );
+	helper.CheckNumberOfArguments( 1, 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value to strip (string containing characters to strip)
+	// chars arg defaults to " \t\n" (whitespace characters)
 	string chars;
-	if( Frame::args_on_stack == 1 )
+	if( frame->NumArgsPassed() == 2 )
 	{
-		// value to strip is first on stack
-		DevaObject val = get_arg_of_type( ex, "string.rstrip", "value", sym_string );
-		chars = val.str_val;
+		Object* charobj = helper.GetLocalN( 1 );
+		helper.ExpectType( charobj, obj_string );
+		chars = charobj->s;
 	}
 	else
-		chars = string( " \t\n" );
+		chars = " \t\n";
 
-	string in( str.str_val );
-	string ret( "" );
-	
+	// strip the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	string out;
 	// right-side strip
-	size_t right = in.find_last_not_of( chars );
+	size_t right = s.find_last_not_of( chars );
 	// if there aren't any characters that aren't in our stripped list, return
 	// an empty string
 	if( right != string::npos )
 	{
-		ret = in.substr( 0, right + 1 );
+		// right-side
+		out = s.substr( 0, right + 1 );
 	}
-
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	const char* ret = frame->GetParent()->AddString( out );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_split( Frame *frame )
 {
-	if( Frame::args_on_stack > 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'split' built-in method." );
+	BuiltinHelper helper( "string", "split", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "split", sym_string );
+	helper.CheckNumberOfArguments( 1, 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// value to split at (string containing characters to split on)
+	// chars arg defaults to " \t\n" (whitespace characters)
 	string chars;
-	if( Frame::args_on_stack == 1 )
+	if( frame->NumArgsPassed() == 2 )
 	{
-		// value to split is first on stack
-		DevaObject val = get_arg_of_type( ex, "string.split", "value", sym_string );
-		chars = val.str_val;
+		Object* charobj = helper.GetLocalN( 1 );
+		helper.ExpectType( charobj, obj_string );
+		chars = charobj->s;
 	}
 	else
-		chars = string( " \t\n" );
+		chars = " \t\n";
 
-	string in( str.str_val );
-	
-	DOVector* ret = new DOVector();
+	// return vector
+	Vector* ret = CreateVector();
+
+	// split the string
+	string s( self->s );
 
 	// special case empty string, which means split into a vector of individual
 	// characters, NOT a vector containing only the original string
 	if( chars.length() == 0 )
 	{
-		ret->reserve( in.length() );
-		for( int c = 0; c < in.length(); ++c )
-			ret->push_back( DevaObject( "", string( 1, in[c] ) ) );
+		ret->reserve( s.length() );
+		for( int c = 0; c < s.length(); ++c )
+		{
+			string out( 1, s[c] );
+			const char* retstr = frame->GetParent()->AddString( out );
+			ret->push_back( Object( retstr ) );
+		}
 	}
 	else
 	{
-		size_t len = in.length();
+		size_t len = s.length();
 		// lhs of the first item is always the first character
 		size_t left = 0;
 		// rhs of the first item is the first splitting character
-		size_t right = in.find_first_of( chars );
+		size_t right = s.find_first_of( chars );
 		if( right == string::npos )
 			right = len;
 		// while lhs is not at the end of the input string
 		while( left <= len )
 		{
-			ret->push_back( DevaObject( "", string( in, left, right - left ) ) );
+			string out( s, left, right - left );
+			const char* retstr = frame->GetParent()->AddString( out );
+			ret->push_back( Object( retstr ) );
 			left = right + 1;
-			right = in.find_first_of( chars, right + 1 );
+			right = s.find_first_of( chars, right + 1 );
 			if( right == string::npos )
 				right = len;
 		}
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the resulting string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_replace( Frame *frame )
 {
-	if( Frame::args_on_stack != 2 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string 'replace' built-in method." );
+	BuiltinHelper helper( "string", "replace", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "replace", sym_string );
+	helper.CheckNumberOfArguments( 3 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	// search string is next
-	DevaObject srch = get_arg_of_type( ex, "string.replace", "search_value", sym_string );
+	// search string
+	Object* srch = helper.GetLocalN( 1 );
+	helper.ExpectType( srch, obj_string );
 
-	// replacement value is next on stack
-	DevaObject val = get_arg_of_type( ex, "string.replace", "replacement_value", sym_string );
-	
+	// replacement string
+	Object* val = helper.GetLocalN( 2 );
+	helper.ExpectType( val, obj_string );
+
 	// do the replacement
-	string ret( str.str_val );
-	replace( ret, srch.str_val, val.str_val );
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s( self->s );
+	replace( s, srch->s, val->s );
+	const char* ret = frame->GetParent()->AddString( s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the new string
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_upper( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'upper'." );
+	BuiltinHelper helper( "string", "upper", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "upper", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	string ret;
-	ret.reserve( strlen( str.str_val ) );
+	// uppercase the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s;
+	s.reserve( strlen( self->s ) );
 	locale loc;
 	int i = 0;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		ret.push_back( toupper( str.str_val[i], loc ) );
+		s.push_back( toupper( self->s[i], loc ) );
 		++i;
 	}
+	const char* ret = frame->GetParent()->AddString( s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_lower( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'lower'." );
+	BuiltinHelper helper( "string", "upper", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "lower", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
-	string ret;
-	ret.reserve( strlen( str.str_val ) );
+	// lowercase the string
+	// (strings are immutable. create a copy and add it to the calling frame)
+	string s;
+	s.reserve( strlen( self->s ) );
 	locale loc;
 	int i = 0;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		ret.push_back( tolower( str.str_val[i], loc ) );
+		s.push_back( tolower( self->s[i], loc ) );
 		++i;
 	}
+	const char* ret = frame->GetParent()->AddString( s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
-
 
 void do_string_isalphanum( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isalphanum'." );
+	BuiltinHelper helper( "string", "isalphanum", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isalphanum", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isalnum( str.str_val[i], loc ) )
+		if( !isalnum( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -790,27 +768,23 @@ void do_string_isalphanum( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isalpha( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isalpha'." );
+	BuiltinHelper helper( "string", "isalpha", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isalpha", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isalpha( str.str_val[i], loc ) )
+		if( !isalpha( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -818,27 +792,23 @@ void do_string_isalpha( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isdigit( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isdigit'." );
+	BuiltinHelper helper( "string", "isdigit", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isdigit", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isdigit( str.str_val[i], loc ) )
+		if( !isdigit( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -846,27 +816,23 @@ void do_string_isdigit( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_islower( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'islower'." );
+	BuiltinHelper helper( "string", "islower", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "islower", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !islower( str.str_val[i], loc ) )
+		if( !islower( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -874,27 +840,23 @@ void do_string_islower( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isupper( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isupper'." );
+	BuiltinHelper helper( "string", "isupper", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isupper", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isupper( str.str_val[i], loc ) )
+		if( !isupper( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -902,27 +864,23 @@ void do_string_isupper( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isspace( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isspace'." );
+	BuiltinHelper helper( "string", "isspace", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isspace", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isspace( str.str_val[i], loc ) )
+		if( !isspace( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -930,27 +888,23 @@ void do_string_isspace( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_ispunct( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'ispunct'." );
+	BuiltinHelper helper( "string", "ispunct", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "ispunct", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !ispunct( str.str_val[i], loc ) )
+		if( !ispunct( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -958,27 +912,23 @@ void do_string_ispunct( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_iscntrl( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'iscntrl'." );
+	BuiltinHelper helper( "string", "iscntrl", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "ispunct", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !iscntrl( str.str_val[i], loc ) )
+		if( !iscntrl( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -986,27 +936,23 @@ void do_string_iscntrl( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isprint( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isprint'." );
+	BuiltinHelper helper( "string", "isprint", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isprint", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isprint( str.str_val[i], loc ) )
+		if( !isprint( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -1014,27 +960,23 @@ void do_string_isprint( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_isxdigit( Frame *frame )
 {
-	if( Frame::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'isxdigit'." );
+	BuiltinHelper helper( "string", "isxdigit", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "isxdigit", sym_string );
+	helper.CheckNumberOfArguments( 1 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
 
 	locale loc;
 	int i = 0;
 	bool ret = true;
-	while( str.str_val[i] )
+	while( self->s[i] )
 	{
-		if( !isxdigit( str.str_val[i], loc ) )
+		if( !isxdigit( self->s[i], loc ) )
 		{
 			ret = false;
 			break;
@@ -1042,81 +984,71 @@ void do_string_isxdigit( Frame *frame )
 		++i;
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return the copy
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_format( Frame *frame )
 {
-	if( Frame::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'format'." );
+	BuiltinHelper helper( "string", "format", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "format", sym_string );
-
-	// get the format_args vector off the stack next
-	DevaObject args = get_arg_of_type( ex, "string.format", "format_arguments", sym_vector );
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
+	Object* args = helper.GetLocalN( 0 );
+	helper.ExpectType( args, obj_vector );
 
 	// format the string using boost's format library
 	boost::format formatter;
 	try
 	{
-		formatter = boost::format( str.str_val );
-		for( DOVector::iterator i = args.vec_val->begin(); i != args.vec_val->end(); ++i )
+		formatter = boost::format( self->s );
+		for( Vector::iterator i = args->v->begin(); i != args->v->end(); ++i )
 		{
 			formatter % *i;
 		}
 	}
 	catch( boost::io::bad_format_string & e )
 	{
-		throw DevaRuntimeException( "The format of the string in string built-in method 'format' was invalid." );
+		throw RuntimeException( "The format of the string in string built-in method 'format' was invalid." );
 	}
 	catch( boost::io::too_many_args & e )
 	{
-		throw DevaRuntimeException( "The format of the string in string built-in method 'format' referred to fewer parameters than were passed in the parameter vector." );
+		throw RuntimeException( "The format of the string in string built-in method 'format' referred to fewer parameters than were passed in the parameter vector." );
 	}
 	catch( boost::io::too_few_args & e )
 	{
-		throw DevaRuntimeException( "The format of the string in string built-in method 'format' referred to more parameters than were passed in the parameter vector." );
+		throw RuntimeException( "The format of the string in string built-in method 'format' referred to more parameters than were passed in the parameter vector." );
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
+	const char* ret = frame->GetParent()->AddString( boost::str( formatter ) );
 
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", boost::str( formatter ) ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_string_join( Frame *frame )
 {
-	if( Frame::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to string built-in method 'join'." );
+	BuiltinHelper helper( "string", "join", frame );
 
-	// get the string object off the top of the stack
-	DevaObject str = get_this( ex, "join", sym_string );
+	helper.CheckNumberOfArguments( 2 );
+	Object* self = helper.GetLocalN( 0 );
+	helper.ExpectType( self, obj_string );
+	Object* args = helper.GetLocalN( 1 );
+	helper.ExpectType( args, obj_vector );
 
-	// get the vector of objects to join off the stack
-	DevaObject args = get_arg_of_type( ex, "string.join", "args", sym_vector );
-
-	string ret;
-	for( DOVector::iterator i = args.vec_val->begin(); i != args.vec_val->end(); ++i )
+	string retstr;
+	for( Vector::iterator i = args->v->begin(); i != args->v->end(); ++i )
 	{
 		ostringstream s;
-		if( i != args.vec_val->begin() )
-			s << str.str_val;
+		if( i != args->v->begin() )
+			s << self->s;
 		s << *i;
-		ret += s.str();
+		retstr += s.str();
 	}
 
-	// pop the return address
-	ex->stack.pop_back();
+	const char* ret = frame->GetParent()->AddString( retstr );
 
-	// push the string onto the stack
-	ex->stack.push_back( DevaObject( "", ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
-*/
+
 
 } // end namespace deva

@@ -55,30 +55,30 @@ void do_string_length( Frame *ex );
 void do_string_copy( Frame *ex );
 void do_string_insert( Frame *ex );
 void do_string_remove( Frame *ex );
-//void do_string_find( Frame *ex );
-//void do_string_rfind( Frame *ex );
-//void do_string_reverse( Frame *ex );
-//void do_string_sort( Frame *ex );
-//void do_string_slice( Frame *ex );
-//void do_string_strip( Frame *ex );
-//void do_string_lstrip( Frame *ex );
-//void do_string_rstrip( Frame *ex );
-//void do_string_split( Frame *ex );
-//void do_string_replace( Frame *ex );
-//void do_string_upper( Frame *ex );
-//void do_string_lower( Frame *ex );
-//void do_string_isalphanum( Frame *ex );
-//void do_string_isalpha( Frame *ex );
-//void do_string_isdigit( Frame *ex );
-//void do_string_islower( Frame *ex );
-//void do_string_isupper( Frame *ex );
-//void do_string_isspace( Frame *ex );
-//void do_string_ispunct( Frame *ex );
-//void do_string_iscntrl( Frame *ex );
-//void do_string_isprint( Frame *ex );
-//void do_string_isxdigit( Frame *ex );
-//void do_string_format( Frame *ex );
-//void do_string_join( Frame *ex );
+void do_string_find( Frame *ex );
+void do_string_rfind( Frame *ex );
+void do_string_reverse( Frame *ex );
+void do_string_sort( Frame *ex );
+void do_string_slice( Frame *ex );
+void do_string_strip( Frame *ex );
+void do_string_lstrip( Frame *ex );
+void do_string_rstrip( Frame *ex );
+void do_string_split( Frame *ex );
+void do_string_replace( Frame *ex );
+void do_string_upper( Frame *ex );
+void do_string_lower( Frame *ex );
+void do_string_isalphanum( Frame *ex );
+void do_string_isalpha( Frame *ex );
+void do_string_isdigit( Frame *ex );
+void do_string_islower( Frame *ex );
+void do_string_isupper( Frame *ex );
+void do_string_isspace( Frame *ex );
+void do_string_ispunct( Frame *ex );
+void do_string_iscntrl( Frame *ex );
+void do_string_isprint( Frame *ex );
+void do_string_isxdigit( Frame *ex );
+void do_string_format( Frame *ex );
+void do_string_join( Frame *ex );
 
 static const string string_builtin_names[] = 
 {
@@ -120,30 +120,30 @@ static NativeFunctionPtr string_builtin_fcns[] =
 	do_string_copy,
 	do_string_insert,
 	do_string_remove,
-//	do_string_find,
-//	do_string_rfind,
-//	do_string_reverse,
-//	do_string_sort,
-//	do_string_slice,
-//	do_string_strip,
-//	do_string_lstrip,
-//	do_string_rstrip,
-//	do_string_split,
-//	do_string_replace,
-//	do_string_upper,
-//	do_string_lower,
-//	do_string_isalphanum,
-//	do_string_isalpha,
-//	do_string_isdigit,
-//	do_string_islower,
-//	do_string_isupper,
-//	do_string_isspace,
-//	do_string_ispunct,
-//	do_string_iscntrl,
-//	do_string_isprint,
-//	do_string_isxdigit,
-//	do_string_format,
-//	do_string_join,
+	do_string_find,
+	do_string_rfind,
+	do_string_reverse,
+	do_string_sort,
+	do_string_slice,
+	do_string_strip,
+	do_string_lstrip,
+	do_string_rstrip,
+	do_string_split,
+	do_string_replace,
+	do_string_upper,
+	do_string_lower,
+	do_string_isalphanum,
+	do_string_isalpha,
+	do_string_isdigit,
+	do_string_islower,
+	do_string_isupper,
+	do_string_isspace,
+	do_string_ispunct,
+	do_string_iscntrl,
+	do_string_isprint,
+	do_string_isxdigit,
+	do_string_format,
+	do_string_join,
 };
 static Object string_builtin_fcn_objs[] = 
 {
@@ -152,30 +152,30 @@ static Object string_builtin_fcn_objs[] =
 	Object( do_string_copy ),
 	Object( do_string_insert ),
 	Object( do_string_remove ),
-//	Object( do_string_find ),
-//	Object( do_string_rfind ),
-//	Object( do_string_reverse ),
-//	Object( do_string_sort ),
-//	Object( do_string_slice ),
-//	Object( do_string_strip ),
-//	Object( do_string_lstrip ),
-//	Object( do_string_rstrip ),
-//	Object( do_string_split ),
-//	Object( do_string_replace ),
-//	Object( do_string_upper ),
-//	Object( do_string_lower ),
-//	Object( do_string_isalphanum ),
-//	Object( do_string_isalpha ),
-//	Object( do_string_isdigit ),
-//	Object( do_string_islower ),
-//	Object( do_string_isupper ),
-//	Object( do_string_isspace ),
-//	Object( do_string_ispunct ),
-//	Object( do_string_iscntrl ),
-//	Object( do_string_isprint ),
-//	Object( do_string_isxdigit ),
-//	Object( do_string_format ),
-//	Object( do_string_join ),
+	Object( do_string_find ),
+	Object( do_string_rfind ),
+	Object( do_string_reverse ),
+	Object( do_string_sort ),
+	Object( do_string_slice ),
+	Object( do_string_strip ),
+	Object( do_string_lstrip ),
+	Object( do_string_rstrip ),
+	Object( do_string_split ),
+	Object( do_string_replace ),
+	Object( do_string_upper ),
+	Object( do_string_lower ),
+	Object( do_string_isalphanum ),
+	Object( do_string_isalpha ),
+	Object( do_string_isdigit ),
+	Object( do_string_islower ),
+	Object( do_string_isupper ),
+	Object( do_string_isspace ),
+	Object( do_string_ispunct ),
+	Object( do_string_iscntrl ),
+	Object( do_string_isprint ),
+	Object( do_string_isxdigit ),
+	Object( do_string_format ),
+	Object( do_string_join ),
 };
 const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
 
