@@ -1924,6 +1924,7 @@ Opcode Executor::ExecuteInstruction()
 			Vector* v = CreateVector( *(o.v), start, end );
 			ret = Object( v );
 
+			IncRef( ret );
 			stack.push_back( ret );
 		}
 		else
@@ -2077,6 +2078,7 @@ Opcode Executor::ExecuteInstruction()
 				ret = Object( v );
 			}
 
+			IncRef( ret );
 			stack.push_back( ret );
 		}
 		else
