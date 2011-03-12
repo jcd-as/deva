@@ -196,7 +196,7 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp(); }
 	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start ); }
 	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start ); }
-	|	^(Key exp[false,NULL] key=key_exp) { compiler->KeyOp( is_lhs_of_assign, parent ); } // TODO: slices??
+	|	^(Key exp[false,NULL] key=key_exp[is_lhs_of_assign, parent])// { compiler->KeyOp( is_lhs_of_assign, $key, parent ); } // TODO: slices??
 	|	dot_exp[is_lhs_of_assign,$parent]
 	|	call_exp[$parent]
 	|	(map_op | vec_op)
@@ -222,14 +222,15 @@ args
 	:	^(ArgList exp[false,NULL]*)
 	;
 
-key_exp
-	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false,NULL]
-	|	(idx idx)=> idx1=idx idx2=idx
-	|	idx1=idx
+key_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
+	:	(idx idx idx)=> idx1=idx idx2=idx idx3=exp[false,NULL] { compiler->KeyOp( is_lhs_of_assign, 3, parent ); }
+	|	(idx idx)=> idx1=idx idx2=idx { compiler->KeyOp( is_lhs_of_assign, 2, parent ); }
+	|	idx1=idx { compiler->KeyOp( is_lhs_of_assign, 1, parent ); }
 	;
 
 idx 
-	:	(END_OP | exp[false,NULL])
+	:	(END_OP { compiler->EndOp(); }
+	|	exp[false,NULL])
 	;
 
 arg_list_decl

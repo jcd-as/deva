@@ -228,7 +228,9 @@ public:
 	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent );
 
 	// Key ('[]') op
-	void KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent );
+	void KeyOp( bool is_lhs_of_assign, int num_children, pANTLR3_BASE_TREE parent );
+	// '$' op in a slice or index
+	void EndOp();
 
 	// Dot ('.') op
 	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent );

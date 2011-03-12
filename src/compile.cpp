@@ -846,16 +846,36 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
 }
 
 // Key ('[]') op
-void Compiler::KeyOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE parent )
+void Compiler::KeyOp( bool is_lhs_of_assign, int num_children, pANTLR3_BASE_TREE parent )
 {
 	// do nothing for left-hand side of assign,
 	// assignment op will take care of generating the tbl_store
 	if( is_lhs_of_assign )
 		return;
 
-	// Key ops never generate method_load ops
-	Emit( op_tbl_load );
-	// TODO: handle slices...
+	// index or slice?
+
+	if( num_children == 1 )
+	{
+		// (Key ops never generate method_load ops)
+		Emit( op_tbl_load );
+	}
+	else if( num_children == 2 )
+	{
+		// 2 arg slice
+		Emit( op_loadslice2 );
+	}
+	else if( num_children == 3 )
+	{
+		// 3 arg slice
+		Emit( op_loadslice3 );
+	}
+}
+
+// '$' op in a index or slice
+void Compiler::EndOp()
+{
+	Emit( op_push_null );
 }
 
 // Dot ('.') op

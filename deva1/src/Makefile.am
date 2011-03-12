@@ -52,65 +52,65 @@ devac_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX
 devac_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g 
 #devac_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt
 
-devadb_SOURCES= \
-	builtins.cpp \
-	compile.cpp \
-	devadb.cpp \
-	dobject.cpp \
-	error_report_parsers.cpp \
-	executor.cpp \
-	fileformat.cpp \
-	instructions.cpp \
-	parser_ids.cpp \
-	scope.cpp \
-	semantics.cpp \
-	symbol.cpp \
-	util.cpp \
-	builtin_helpers.cpp \
-	vector_builtins.cpp \
-	map_builtins.cpp \
-	string_builtins.cpp \
-	module_os.cpp \
-	module_bit.cpp \
-	module_math.cpp \
-	module_re.cpp
-devadb_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
-devadb_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
-# -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
-#devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
-
-devash_SOURCES= \
-	builtins.cpp \
-	compile.cpp \
-	devash.cpp \
-	dobject.cpp \
-	error_report_parsers.cpp \
-	executor.cpp \
-	fileformat.cpp \
-	instructions.cpp \
-	parser_ids.cpp \
-	scope.cpp \
-	semantics.cpp \
-	symbol.cpp \
-	util.cpp \
-	builtin_helpers.cpp \
-	vector_builtins.cpp \
-	map_builtins.cpp \
-	string_builtins.cpp \
-	module_os.cpp \
-	module_bit.cpp \
-	module_math.cpp \
-	module_re.cpp
-devash_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
-# -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
-devash_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
-devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
-#devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
-
-test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
-test_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
-test_LDADD = $(BOOST_FILESYSTEM_LIB)
-test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
-#test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) #-lboost_filesystem-mt
+#devadb_SOURCES= \
+#	builtins.cpp \
+#	compile.cpp \
+#	devadb.cpp \
+#	dobject.cpp \
+#	error_report_parsers.cpp \
+#	executor.cpp \
+#	fileformat.cpp \
+#	instructions.cpp \
+#	parser_ids.cpp \
+#	scope.cpp \
+#	semantics.cpp \
+#	symbol.cpp \
+#	util.cpp \
+#	builtin_helpers.cpp \
+#	vector_builtins.cpp \
+#	map_builtins.cpp \
+#	string_builtins.cpp \
+#	module_os.cpp \
+#	module_bit.cpp \
+#	module_math.cpp \
+#	module_re.cpp
+#devadb_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
+#devadb_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
+## -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
+#devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
+##devadb_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
+#
+#devash_SOURCES= \
+#	builtins.cpp \
+#	compile.cpp \
+#	devash.cpp \
+#	dobject.cpp \
+#	error_report_parsers.cpp \
+#	executor.cpp \
+#	fileformat.cpp \
+#	instructions.cpp \
+#	parser_ids.cpp \
+#	scope.cpp \
+#	semantics.cpp \
+#	symbol.cpp \
+#	util.cpp \
+#	builtin_helpers.cpp \
+#	vector_builtins.cpp \
+#	map_builtins.cpp \
+#	string_builtins.cpp \
+#	module_os.cpp \
+#	module_bit.cpp \
+#	module_math.cpp \
+#	module_re.cpp
+#devash_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
+## -undefined dynamic_lookup required on Mac OS X to find Boost symbols...
+#devash_LDADD = $(LIBEDIT_LIBS)  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB)
+#devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
+##devash_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_REGEX_LIB) #-lboost_program_options-mt -lboost_filesystem-mt -lboost_regex-mt
+#
+#test_SOURCES=test.cpp symbol.cpp parser_ids.cpp error_report_parsers.cpp dobject.cpp util.cpp
+#test_CPPFLAGS = -I $(top_srcdir)/inc $(BOOST_CPPFLAGS)
+#test_LDADD = $(BOOST_FILESYSTEM_LIB)
+#test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g
+##test_LDFLAGS = $(MY_LDFLAGS) $(BOOST_LDFLAGS) -g  $(BOOST_FILESYSTEM_LIB) #-lboost_filesystem-mt
 

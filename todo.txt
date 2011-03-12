@@ -7,12 +7,10 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	28 (import NYI)
 	29 (import NYI, .dvc NYI)
-	34 (string slicing/builtins NYI)
 	37 (bit module NYI)
 	38 (math module NYI)
 	44 (string builtins NYI)
 	45 (chained assign op only assigning leftmost var)
-	47 (slices NYI)
 	48 (eval builtin NYI)
 	50 ('_re.delete() not allowed to use keyword & _re/re modules NYI)
 	53 (os module NYI)

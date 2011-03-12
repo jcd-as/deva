@@ -266,6 +266,17 @@ void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
 	}
 }
 
+// helper for slicing vectors in steps (see vector_builtins.cpp for fcn def)
+static size_t s_step = 1;
+static size_t s_i = 0;
+bool if_step_ex( Object )
+{
+	if( s_i++ % s_step == 0 )
+		return false;
+	else
+		return true;
+}
+
 Opcode Executor::ExecuteInstruction()
 {
 	dword arg, arg2, arg3;
@@ -1811,10 +1822,269 @@ Opcode Executor::ExecuteInstruction()
 		DecRef( rhs );
 		}
 		break;
-	case op_loadslice2:
-		// TODO:
-	case op_loadslice3:
-		// TODO:
+	case op_loadslice2:// tos = tos2[tos1:tos]
+		{
+		Object idx2 = stack.back();
+		DecRef( idx2 );
+		idx2 = ResolveSymbol( idx2 );
+		stack.pop_back();
+		Object idx1 = stack.back();
+		DecRef( idx1 );
+		idx1 = ResolveSymbol( idx1 );
+		stack.pop_back();
+		o = stack.back();
+		o = ResolveSymbol( o );
+		stack.pop_back();
+
+		if( !is_integral( idx1.type ) && idx1.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+		if( !is_integral( idx2.type ) && idx2.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+
+		// string
+		if( o.type == obj_string )
+		{
+			int start, end;
+			size_t sz = strlen( o.s );
+			if( sz == 0 )
+			{
+				start = 0;
+				end = 0;
+			}
+			else
+			{
+				start = idx1.type == obj_null ? sz : (int)idx1.d;
+				end = idx2.type == obj_null ? sz : (int)idx2.d;
+			}
+
+			// handle negative values
+			if( start < 0 )
+				start = sz + start;
+			if( end < 0 )
+				end = sz + end;
+
+			// check the indices & step value and convert to sane values, if
+			// necessary
+			if( start > sz )
+				start = sz;
+			if( start < 0 )
+				start = 0;
+			if( end > sz )
+				end = sz;
+			if( end < 0 )
+				end = 0;
+			if( end < start )
+				end = start;
+
+			// slice the string
+			// (strings are immutable. create a copy and add it to the calling frame)
+			string s( o.s );
+			string r = s.substr( start, end - start );
+			const char* ret = CurrentFrame()->AddString( r );
+			stack.push_back( Object( ret ) );
+		}
+		else if( o.type == obj_vector )
+		{
+			int start, end;
+			size_t sz = o.v->size();
+			if( sz == 0 )
+			{
+				start = 0;
+				end = 0;
+			}
+			else
+			{
+				start = idx1.type == obj_null ? sz : (int)idx1.d;
+				end = idx2.type == obj_null ? sz : (int)idx2.d;
+			}
+
+			// handle negative values
+			if( start < 0 )
+				start = sz + start;
+			if( end < 0 )
+				end = sz + end;
+
+			// check the indices & step value and convert to sane values, if
+			// necessary
+			if( start > sz )
+				start = sz;
+			if( start < 0 )
+				start = 0;
+			if( end > sz )
+				end = sz;
+			if( end < 0 )
+				end = 0;
+			if( end < start )
+				end = start;
+
+			// slice the vector
+			Object ret;
+			// create a new vector object that is a copy of the 'sub-vector' we're
+			// looking for
+			Vector* v = CreateVector( *(o.v), start, end );
+			ret = Object( v );
+
+			stack.push_back( ret );
+		}
+		else
+			throw RuntimeException( boost::format( "Invalid slice: '%1%' is not a vector or string." ) % o );
+
+		DecRef( o );
+		}
+		break;
+	case op_loadslice3:// tos = tos3[tos2:tos1:tos]
+		{
+		Object idx3 = stack.back();
+		DecRef( idx3 );
+		idx3 = ResolveSymbol( idx3 );
+		stack.pop_back();
+		Object idx2 = stack.back();
+		DecRef( idx2 );
+		idx2 = ResolveSymbol( idx2 );
+		stack.pop_back();
+		Object idx1 = stack.back();
+		DecRef( idx1 );
+		idx1 = ResolveSymbol( idx1 );
+		stack.pop_back();
+		o = stack.back();
+		o = ResolveSymbol( o );
+		stack.pop_back();
+
+		if( !is_integral( idx1.type ) && idx1.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+		if( !is_integral( idx2.type ) && idx2.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+		if( !is_integral( idx2.type ) )
+			throw RuntimeException( "'step' value in slice must be an integral number." );
+
+		int step = (int)idx3.d;
+
+		// string
+		if( o.type == obj_string )
+		{
+			int start, end;
+			size_t sz = strlen( o.s );
+			if( sz == 0 )
+			{
+				start = 0;
+				end = 0;
+			}
+			else
+			{
+				start = idx1.type == obj_null ? sz : (int)idx1.d;
+				end = idx2.type == obj_null ? sz : (int)idx2.d;
+			}
+
+			// handle negative values
+			if( start < 0 )
+				start = sz + start;
+			if( end < 0 )
+				end = sz + end;
+
+			// check the indices & step value and convert to sane values, if
+			// necessary
+			if( start > sz )
+				start = sz;
+			if( start < 0 )
+				start = 0;
+			if( end > sz )
+				end = sz;
+			if( end < 0 )
+				end = 0;
+			if( end < start )
+				end = start;
+			if( step < 1 )
+				throw RuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
+
+			// slice the string
+			// (strings are immutable. create a copy and add it to the calling frame)
+			string s( o.s );
+			if( step == 1 )
+			{
+				string r = s.substr( start, end - start );
+				const char* ret = CurrentFrame()->AddString( r );
+				stack.push_back( Object( ret ) );
+			}
+			// otherwise the string class doesn't help us, have to do it manually
+			else
+			{
+				// first get the substring from start to end positions
+				string r = s.substr( start, end - start );
+				// TODO: call 'reserve' on the string to reduce allocations?
+				// then walk it grabbing every 'nth' character
+				string slice;
+				for( int i = 0; i < r.length(); i += step )
+				{
+					slice += r[i];
+				}
+				const char* ret = CurrentFrame()->AddString( slice );
+				stack.push_back( Object( ret ) );
+			}
+		}
+		else if( o.type == obj_vector )
+		{
+			int start, end;
+			size_t sz = o.v->size();
+			if( sz == 0 )
+			{
+				start = 0;
+				end = 0;
+			}
+			else
+			{
+				start = idx1.type == obj_null ? sz : (int)idx1.d;
+				end = idx2.type == obj_null ? sz : (int)idx2.d;
+			}
+
+			// handle negative values
+			if( start < 0 )
+				start = sz + start;
+			if( end < 0 )
+				end = sz + end;
+
+			// check the indices & step value and convert to sane values, if
+			// necessary
+			if( start > sz )
+				start = sz;
+			if( start < 0 )
+				start = 0;
+			if( end > sz )
+				end = sz;
+			if( end < 0 )
+				end = 0;
+			if( end < start )
+				end = start;
+			if( step < 1 )
+				throw RuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
+
+			// slice the vector
+			Object ret;
+			// if 'step' is '1' (the default)
+			if( step == 1 )
+			{
+				// create a new vector object that is a copy of the 'sub-vector' we're
+				// looking for
+				Vector* v = CreateVector( *(o.v), start, end );
+				ret = Object( v );
+			}
+			// otherwise the vector class doesn't help us, have to do it manually
+			else
+			{
+				Vector* v = CreateVector();
+				s_i = 0;
+				s_step = step;
+				remove_copy_if( o.v->begin() + start, o.v->begin() + end, back_inserter( *v ), if_step_ex );
+				ret = Object( v );
+			}
+
+			stack.push_back( ret );
+		}
+		else
+			throw RuntimeException( boost::format( "Invalid slice: '%1%' is not a vector or string." ) % o );
+
+		DecRef( o );
+		}
+		break;
 	case op_tbl_store:// tos2[tos1] = tos
 		o = stack.back();
 		o = ResolveSymbol( o );
@@ -1880,9 +2150,174 @@ Opcode Executor::ExecuteInstruction()
 		}
 		break;
 	case op_storeslice2:
-		// TODO:
+		{
+		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
+		stack.pop_back();
+		Object idx2 = stack.back();
+		idx2 = ResolveSymbol( idx2 );
+		stack.pop_back();
+		Object idx1 = stack.back();
+		idx1 = ResolveSymbol( idx1 );
+		stack.pop_back();
+		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
+		stack.pop_back();
+
+		if( !IsVecType( lhs.type ) )
+			throw RuntimeException( boost::format( "Invalid object for slice assignment: '%1%' is not a vector." ) % lhs );
+		if( !is_integral( idx1.type ) )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+		if( !is_integral( idx2.type ) )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+
+		size_t sz = lhs.v->size();
+		if( sz != 0 )
+		{
+			int start = idx1.type == obj_null ? sz : (int)idx1.d;
+			int end = idx2.type == obj_null ? sz : (int)idx2.d;
+
+			// handle negative values
+			if( start < 0 )
+				start = sz + start;
+			if( end < 0 )
+				end = sz + end;
+
+			// check the indices & step value and convert to sane values, if
+			// necessary
+			if( start > sz )
+				start = sz;
+			if( start < 0 )
+				start = 0;
+			if( end > sz )
+				end = sz;
+			if( end < 0 )
+				end = 0;
+			if( end < start )
+				end = start;
+
+			// first erase the destination range
+			lhs.v->erase( lhs.v->begin() + start, lhs.v->begin() + end );
+			// if the rhs is a vector, insert its contents
+			if( rhs.type == obj_vector )
+			{
+				lhs.v->insert( lhs.v->begin() + start, rhs.v->begin(), rhs.v->end() );
+				// IncRef each of the items being inserted
+				for( Vector::iterator i = rhs.v->begin(); i != rhs.v->end(); ++i )
+				{
+					IncRef( *i );
+				}
+			}
+			// otherwise insert whatever the object is
+			else
+			{
+				lhs.v->insert( lhs.v->begin() + start, rhs );
+				IncRef( rhs );
+			}
+		}
+		DecRef( rhs );
+		DecRef( lhs );
+		}
+		break;
 	case op_storeslice3:
-		// TODO:
+		{
+		rhs = stack.back();
+		rhs = ResolveSymbol( rhs );
+		stack.pop_back();
+		Object idx3 = stack.back();
+		idx3 = ResolveSymbol( idx3 );
+		stack.pop_back();
+		Object idx2 = stack.back();
+		idx2 = ResolveSymbol( idx2 );
+		stack.pop_back();
+		Object idx1 = stack.back();
+		idx1 = ResolveSymbol( idx1 );
+		stack.pop_back();
+		lhs = stack.back();
+		lhs = ResolveSymbol( lhs );
+		stack.pop_back();
+
+		if( !IsVecType( lhs.type ) )
+			throw RuntimeException( boost::format( "Invalid object for slice assignment: '%1%' is not a vector." ) % lhs );
+		if( !is_integral( idx1.type ) && idx1.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+		if( !is_integral( idx2.type ) && idx2.type != obj_null )
+			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
+
+		size_t sz = lhs.v->size();
+
+		int start = idx1.type == obj_null ? sz : (int)idx1.d;
+		int end = idx2.type == obj_null ? sz : (int)idx2.d;
+		int step = (int)idx3.d;
+
+		// handle negative values
+		if( start < 0 )
+			start = sz + start;
+		if( end < 0 )
+			end = sz + end;
+
+		// check the indices & step value and convert to sane values, if
+		// necessary
+		if( start > sz )
+			start = sz;
+		if( start < 0 )
+			start = 0;
+		if( end > sz )
+			end = sz;
+		if( end < 0 )
+			end = 0;
+		if( end < start )
+			end = start;
+		if( step < 1 )
+			throw RuntimeException( "Invalid 'step' argument in slice: 'step' is less than one." );
+
+		if( step == 1 )
+		{
+			// first erase the destination range
+			lhs.v->erase( lhs.v->begin() + start, lhs.v->begin() + end );
+			// if the rhs is a vector, insert its contents
+			if( rhs.type == obj_vector )
+			{
+				lhs.v->insert( lhs.v->begin() + start, rhs.v->begin(), rhs.v->end() );
+				// IncRef each of the items being inserted
+				for( Vector::iterator i = rhs.v->begin(); i != rhs.v->end(); ++i )
+				{
+					IncRef( *i );
+				}
+			}
+			// otherwise insert whatever the object is
+			else
+			{
+				lhs.v->insert( lhs.v->begin() + start, rhs );
+				IncRef( rhs );
+			}
+		}
+		// other steps are separate deletions and insertions
+		else
+		{
+			if( !IsVecType( rhs.type ) )
+				throw RuntimeException( "Source in slice assignment must be a vector." );
+			// ensure the destination and source lengths are identical
+			size_t lhs_sz = (size_t)ceil(((double)end - (double)start)/(double)step);
+			size_t rhs_sz = rhs.v->size();
+			if( lhs_sz != rhs_sz )
+				throw RuntimeException( "Source and destination in slice assignment must be the same size." );
+
+			int j = 0;
+			for( int i = 0; i < end - start; i++ )
+			{
+				if( i % step == 0 )
+				{
+					lhs.v->at( start + i ) = rhs.v->at( j );
+					IncRef( rhs.v->at( j ) );
+					j++;
+				}
+			}
+		}
+		DecRef( rhs );
+		DecRef( lhs );
+		}
+		break;
 	case op_add_tbl_store:	// tos2[tos1] += tos
 		o = stack.back();
 		o = ResolveSymbol( o );
