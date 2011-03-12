@@ -156,8 +156,9 @@ assign_statement[pANTLR3_BASE_TREE parent]
 	|	(^(Extern exp[true,NULL] new_exp))=> ^(Extern lhs=exp[true,NULL] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
 	|	(^(Extern lhs=exp[true,NULL] exp[false,NULL]))=> ^(Extern lhs=exp[true,NULL] exp[false,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
 	|	^(Extern lhs=exp[true,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, false ); }
-	|	(^('=' exp[true,NULL] new_exp))=> ^('=' lhs=exp[true,NULL] new_exp) { compiler->Assign( $lhs.start ); }
-	|	^('=' lhs=exp[true,NULL] (exp[false,NULL]|assign_rhs)) { compiler->Assign( $lhs.start ); }
+	|	(^('=' exp[true,NULL] new_exp))=> ^('=' lhs=exp[true,NULL] new_exp) { compiler->Assign( $lhs.start, false ); }
+	|	(^('=' lhs=exp[true,NULL] assign_rhs)) => ^('=' lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, false ); }
+	|	^('=' lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, false ); }
 	|	^(ADD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_add ); }
 	|	^(SUB_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_sub ); }
 	|	^(MUL_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mul ); }
@@ -166,8 +167,9 @@ assign_statement[pANTLR3_BASE_TREE parent]
 	|	exp[false,parent]
 	;
 
-assign_rhs 
-	:	^('=' lhs=exp[true,NULL] (assign_rhs|exp[false,NULL]))
+assign_rhs
+	:	(^('=' lhs=exp[true,NULL] assign_rhs)) => ^('=' lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, true ); }
+	|	^('=' lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, true ); }
 	;
 	
 new_exp
@@ -196,7 +198,7 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp(); }
 	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start ); }
 	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start ); }
-	|	^(Key exp[false,NULL] key=key_exp[is_lhs_of_assign, parent])// { compiler->KeyOp( is_lhs_of_assign, $key, parent ); } // TODO: slices??
+	|	^(Key exp[false,NULL] key=key_exp[is_lhs_of_assign, parent])
 	|	dot_exp[is_lhs_of_assign,$parent]
 	|	call_exp[$parent]
 	|	(map_op | vec_op)

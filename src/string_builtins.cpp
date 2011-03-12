@@ -994,7 +994,7 @@ void do_string_format( Frame *frame )
 	helper.CheckNumberOfArguments( 2 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_string );
-	Object* args = helper.GetLocalN( 0 );
+	Object* args = helper.GetLocalN( 1 );
 	helper.ExpectType( args, obj_vector );
 
 	// format the string using boost's format library

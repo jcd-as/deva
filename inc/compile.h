@@ -219,7 +219,7 @@ public:
 	// assignments and variable decls
 	void LocalVar( char* n );
 	void ExternVar( char* n, bool is_assign );
-	void Assign( pANTLR3_BASE_TREE node );
+	void Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign );
 
 	// augmented assignment operators (+=, -=, *=, /=, %=)
 	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op );

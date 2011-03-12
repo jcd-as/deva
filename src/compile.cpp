@@ -590,11 +590,14 @@ void Compiler::ExternVar( char* n, bool is_assign )
 		Emit( op_storeconst, (dword)idx );
 }
 
-void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
+void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign )
 {
 	// the immediate lhs always determines whether this is a simple store (an
 	// ID) or a table store (Key/DOT_OP)
 	unsigned int type = lhs_node->getType( lhs_node );
+
+	if( parent_is_assign )
+		Emit( op_dup1 );
 
 	// is the lhs node an identifier?
 	if( type == ID )
@@ -668,16 +671,31 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node )
 		int num_children = lhs_node->getChildCount( lhs_node );
 		if( num_children == 2 )
 		{
+			// if we're in a chained assignment, we dup'd the tos, we need to get
+			// that item into it's proper place *before* we do the store
+			if( parent_is_assign )
+				Emit( op_rot3 );
+
 			// simple index
 			Emit( op_tbl_store );
 		}
 		else if( num_children == 3 )
 		{
+			// if we're in a chained assignment, we dup'd the tos, we need to get
+			// that item into it's proper place *before* we do the store
+			if( parent_is_assign )
+				Emit( op_rot4 );
+
 			// 2 index slice
 			Emit( op_storeslice2 );
 		}
 		else if( num_children == 4 )
 		{
+			// if we're in a chained assignment, we dup'd the tos, we need to get
+			// that item into it's proper place *before* we do the store
+			if( parent_is_assign )
+				Emit( op_rot, 5 );
+
 			// 3 index slice
 			Emit( op_storeslice3 );
 		}

@@ -779,7 +779,7 @@ void do_writestring( Frame *frame )
 	Object* num_bytes_obj = helper.GetLocalN( 1 );
 	helper.ExpectIntegralNumber( num_bytes_obj );
 	Object* source = helper.GetLocalN( 2 );
-	helper.ExpectType( source, obj_vector );
+	helper.ExpectType( source, obj_string );
 	
 	int num_bytes = (int)num_bytes_obj->d;
 
@@ -906,7 +906,7 @@ void do_format( Frame *frame )
 	helper.CheckNumberOfArguments( 2 );
 	Object* formatstr = helper.GetLocalN( 0 );
 	helper.ExpectType( formatstr, obj_string );
-	Object* formatargs = helper.GetLocalN( 0 );
+	Object* formatargs = helper.GetLocalN( 1 );
 	helper.ExpectType( formatargs, obj_vector );
 
 	// format the string using boost's format library

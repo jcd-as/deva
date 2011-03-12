@@ -2714,26 +2714,55 @@ Opcode Executor::ExecuteInstruction()
 		{
 		int stack_size = stack.size();
 		if( stack_size < 2 )
-			throw ICE( "Stack error: not enough elements on stack for 'swap' instruction." );
+			throw ICE( "Stack error: not enough elements on the stack for 'swap' instruction." );
 		Object tmp = stack[stack_size-1];
 		stack[stack_size-1] = stack[stack_size-2];
 		stack[stack_size-2] = tmp;
 		}
 		break;
 	case op_rot:
-		// TODO:
-		// 1 arg:
+		// 1 arg: integer number for how far to rotate
 		arg = *((dword*)ip);
-		// look-up the constant
-		o = GetConstant(arg);
 		ip += sizeof( dword );
+		// verify the stack is deep enough
+		if( stack.size() < (int)arg+1 )
+			throw ICE( "Stack error: not enough elements on the stack for 'rot' instruction." );
+		// pop the tos
+		o = stack.back();
+		stack.pop_back();
+		// insert it into place
+		stack.insert( stack.end() - (int)arg, o );
 		break;
 	case op_rot2:
-		// TODO:
+		// verify the stack is deep enough
+		if( stack.size() < 3 )
+			throw ICE( "Stack error: not enough elements on the stack for 'rot2' instruction." );
+		// pop the tos
+		o = stack.back();
+		stack.pop_back();
+		// insert it into the second-to-last place
+		stack.insert( stack.end() - 2, o );
+		break;
 	case op_rot3:
-		// TODO:
+		// verify the stack is deep enough
+		if( stack.size() < 4 )
+			throw ICE( "Stack error: not enough elements on the stack for 'rot3' instruction." );
+		// pop the tos
+		o = stack.back();
+		stack.pop_back();
+		// insert it into place
+		stack.insert( stack.end() - 3, o );
+		break;
 	case op_rot4:
-		// TODO:
+		// verify the stack is deep enough
+		if( stack.size() < 5 )
+			throw ICE( "Stack error: not enough elements on the stack for 'rot4' instruction." );
+		// pop the tos
+		o = stack.back();
+		stack.pop_back();
+		// insert it into place
+		stack.insert( stack.end() - 4, o );
+		break;
 	case op_import:
 		// TODO:
 		// 1 arg:
@@ -3188,6 +3217,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_rot2:
 	case op_rot3:
 	case op_rot4:
+		break;
 	case op_import:
 		// 1 arg:
 		arg = *((dword*)p);
