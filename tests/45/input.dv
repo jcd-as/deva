@@ -5,3 +5,31 @@ print( x );
 print( y );
 print( m.a );
 print( z );
+
+# more complicated tests
+local a = 0;
+local b = 0;
+local c = 0;
+local m = {"x" : 0};
+local n = {"y" : m};
+local v = [0, 1, 2];
+
+v[1] = a = v[0] = b = n.y.x = c = v[2] = 255;
+
+print( a );
+print( b );
+print( c );
+print( m );
+print( n );
+print( v );
+
+local z = 32;
+
+v[1] = a = v[0] = b = n.y.x = c = v[2] = z;
+
+print( a );
+print( b );
+print( c );
+print( m );
+print( n );
+print( v );
