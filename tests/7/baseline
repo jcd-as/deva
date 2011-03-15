@@ -65,6 +65,7 @@ concat
 copy
 count
 delete
+error
 exit
 fcn
 filter
@@ -72,6 +73,7 @@ find
 flush
 foo
 format
+geterror
 insert
 join
 keys
@@ -100,6 +102,7 @@ rewind
 rfind
 seek
 self
+seterror
 slice
 sort
 stderr
@@ -152,7 +155,7 @@ Instructions:
   27: storelocal0		 
   28: leave		 
   29: jmp		19
-  34: def_function	34 (foo), 48
+  34: def_function	35 (foo), 48
   43: jmp		56
   48: enter		 
   49: leave		 
@@ -162,7 +165,7 @@ Instructions:
   57: def_local2		 
   58: push_zero		 
   59: def_local3		 
-  60: def_function	79 (z), 74
+  60: def_function	82 (z), 74
   69: jmp		82
   74: enter		 
   75: leave		 
@@ -174,7 +177,7 @@ Instructions:
   89: pushlocal3		 
   90: jmpf		108
   95: enter		 
-  96: pushconst		79 (z)
+  96: pushconst		82 (z)
  101: call		0
  106: pop		 
  107: leave		 
@@ -185,7 +188,7 @@ Instructions:
  116: pushlocal3		 
  117: jmpf		135
  122: enter		 
- 123: pushconst		79 (z)
+ 123: pushconst		82 (z)
  128: call		0
  133: pop		 
  134: leave		 
@@ -201,18 +204,18 @@ Instructions:
  148: jmp		155
  153: enter		 
  154: leave		 
- 155: def_function	30 (fcn), 169
+ 155: def_function	31 (fcn), 169
  164: jmp		193
  169: enter		 
  170: pushconst		11 (fcn called)
- 175: pushconst		51 (print)
+ 175: pushconst		53 (print)
  180: call		1
  185: pop		 
  186: leave		 
  187: push_null		 
  188: return		0
  193: pushconst		8 (b)
- 198: pushconst		30 (fcn)
+ 198: pushconst		31 (fcn)
  203: new_map		1
  208: storelocal0		 
  209: pushlocal0		 

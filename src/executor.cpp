@@ -48,7 +48,7 @@ namespace deva
 // global executor object
 Executor* ex;
 
-Executor::Executor() : ip( NULL ), debug( false ), trace( false )
+Executor::Executor() : ip( NULL ), debug( false ), trace( false ), is_error( false )
 {
 	// set-up the constant and function object pools
 	constants.Reserve( 256 );
@@ -246,6 +246,8 @@ void Executor::ExecuteCode( const Code & code )
 	}
 
 	// TODO: delete scope table here?
+	// pop the 'global' scope
+	scopes->PopScope();
 	// free the scope table
 	delete scopes;
 	// TODO: review. is this where the 'global' frame should be deleted?
@@ -2856,6 +2858,10 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	int stack_size = stack.size();
 	if( stack_size < 0 )
 		throw ICE( "Stack underflow." );
+	// clear the error state/object
+	if( is_error )
+		DecRef( error );
+	is_error = false;
 	// execute until it returns
 	ExecuteToReturn( is_destructor );
 	if( stack.size() != stack_size + 1 )
@@ -2913,6 +2919,12 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	int stack_size = stack.size();
 	if( stack_size < 0 )
 		throw ICE( "Stack underflow." );
+	// clear the error state/object
+	if( is_error && nf.p != do_error && nf.p != do_seterror && nf.p != do_geterror )
+	{
+		is_error = false;
+		DecRef( error );
+	}
 	// execute the function
 	nf.p( frame );
 	// check the stack
@@ -2922,6 +2934,30 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	PopFrame();
 }
 
+void Executor::SetError( Object* err )
+{
+	if( is_error )
+		DecRef( error );
+	error = *err;
+	is_error = true;
+	IncRef( error );
+}
+
+bool Executor::Error()
+{
+	return is_error;
+}
+
+Object Executor::GetError()
+{
+	if( is_error )
+	{
+//		IncRef( error );
+		return error;
+	}
+	else
+		return Object( obj_null );
+}
 
 // disassemble the instruction stream to stdout
 void Executor::Decode( const Code & code)

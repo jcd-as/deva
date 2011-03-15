@@ -79,7 +79,7 @@ class ScopeTable
 public:
 	~ScopeTable();
 	inline void PushScope( Scope* s ) { data.push_back( s ); }
-	inline void PopScope() { delete data.back(); data.pop_back(); }
+	void PopScope();
 	inline Scope* CurrentScope() const { return data.back(); }
 	inline Scope* At( size_t idx ) const { return data[idx]; }
 	Object* FindSymbol( const char* name, bool local_only = false ) const;

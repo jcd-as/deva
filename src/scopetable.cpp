@@ -26,6 +26,7 @@
 // created by jcs, january 18, 2010 
 
 #include "scopetable.h"
+#include "executor.h"
 #include "frame.h"
 
 
@@ -110,6 +111,19 @@ ScopeTable::~ScopeTable()
 		delete data.back();
 }
 
+void ScopeTable::PopScope()
+{ 
+	// if this is the last scope (main), we need to free up the executor's
+	// error object (because it will go into the dead pool, which the scope
+	// cleans up - if we wait for the Executor's destructor, the scope will 
+	// already be deleted and it will be too late to add things to the dead
+	// pool and thus will leak)
+	if( data.size() ==1 )
+		ex->DeleteErrorObject();
+	delete data.back();
+	data.pop_back();
+}
+
 Object* ScopeTable::FindSymbol( const char* name, bool local_only /*= false*/ ) const
 {
 	if( local_only )
@@ -143,6 +157,5 @@ const char* ScopeTable::FindSymbolName( Object* o, bool local_only /*= false*/ )
 	}
 	return NULL;
 }
-
 
 } // end namespace deva

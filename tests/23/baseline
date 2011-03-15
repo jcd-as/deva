@@ -57,11 +57,13 @@ concat
 copy
 count
 delete
+error
 exit
 filter
 find
 flush
 format
+geterror
 i
 insert
 j
@@ -94,6 +96,7 @@ rewind
 rfind
 seek
 self
+seterror
 slice
 sort
 stderr
@@ -123,7 +126,7 @@ Instructions:
    9: jmp		137
   14: enter		 
   15: pushlocal0		 
-  16: pushconst		43 (length)
+  16: pushconst		45 (length)
   21: call		1
   26: def_local1		 
   27: push_true		 
@@ -253,12 +256,12 @@ Instructions:
  303: call		2
  308: pop		 
  309: pushconst		15 (un-sorted:)
- 314: pushconst		55 (print)
+ 314: pushconst		57 (print)
  319: call		1
  324: pop		 
  325: pushlocal0		 
  326: dup1		 
- 327: pushconst		64 (rewind)
+ 327: pushconst		66 (rewind)
  332: method_load	
  333: call_method		0
  338: pop		 
@@ -266,7 +269,7 @@ Instructions:
  344: def_local1		 
  345: enter		 
  346: pushlocal1		 
- 347: pushconst		55 (print)
+ 347: pushconst		57 (print)
  352: call		1
  357: pop		 
  358: leave		 
@@ -277,12 +280,12 @@ Instructions:
  371: call		1
  376: def_local2		 
  377: pushconst		14 (sorted:)
- 382: pushconst		55 (print)
+ 382: pushconst		57 (print)
  387: call		1
  392: pop		 
  393: pushlocal2		 
  394: dup1		 
- 395: pushconst		64 (rewind)
+ 395: pushconst		66 (rewind)
  400: method_load	
  401: call_method		0
  406: pop		 
@@ -290,7 +293,7 @@ Instructions:
  412: def_local3		 
  413: enter		 
  414: pushlocal3		 
- 415: pushconst		55 (print)
+ 415: pushconst		57 (print)
  420: call		1
  425: pop		 
  426: leave		 

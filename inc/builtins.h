@@ -79,9 +79,9 @@ void do_stdout( Frame *f );
 void do_stderr( Frame *f );
 void do_format( Frame *f );
 void do_join( Frame *f );
-//void do_error( Frame *f );
-//void do_seterror( Frame *f );
-//void do_geterror( Frame *f );
+void do_error( Frame *f );
+void do_seterror( Frame *f );
+void do_geterror( Frame *f );
 //void do_importmodule( Frame *f );
 
 static const string builtin_names[] = 
@@ -116,9 +116,9 @@ static const string builtin_names[] =
 	string( "stderr" ),
 	string( "format" ),
 	string( "join" ),
-//	string( "error" ),
-//	string( "seterror" ),
-//	string( "geterror" ),
+	string( "error" ),
+	string( "seterror" ),
+	string( "geterror" ),
 //	string( "importmodule" ),
 };
 // ...and function pointers to the executor functions for them
@@ -154,9 +154,9 @@ static NativeFunction builtin_fcns[] =
 	{do_stderr, false},
 	{do_format, false},
 	{do_join, false},
-//	{do_error, false},
-//	{do_seterror, false},
-//	{do_geterror, false},
+	{do_error, false},
+	{do_seterror, false},
+	{do_geterror, false},
 //	{do_importmodule, false},
 };
 static Object builtin_fcn_objs[] = 
@@ -191,9 +191,9 @@ static Object builtin_fcn_objs[] =
 	Object( do_stderr ),
 	Object( do_format ),
 	Object( do_join ),
-//	Object( do_error ),
-//	Object( do_seterror ),
-//	Object( do_geterror ),
+	Object( do_error ),
+	Object( do_seterror ),
+	Object( do_geterror ),
 //	Object( do_importmodule ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );

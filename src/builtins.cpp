@@ -969,60 +969,38 @@ void do_join( Frame *frame )
 	helper.ReturnVal( Object( str ) );
 }
 
-/*
+
 void do_error( Frame *frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
+	BuiltinHelper helper( NULL, "error", frame );
 
-	bool err = ex->Error();
+	helper.CheckNumberOfArguments( 0 );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return error
-	ex->stack.push_back( DevaObject( "", err ) );
-
+	helper.ReturnVal( Object( ex->Error() ) );
 }
 
 void do_seterror( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'seterror'." );
+	BuiltinHelper helper( NULL, "seterror", frame );
 
-	// get error data arg from stack
-	DevaObject o = get_arg( ex, "seterror", "error_object" );
+	helper.CheckNumberOfArguments( 1 );
+	Object* err = helper.GetLocalN( 0 );
 
-	// set the global error flag
-	ex->SetError( true );
-	
-	// set the global error object
-	ex->SetErrorData( o );
+	ex->SetError( err );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
 
 void do_geterror( Frame *frame )
 {
-	if( Executor::args_on_stack != 0 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'error'." );
+	BuiltinHelper helper( NULL, "geterror", frame );
 
-	DevaObject* o = ex->GetErrorData();
+	helper.CheckNumberOfArguments( 0 );
 
-	// pop the return address
-	ex->stack.pop_back();
+	helper.ReturnVal( ex->GetError() );
 
-	// push the error object onto the stack
-	if( !o )
-		ex->stack.push_back( DevaObject( "", sym_null ) );
-	else
-		ex->stack.push_back( DevaObject( "", *o ) );
 }
-
+/*
 void do_importmodule( Frame *frame )
 {
 	if( Executor::args_on_stack != 1 )

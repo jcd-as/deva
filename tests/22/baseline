@@ -36,11 +36,13 @@ copy
 count
 d
 delete
+error
 exit
 filter
 find
 flush
 format
+geterror
 insert
 join
 keys
@@ -68,6 +70,7 @@ rewind
 rfind
 seek
 self
+seterror
 slice
 sort
 stderr
@@ -115,7 +118,7 @@ Instructions:
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	69 (x), 73
+  59: def_function	72 (x), 73
   68: jmp		104
   73: enter		 
   74: pushconst		11 (a)

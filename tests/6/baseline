@@ -49,12 +49,14 @@ concat
 copy
 count
 delete
+error
 exit
 filter
 find
 flush
 foo
 format
+geterror
 insert
 io
 join
@@ -84,6 +86,7 @@ rewind
 rfind
 seek
 self
+seterror
 slice
 sort
 stderr
@@ -109,7 +112,7 @@ function: foo, from file: input.dv, line: 1
 2 local(s): a b 
 code address: 14
 Instructions:
-   0: def_function	29 (foo), 14
+   0: def_function	30 (foo), 14
    9: jmp		70
   14: enter		 
   15: pushlocal0		 
@@ -151,7 +154,7 @@ Instructions:
  107: tbl_store	
  108: pushlocal1		 
  109: pushconst		8 (foo)
- 114: pushconst		29 (foo)
+ 114: pushconst		30 (foo)
  119: tbl_store	
  120: push_zero		 
  121: push_one		 
@@ -171,7 +174,7 @@ Instructions:
  151: pop		 
  152: pushlocal1		 
  153: dup1		 
- 154: pushconst		56 (rewind)
+ 154: pushconst		58 (rewind)
  159: method_load	
  160: call_method		0
  165: pop		 
@@ -180,13 +183,13 @@ Instructions:
  172: def_local3		 
  173: enter		 
  174: pushlocal3		 
- 175: pushconst		65 (str)
+ 175: pushconst		68 (str)
  180: call		1
  185: pushlocal4		 
- 186: pushconst		65 (str)
+ 186: pushconst		68 (str)
  191: call		1
  196: add		 
- 197: pushconst		32 (io)
+ 197: pushconst		34 (io)
  202: pushconst		9 (print)
  207: method_load	
  208: call_method		1
@@ -204,9 +207,9 @@ Instructions:
  236: add		 
  237: storelocal0		 
  238: pushlocal0		 
- 239: pushconst		65 (str)
+ 239: pushconst		68 (str)
  244: call		1
- 249: pushconst		32 (io)
+ 249: pushconst		34 (io)
  254: pushconst		9 (print)
  259: method_load	
  260: call_method		1

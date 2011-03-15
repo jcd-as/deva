@@ -62,6 +62,8 @@ struct Code
 
 class Executor
 {
+	friend class ScopeTable;
+
 	// current instruction pointer (current code)
 	byte* ip;
 	// current base pointer (module base)
@@ -87,6 +89,11 @@ class Executor
 
 	// set of constants (including all names)
 	OrderedSet<Object> constants;
+
+	// error flag
+	bool is_error;
+	// error object
+	Object error;
 
 public:
 	// flags:
@@ -139,6 +146,12 @@ public:
 	void ExecuteToReturn( bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
+
+	void SetError( Object* err );
+	bool Error();
+	Object GetError();
+private:
+	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream
