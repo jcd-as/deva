@@ -231,9 +231,7 @@ void Executor::ExecuteCode( const Code & code )
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
-	// (call site is ip minus the size of the instruction (1) and the
-	// call/for-loop arg (sizeof(dword)) )
-	Frame* frame = new Frame( NULL, scopes, bp, 0, main->f );
+	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
@@ -2808,7 +2806,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip - sizeof(dword) - 1, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
 
 	// set the args for the frame
@@ -2888,9 +2886,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	}
 
 	// create a frame for the fcn
-	// (call site is ip minus the size of the instruction (1) and the
-	// call/for-loop arg (sizeof(dword)) )
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip - sizeof(dword) - 1, num_args, nf );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
 
@@ -3362,7 +3358,7 @@ void Executor::DumpTrace( ostream & os )
 			os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
 		else
 		{
-			size_t call_site = ex->GetCallSiteForOffset( f->GetReturnAddress() );
+			size_t call_site = ex->GetOffsetForCallSite( f->GetCallSite() );
 			os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
 //		os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
 		}

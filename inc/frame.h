@@ -67,8 +67,11 @@ class Frame
 	// number of arguments actually passed to the call
 	int num_args;
 
-	// return address (ip at the time of call - address of caller)
+	// return address
 	byte* addr;
+
+	// call site (ip at the time of call - address of caller)
+	byte* call_site;
 
 	// pointer at the scopes so symbols can be resolved from the frame object
 	ScopeTable* scopes;
@@ -76,8 +79,8 @@ class Frame
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, Function* f );
-	Frame( Frame* p, ScopeTable* s, byte* loc, int args_passed, NativeFunction f );
+	Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f );
+	Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, NativeFunction f );
 	~Frame();
 	inline Frame* GetParent() { return parent; }
 	inline bool IsNative() const { return is_native; }
@@ -88,6 +91,7 @@ public:
 	inline Object* GetLocalRef( int i ) const { return &locals[i]; }
 	inline void SetLocal( int i, Object o ) { DecRef( locals[i] ); locals[i] = o; }
 	inline byte* GetReturnAddress() const { return addr; }
+	inline byte* GetCallSite() const { return call_site; }
 	inline int NumArgsPassed() const { return num_args; }
 	inline void AddString( char* s ) { strings.push_back( s ); }
 	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }
