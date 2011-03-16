@@ -1,3 +1,11 @@
+def Foo()
+{
+	# error:
+	local x = null;
+	x /= 4;
+}
+def Bar(){ Foo(); }
+Bar();
 
 ## BUG: break in nested fcn not working
 ## see test 67

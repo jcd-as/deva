@@ -67,9 +67,9 @@ class Frame
 	// number of arguments actually passed to the call
 	int num_args;
 
-	// return address
+	// return address (ip at the time of call - address of caller)
 	byte* addr;
-	
+
 	// pointer at the scopes so symbols can be resolved from the frame object
 	ScopeTable* scopes;
 

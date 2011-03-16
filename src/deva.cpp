@@ -284,6 +284,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		// display an error
 		emit_error( e );
 
+		// dump the stack trace
+		ex->DumpTrace( cerr );
+
 		// free parser, compile memory
 		FreeParseReturnValue( prv );
 		FreePassOneReturnValue( p1rv );

@@ -104,6 +104,9 @@ public:
 	Executor();
 	~Executor();
 
+	// TODO: calculate using module bp!!!
+	inline size_t GetCallSiteForOffset( byte* addr ) const { return addr - bp; }
+
 	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
 	inline Scope* GlobalScope() { return scopes->At( 0 ); }
 	inline Frame* CurrentFrame() { return callstack.back(); }
@@ -163,6 +166,7 @@ public:
 	void DumpFunctions();
 	void DumpConstantPool();
 	void DumpStackTop();
+	void DumpTrace( ostream & os );
 
 	// process exit
 	// TODO: anything needs doing here? prevent the process from exit, just the

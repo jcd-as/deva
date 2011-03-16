@@ -109,6 +109,9 @@ private:
 class Compiler
 {
 private:
+	// compile with debug (line number) statements?
+	bool emit_debug_info;
+
 	// scopes & scope handling
 	int max_scope_idx;		// index to the highest scope num created so far
 	vector<int> scopestack;

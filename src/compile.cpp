@@ -54,6 +54,7 @@ static vector<dword> fcn_scope_stack;
 
 
 Compiler::Compiler( Semantics* sem, Executor* ex ) : 
+	emit_debug_info( true ),
 	max_scope_idx( 0 ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),

@@ -1,4 +1,4 @@
-TODO 2011-03-09 @deva +high fix minor issues with tests:
+TODO 2011-03-09 @deva +medium fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
 
@@ -54,6 +54,8 @@ TODO 2011-02-01 @deva +veryhigh import/modules
 
 TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os, re et al)
 
+TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
+
 DONE 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
     CLOSED: 2011-02-27 16:20:02
     :LOGBOOK:
@@ -67,21 +69,22 @@ DONE 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
 		===
 		functions are currently stored in a map in the Executor, which has a method FindFunction() used to locate them. this needs to become a multi-map and the Find functionality moved to Scope/ScopeTable, which need to have local pointers to the function objects stored in Executor
 
-TODO 2011-02-01 @deva +veryhigh slices!!
+DONE 2011-02-01 @deva +veryhigh slices!!
+    CLOSED: 2011-03-14 20:47:15
+    :LOGBOOK:
+        DONE: 2011-03-14 20:47:15
 	codegen to generate slice ops
 		VM support to execute them
 
 TODO 2011-02-03 @deva +veryhigh functional vector builtins (map, filter, reduce etc) don't work with methods
 
-TODO 2011-02-01 @deva +veryhigh remaining builtins (eval, error fcns, importmodule)
+TODO 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
 
 TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;' ??
 
 TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
 
 TODO 2011-02-01 @deva +high short-circuiting && and || ops ??
-
-TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
 
 TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
 

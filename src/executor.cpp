@@ -34,6 +34,7 @@
 #include "map_builtins.h"
 
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
@@ -230,6 +231,8 @@ void Executor::ExecuteCode( const Code & code )
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
+	// (call site is ip minus the size of the instruction (1) and the
+	// call/for-loop arg (sizeof(dword)) )
 	Frame* frame = new Frame( NULL, scopes, bp, 0, main->f );
 	PushFrame( frame );
 
@@ -2805,7 +2808,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
 
 	// set the args for the frame
@@ -2885,7 +2888,9 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	}
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, num_args, nf );
+	// (call site is ip minus the size of the instruction (1) and the
+	// call/for-loop arg (sizeof(dword)) )
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip - sizeof(dword) - 1, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
 
@@ -2951,10 +2956,7 @@ bool Executor::Error()
 Object Executor::GetError()
 {
 	if( is_error )
-	{
-//		IncRef( error );
 		return error;
-	}
 	else
 		return Object( obj_null );
 }
@@ -3270,7 +3272,6 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "Error: Invalid instruction.";
 		break;
 	}
-//	cout << endl;
 	return ret+1;
 }
 
@@ -3323,6 +3324,51 @@ void Executor::DumpStackTop()
 	if( stack.size() > 5 )
 		cout << " +" << stack.size()-5 << " more";
 	cout << endl;
+}
+
+void Executor::DumpTrace( ostream & os )
+{
+	os << "Traceback (most recent first):" << endl;
+	string fcn, file;
+	int line = -1;
+	int depth = 1;
+	Frame* f;
+	for(vector<Frame*>::reverse_iterator i = callstack.rbegin(); i != callstack.rend() - 1; ++i )
+	{
+		f = *i;
+		if( f->IsNative() )
+		{
+			ostringstream s;
+			s << hex << f->GetNativeFunction().p;
+			fcn = "[Native Function at " + s.str() + "]";
+
+			file = "[Native Module]";
+		}
+		else
+		{
+			fcn = f->GetFunction()->name;
+			file = f->GetFunction()->filename;
+		}
+
+		// pad for callstack depth
+		for( int c = 0; c < depth; c++ )
+			os << " ";
+
+		// TODO: if there is debug info, include the line number, else don't
+		// TODO: call site: if there is debug info, map the call-site
+		// (frame->addr) to a line number. otherwise, subtract the bp (for this
+		// module) from it to produce the code offset
+		if( depth == 1 )
+			os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
+		else
+		{
+			size_t call_site = ex->GetCallSiteForOffset( f->GetReturnAddress() );
+			os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
+//		os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
+		}
+
+		depth++;
+	}
 }
 
 } // namespace deva
