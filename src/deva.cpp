@@ -245,7 +245,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// execute the code
 			if( !compile_only )
 			{
-				Execute();
+				Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
+				Execute( code );
 			}
 		}
 	}
@@ -285,7 +286,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		emit_error( e );
 
 		// dump the stack trace
-		ex->DumpTrace( cerr );
+		if( ex )
+			ex->DumpTrace( cerr );
 
 		// free parser, compile memory
 		FreeParseReturnValue( prv );

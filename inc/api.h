@@ -88,7 +88,7 @@ void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags );
 PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
 // free pass one/compilation memory, call after finished compiling, using ast
 void FreePassOneReturnValue( PassOneReturnValue p1rv );
-void Execute();
+void Execute( const Code* const code );
 
 
 } // end namespace deva

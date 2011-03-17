@@ -47,7 +47,7 @@ namespace deva
 /////////////////////////////////////////////////////////////////////////////
 
 // global executor object
-Executor* ex;
+Executor* ex = NULL;
 
 Executor::Executor() : ip( NULL ), debug( false ), trace( false ), is_error( false )
 {
@@ -71,6 +71,11 @@ Executor::~Executor()
 		if( i->second->type == obj_function )
 			delete i->second->f;
 		delete i->second;
+	}
+	// free the code blocks
+	for( vector<const Code*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
+	{
+		delete *i;
 	}
 }
 
@@ -210,28 +215,24 @@ void Executor::CallDestructors( Object o )
 	}
 }
 
-void Executor::ExecuteCode( const Code & code )
+void Executor::Execute( const Code* const code )
 {
 	// NOTE: all actions that create a new C string (char*) as a local need to
 	// add it to that frame's strings collection (i.e. call
 	// CurrentFrame()->AddString())
 
-	Opcode op = op_nop;
+//	Opcode op = op_nop;
 
-	end = code.code + code.len;
-	bp = code.code;
-	ip = bp;
+//	end = code->code + code->len;
+//	bp = code->code;
+//	ip = bp;
 
-	// TODO: create the scopes here?
 	scopes = new ScopeTable();
-
-	// TODO: review. is this where this frame should be added?
-	// (it needs the code location/address, for return values, so where else can
-	// it go??)
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
-	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
+//	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
@@ -241,18 +242,37 @@ void Executor::ExecuteCode( const Code & code )
 		cout << "Execution trace:" << endl;
 
 	// execute until end
-	while( ip < end && op < op_halt )
-	{
-		op = ExecuteInstruction();
-	}
+	ExecuteCode( code );
+//	while( ip < end && op < op_halt )
+//	{
+//		op = ExecuteInstruction();
+//	}
 
-	// TODO: delete scope table here?
 	// pop the 'global' scope
 	scopes->PopScope();
 	// free the scope table
 	delete scopes;
-	// TODO: review. is this where the 'global' frame should be deleted?
 	PopFrame();
+}
+
+// TODO: implement
+void Executor::ExecuteCode( const Code* const code )
+{
+	// add this code block to our collection
+	code_blocks.push_back( code );
+
+	Opcode op = op_nop;
+
+	// set the ip, bp and end 
+	end = code->code + code->len;
+	bp = code->code;
+	ip = bp;
+
+	// execute until end
+	while( ip < end && op < op_halt )
+	{
+		op = ExecuteInstruction();
+	}
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -2767,12 +2787,14 @@ Opcode Executor::ExecuteInstruction()
 		stack.insert( stack.end() - 4, o );
 		break;
 	case op_import:
-		// TODO:
 		// 1 arg:
 		arg = *((dword*)ip);
-		// look-up the constant
-		o = GetConstant(arg);
 		ip += sizeof( dword );
+		// look-up the constant
+		o = GetConstant( arg );
+		if( o.type != obj_symbol_name )
+			throw ICE( "Invalid argument to 'import' instruction: not a symbol name." );
+		ImportModule( o.s );
 		break;
 	case op_halt:
 		break;
@@ -2955,6 +2977,132 @@ Object Executor::GetError()
 		return error;
 	else
 		return Object( obj_null );
+}
+
+// helper function to locate a namespace by (module) name
+// helper (functor) class
+class equal_to_first
+{
+	string value;
+public:
+	equal_to_first( string val ) : value( val ) {}
+	bool operator()(pair<string, void*> n ) { return n.first == value; }
+};
+// find a namespace
+vector< pair<string, void*> >::iterator Executor::find_namespace( string mod )
+{
+	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
+}
+
+// helper function for Import
+string Executor::find_module( string mod )
+{
+	// split the path given into it's / separated parts
+	vector<string> path = split_path( mod );
+
+	// first, look in the directory of the currently executing file
+	string cf( current_file );
+	string cur_file = get_file_part( cf );
+	// get the cwd
+	string curdir = get_cwd();
+	// append the current file to the current directory (in case the current
+	// file path contains directories, e.g. the compiler was called on the
+	// file 'src/foo.dv')
+	curdir += "/";
+	curdir += cur_file;
+	curdir = get_dir_part( curdir );
+	// 'curdir' now contains the directory of the currently executing file
+	// append the mod name to get the mod path
+	string modpath( curdir );
+	for( vector<string>::iterator it = path.begin(); it != path.end(); ++it )
+	{
+		modpath = join_paths( modpath, *it );
+	}
+	// check for .dv/.dvc files on disk
+	struct stat statbuf;
+	// if we can open the module file, return it
+	string dv = modpath + ".dv";
+	if( stat( dv.c_str(), &statbuf ) != -1 )
+		return modpath;
+	string dvc = modpath + ".dvc";
+	if( stat( dvc.c_str(), &statbuf ) != -1 )
+		return modpath;
+	// otherwise check the paths in the DEVA env var
+	else
+	{
+		// get the DEVA env var
+		string devapath( getenv( "DEVA" ) );
+		// split it into separate paths (on the ":" char in un*x)
+		vector<string> paths;
+		split_env_var_paths( devapath, paths );
+		// for each of the paths, append the mod
+		// and see if it exists
+		for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
+		{
+			modpath = join_paths( *it, mod );
+			// check for .dv/.dvc files on disk
+			struct stat statbuf;
+			// if we can't open the module file, error out
+			string dv = modpath + ".dv";
+			if( stat( dv.c_str(), &statbuf ) != -1 )
+				return modpath;
+			string dvc = modpath + ".dvc";
+			if( stat( dvc.c_str(), &statbuf ) != -1 )
+				return modpath;
+		}
+	}
+	// not found, error
+	throw RuntimeException( boost::format( "Unable to locate module '%1%' for import." ) % mod );
+}
+bool Executor::ImportModule( const char* module_name )
+{
+	// TODO: implement!
+	//throw ICE( "ImportModule() not yet implemented!" );
+	
+	// check the list of builtin modules first
+//	if( ImportBuiltinModule( mod ) )
+//		return true;
+
+	// prevent importing the same module more than once
+	vector< pair<string, void*> >::iterator it;
+	it = find_namespace( module_name );
+	// if we found the namespace
+	if( it != namespaces.end() )
+		return true;
+
+	// otherwise look for the .dv/.dvc file to import
+	string path = find_module( module_name );
+
+	// for now, just run the file by short name with ".dvc" extension (i.e. in
+	// the current working directory)
+	string dvfile( path + ".dv" );
+	string dvcfile( path + ".dvc" );
+	// save the ip
+	byte* orig_ip = ip;
+	// save the current scope table
+//	ScopeTable* orig_scopes = current_scopes;
+	// create a new namespace and set it at the current scope
+	// TODO: currently this only adds the "short" name of the module as a
+	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
+	// foo-bar? foo/bar?
+	string mod( module_name );
+	mod = get_file_part( mod );
+//	ScopeTable* st = new ScopeTable( this );
+//	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
+	namespaces.push_back( pair<string, void*>(mod, NULL) );
+//	current_scopes = st;
+//	// create a 'file/module' level scope for the namespace
+//	current_scopes->Push();
+//	// compile the file, if needed
+//	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
+//	// and then run the file
+//	RunFile( dvcfile.c_str() );
+	// restore the ip
+	ip = orig_ip;
+	// restore the current scope table
+//	current_scopes = orig_scopes;
+
+	return true;
 }
 
 // disassemble the instruction stream to stdout
@@ -3324,6 +3472,10 @@ void Executor::DumpStackTop()
 
 void Executor::DumpTrace( ostream & os )
 {
+	// nothing to do?
+	if( callstack.begin() == callstack.end() - 1 )
+		return;
+
 	os << "Traceback (most recent first):" << endl;
 	string fcn, file;
 	int line = -1;

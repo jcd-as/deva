@@ -71,7 +71,7 @@ class Executor
 	// end of current code block
 	byte* end;
 	// list of code blocks (modules, eval'd blocks)
-	vector<Code> code_blocks;
+	vector<const Code*> code_blocks;
 
 	// call stack
 	vector<Frame*> callstack;
@@ -83,6 +83,9 @@ class Executor
 
 	// scope table
 	ScopeTable* scopes;
+
+	// loaded modules (namespaces)
+	vector< pair<string, void*> > namespaces;
 
 	// set of function objects
 	multimap<string, Object*> functions;
@@ -142,9 +145,12 @@ public:
 	inline size_t NumConstants() { return constants.Size(); }
 
 	// code execution methods:
+	//
+	// main entry point (must be called on the 'main' code block)
+	void Execute( const Code* const code );
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
-	void ExecuteCode( const Code & code );
+	void ExecuteCode( const Code* const code );
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
@@ -155,6 +161,12 @@ public:
 	Object GetError();
 private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
+
+	// helper fcn to find a loaded module (namespace)
+	vector< pair<string, void*> >::iterator find_namespace( string mod );
+	// helper fcn for ImportModule:
+	string find_module( string mod );
+	bool ImportModule( const char* module_name );
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream

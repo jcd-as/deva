@@ -151,10 +151,9 @@ void FreePassOneReturnValue( PassOneReturnValue p1rv )
 	if( p1rv.nodes ) p1rv.nodes->free( p1rv.nodes );
 }
 
-void Execute()
+void Execute( const Code* const code )
 {
-	Code c( (byte*)compiler->is->Bytes(), compiler->is->Length() );
-	ex->ExecuteCode( c );
+	ex->Execute( code );
 }
 
 

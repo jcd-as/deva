@@ -993,10 +993,10 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 	}
 
 	// find the name in the constant pool
-	int idx = GetConstant( Object( (char*)modname.c_str() ) );
+	int idx = GetConstant( Object( obj_symbol_name, (char*)modname.c_str() ) );
 	// not found? error
 	if( idx == -1 )
-		throw ICE( boost::format( "Symbol '%1%' not found." ) % modname );
+		throw ICE( boost::format( "Symbol '%1%' not found for 'import' instruction." ) % modname );
 	Emit( op_import, (dword)idx );
 }
 

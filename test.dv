@@ -1,11 +1,14 @@
-def Foo()
-{
-	# error:
-	local x = null;
-	x /= 4;
-}
-def Bar(){ Foo(); }
-Bar();
+import foo/bar;
+
+# TEST error stack trace:
+#def Foo()
+#{
+#	# error:
+#	local x = null;
+#	x /= 4;
+#}
+#def Bar(){ Foo(); }
+#Bar();
 
 ## BUG: break in nested fcn not working
 ## see test 67
