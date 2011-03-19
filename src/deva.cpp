@@ -221,7 +221,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			}
 
 			// PASS TWO: compile
+			ex = new Executor();
 			PassTwo( p1rv, p2f );
+			Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
 
 			// debug dumps
 #ifdef DEBUG
@@ -238,16 +240,25 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 
 			if( disasm )
 			{
-				Code c( (byte*)compiler->is->Bytes(), compiler->is->Length() );
-				ex->Decode( c );
+				ex->Decode( code );
 			}
+
+			// free compile-time objects before executing code
+			// free parser, compile memory
+			FreeParseReturnValue( prv );
+			FreePassOneReturnValue( p1rv );
+			delete compiler;
+			compiler = NULL;
+			delete semantics;
+			semantics = NULL;
 
 			// execute the code
 			if( !compile_only )
 			{
-				Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
-				Execute( code );
+				ex->Execute( code );
 			}
+			else
+				delete code;
 		}
 	}
 	catch( SemanticException & e )
@@ -301,13 +312,13 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	}
 
 	// free parser, compiler memory
-	FreePassOneReturnValue( p1rv );
-	FreeParseReturnValue( prv );
-
-	// free the semantics objects (symbol table et al), compiler, executor
+//	FreePassOneReturnValue( p1rv );
+//	FreeParseReturnValue( prv );
+//
+//	// free the semantics objects (symbol table et al), compiler, executor
 	delete ex;
-	delete compiler;
-	delete semantics;
+//	delete compiler;
+//	delete semantics;
 
 
 	return 0;

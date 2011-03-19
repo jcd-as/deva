@@ -125,12 +125,14 @@ void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags )
 
 	// PASS TWO: compile
 	// (semantics and execution engine must be created BEFORE the compiler...)
-	ex = new Executor();
+	
+	if( !ex )
+		throw ICE( "Executor object must exist before calling PassTwo()." );
 
 	// TODO: other flags (debug et al)
 	ex->trace = flags.trace;
 
-	compiler = new Compiler( semantics, ex );
+	compiler = new Compiler( semantics );
 
 	cmpPsr = compile_walkerNew( p1rv.nodes );
 	cmpPsr->translation_unit( cmpPsr );
@@ -149,11 +151,6 @@ PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoF
 void FreePassOneReturnValue( PassOneReturnValue p1rv )
 {
 	if( p1rv.nodes ) p1rv.nodes->free( p1rv.nodes );
-}
-
-void Execute( const Code* const code )
-{
-	ex->Execute( code );
 }
 
 

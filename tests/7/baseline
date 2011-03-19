@@ -36,9 +36,18 @@ Function: fcn, 0 arguments, 0 locals
 Scope: 14
 	vars: 
 Constant data pool:
-<null-value>
-<boolean-false>
 <boolean-true>
+<boolean-false>
+<null-value>
+__name__
+__class__
+__bases__
+__module__
+new
+delete
+self
+rewind
+next
 0
 1
 2
@@ -49,76 +58,67 @@ c
 d
 fcn called
 foo
-__bases__
-__class__
-__module__
-__name__
+foo
 a
-all
-any
-append
 b
 c
-chr
-close
-concat
-copy
-count
-delete
-error
-exit
 fcn
-filter
-find
-flush
-foo
-format
-geterror
-insert
-join
-keys
-length
-map
-max
-merge
-min
 n
-name
-new
-next
-num
-open
-pop
-print
-range
-read
-readline
-readlines
-readstring
-reduce
-remove
-reverse
-rewind
-rfind
-seek
-self
-seterror
-slice
-sort
-stderr
-stdin
-stdout
-str
-tell
-type
-values
-write
-writeline
-writelines
-writestring
 x
 y
 z
+print
+str
+chr
+append
+length
+copy
+name
+type
+exit
+num
+range
+open
+close
+flush
+read
+readstring
+readline
+readlines
+write
+writestring
+writeline
+writelines
+seek
+tell
+stdin
+stdout
+stderr
+format
+join
+error
+seterror
+geterror
+concat
+min
+max
+pop
+insert
+remove
+find
+rfind
+count
+reverse
+sort
+map
+filter
+reduce
+any
+all
+slice
+keys
+values
+merge
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -155,7 +155,7 @@ Instructions:
   27: storelocal0		 
   28: leave		 
   29: jmp		19
-  34: def_function	35 (foo), 48
+  34: def_function	22 (foo), 48
   43: jmp		56
   48: enter		 
   49: leave		 
@@ -165,7 +165,7 @@ Instructions:
   57: def_local2		 
   58: push_zero		 
   59: def_local3		 
-  60: def_function	82 (z), 74
+  60: def_function	30 (z), 74
   69: jmp		82
   74: enter		 
   75: leave		 
@@ -177,7 +177,7 @@ Instructions:
   89: pushlocal3		 
   90: jmpf		108
   95: enter		 
-  96: pushconst		82 (z)
+  96: pushconst		30 (z)
  101: call		0
  106: pop		 
  107: leave		 
@@ -188,7 +188,7 @@ Instructions:
  116: pushlocal3		 
  117: jmpf		135
  122: enter		 
- 123: pushconst		82 (z)
+ 123: pushconst		30 (z)
  128: call		0
  133: pop		 
  134: leave		 
@@ -204,57 +204,57 @@ Instructions:
  148: jmp		155
  153: enter		 
  154: leave		 
- 155: def_function	31 (fcn), 169
+ 155: def_function	26 (fcn), 169
  164: jmp		193
  169: enter		 
- 170: pushconst		11 (fcn called)
- 175: pushconst		53 (print)
+ 170: pushconst		20 (fcn called)
+ 175: pushconst		31 (print)
  180: call		1
  185: pop		 
  186: leave		 
  187: push_null		 
  188: return		0
- 193: pushconst		8 (b)
- 198: pushconst		31 (fcn)
+ 193: pushconst		17 (b)
+ 198: pushconst		26 (fcn)
  203: new_map		1
  208: storelocal0		 
  209: pushlocal0		 
- 210: pushconst		8 (b)
+ 210: pushconst		17 (b)
  215: method_load	
  216: call_method		0
  221: pop		 
  222: pushlocal0		 
- 223: pushconst		8 (b)
- 228: pushconst		9 (c)
- 233: pushconst		10 (d)
+ 223: pushconst		17 (b)
+ 228: pushconst		18 (c)
+ 233: pushconst		19 (d)
  238: push_one		 
  239: new_map		1
  244: new_map		1
  249: tbl_store	
  250: pushlocal0		 
- 251: pushconst		8 (b)
+ 251: pushconst		17 (b)
  256: tbl_load	
- 257: pushconst		9 (c)
+ 257: pushconst		18 (c)
  262: tbl_load	
- 263: pushconst		10 (d)
+ 263: pushconst		19 (d)
  268: push_zero		 
  269: tbl_store	
  270: pushlocal0		 
- 271: pushconst		8 (b)
+ 271: pushconst		17 (b)
  276: tbl_load	
- 277: pushconst		9 (c)
+ 277: pushconst		18 (c)
  282: tbl_load	
- 283: pushconst		10 (d)
+ 283: pushconst		19 (d)
  288: new_map		0
  293: tbl_store	
  294: pushlocal0		 
- 295: pushconst		8 (b)
+ 295: pushconst		17 (b)
  300: tbl_load	
- 301: pushconst		9 (c)
+ 301: pushconst		18 (c)
  306: tbl_load	
- 307: pushconst		10 (d)
+ 307: pushconst		19 (d)
  312: tbl_load	
- 313: pushconst		12 (foo)
+ 313: pushconst		21 (foo)
  318: push_one		 
  319: tbl_store	
  320: push_one		 

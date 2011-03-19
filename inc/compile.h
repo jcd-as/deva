@@ -61,7 +61,7 @@ public:
 		cur = bytes;
 		memset( bytes, 0, size );
 	}
-	~InstructionStream(){ delete[] bytes; }
+	~InstructionStream(){ /*delete[] bytes;*/ /*don't delete the bytes, the executor will*/ }
 	const byte* Bytes(){ return bytes; }
 	const byte* Current(){ return cur; }
 	inline size_t Length(){ return cur - bytes; }
@@ -162,9 +162,8 @@ private:
 public:
 	// public functions
 	/////////////////////////////////////////////////////////////////////////
-	Compiler( Semantics* sem, Executor* ex );
-	~Compiler()
-	{ delete is; }
+	Compiler( Semantics* sem );
+	~Compiler() { delete is; }
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
 	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }

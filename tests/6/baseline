@@ -24,84 +24,84 @@ Scope: 8
 Scope: 9
 	vars: 
 Constant data pool:
-<null-value>
-<boolean-false>
 <boolean-true>
+<boolean-false>
+<null-value>
+__name__
+__class__
+__bases__
+__module__
+new
+delete
+self
+rewind
+next
 0
 1
 5
 10
-append
 foo
+append
 print
-__bases__
-__class__
-__module__
-__name__
+foo
 a
-all
-any
-append
 b
-chr
-close
-concat
-copy
-count
-delete
-error
-exit
-filter
-find
-flush
-foo
-format
-geterror
-insert
 io
-join
 key
-keys
-length
-map
-max
-merge
-min
-name
-new
-next
-num
-open
-pop
+value
+x
 print
+str
+chr
+append
+length
+copy
+name
+type
+exit
+num
 range
+open
+close
+flush
 read
+readstring
 readline
 readlines
-readstring
-reduce
-remove
-reverse
-rewind
-rfind
-seek
-self
-seterror
-slice
-sort
-stderr
-stdin
-stdout
-str
-tell
-type
-value
-values
 write
+writestring
 writeline
 writelines
-writestring
-x
+seek
+tell
+stdin
+stdout
+stderr
+format
+join
+error
+seterror
+geterror
+concat
+min
+max
+pop
+insert
+remove
+find
+rfind
+count
+reverse
+sort
+map
+filter
+reduce
+any
+all
+slice
+keys
+values
+merge
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -112,7 +112,7 @@ function: foo, from file: input.dv, line: 1
 2 local(s): a b 
 code address: 14
 Instructions:
-   0: def_function	30 (foo), 14
+   0: def_function	19 (foo), 14
    9: jmp		70
   14: enter		 
   15: pushlocal0		 
@@ -142,7 +142,7 @@ Instructions:
   75: def_local0		 
   76: push		5
   81: pushlocal0		 
-  82: pushconst		7 (append)
+  82: pushconst		17 (append)
   87: method_load	
   88: call_method		1
   93: pop		 
@@ -150,21 +150,21 @@ Instructions:
   99: def_local1		 
  100: pushlocal1		 
  101: push_zero		 
- 102: pushconst		8 (foo)
+ 102: pushconst		16 (foo)
  107: tbl_store	
  108: pushlocal1		 
- 109: pushconst		8 (foo)
- 114: pushconst		30 (foo)
+ 109: pushconst		16 (foo)
+ 114: pushconst		19 (foo)
  119: tbl_store	
  120: push_zero		 
  121: push_one		 
  122: pushlocal1		 
- 123: pushconst		8 (foo)
+ 123: pushconst		16 (foo)
  128: tbl_load	
  129: call		2
  134: pop		 
  135: pushlocal1		 
- 136: pushconst		8 (foo)
+ 136: pushconst		16 (foo)
  141: tbl_load	
  142: def_local2		 
  143: push_zero		 
@@ -174,7 +174,7 @@ Instructions:
  151: pop		 
  152: pushlocal1		 
  153: dup1		 
- 154: pushconst		58 (rewind)
+ 154: pushconst		10 (rewind)
  159: method_load	
  160: call_method		0
  165: pop		 
@@ -183,14 +183,14 @@ Instructions:
  172: def_local3		 
  173: enter		 
  174: pushlocal3		 
- 175: pushconst		68 (str)
+ 175: pushconst		27 (str)
  180: call		1
  185: pushlocal4		 
- 186: pushconst		68 (str)
+ 186: pushconst		27 (str)
  191: call		1
  196: add		 
- 197: pushconst		34 (io)
- 202: pushconst		9 (print)
+ 197: pushconst		22 (io)
+ 202: pushconst		18 (print)
  207: method_load	
  208: call_method		1
  213: pop		 
@@ -207,10 +207,10 @@ Instructions:
  236: add		 
  237: storelocal0		 
  238: pushlocal0		 
- 239: pushconst		68 (str)
+ 239: pushconst		27 (str)
  244: call		1
- 249: pushconst		34 (io)
- 254: pushconst		9 (print)
+ 249: pushconst		22 (io)
+ 254: pushconst		18 (print)
  259: method_load	
  260: call_method		1
  265: pop		 

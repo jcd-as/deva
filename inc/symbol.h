@@ -51,7 +51,6 @@ public:
 	SymbolBase() : type( sym_end ) {}
 	SymbolBase( SymbolType t ) : type( t ) {}
 	SymbolBase( const char* const nm, SymbolType t ) : name( nm ), type( t ) {}
-//	virtual ~SymbolBase() {}
 
 	const string & Name() const { return name; }
 	const SymbolType Type() const { return type; }
@@ -71,7 +70,8 @@ enum VariableModifier
 	mod_constant,	// 'const'
 	mod_external,	// 'extern'
 	mod_local,		// 'local'
-	mod_arg			// function argument. equivalent to local in most ways
+	mod_arg,			// function argument. equivalent to local in most ways
+	mod_module_name		// the name of a module for import
 };
 
 static int s_index_counter = 0;

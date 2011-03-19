@@ -53,7 +53,7 @@ static vector< vector<dword>* > loop_break_locations;
 static vector<dword> fcn_scope_stack;
 
 
-Compiler::Compiler( Semantics* sem, Executor* ex ) : 
+Compiler::Compiler( Semantics* sem ) : 
 	emit_debug_info( true ),
 	max_scope_idx( 0 ),
 	num_locals( 0 ),
@@ -66,24 +66,6 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 {
 	// create the instruction stream
 	is = new InstructionStream();
-
-	// all global names and constants MUST be added here, as the compiler needs
-	// to generate and use indices into their collections, and adding items to
-	// the sorted collections will invalidate the indices already used
-
-	// add names that always exist
-	ex->AddConstant( Object( true ) );
-	ex->AddConstant( Object( false ) );
-	ex->AddConstant( Object( obj_null ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "__name__" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "__class__" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "__bases__" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "__module__" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "new" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "delete" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "self" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "rewind" ) ) );
-	ex->AddConstant( Object( obj_symbol_name, copystr( "next" ) ) );
 
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
@@ -117,6 +99,14 @@ Compiler::Compiler( Semantics* sem, Executor* ex ) :
 		}
 		else
 			ex->AddConstant( *i );
+	}
+
+	// copy the module names to the executor
+	for( set<char*>::iterator i = sem->module_names.begin(); i != sem->module_names.end(); ++i )
+	{
+		ex->AddModuleName( string( *i ) );
+		// free the module name string now that we are truly done with it
+		delete [] *i;
 	}
 
 	// add the builtins, vector builtins and map builtins to the constant pool

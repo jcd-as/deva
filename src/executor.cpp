@@ -32,6 +32,7 @@
 #include "string_builtins.h"
 #include "vector_builtins.h"
 #include "map_builtins.h"
+#include "api.h"
 
 #include <algorithm>
 #include <sstream>
@@ -48,20 +49,42 @@ namespace deva
 
 // global executor object
 Executor* ex = NULL;
+// static member initialization
+// singleton support:
+bool Executor::instantiated = false;
 
 Executor::Executor() : ip( NULL ), debug( false ), trace( false ), is_error( false )
 {
-	// set-up the constant and function object pools
-	constants.Reserve( 256 );
+	if( instantiated )
+		throw ICE( "Executor is a singleton object, it cannot be instantiated twice." );
+	else
+		instantiated = true;
+
+	// set-up the constant pool
+	constants.reserve( 256 );
+
+	// add names that always exist
+	AddConstant( Object( true ) );
+	AddConstant( Object( false ) );
+	AddConstant( Object( obj_null ) );
+	AddConstant( Object( obj_symbol_name, copystr( "__name__" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "__class__" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "__bases__" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "__module__" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "new" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "delete" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "self" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "rewind" ) ) );
+	AddConstant( Object( obj_symbol_name, copystr( "next" ) ) );
 }
 
 Executor::~Executor()
 {
 	// free the constants' string data
-	for( int i = 0; i < constants.Size(); i++ )
+	for( int i = 0; i < constants.size(); i++ )
 	{
-		ObjectType type = constants.At( i ).type;
-		if( type == obj_string || type == obj_symbol_name ) delete [] constants.At( i ).s;
+		ObjectType type = constants.at( i ).type;
+		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
 	}
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
@@ -127,6 +150,9 @@ Object Executor::ResolveSymbol( Object sym )
 		nf = GetMapBuiltin( sym.s );
 		if( nf.p )
 			return Object( nf );
+		// module name?
+		if( module_names.count( sym.s ) != 0 )
+			return sym;
 
 		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
 	}
@@ -683,7 +709,7 @@ Opcode Executor::ExecuteInstruction()
 			throw ICE( "def_function instruction called with an object that is not a function name." );
 		string name( fcnname.s );
 		// find the function
-		Object* objf = ex->FindFunction( name, (size_t)arg3 );
+		Object* objf = FindFunction( name, (size_t)arg3 );
 		if( !objf )
 			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
 		// is there a local of this name that we need to override?
@@ -2994,7 +3020,7 @@ vector< pair<string, void*> >::iterator Executor::find_namespace( string mod )
 	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
 
-// helper function for Import
+// helper function for ImportModule
 string Executor::find_module( string mod )
 {
 	// split the path given into it's / separated parts
@@ -3054,6 +3080,46 @@ string Executor::find_module( string mod )
 	// not found, error
 	throw RuntimeException( boost::format( "Unable to locate module '%1%' for import." ) % mod );
 }
+
+// helper fcn for parsing and compiling a module
+const Code* const Executor::LoadModule( string fname )
+{
+	ParseReturnValue prv;
+	PassOneReturnValue p1rv;
+
+	// NOTE: compiler and semantics global objects should be free'd and NULL at
+	// this point!
+
+	// parse the file
+	prv = Parse( fname.c_str() );
+
+	if( prv.successful )
+	{
+		PassOneFlags p1f; // currently no pass one flags
+		PassTwoFlags p2f;
+		p2f.trace = trace;
+
+		// PASS ONE: build the symbol table and check semantics
+		p1rv = PassOne( prv, p1f );
+
+		// PASS TWO: compile
+		PassTwo( p1rv, p2f );
+		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
+
+		// free parser, compiler memory
+		FreeParseReturnValue( prv );
+		FreePassOneReturnValue( p1rv );
+		// free the semantics and compiler objects (symbol table et al) 
+		delete compiler;
+		delete semantics;
+
+		// return the code
+		return c;
+	}
+	else
+		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % fname );
+}
+
 bool Executor::ImportModule( const char* module_name )
 {
 	// TODO: implement!
@@ -3077,8 +3143,10 @@ bool Executor::ImportModule( const char* module_name )
 	// the current working directory)
 	string dvfile( path + ".dv" );
 	string dvcfile( path + ".dvc" );
-	// save the ip
+	// save the ip, bp and end ptrs
 	byte* orig_ip = ip;
+	byte* orig_bp = bp;
+	byte* orig_end = end;
 	// save the current scope table
 //	ScopeTable* orig_scopes = current_scopes;
 	// create a new namespace and set it at the current scope
@@ -3097,8 +3165,19 @@ bool Executor::ImportModule( const char* module_name )
 //	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 //	// and then run the file
 //	RunFile( dvcfile.c_str() );
-	// restore the ip
+
+	// load (compile) the module
+	const Code* code = LoadModule( dvfile );
+	if( !code )
+		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
+	// execute it
+	ExecuteCode( code );
+	
+	// restore the ip, bp and end ptrs
 	ip = orig_ip;
+	bp = orig_bp;
+	end = orig_end;
+
 	// restore the current scope table
 //	current_scopes = orig_scopes;
 
@@ -3106,11 +3185,11 @@ bool Executor::ImportModule( const char* module_name )
 }
 
 // disassemble the instruction stream to stdout
-void Executor::Decode( const Code & code)
+void Executor::Decode( const Code* code)
 {
-	byte* b = code.code;
+	byte* b = code->code;
 	byte* p = b;
-	byte* end = code.code + code.len;
+	byte* end = code->code + code->len;
 	Opcode op = op_nop;
 
 	cout << "Instructions:" << endl;
@@ -3481,7 +3560,7 @@ void Executor::DumpTrace( ostream & os )
 	int line = -1;
 	int depth = 1;
 	Frame* f;
-	for(vector<Frame*>::reverse_iterator i = callstack.rbegin(); i != callstack.rend() - 1; ++i )
+	for(vector<Frame*>::reverse_iterator i = callstack.rbegin(); i < callstack.rend() - 1; ++i )
 	{
 		f = *i;
 		if( f->IsNative() )
@@ -3510,7 +3589,7 @@ void Executor::DumpTrace( ostream & os )
 			os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
 		else
 		{
-			size_t call_site = ex->GetOffsetForCallSite( f->GetCallSite() );
+			size_t call_site = GetOffsetForCallSite( f->GetCallSite() );
 			os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
 //		os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
 		}

@@ -50,7 +50,9 @@ DONE 2011-02-27 @deva +veryhigh implement string builtins!!
 TODO 2011-02-01 @deva +veryhigh import/modules
 	better module/package architecture: allow packages (dirs) of modules? 
 	how do modules work? (each module is compiled into a separate code block, which means the 'import' op needs to create the new code block. all fcns in the module are inside this code block, just like the 'main' code block
-	BUG: module names aren't being found (ICE in compiler)
+	ISSUE: modules need to reside in their own "namespace" with their own Executor object, or else they can't be loaded as precompiled .dvc files, because the indices in the constant pool will be different for the module when loaded solo vs loaded as an import. _OR_ they could be 'fixed' up at load time by adding the appropriate offset to every constant load...
+	TBD:
+	- name lookup (foo.bar needs to check for bar in module foo) for both tbl_load and method_load
 
 TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os, re et al)
 

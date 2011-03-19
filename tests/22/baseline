@@ -12,79 +12,79 @@ Function: x, 0 arguments, 0 locals
 Scope: 3
 	vars: undeclared b; undeclared c; 
 Constant data pool:
-<null-value>
-<boolean-false>
 <boolean-true>
+<boolean-false>
+<null-value>
+__name__
+__class__
+__bases__
+__module__
+new
+delete
+self
+rewind
+next
 0
 b
 c
 d
-__bases__
-__class__
-__module__
-__name__
 a
-all
-any
-append
 b
 c
-chr
-close
-concat
-copy
-count
 d
-delete
-error
-exit
-filter
-find
-flush
-format
-geterror
-insert
-join
-keys
-length
-map
-max
-merge
-min
-name
-new
-next
-num
-open
-pop
+x
 print
+str
+chr
+append
+length
+copy
+name
+type
+exit
+num
 range
+open
+close
+flush
 read
+readstring
 readline
 readlines
-readstring
-reduce
-remove
-reverse
-rewind
-rfind
-seek
-self
-seterror
-slice
-sort
-stderr
-stdin
-stdout
-str
-tell
-type
-values
 write
+writestring
 writeline
 writelines
-writestring
-x
+seek
+tell
+stdin
+stdout
+stderr
+format
+join
+error
+seterror
+geterror
+concat
+min
+max
+pop
+insert
+remove
+find
+rfind
+count
+reverse
+sort
+map
+filter
+reduce
+any
+all
+slice
+keys
+values
+merge
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -101,30 +101,30 @@ Instructions:
    3: jmpf		40
    8: enter		 
    9: pushlocal0		 
-  10: pushconst		4 (b)
+  10: pushconst		13 (b)
   15: tbl_load	
-  16: pushconst		5 (c)
+  16: pushconst		14 (c)
   21: tbl_load	
-  22: pushconst		6 (d)
+  22: pushconst		15 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
   34: leave		 
   35: jmp		2
   40: pushlocal0		 
-  41: pushconst		4 (b)
+  41: pushconst		13 (b)
   46: tbl_load	
-  47: pushconst		5 (c)
+  47: pushconst		14 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	72 (x), 73
+  59: def_function	20 (x), 73
   68: jmp		104
   73: enter		 
-  74: pushconst		11 (a)
-  79: pushconst		4 (b)
+  74: pushconst		16 (a)
+  79: pushconst		13 (b)
   84: tbl_load	
-  85: pushconst		5 (c)
+  85: pushconst		14 (c)
   90: method_load	
   91: call_method		0
   96: pop		 

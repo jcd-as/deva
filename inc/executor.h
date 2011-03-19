@@ -44,6 +44,7 @@
 #include "map_builtins.h"
 
 #include <vector>
+#include <set>
 
 using namespace std;
 
@@ -58,11 +59,16 @@ struct Code
 	size_t len;
 
 	Code( byte* c, size_t l ) : code( c ), len( l ) { }
+	~Code(){ delete[] code; }
 };
 
+// singleton class for deva VM execution engine
 class Executor
 {
 	friend class ScopeTable;
+
+	// static bool for singleton functionality
+	static bool instantiated;
 
 	// current instruction pointer (current code)
 	byte* ip;
@@ -84,6 +90,9 @@ class Executor
 	// scope table
 	ScopeTable* scopes;
 
+	// list of possible module names (from compilation)
+	set<string> module_names;
+
 	// loaded modules (namespaces)
 	vector< pair<string, void*> > namespaces;
 
@@ -91,7 +100,8 @@ class Executor
 	multimap<string, Object*> functions;
 
 	// set of constants (including all names)
-	OrderedSet<Object> constants;
+	vector<Object> constants;
+	set<Object> constants_set;
 
 	// error flag
 	bool is_error;
@@ -139,10 +149,18 @@ private:
 public:
 
 	// constant pool handling methods
-	inline bool AddConstant( Object o ) { return constants.Add( o ); }
-	inline int FindConstant( const Object & o ) { return constants.Find( o ); }
-	inline Object GetConstant( int idx ) { return constants.At(idx); }
-	inline size_t NumConstants() { return constants.Size(); }
+	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
+	inline int FindConstant( const Object & o )
+	{
+		if( constants_set.count( o ) == 0 ) return -1;
+		for( int i = 0; i < constants.size(); i++ )
+			if( o == constants.at( i ) )
+				return i;
+	}
+	inline Object GetConstant( int idx ) { return constants.at( idx ); }
+	inline size_t NumConstants() { return constants.size(); }
+
+	inline void AddModuleName( const string n ) { module_names.insert( n ); }
 
 	// code execution methods:
 	//
@@ -166,6 +184,8 @@ private:
 	vector< pair<string, void*> >::iterator find_namespace( string mod );
 	// helper fcn for ImportModule:
 	string find_module( string mod );
+	// helper fcn for parsing and compiling a module
+	const Code* const LoadModule( string path );
 	bool ImportModule( const char* module_name );
 
 	// debug and output methods:
@@ -173,7 +193,7 @@ private:
 protected:
 	int PrintOpcode( Opcode op, const byte* base, byte* ip );
 public:
-	void Decode( const Code & code );
+	void Decode( const Code* code );
 
 	void DumpFunctions();
 	void DumpConstantPool();

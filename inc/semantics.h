@@ -67,6 +67,9 @@ struct Semantics
 	// constants (numbers, strings & symbol names)
 	set<Object> constants;
 
+	// module names
+	set<char*> module_names;
+
 	// classes
 	bool in_class;
 

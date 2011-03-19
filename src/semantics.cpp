@@ -119,6 +119,10 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 	}
 	// add the var name to the constant pool
 	constants.insert( Object( obj_symbol_name, name ) );
+
+	// if this is a module name, also add it to the list of modules
+	if( mod == mod_module_name )
+		module_names.insert( name );
 }
 
 // resolve a variable, in the current scope
@@ -672,9 +676,11 @@ void Semantics::CheckImport( pANTLR3_BASE_TREE node )
 		char* childname = (char*)child->getText( child )->chars;
 		modname += childname;
 	}
+	// this string will be freed by the Compiler object after it adds it to the
+	// Executor's module list...
 	char* mod = new char[modname.length() + 1];
 	strcpy( mod, modname.c_str() );
-	DefineVar( mod, node->getLine( node ) );
+	DefineVar( mod, node->getLine( node ), mod_module_name );
 }
 
 } // namespace deva_compile

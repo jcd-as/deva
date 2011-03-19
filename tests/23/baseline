@@ -26,9 +26,18 @@ Scope: 9
 Scope: 10
 	vars: 
 Constant data pool:
-<null-value>
-<boolean-false>
 <boolean-true>
+<boolean-false>
+<null-value>
+__name__
+__class__
+__bases__
+__module__
+new
+delete
+self
+rewind
+next
 0
 1
 2
@@ -42,76 +51,67 @@ Constant data pool:
 10
 sorted:
 un-sorted:
-__bases__
-__class__
-__module__
-__name__
 a
-all
-any
-append
 bubble_sort
-chr
-close
-concat
-copy
-count
-delete
-error
-exit
-filter
-find
-flush
-format
-geterror
 i
-insert
 j
-join
-keys
 l
 len
-length
-map
-max
-merge
-min
 n
-name
-new
-next
-num
-open
-pop
+swap
+temp
 print
+str
+chr
+append
+length
+copy
+name
+type
+exit
+num
 range
+open
+close
+flush
 read
+readstring
 readline
 readlines
-readstring
-reduce
-remove
-reverse
-rewind
-rfind
-seek
-self
-seterror
-slice
-sort
-stderr
-stdin
-stdout
-str
-swap
-tell
-temp
-type
-values
 write
+writestring
 writeline
 writelines
-writestring
+seek
+tell
+stdin
+stdout
+stderr
+format
+join
+error
+seterror
+geterror
+concat
+min
+max
+pop
+insert
+remove
+find
+rfind
+count
+reverse
+sort
+map
+filter
+reduce
+any
+all
+slice
+keys
+values
+merge
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -122,11 +122,11 @@ function: bubble_sort, from file: input.dv, line: 3
 6 local(s): a len swap i j temp 
 code address: 14
 Instructions:
-   0: def_function	24 (bubble_sort), 14
+   0: def_function	26 (bubble_sort), 14
    9: jmp		137
   14: enter		 
   15: pushlocal0		 
-  16: pushconst		45 (length)
+  16: pushconst		38 (length)
   21: call		1
   26: def_local1		 
   27: push_true		 
@@ -207,61 +207,61 @@ Instructions:
  142: def_local0		 
  143: pushlocal0		 
  144: push		2
- 149: pushconst		23 (append)
+ 149: pushconst		37 (append)
  154: call		2
  159: pop		 
  160: pushlocal0		 
  161: push_one		 
- 162: pushconst		23 (append)
+ 162: pushconst		37 (append)
  167: call		2
  172: pop		 
  173: pushlocal0		 
  174: push		4
- 179: pushconst		23 (append)
+ 179: pushconst		37 (append)
  184: call		2
  189: pop		 
  190: pushlocal0		 
  191: push		3
- 196: pushconst		23 (append)
+ 196: pushconst		37 (append)
  201: call		2
  206: pop		 
  207: pushlocal0		 
  208: push		6
- 213: pushconst		23 (append)
+ 213: pushconst		37 (append)
  218: call		2
  223: pop		 
  224: pushlocal0		 
  225: push		5
- 230: pushconst		23 (append)
+ 230: pushconst		37 (append)
  235: call		2
  240: pop		 
  241: pushlocal0		 
  242: push		8
- 247: pushconst		23 (append)
+ 247: pushconst		37 (append)
  252: call		2
  257: pop		 
  258: pushlocal0		 
  259: push		7
- 264: pushconst		23 (append)
+ 264: pushconst		37 (append)
  269: call		2
  274: pop		 
  275: pushlocal0		 
  276: push		10
- 281: pushconst		23 (append)
+ 281: pushconst		37 (append)
  286: call		2
  291: pop		 
  292: pushlocal0		 
  293: push		9
- 298: pushconst		23 (append)
+ 298: pushconst		37 (append)
  303: call		2
  308: pop		 
- 309: pushconst		15 (un-sorted:)
- 314: pushconst		57 (print)
+ 309: pushconst		24 (un-sorted:)
+ 314: pushconst		34 (print)
  319: call		1
  324: pop		 
  325: pushlocal0		 
  326: dup1		 
- 327: pushconst		66 (rewind)
+ 327: pushconst		10 (rewind)
  332: method_load	
  333: call_method		0
  338: pop		 
@@ -269,23 +269,23 @@ Instructions:
  344: def_local1		 
  345: enter		 
  346: pushlocal1		 
- 347: pushconst		57 (print)
+ 347: pushconst		34 (print)
  352: call		1
  357: pop		 
  358: leave		 
  359: jmp		339
  364: pop		 
  365: pushlocal0		 
- 366: pushconst		24 (bubble_sort)
+ 366: pushconst		26 (bubble_sort)
  371: call		1
  376: def_local2		 
- 377: pushconst		14 (sorted:)
- 382: pushconst		57 (print)
+ 377: pushconst		23 (sorted:)
+ 382: pushconst		34 (print)
  387: call		1
  392: pop		 
  393: pushlocal2		 
  394: dup1		 
- 395: pushconst		66 (rewind)
+ 395: pushconst		10 (rewind)
  400: method_load	
  401: call_method		0
  406: pop		 
@@ -293,7 +293,7 @@ Instructions:
  412: def_local3		 
  413: enter		 
  414: pushlocal3		 
- 415: pushconst		57 (print)
+ 415: pushconst		34 (print)
  420: call		1
  425: pop		 
  426: leave		 

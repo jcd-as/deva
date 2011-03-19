@@ -1,4 +1,5 @@
-import foo/bar;
+import foo;
+print( "done" );
 
 # TEST error stack trace:
 #def Foo()
