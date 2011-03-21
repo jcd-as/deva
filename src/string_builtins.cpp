@@ -286,12 +286,12 @@ void do_string_rfind( Frame *frame )
 	helper.ExpectType( val, obj_string );
 
 	// start arg defaults to end-of-string
-	int start = string::npos;
+	long start = string::npos;
 	if( frame->NumArgsPassed() > 2 )
 	{
 		Object* startobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( startobj );
-		start = (int)startobj->d;
+		start = (long)startobj->d;
 	}
 
 	// substring length arg defaults to -1 (same as end-of-string)

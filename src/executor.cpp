@@ -53,7 +53,15 @@ Executor* ex = NULL;
 // singleton support:
 bool Executor::instantiated = false;
 
-Executor::Executor() : ip( NULL ), debug( false ), trace( false ), is_error( false )
+Executor::Executor() : 
+	ip( NULL ), 
+	bp( NULL ), 
+	end( NULL ), 
+	scopes( NULL ),
+	current_scopes( NULL ),
+	is_error( false ),
+	debug( false ), 
+	trace( false )
 {
 	if( instantiated )
 		throw ICE( "Executor is a singleton object, it cannot be instantiated twice." );
@@ -85,6 +93,11 @@ Executor::~Executor()
 	{
 		ObjectType type = constants.at( i ).type;
 		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
+	}
+	// free the namespaces (scope tables)
+	for( vector< pair<string, ScopeTable*> >::iterator i = namespaces.begin(); i != namespaces.end(); ++i )
+	{
+		delete i->second;
 	}
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
@@ -130,7 +143,7 @@ Object Executor::ResolveSymbol( Object sym )
 	if( sym.type != obj_symbol_name )
 		return sym;
 
-	Object* obj = scopes->FindSymbol( sym.s );
+	Object* obj = current_scopes->FindSymbol( sym.s );
 
 	if( !obj )
 	{
@@ -254,15 +267,16 @@ void Executor::Execute( const Code* const code )
 //	ip = bp;
 
 	scopes = new ScopeTable();
+	current_scopes = scopes;
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
-//	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
-	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
+//	Frame* frame = new Frame( NULL, current_scopes, bp, bp, 0, main->f );
+	Frame* frame = new Frame( NULL, current_scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
-	scopes->PushScope( new Scope() );
+	PushScope( new Scope() );
 
 	if( trace )
 		cout << "Execution trace:" << endl;
@@ -275,7 +289,7 @@ void Executor::Execute( const Code* const code )
 //	}
 
 	// pop the 'global' scope
-	scopes->PopScope();
+	PopScope();
 	// free the scope table
 	delete scopes;
 	PopFrame();
@@ -1118,7 +1132,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = scopes->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1151,7 +1165,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = scopes->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1170,7 +1184,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = scopes->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1189,7 +1203,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = scopes->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1210,7 +1224,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant( arg );
 		// find the variable
-		plhs = scopes->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		rhs = stack.back();
@@ -1343,7 +1357,7 @@ Opcode Executor::ExecuteInstruction()
 		// is it a symbol name that we need to look-up?
 		if( o.type == obj_symbol_name )
 		{
-			Object* callablePtr = scopes->FindSymbol( o.s );
+			Object* callablePtr = FindSymbol( o.s );
 			if( !callablePtr )
 			{
 				// builtin?
@@ -2854,7 +2868,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), current_scopes, ip, ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
 
 	// set the args for the frame
@@ -2934,7 +2948,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	}
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
+	Frame* frame = new Frame( CurrentFrame(), current_scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
 
@@ -3015,7 +3029,7 @@ public:
 	bool operator()(pair<string, void*> n ) { return n.first == value; }
 };
 // find a namespace
-vector< pair<string, void*> >::iterator Executor::find_namespace( string mod )
+vector< pair<string, ScopeTable*> >::iterator Executor::find_namespace( string mod )
 {
 	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
@@ -3111,7 +3125,9 @@ const Code* const Executor::LoadModule( string fname )
 		FreePassOneReturnValue( p1rv );
 		// free the semantics and compiler objects (symbol table et al) 
 		delete compiler;
+		compiler = NULL;
 		delete semantics;
+		semantics = NULL;
 
 		// return the code
 		return c;
@@ -3122,15 +3138,16 @@ const Code* const Executor::LoadModule( string fname )
 
 bool Executor::ImportModule( const char* module_name )
 {
-	// TODO: implement!
-	//throw ICE( "ImportModule() not yet implemented!" );
-	
+	// TODO: need to track a current callstack (Frame stack) as well as current
+	// ScopeTable
+	//
+	// TODO: builtin modules
 	// check the list of builtin modules first
 //	if( ImportBuiltinModule( mod ) )
 //		return true;
 
 	// prevent importing the same module more than once
-	vector< pair<string, void*> >::iterator it;
+	vector< pair<string, ScopeTable*> >::iterator it;
 	it = find_namespace( module_name );
 	// if we found the namespace
 	if( it != namespaces.end() )
@@ -3148,19 +3165,18 @@ bool Executor::ImportModule( const char* module_name )
 	byte* orig_bp = bp;
 	byte* orig_end = end;
 	// save the current scope table
-//	ScopeTable* orig_scopes = current_scopes;
+	ScopeTable* orig_scopes = current_scopes;
 	// create a new namespace and set it at the current scope
 	// TODO: currently this only adds the "short" name of the module as a
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	string mod( module_name );
 	mod = get_file_part( mod );
-//	ScopeTable* st = new ScopeTable( this );
-//	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
-	namespaces.push_back( pair<string, void*>(mod, NULL) );
-//	current_scopes = st;
-//	// create a 'file/module' level scope for the namespace
-//	current_scopes->Push();
+	ScopeTable* st = new ScopeTable();
+	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
+	current_scopes = st;
+	// create a 'file/module' level scope for the namespace
+	PushScope( new Scope() );
 //	// compile the file, if needed
 //	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 //	// and then run the file
@@ -3179,7 +3195,7 @@ bool Executor::ImportModule( const char* module_name )
 	end = orig_end;
 
 	// restore the current scope table
-//	current_scopes = orig_scopes;
+	current_scopes = orig_scopes;
 
 	return true;
 }

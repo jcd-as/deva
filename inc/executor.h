@@ -76,6 +76,7 @@ class Executor
 	byte* bp;
 	// end of current code block
 	byte* end;
+
 	// list of code blocks (modules, eval'd blocks)
 	vector<const Code*> code_blocks;
 
@@ -87,14 +88,17 @@ class Executor
 	// with a plain pointer/array we can get rid of one add.. worth it?
 	vector<Object> stack;
 
-	// scope table
+	// 'global' scope table (namespace)
 	ScopeTable* scopes;
+
+	// currently executing scope table (namespace
+	ScopeTable* current_scopes;
 
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
 	// loaded modules (namespaces)
-	vector< pair<string, void*> > namespaces;
+	vector< pair<string, ScopeTable*> > namespaces;
 
 	// set of function objects
 	multimap<string, Object*> functions;
@@ -120,21 +124,21 @@ public:
 	// TODO: calculate using module bp!!!
 	inline size_t GetOffsetForCallSite( byte* addr ) const { return addr - bp; }
 
-	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
-	inline Scope* GlobalScope() { return scopes->At( 0 ); }
+	inline Scope* CurrentScope() { return current_scopes->CurrentScope(); }
+	inline Scope* GlobalScope() { return current_scopes->At( 0 ); }
 	inline Frame* CurrentFrame() { return callstack.back(); }
 	inline Frame* MainFrame() { return callstack[0]; }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
 	inline void PopFrame() { delete callstack.back(); callstack.pop_back(); }
 
-	inline void PushScope( Scope* s ) { scopes->PushScope( s ); }
-	inline void PopScope() { scopes->PopScope(); }
+	inline void PushScope( Scope* s ) { current_scopes->PushScope( s ); }
+	inline void PopScope() { current_scopes->PopScope(); }
 
 	inline void PushStack( Object o ) { stack.push_back( o ); }
 	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
 
-	inline Object* FindSymbol( const char* name ) { return scopes->FindSymbol( name ); }
+	inline Object* FindSymbol( const char* name ) { return current_scopes->FindSymbol( name ); }
 	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
 	// helpers
@@ -181,7 +185,7 @@ private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
 	// helper fcn to find a loaded module (namespace)
-	vector< pair<string, void*> >::iterator find_namespace( string mod );
+	vector< pair<string, ScopeTable*> >::iterator find_namespace( string mod );
 	// helper fcn for ImportModule:
 	string find_module( string mod );
 	// helper fcn for parsing and compiling a module

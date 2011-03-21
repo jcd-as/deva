@@ -82,12 +82,12 @@ struct PassOneReturnValue
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM in );
 ParseReturnValue Parse( const char* filename );
 // free parser memory, call after completely finished with parser items, ast etc
-void FreeParseReturnValue( ParseReturnValue prv );
+void FreeParseReturnValue( ParseReturnValue & prv );
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags );
 void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags );
 PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
 // free pass one/compilation memory, call after finished compiling, using ast
-void FreePassOneReturnValue( PassOneReturnValue p1rv );
+void FreePassOneReturnValue( PassOneReturnValue & p1rv );
 
 
 } // end namespace deva

@@ -63,7 +63,7 @@ ParseReturnValue Parse( pANTLR3_INPUT_STREAM input_stream )
 	return ret;
 }
 
-void FreeParseReturnValue( ParseReturnValue prv )
+void FreeParseReturnValue( ParseReturnValue & prv )
 {
 	if( prv.parser ) prv.parser->free( prv.parser );
 	prv.parser = NULL;
@@ -148,9 +148,10 @@ PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoF
 	return p1rv;
 }
 
-void FreePassOneReturnValue( PassOneReturnValue p1rv )
+void FreePassOneReturnValue( PassOneReturnValue & p1rv )
 {
 	if( p1rv.nodes ) p1rv.nodes->free( p1rv.nodes );
+	p1rv.nodes = NULL;
 }
 
 

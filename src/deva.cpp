@@ -207,7 +207,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			PassTwoFlags p2f;
 			p2f.trace = trace;
 
-//			p1rv = Compile( prv, p1f, p2f );
 			// PASS ONE: build the symbol table and check semantics
 			p1rv = PassOne( prv, p1f );
 
