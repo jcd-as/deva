@@ -164,6 +164,7 @@ public:
 	inline Object GetConstant( int idx ) { return constants.at( idx ); }
 	inline size_t NumConstants() { return constants.size(); }
 
+	// module/namespace handling methods
 	inline void AddModuleName( const string n ) { module_names.insert( n ); }
 
 	// code execution methods:
@@ -185,9 +186,9 @@ private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
 	// helper fcn to find a loaded module (namespace)
-	vector< pair<string, ScopeTable*> >::iterator find_namespace( string mod );
+	vector< pair<string, ScopeTable*> >::iterator FindNamespace( string mod );
 	// helper fcn for ImportModule:
-	string find_module( string mod );
+	string FindModule( string mod );
 	// helper fcn for parsing and compiling a module
 	const Code* const LoadModule( string path );
 	bool ImportModule( const char* module_name );

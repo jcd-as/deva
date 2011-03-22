@@ -1582,10 +1582,27 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
-			throw RuntimeException( boost::format( "'%1%' is not a vector or map." ) % lhs );
+		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
+			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
+		// TODO: module/namespace lookup
+		if( lhs.type == obj_symbol_name )
+		{
+			// TODO: is this runtime error or ICE?
+			if( rhs.type != obj_string )
+				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+			// see if there is a module with this name
+			vector< pair<string, ScopeTable*> >::iterator it = FindNamespace( string( lhs.s ) );
+			if( it == namespaces.end() )
+				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+			// look up the rhs as a symbol in the module
+			Object* obj = it->second->FindSymbol( rhs.s );
+			if( !obj )
+				throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
+			IncRef( *obj );
+			stack.push_back( *obj );
+		}
 		// string:
-		if( lhs.type == obj_string )
+		else if( lhs.type == obj_string )
 		{
 			// TODO: handle string built-in methods
 			//
@@ -3029,13 +3046,13 @@ public:
 	bool operator()(pair<string, void*> n ) { return n.first == value; }
 };
 // find a namespace
-vector< pair<string, ScopeTable*> >::iterator Executor::find_namespace( string mod )
+vector< pair<string, ScopeTable*> >::iterator Executor::FindNamespace( string mod )
 {
 	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
 
 // helper function for ImportModule
-string Executor::find_module( string mod )
+string Executor::FindModule( string mod )
 {
 	// split the path given into it's / separated parts
 	vector<string> path = split_path( mod );
@@ -3148,13 +3165,13 @@ bool Executor::ImportModule( const char* module_name )
 
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
-	it = find_namespace( module_name );
+	it = FindNamespace( module_name );
 	// if we found the namespace
 	if( it != namespaces.end() )
 		return true;
 
 	// otherwise look for the .dv/.dvc file to import
-	string path = find_module( module_name );
+	string path = FindModule( module_name );
 
 	// for now, just run the file by short name with ".dvc" extension (i.e. in
 	// the current working directory)
@@ -3175,6 +3192,12 @@ bool Executor::ImportModule( const char* module_name )
 	ScopeTable* st = new ScopeTable();
 	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
 	current_scopes = st;
+
+	// TODO: need a new frame for the module
+	// where should it be stored??
+//	Frame* frame = new Frame( NULL, current_scopes, code->code, code->code, 0, main->f );
+//	PushFrame( frame );
+
 	// create a 'file/module' level scope for the namespace
 	PushScope( new Scope() );
 //	// compile the file, if needed
