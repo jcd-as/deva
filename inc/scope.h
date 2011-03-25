@@ -63,7 +63,7 @@ struct Scope
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s ) = 0;
 	// set a local as having been defined in code-gen
-	virtual bool SetLocalGenerated( int idx ) = 0;
+	virtual void SetLocalGenerated( int idx ) = 0;
 	// has a local been defined yet?
 	virtual bool HasLocalBeenGenerated( int idx ) = 0;
 
@@ -107,7 +107,7 @@ public:
 	// add to the parent function's list of names
 	virtual void AddName( Symbol* s );
 	// set a local as having been defined in code-gen
-	bool SetLocalGenerated( int idx ){ generated_locals.insert( idx ); }
+	void SetLocalGenerated( int idx ){ generated_locals.insert( idx ); }
 	// has a local been generated yet?
 	bool HasLocalBeenGenerated( int idx );
 };

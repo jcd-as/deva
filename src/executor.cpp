@@ -842,7 +842,7 @@ Opcode Executor::ExecuteInstruction()
 		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
 
 		// add all of the methods for this class
-		for( map<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
+		for( multimap<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 		{
 			Function* f = i->second->f;
 			if( f->classname == name.s )
@@ -3540,7 +3540,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 void Executor::DumpFunctions()
 {
 	cout << "Function objects:" << endl;
-	for( map<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
+	for( multimap<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
 		Function* f = i->second->f;
 		cout << "function: " << f->name << ", from file: " << f->filename << ", line: " << f->first_line;

@@ -42,6 +42,7 @@ FunctionScope* LocalScope::getParentFun()
 {
 	if( parent )
 		return parent->getParentFun();
+	return NULL;
 }
 
 const string & LocalScope::Name() const
@@ -135,7 +136,7 @@ int LocalScope::ResolveLocalToIndex( const string & name )
 void LocalScope::Print()
 {
 	cout << "Scope: " << name << endl << "\tvars: ";
-	for( map<string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		const char* mod;
 		if( i->second->IsConst() ) mod = "const";
@@ -152,7 +153,7 @@ void LocalScope::Print()
 LocalScope::~LocalScope()
 {
 	// delete the symbol ptrs in the map
-	for( map<string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		delete i->second;
 	}
@@ -253,7 +254,7 @@ void FunctionScope::Print()
 		cout << mod << " " << s->Name() << "; ";
 	}
 	cout << endl << "\targument scope vars: ";
-	for( map<string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		const char* mod;
 		if( i->second->IsConst() ) mod = "const";

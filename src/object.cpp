@@ -167,6 +167,8 @@ int DecRef( Object & o )
 			o.m = NULL;
 		return ret;
 	}
+	// non-ref-type
+	return 0;
 }
 
 // equality operator
@@ -262,6 +264,7 @@ bool Object::operator < ( const Object & rhs ) const
 			return strcmp( s, rhs.s ) < 0;
 		}
 	}
+	return false;
 }
 
 // coerce to a boolean (for jmpf op, for instance)
@@ -308,7 +311,7 @@ bool Object::CoerceToBool()
 	return false;
 }
 
-ostream & operator << ( ostream & os, Object & obj )
+ostream & operator << ( ostream & os, const Object & obj )
 {
 	static bool prettify_strings = false;
 
@@ -478,6 +481,7 @@ ostream & operator << ( ostream & os, ObjectType t )
 		os << "<invalid>";
 		break;
 	}
+	return os;
 }
 
 

@@ -160,6 +160,7 @@ public:
 		for( int i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
 				return i;
+		return -1;
 	}
 	inline Object GetConstant( int idx ) { return constants.at( idx ); }
 	inline size_t NumConstants() { return constants.size(); }

@@ -45,6 +45,11 @@ namespace po = boost::program_options;
 using namespace deva;
 using namespace deva_compile;
 
+#ifdef MS_WINDOWS
+#define chdir(x) _chdir(x)
+#include <direct.h>
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // globals
 /////////////////////////////////////////////////////////////////////////////
@@ -120,7 +125,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	if( vm.count( "version" ) )
 	{
 		// dump the version number
-		cout << "deva " << DEVA_VERSION << endl;
+		cout << "deva " << "DEVA_VERSION" << endl;
 		return 1;
 	}
 	if( vm.count( "no-dvc" ) )

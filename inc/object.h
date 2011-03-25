@@ -188,7 +188,7 @@ struct DO_ptr_lt
 
 
 // operator << for printing Objects
-ostream & operator << ( ostream & os, Object & obj );
+ostream & operator << ( ostream & os, const Object & obj );
 // operator << for printing ObjectTypes
 ostream & operator << ( ostream & os, ObjectType t );
 
@@ -277,7 +277,7 @@ struct Function
 	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
-	inline int NumDefaultArgs() { return default_args.Size(); }
+	inline size_t NumDefaultArgs() { return default_args.Size(); }
 
 	bool operator == ( const Function & rhs ) const
 	{

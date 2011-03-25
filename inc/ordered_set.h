@@ -80,14 +80,14 @@ public:
 	}
 private:
 	// (same as std::lower_bound on entire collection)
-	int insertionPoint( const T& t ) const
+	size_t insertionPoint( const T& t ) const
 	{
-		int len = data.size();
+		size_t len = data.size();
 		if( len == 0 )
 			return 0;
-		int half;
-		int middle = 0;
-		int first = 0;
+		size_t half;
+		size_t middle = 0;
+		size_t first = 0;
 
 		while( len > 0 )
 		{

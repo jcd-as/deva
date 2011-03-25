@@ -131,7 +131,7 @@ void do_string_length( Frame *frame )
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_string );
 
-	int len = strlen( self->s );
+	size_t len = strlen( self->s );
 	
 	helper.ReturnVal( Object( (double)len ) );
 }
