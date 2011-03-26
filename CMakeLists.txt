@@ -1,52 +1,91 @@
 # cmake build file for deva language, v2
 # currently tested on
 # [x] ubuntu linux 32-bit
-# [ ] ubuntu linux 64-bit
+# [x] ubuntu linux 64-bit
 # [ ] darwin 64-bit (Mac OSX 10.6) 
-# [x] cygwin 64-bit (Windows 7)
+# [x] cygwin 32-bit (Windows 7)
+# [x] msvc 64-bit (Windows 7)
+
+# ONLY TESTED WITH IN-SOURCE BUILDS
+
+# required vars for the user to set:
+# all platforms:
+#	CMAKE_MODULE_PATH: path where FindANTLR.cmake is located
+#	CTAGS: on/off for ctags file generation
+#	IDUTILS: on/off for id-utils file generation
+#	CSCOPE: on/off for cscope file generation
+# VisualStudio/MSVC on Windows:
+#	MSVC: on
+
+# NOTES: 
+# for all platforms:
+# - the java sdk needs to be installed and on the path if the ANTLR grammars are changed
+# - ANTLR or ANTLRworks needs to be on the java CLASSPATH
+# - Boost 1.4.0+ needs to be installed
+# - the ANTLR3 C library and headers need to be installed
+
+# for UNIX/Cygwin:
+
+# for MSVC/Windows:
+# - Boost 1.4.0+ needs to be installed and built appropriately and added to the system paths so MSVC can locate it (we're using the 'autolink' features so the toolset should find the appropriate libs to link to)
+# - the ANTLR3 C library and headers need to be installed and built appropriately and the system INCLUDE and LIB paths set to point to it
 
 cmake_minimum_required( VERSION 2.6 FATAL_ERROR )
 project( deva )
+include( FindANTLR )
+
+# set flag if this is being generated for Visual Studio (msvc)
+##############################################################
+if( CMAKE_GENERATOR MATCHES "Visual Studio" )
+	option( MSVC ON )
+endif()
 
 # find boost
-#find_package( Boost 1.40 COMPONENTS regex filesystem system program_options )
-find_package( Boost 1.40 COMPONENTS filesystem system program_options )
+############
+if( NOT MSVC )
+	find_package( Boost 1.40 COMPONENTS regex filesystem system program_options )
+	set( BOOST_ROOT "${BOOST_ROOT}" CACHE PATH "Root directory of Boost install" )
+	set( Boost_USE_STATIC_LIBS OFF )
+	set( Boost_USE_MULTITHREADED ON )
+	set( Boost_USE_STATIC_RUNTIME OFF )
+	find_package( Boost 1.40.0 REQUIRED COMPONENTS filesystem system program_options )
+	if( Boost_FOUND )
+		include_directories( ${Boost_INCLUDE_DIRS} )
+	endif()
+endif()
 
 # find antlr3
-find_library( ANTLR antlr3c )
+#############
+find_package( ANTLR REQUIRED )
+if( ANTLR_FOUND )
+	include_directories( ${ANTLR_INCLUDE_DIR} )
+endif()
 
-# TODO: configure for debug and release builds
 # configure defines
+###################
 if( ${UNIX} )
 	#add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
 	set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
-if( ${WIN32} )
-	# TODO: configure for ms-windows (msvc) builds (different switches & -DMSWINDOWS)
-	#add_definitions( -d -DMSWINDOWS -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
-	set( CMAKE_CXX_FLAGS "-DMSWINDOWS" )
-	set( CMAKE_CXX_FLAGS_DEBUG "-d -DDEBUG -DREFCOUNT_TRACE" )
+if( MSVC )
+	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -MD -EHsc" )
+	set( CMAKE_CXX_FLAGS_DEBUG "-Od -Zi -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
 
 # include dirs
-# TODO: msvc needs antlr inc dir
+##############
 include_directories( "inc" )
+# need the dir for ANTLR generated h files
 include_directories( "${CMAKE_CURRENT_BINARY_DIR}" )
-if( ${WIN32} )
-	include_directories( "${ANTLRDIR}" )
-endif()
 
 # link dirs
-#link_directories( ${Boost_INCLUDE_DIRS} )
+###########
 link_directories( ${Boost_LIBRARY_DIRS} )
-if( ${WIN32} )
-	# TODO: msvc needs antlr lib dir (antlr_dir/$(PlatformName)/$(ConfigurationName))
-	include_directories( "${ANTLRDIR}\$(PlatformName)\$(ConfigurationName)" )
-endif()
 
 # custom command to build antlr grammars
+########################################
 add_custom_command(
 	OUTPUT 
 		${CMAKE_CURRENT_BINARY_DIR}/devaParser.c ${CMAKE_CURRENT_BINARY_DIR}/devaParser.h
@@ -73,6 +112,8 @@ add_custom_command(
 # force the antlr-generated .c files to build as c++
 set_source_files_properties( devaLexer.c devaParser.c semantic_walker.c compile_walker.c PROPERTIES LANGUAGE CXX )
 
+# main executable
+#################
 add_executable( deva 
 	src/deva.cpp
 	src/scope.cpp
@@ -95,29 +136,43 @@ add_executable( deva
 	semantic_walker.c
 	compile_walker.c
 )
-target_link_libraries( deva antlr3c ${Boost_LIBRARIES} )
 
-# custom commands to build ID and tags databases
-add_custom_command(
-	TARGET deva POST_BUILD
-	COMMAND ctags -R --exclude=deva1 --exclude=tests --exclude=antlr
-	WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
-	COMMENT "Building tags database"
-	VERBATIM
-)
+# add libraries
+###############
+if( ANTLR_FOUND )
+	target_link_libraries( deva ${ANTLR_LIBRARIES})
+endif()
+if( Boost_FOUND )
+	target_link_libraries( deva ${Boost_LIBRARIES} )
+endif()
 
-add_custom_command(
-	TARGET deva POST_BUILD
-	COMMAND mkid -i "C++" --prune=deva1 --prune=tests --prune=antlr
-	WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
-	COMMENT "Building ID database"
-	VERBATIM
-)
+# custom commands to build ID, tags and cscope databases
+########################################################
+if( CTAGS )
+	add_custom_command(
+		TARGET deva POST_BUILD
+		COMMAND ctags -R --exclude=deva1 --exclude=tests --exclude=antlr
+		WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
+		COMMENT "Building tags database"
+		VERBATIM
+	)
+endif()
+if( IDUTILS )
+	add_custom_command(
+		TARGET deva POST_BUILD
+		COMMAND mkid -i "C++" --prune=deva1 --prune=tests --prune=antlr
+		WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
+		COMMENT "Building ID database"
+		VERBATIM
+	)
 
-add_custom_command(
-	TARGET deva POST_BUILD
-	COMMAND cscope -b -I inc -s src devaParser.c
-	WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
-	COMMENT "Building cscope database"
-	VERBATIM
-)
+endif()
+if( CSCOPE )
+	add_custom_command(
+		TARGET deva POST_BUILD
+		COMMAND cscope -b -I inc -s src devaParser.c
+		WORKING_DIRECTORY ${DEVA_SOURCE_DIR}
+		COMMENT "Building cscope database"
+		VERBATIM
+	)
+endif()
