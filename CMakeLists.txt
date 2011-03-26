@@ -17,18 +17,34 @@ find_library( ANTLR antlr3c )
 
 # TODO: configure for debug and release builds
 # configure defines
-add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
-#add_definitions( -DDEVA_VERSION="2.0.0-alpha" )
-#set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
-#set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+if( ${UNIX} )
+	#add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
+	set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
+	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+endif()
+if( ${WIN32} )
+	# TODO: configure for ms-windows (msvc) builds (different switches & -DMSWINDOWS)
+	#add_definitions( -d -DMSWINDOWS -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
+	set( CMAKE_CXX_FLAGS "-DMSWINDOWS" )
+	set( CMAKE_CXX_FLAGS_DEBUG "-d -DDEBUG -DREFCOUNT_TRACE" )
+	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+endif()
 
 # include dirs
+# TODO: msvc needs antlr inc dir
 include_directories( "inc" )
 include_directories( "${CMAKE_CURRENT_BINARY_DIR}" )
-link_directories( ${Boost_INCLUDE_DIRS} )
+if( ${WIN32} )
+	include_directories( "${ANTLRDIR}" )
+endif()
 
 # link dirs
+#link_directories( ${Boost_INCLUDE_DIRS} )
 link_directories( ${Boost_LIBRARY_DIRS} )
+if( ${WIN32} )
+	# TODO: msvc needs antlr lib dir (antlr_dir/$(PlatformName)/$(ConfigurationName))
+	include_directories( "${ANTLRDIR}\$(PlatformName)\$(ConfigurationName)" )
+endif()
 
 # custom command to build antlr grammars
 add_custom_command(
