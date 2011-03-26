@@ -1,4 +1,7 @@
-TODO 2011-03-20 @deva +veryhigh add 'dotest_valgrind_compile' to mercurial (so that tests 6 and 22 can pass valgrind clean)
+DONE 2011-03-20 @deva +veryhigh add 'dotest_valgrind_compile' to mercurial (so that tests 6 and 22 can pass valgrind clean)
+    CLOSED: 2011-03-24 18:08:04
+    :LOGBOOK:
+        DONE: 2011-03-24 18:08:04
 
 TODO 2011-03-09 @deva +medium fix minor issues with tests:
 	= tests working but needing test fixes:

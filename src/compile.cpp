@@ -143,7 +143,7 @@ Compiler::Compiler( Semantics* sem ) :
 	f->classname = string( "" );
 	f->addr = 0;
 	// add the locals
-	for( int i = 0; i < scope->GetLocals().size(); i++ )
+	for( size_t i = 0; i < scope->GetLocals().size(); i++ )
 	{
 		f->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
@@ -247,12 +247,12 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->addr = is->Length();
 
 	// add the locals
-	for( int i = 0; i < scope->GetLocals().size(); i++ )
+	for( size_t i = 0; i < scope->GetLocals().size(); i++ )
 	{
 		fcn->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
 	// add the default arg indices for this (function) scope
-	for( int i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
+	for( size_t i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
 	{
 		int idx = -1;
 		// find the index for this constant

@@ -83,7 +83,7 @@ void IncRefChildren( Object & o )
 	if( IsVecType( o.type ) )
 	{
 		// walk the vector's contents
-		for( int i = 0; i < o.v->size(); i++ )
+		for( size_t i = 0; i < o.v->size(); i++ )
 		{
 			Object obj = o.v->operator[]( i );
 			IncRef( obj );
@@ -107,7 +107,7 @@ void DecRefChildren( Object & o )
 	if( IsVecType( o.type ) )
 	{
 		// walk the vector's contents
-		for( int i = 0; i < o.v->size(); i++ )
+		for( size_t i = 0; i < o.v->size(); i++ )
 		{
 			Object obj = o.v->operator[]( i );
 			DecRef( obj );
@@ -242,6 +242,7 @@ bool Object::operator < ( const Object & rhs ) const
 			return false;
 		case obj_number:
 			return d < rhs.d;
+		case obj_symbol_name:
 		case obj_string:
 			return strcmp( s, rhs.s ) < 0;
 		case obj_boolean:
@@ -260,8 +261,10 @@ bool Object::operator < ( const Object & rhs ) const
 			return no < rhs.no;
 		case obj_size:
 			return sz < rhs.sz;
-		case obj_symbol_name:
-			return strcmp( s, rhs.s ) < 0;
+		case obj_end:
+			throw ICE( "Invalid object type (obj_end) in Object::operator <." );
+		default:
+			throw ICE( "Unknown object type in Object::operator <." );
 		}
 	}
 	return false;

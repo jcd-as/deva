@@ -94,7 +94,7 @@ string join_paths( const string & base, const string & add )
 string join_paths( vector<string> & parts )
 {
 	filesystem::path retpath;
-	for( int i = 0; i < parts.size(); ++i )
+	for( size_t i = 0; i < parts.size(); ++i )
 	{
 		retpath /= filesystem::path( parts[i] );
 	}
@@ -174,7 +174,7 @@ string strip_symbol( const string& src, const string& c )
 	int comment_pos = src.find_first_of( "#" );
 	if( comment_pos != string::npos )
 	{
-		int first_nl_pos = src.find_first_of( "\r\n", comment_pos + 1 );
+		size_t first_nl_pos = src.find_first_of( "\r\n", comment_pos + 1 );
 		if( first_nl_pos != string::npos )
 		{
 			src2 = src.substr( first_nl_pos + 1, string::npos );
@@ -182,10 +182,10 @@ string strip_symbol( const string& src, const string& c )
 		else src2 = src;
 	}
 	else src2 = src;
- 	int p2 = src2.find_last_not_of( c );
+ 	size_t p2 = src2.find_last_not_of( c );
  	if( p2 == string::npos ) 
 		return string();
-	int p1 = src2.find_first_not_of( c );
+	size_t p1 = src2.find_first_not_of( c );
 	if( p1 == string::npos )
 		p1 = 0;
 	return src2.substr( p1, (p2 - p1) + 1 );
@@ -197,7 +197,7 @@ string strip_quotes( const string& src )
 {
 	string quotes( "\"'" );
 
-	int start = src.find_first_of( quotes );
+	size_t start = src.find_first_of( quotes );
 	if( start == string::npos )
 		return src;
 
@@ -207,11 +207,11 @@ string strip_quotes( const string& src )
 	else
 		c = '\'';
 
-	int p2 = src.find_last_not_of( c );
+	size_t p2 = src.find_last_not_of( c );
 	// no characters after 'start' that aren't quotes: zero-length string
 	if( p2 == string::npos ) 
 		return string( "" );
-	int p1 = src.find_first_not_of( c );
+	size_t p1 = src.find_first_not_of( c );
 	if( p1 == string::npos )
 		p1 = 0;
 	return src.substr( p1, (p2 - p1) + 1 );

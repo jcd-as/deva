@@ -1,9 +1,12 @@
 # cmake build file for deva language, v2
 # currently tested on
 # [x] ubuntu linux 32-bit
-# [ ] ubuntu linux 64-bit
+# [x] ubuntu linux 64-bit
 # [ ] darwin 64-bit (Mac OSX 10.6) 
 # [x] cygwin 64-bit (Windows 7)
+
+# TODO / FUTURE: 
+# [ ] windows 64-bit (Visual C++)
 
 cmake_minimum_required( VERSION 2.6 FATAL_ERROR )
 project( deva )
@@ -17,7 +20,8 @@ find_library( ANTLR antlr3c )
 
 # TODO: configure for debug and release builds
 # configure defines
-add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
+# gcc seems to warn that static const variables are unused if they are are used in another file...
+add_definitions( -g -Wall -Wno-sign-compare -Wno-unused-variable -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
 #add_definitions( -DDEVA_VERSION="2.0.0-alpha" )
 #set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
 #set( CMAKE_CXX_FLAGS_RELEASE "-O2" )

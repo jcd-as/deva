@@ -652,7 +652,7 @@ void Semantics::CheckAndResetFun( int line )
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(current_scope);
 	if( !scope )
 		throw ICE( "Local scope found where function scope expected" );
-	for( int i = 0; i < default_arg_values.size(); i++ )
+	for( size_t i = 0; i < default_arg_values.size(); i++ )
 	{
 		scope->GetDefaultArgVals().Add( default_arg_values[i]  );
 	}

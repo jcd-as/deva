@@ -104,7 +104,7 @@ void devaDisplayRecognitionError( pANTLR3_BASE_RECOGNIZER recognizer, pANTLR3_UI
 	switch( recognizer->type )
 	{
 	case ANTLR3_TYPE_LEXER:
-		ANTLR3_FPRINTF( stderr, "error: ", recognizer->state->exception->charPositionInLine );
+		ANTLR3_FPRINTF( stderr, "error: %d", recognizer->state->exception->charPositionInLine );
 		break;
 
 	case ANTLR3_TYPE_PARSER:

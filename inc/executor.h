@@ -157,7 +157,7 @@ public:
 	inline int FindConstant( const Object & o )
 	{
 		if( constants_set.count( o ) == 0 ) return -1;
-		for( int i = 0; i < constants.size(); i++ )
+		for( size_t i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
 				return i;
 		return -1;

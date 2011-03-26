@@ -42,13 +42,13 @@ namespace deva
 
 Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f ) :
 	parent( p ),
-	scopes( s ),
 	function( f ), 
 	is_native( false ), 
 	locals( NULL ),
 	num_args( args_passed ), 
 	addr( loc ),
-	call_site( site )
+	call_site( site ),
+	scopes( s )
 {
 	num_locals = f->IsMethod() ? f->num_locals+1 : f->num_locals;
 	if( num_locals ) locals = new Object[num_locals];
@@ -56,13 +56,13 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, F
 
 Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, NativeFunction f ) :
 	parent( p ),
-	scopes( s ),
 	native_function( f ), 
 	is_native( true ), 
 	locals( NULL ),
 	num_args( args_passed ), 
 	addr( loc ),
-	call_site( site )
+	call_site( site ),
+	scopes( s )
 {
 	num_locals = args_passed;
 	if( num_locals ) locals = new Object[num_locals];
