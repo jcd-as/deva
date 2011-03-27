@@ -11,6 +11,7 @@
 # required vars for the user to set:
 # all platforms:
 #	CMAKE_MODULE_PATH: path where FindANTLR.cmake is located
+#	CMAKE_BUILD_TYPE: (Debug/Release) to control the build type
 #	CTAGS: on/off for ctags file generation
 #	IDUTILS: on/off for id-utils file generation
 #	CSCOPE: on/off for cscope file generation
@@ -65,11 +66,12 @@ endif()
 ###################
 if( ${UNIX} )
 	#add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
-	set( CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -DREFCOUNT_TRACE" )
+	set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+	set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wno-sign-compare -Wno-unused-variable -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
 if( MSVC )
-	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -MD -EHsc" )
+	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -DDEVA_VERSION=\\"2.0.0-alpha\\" -MD -EHsc" )
 	set( CMAKE_CXX_FLAGS_DEBUG "-Od -Zi -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
@@ -140,7 +142,8 @@ add_executable( deva
 # add libraries
 ###############
 if( ANTLR_FOUND )
-	target_link_libraries( deva ${ANTLR_LIBRARIES})
+	#target_link_libraries( deva ${ANTLR_LIBRARIES})
+	target_link_libraries( deva ${ANTLR})
 endif()
 if( Boost_FOUND )
 	target_link_libraries( deva ${Boost_LIBRARIES} )
@@ -176,3 +179,39 @@ if( CSCOPE )
 		VERBATIM
 	)
 endif()
+
+# 'install' target
+##################
+install( TARGETS deva RUNTIME DESTINATION bin )
+
+# setup package generation for .deb
+##########################################
+set( CPACK_PACKAGE_DESCRIPTION "The deva programming language" )
+set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "The deva programming language is a byte-code compiled language similar in syntax to C and bearing semantic similarities to Python. It is written in C++, and designed to be embedded into C++ programs. The guiding principle behind its design is to be as simple as possible, both to implement and to write code in." )
+set( CPACK_PACKAGE_NAME "deva" )
+set( CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), libgcc1 (>= 1:4.1), libstdc++6 (>= 4.4), libboost-dev (>= 1.40)" )
+set( CPACK_PACKAGE_CONTACT "Joshua Shepard " )
+set( CPACK_PACKAGE_VENDOR "" )
+set( CPACK_PACKAGE_VERSION_MAJOR "2" )
+set( CPACK_PACKAGE_VERSION_MINOR "0" )
+set( CPACK_PACKAGE_VERSION_PATCH "0" )
+set( VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}" )
+#set( CPACK_GENERATOR "DEB;RPM;" )
+set( CPACK_GENERATOR DEB )
+set( CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CMAKE_SYSTEM_PROCESSOR}" )
+set( CPACK_BINARY_BUNDLE "" )
+set( CPACK_BINARY_CYGWIN "" )
+set( CPACK_BINARY_DEB "ON" )
+set( CPACK_BINARY_DRAGNDROP "" )
+set( CPACK_BINARY_NSIS "OFF" )
+set( CPACK_BINARY_OSXX11 "" )
+set( CPACK_BINARY_PACKAGEMAKER "" )
+set( CPACK_BINARY_RPM "OFF" )
+set( CPACK_BINARY_STGZ "OFF" )
+set( CPACK_BINARY_TBZ2 "OFF" )
+set( CPACK_BINARY_TGZ "OFF" )
+set( CPACK_BINARY_TZ "OFF" )
+set( CPACK_BINARY_ZIP "" )
+
+
+include( CPack )
