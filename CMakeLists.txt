@@ -14,8 +14,6 @@
 #	CTAGS: on/off for ctags file generation
 #	IDUTILS: on/off for id-utils file generation
 #	CSCOPE: on/off for cscope file generation
-# VisualStudio/MSVC on Windows:
-#	MSVC: on
 
 # NOTES: 
 # for all platforms:
@@ -30,8 +28,6 @@
 # - Boost 1.4.0+ needs to be installed and built appropriately and added to the system paths so MSVC can locate it (we're using the 'autolink' features so the toolset should find the appropriate libs to link to)
 # - the ANTLR3 C library and headers need to be installed and built appropriately and the system INCLUDE and LIB paths set to point to it
 
-# TODO / FUTURE: 
-# [ ] windows 64-bit (Visual C++)
 
 cmake_minimum_required( VERSION 2.6 FATAL_ERROR )
 project( deva )
