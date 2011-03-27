@@ -40,6 +40,45 @@ namespace deva
 {
 
 
+const string map_builtin_names[] = 
+{
+	string( "length" ),
+	string( "copy" ),
+	string( "remove" ),
+	string( "find" ),
+	string( "keys" ),
+	string( "values" ),
+	string( "merge" ),
+	string( "rewind" ),
+	string( "next" ),
+};
+NativeFunctionPtr map_builtin_fcns[] = 
+{
+	do_map_length,
+	do_map_copy,
+	do_map_remove,
+	do_map_find,
+	do_map_keys,
+	do_map_values,
+	do_map_merge,
+	do_map_rewind,
+	do_map_next,
+};
+Object map_builtin_fcn_objs[] = 
+{
+	Object( do_map_length ),
+	Object( do_map_copy ),
+	Object( do_map_remove ),
+	Object( do_map_find ),
+	Object( do_map_keys ),
+	Object( do_map_values ),
+	Object( do_map_merge ),
+	Object( do_map_rewind ),
+	Object( do_map_next ),
+};
+const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builtin_names[0] );
+
+
 bool IsMapBuiltin( const string & name )
 {
 	const string* i = find( map_builtin_names, map_builtin_names + num_of_map_builtins, name );
@@ -161,7 +200,7 @@ void do_map_next( Frame *frame )
 		// this loop is equivalent of "it = mp->begin() + idx;" 
 		// (which is required because map iterators don't support the + op)
 		it = self->m->begin();
-		for( int i = 0; i < idx; ++i ) ++it;
+		for( size_t i = 0; i < idx; ++i ) ++it;
 
 		if( it == self->m->end() )
 			throw ICE( "Index out-of-range in Map built-in method 'next'." );

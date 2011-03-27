@@ -80,104 +80,13 @@ void do_string_isxdigit( Frame *ex );
 void do_string_format( Frame *ex );
 void do_string_join( Frame *ex );
 
-static const string string_builtin_names[] = 
-{
-	string( "concat" ),
-	string( "length" ),
-	string( "copy" ),
-	string( "insert" ),
-	string( "remove" ),
-	string( "find" ),
-	string( "rfind" ),
-	string( "reverse" ),
-	string( "sort" ),
-	string( "slice" ),
-	string( "strip" ),
-	string( "lstrip" ),
-	string( "rstrip" ),
-	string( "split" ),
-	string( "replace" ),
-	string( "upper" ),
-	string( "lower" ),
-	string( "isalphanum" ),
-	string( "isalpha" ),
-	string( "isdigit" ),
-	string( "islower" ),
-	string( "isupper" ),
-	string( "isspace" ),
-	string( "ispunct" ),
-	string( "iscntrl" ),
-	string( "isprint" ),
-	string( "isxdigit" ),
-	string( "format" ),
-	string( "join" ),
-};
-// ...and function pointers to the executor functions for them
-static NativeFunctionPtr string_builtin_fcns[] = 
-{
-	do_string_concat,
-	do_string_length,
-	do_string_copy,
-	do_string_insert,
-	do_string_remove,
-	do_string_find,
-	do_string_rfind,
-	do_string_reverse,
-	do_string_sort,
-	do_string_slice,
-	do_string_strip,
-	do_string_lstrip,
-	do_string_rstrip,
-	do_string_split,
-	do_string_replace,
-	do_string_upper,
-	do_string_lower,
-	do_string_isalphanum,
-	do_string_isalpha,
-	do_string_isdigit,
-	do_string_islower,
-	do_string_isupper,
-	do_string_isspace,
-	do_string_ispunct,
-	do_string_iscntrl,
-	do_string_isprint,
-	do_string_isxdigit,
-	do_string_format,
-	do_string_join,
-};
-static Object string_builtin_fcn_objs[] = 
-{
-	Object( do_string_concat ),
-	Object( do_string_length ),
-	Object( do_string_copy ),
-	Object( do_string_insert ),
-	Object( do_string_remove ),
-	Object( do_string_find ),
-	Object( do_string_rfind ),
-	Object( do_string_reverse ),
-	Object( do_string_sort ),
-	Object( do_string_slice ),
-	Object( do_string_strip ),
-	Object( do_string_lstrip ),
-	Object( do_string_rstrip ),
-	Object( do_string_split ),
-	Object( do_string_replace ),
-	Object( do_string_upper ),
-	Object( do_string_lower ),
-	Object( do_string_isalphanum ),
-	Object( do_string_isalpha ),
-	Object( do_string_isdigit ),
-	Object( do_string_islower ),
-	Object( do_string_isupper ),
-	Object( do_string_isspace ),
-	Object( do_string_ispunct ),
-	Object( do_string_iscntrl ),
-	Object( do_string_isprint ),
-	Object( do_string_isxdigit ),
-	Object( do_string_format ),
-	Object( do_string_join ),
-};
-const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
+// tables defining the builtin names...
+extern const string string_builtin_names[];
+// ...function pointers to the executor functions for them...
+extern NativeFunctionPtr string_builtin_fcns[];
+// ...and function objects
+extern Object string_builtin_fcn_objs[];
+extern const int num_of_string_builtins;
 
 // is a given name a builtin function?
 bool IsStringBuiltin( const string & name );

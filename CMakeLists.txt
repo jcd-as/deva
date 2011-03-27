@@ -64,9 +64,8 @@ endif()
 # configure defines
 ###################
 if( ${UNIX} )
-	#add_definitions( -g -DDEVA_VERSION="2.0.0-alpha" -DDEBUG -DREFCOUNT_TRACE )
 	set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
-	set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wno-sign-compare -Wno-unused-variable -DDEBUG -DREFCOUNT_TRACE" )
+	set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
 if( MSVC )
@@ -117,6 +116,7 @@ set_source_files_properties( devaLexer.c devaParser.c semantic_walker.c compile_
 #################
 add_executable( deva 
 	src/deva.cpp
+	src/opcodes.cpp
 	src/scope.cpp
 	src/semantics.cpp
 	src/util.cpp

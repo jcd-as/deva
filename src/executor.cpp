@@ -2097,7 +2097,7 @@ Opcode Executor::ExecuteInstruction()
 				// TODO: call 'reserve' on the string to reduce allocations?
 				// then walk it grabbing every 'nth' character
 				string slice;
-				for( int i = 0; i < r.length(); i += step )
+				for( size_t i = 0; i < r.length(); i += step )
 				{
 					slice += r[i];
 				}
@@ -2903,7 +2903,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		frame->SetLocal( 0, ob );
 		stack.pop_back();
 	}
-	for( int i = 0; i < args_passed; i++ )
+	for( dword i = 0; i < args_passed; i++ )
 	{
 		Object ob = stack.back();
 		frame->SetLocal( num_args-i-1, ob );

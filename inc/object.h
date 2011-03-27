@@ -69,24 +69,8 @@ enum ObjectType
 	obj_symbol_name,		// an identifier, same data as a string
 	obj_end = 255			// end of enum marker
 };
-static const char* object_type_names[] = 
-{
-	"null",
-	"boolean",
-	"number",
-	"string",
-	"vector",
-	"map",
-	"function",
-	"native function",
-	"class",
-	"object",
-	"native object",
-	"size/address",
-	"symbol name",
-	"<invalid>"
-};
 
+extern const char* object_type_names[];
 
 inline bool IsRefType( ObjectType t ) { return (t == obj_vector || t == obj_map || t == obj_class || t == obj_instance ); }
 inline bool IsMapType( ObjectType t ) { return (t == obj_map || t == obj_class || t == obj_instance ); }

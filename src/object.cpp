@@ -36,6 +36,23 @@ using namespace std;
 namespace deva
 {
 
+const char* object_type_names[] = 
+{
+	"null",
+	"boolean",
+	"number",
+	"string",
+	"vector",
+	"map",
+	"function",
+	"native function",
+	"class",
+	"object",
+	"native object",
+	"size/address",
+	"symbol name",
+	"<invalid>"
+};
 
 // static member of RefCounted
 template<typename T> vector<T*> RefCounted<T>::dead_pool = vector<T*>();
@@ -361,7 +378,7 @@ ostream & operator << ( ostream & os, const Object & obj )
 			{
 			// dump vector contents
 			os << "[";
-			for( int i = 0; i < obj.v->size(); i++ )
+			for( size_t i = 0; i < obj.v->size(); i++ )
 			{
 				Object val = obj.v->at( i );
 				prettify_strings = true;

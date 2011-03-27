@@ -242,7 +242,7 @@ int FunctionScope::ResolveLocalToIndex( const string & name )
 void FunctionScope::Print()
 {
 	cout << "Function: " << name << ", " << numArgs << " arguments, " << NumLocals() << " locals" << endl << "\tall names: ";
-	for( int i = 0; i < names.Size(); i++ )
+	for( size_t i = 0; i < names.Size(); i++ )
 	{
 		Symbol* s = names.At( i );
 		const char* mod;

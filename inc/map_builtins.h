@@ -62,44 +62,12 @@ void do_map_next( Frame *frame );
 
 
 // tables defining the built-in function names...
-static const string map_builtin_names[] = 
-{
-	string( "length" ),
-	string( "copy" ),
-	string( "remove" ),
-	string( "find" ),
-	string( "keys" ),
-	string( "values" ),
-	string( "merge" ),
-	string( "rewind" ),
-	string( "next" ),
-};
-// ...and function pointers to the executor functions for them
-static NativeFunctionPtr map_builtin_fcns[] = 
-{
-	do_map_length,
-	do_map_copy,
-	do_map_remove,
-	do_map_find,
-	do_map_keys,
-	do_map_values,
-	do_map_merge,
-	do_map_rewind,
-	do_map_next,
-};
-static Object map_builtin_fcn_objs[] = 
-{
-	Object( do_map_length ),
-	Object( do_map_copy ),
-	Object( do_map_remove ),
-	Object( do_map_find ),
-	Object( do_map_keys ),
-	Object( do_map_values ),
-	Object( do_map_merge ),
-	Object( do_map_rewind ),
-	Object( do_map_next ),
-};
-const int num_of_map_builtins = sizeof( map_builtin_names ) / sizeof( map_builtin_names[0] );
+extern const string map_builtin_names[];
+// ...function pointers to the executor functions for them...
+extern NativeFunctionPtr map_builtin_fcns[];
+// ...and the function objects for them
+extern Object map_builtin_fcn_objs[];
+extern const int num_of_map_builtins;
 
 // is a given name a builtin function?
 bool IsMapBuiltin( const string & name );

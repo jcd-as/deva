@@ -74,8 +74,6 @@ enum VariableModifier
 	mod_module_name		// the name of a module for import
 };
 
-static int s_index_counter = 0;
-
 // variable symbol, has modifier
 class Symbol : public SymbolBase
 {

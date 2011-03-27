@@ -43,11 +43,11 @@ namespace deva
 
 // file name and path utility functions
 /////////////////////////////////////////////////////////////////////////////
-static const char dirsep = '/';
-static const char extsep = '.';
-static const char* const cwdstr = ".";
-static const char* const pardirstr = "..";
-static const char* env_var_path_seps = ":";
+extern const char dirsep;
+extern const char extsep;
+extern const char* const cwdstr;
+extern const char* const pardirstr;
+extern const char* env_var_path_seps;
 
 string get_cwd();
 string get_extension( string & path );

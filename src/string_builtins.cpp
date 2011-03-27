@@ -42,6 +42,105 @@ namespace deva
 {
 
 
+const string string_builtin_names[] = 
+{
+	string( "concat" ),
+	string( "length" ),
+	string( "copy" ),
+	string( "insert" ),
+	string( "remove" ),
+	string( "find" ),
+	string( "rfind" ),
+	string( "reverse" ),
+	string( "sort" ),
+	string( "slice" ),
+	string( "strip" ),
+	string( "lstrip" ),
+	string( "rstrip" ),
+	string( "split" ),
+	string( "replace" ),
+	string( "upper" ),
+	string( "lower" ),
+	string( "isalphanum" ),
+	string( "isalpha" ),
+	string( "isdigit" ),
+	string( "islower" ),
+	string( "isupper" ),
+	string( "isspace" ),
+	string( "ispunct" ),
+	string( "iscntrl" ),
+	string( "isprint" ),
+	string( "isxdigit" ),
+	string( "format" ),
+	string( "join" ),
+};
+NativeFunctionPtr string_builtin_fcns[] = 
+{
+	do_string_concat,
+	do_string_length,
+	do_string_copy,
+	do_string_insert,
+	do_string_remove,
+	do_string_find,
+	do_string_rfind,
+	do_string_reverse,
+	do_string_sort,
+	do_string_slice,
+	do_string_strip,
+	do_string_lstrip,
+	do_string_rstrip,
+	do_string_split,
+	do_string_replace,
+	do_string_upper,
+	do_string_lower,
+	do_string_isalphanum,
+	do_string_isalpha,
+	do_string_isdigit,
+	do_string_islower,
+	do_string_isupper,
+	do_string_isspace,
+	do_string_ispunct,
+	do_string_iscntrl,
+	do_string_isprint,
+	do_string_isxdigit,
+	do_string_format,
+	do_string_join,
+};
+Object string_builtin_fcn_objs[] = 
+{
+	Object( do_string_concat ),
+	Object( do_string_length ),
+	Object( do_string_copy ),
+	Object( do_string_insert ),
+	Object( do_string_remove ),
+	Object( do_string_find ),
+	Object( do_string_rfind ),
+	Object( do_string_reverse ),
+	Object( do_string_sort ),
+	Object( do_string_slice ),
+	Object( do_string_strip ),
+	Object( do_string_lstrip ),
+	Object( do_string_rstrip ),
+	Object( do_string_split ),
+	Object( do_string_replace ),
+	Object( do_string_upper ),
+	Object( do_string_lower ),
+	Object( do_string_isalphanum ),
+	Object( do_string_isalpha ),
+	Object( do_string_isdigit ),
+	Object( do_string_islower ),
+	Object( do_string_isupper ),
+	Object( do_string_isspace ),
+	Object( do_string_ispunct ),
+	Object( do_string_iscntrl ),
+	Object( do_string_isprint ),
+	Object( do_string_isxdigit ),
+	Object( do_string_format ),
+	Object( do_string_join ),
+};
+const int num_of_string_builtins = sizeof( string_builtin_names ) / sizeof( string_builtin_names[0] );
+
+
 bool IsStringBuiltin( const string & name )
 {
 	const string* i = find( string_builtin_names, string_builtin_names + num_of_string_builtins, name );
@@ -197,9 +296,9 @@ void do_string_remove( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz )
+	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'remove'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in string built-in method 'remove'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in string built-in method 'remove': start is greater than end." );
@@ -256,9 +355,9 @@ void do_string_find( Frame *frame )
 	}
 	else
 	{
-		if( start >= sz )
+		if( (size_t)start >= sz )
 			throw RuntimeException( "Invalid 'start' argument in string built-in method 'find'." );
-		if( len > sz_val || len < 0 )
+		if( (size_t)len > sz_val || len < 0 )
 			throw RuntimeException( "Invalid 'length' argument in string built-in method 'find'." );
 
 		// find the matching sub-string
@@ -319,9 +418,9 @@ void do_string_rfind( Frame *frame )
 	}
 	else
 	{
-		if( (start >= sz && start != string::npos) || start < -1 )
+		if( ((size_t)start >= sz && (size_t)start != string::npos) || start < -1 )
 			throw RuntimeException( "Invalid 'start' argument in string built-in method 'rfind'." );
-		if( (len > sz_val && len != string::npos) || len < 0 )
+		if( ((size_t)len > sz_val && (size_t)len != string::npos) || len < 0 )
 			throw RuntimeException( "Invalid 'length' argument in string built-in method 'rfind'." );
 
 		// find the matching sub-string
@@ -366,9 +465,9 @@ void do_string_reverse( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz )
+	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'reverse'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in string built-in method 'reverse'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in string built-in method 'reverse': start is greater than end." );
@@ -412,9 +511,9 @@ void do_string_sort( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz )
+	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'sort'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in string built-in method 'sort'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in string built-in method 'sort': start is greater than end." );
@@ -467,11 +566,11 @@ void do_string_slice( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz )
+	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'slice'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in string built-in method 'slice'." );
-	if( step > sz )
+	if( (size_t)step > sz )
 		throw RuntimeException( "Invalid 'step' argument in string built-in method 'slice'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in string built-in method 'slice': start is greater than end." );
@@ -493,7 +592,7 @@ void do_string_slice( Frame *frame )
 		// TODO: call 'reserve' on the string to reduce allocations?
 		// then walk it grabbing every 'nth' character
 		string slice;
-		for( int i = 0; i < r.length(); i += step )
+		for( size_t i = 0; i < r.length(); i += step )
 		{
 			slice += r[i];
 		}
@@ -642,7 +741,7 @@ void do_string_split( Frame *frame )
 	if( chars.length() == 0 )
 	{
 		ret->reserve( s.length() );
-		for( int c = 0; c < s.length(); ++c )
+		for( size_t c = 0; c < s.length(); ++c )
 		{
 			string out( 1, s[c] );
 			const char* retstr = frame->GetParent()->AddString( out );

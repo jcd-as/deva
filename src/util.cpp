@@ -37,6 +37,12 @@ using namespace boost;
 namespace deva
 {
 
+const char dirsep = '/';
+const char extsep = '.';
+const char* const cwdstr = ".";
+const char* const pardirstr = "..";
+const char* env_var_path_seps = ":";
+
 // file name and path utility functions
 /////////////////////////////////////////////////////////////////////////////
 string get_cwd()
@@ -171,7 +177,7 @@ string strip_symbol( const string& src, const string& c )
 	// if src starts with a comment character ('#'), remove from that up to the
 	// first nl/cr
 	string src2;
-	int comment_pos = src.find_first_of( "#" );
+	size_t comment_pos = src.find_first_of( "#" );
 	if( comment_pos != string::npos )
 	{
 		size_t first_nl_pos = src.find_first_of( "\r\n", comment_pos + 1 );

@@ -40,6 +40,88 @@ namespace deva
 {
 
 
+const string vector_builtin_names[] = 
+{
+	string( "append" ),
+	string( "length" ),
+	string( "copy" ),
+	string( "concat" ),
+	string( "min" ),
+	string( "max" ),
+	string( "pop" ),
+	string( "insert" ),
+	string( "remove" ),
+	string( "find" ),
+	string( "rfind" ),
+	string( "count" ),
+	string( "reverse" ),
+	string( "sort" ),
+	string( "map" ),
+	string( "filter" ),
+	string( "reduce" ),
+	string( "any" ),
+	string( "all" ),
+	string( "slice" ),
+	string( "join" ),
+	string( "rewind" ),
+	string( "next" ),
+};
+// ...and function pointers to the executor functions for them
+NativeFunctionPtr vector_builtin_fcns[] = 
+{
+	do_vector_append,
+	do_vector_length,
+	do_vector_copy,
+	do_vector_concat,
+	do_vector_min,
+	do_vector_max,
+	do_vector_pop,
+	do_vector_insert,
+	do_vector_remove,
+	do_vector_find,
+	do_vector_rfind,
+	do_vector_count,
+	do_vector_reverse,
+	do_vector_sort,
+	do_vector_map,
+	do_vector_filter,
+	do_vector_reduce,
+	do_vector_any,
+	do_vector_all,
+	do_vector_slice,
+	do_vector_join,
+	do_vector_rewind,
+	do_vector_next,
+};
+Object vector_builtin_fcn_objs[] = 
+{
+	Object( do_vector_append ),
+	Object( do_vector_length ),
+	Object( do_vector_copy ),
+	Object( do_vector_concat ),
+	Object( do_vector_min ),
+	Object( do_vector_max ),
+	Object( do_vector_pop ),
+	Object( do_vector_insert ),
+	Object( do_vector_remove ),
+	Object( do_vector_find ),
+	Object( do_vector_rfind ),
+	Object( do_vector_count ),
+	Object( do_vector_reverse ),
+	Object( do_vector_sort ),
+	Object( do_vector_map ),
+	Object( do_vector_filter ),
+	Object( do_vector_reduce ),
+	Object( do_vector_any ),
+	Object( do_vector_all ),
+	Object( do_vector_slice ),
+	Object( do_vector_join ),
+	Object( do_vector_rewind ),
+	Object( do_vector_next ),
+};
+const int num_of_vector_builtins = sizeof( vector_builtin_names ) / sizeof( vector_builtin_names[0] );
+
+
 bool IsVectorBuiltin( const string & name )
 {
 	const string* i = find( vector_builtin_names, vector_builtin_names + num_of_vector_builtins, name );
@@ -266,7 +348,7 @@ void do_vector_remove( Frame *frame )
 	helper.ExpectType( self, obj_vector );
 	Object* startobj = helper.GetLocalN( 1 );
 
-	helper.ExpectIntegralNumber( startobj );
+	helper.ExpectPositiveIntegralNumber( startobj );
 
 	int start = (int)startobj->d;
 	int end = -1;
@@ -282,9 +364,9 @@ void do_vector_remove( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'remove'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'remove': start is greater than end." );
@@ -314,7 +396,7 @@ void do_vector_find( Frame *frame )
 	if( num_args > 2 )
 	{
 		Object* startobj = helper.GetLocalN( 2 );
-		helper.ExpectIntegralNumber( startobj );
+		helper.ExpectPositiveIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
@@ -329,9 +411,9 @@ void do_vector_find( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'find'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'find'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'find': start is greater than end." );
@@ -372,7 +454,7 @@ void do_vector_rfind( Frame *frame )
 	if( num_args > 2 )
 	{
 		Object* startobj = helper.GetLocalN( 2 );
-		helper.ExpectIntegralNumber( startobj );
+		helper.ExpectPositiveIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
@@ -387,9 +469,9 @@ void do_vector_rfind( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'rfind'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'rfind'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'rfind': start is greater than end." );
@@ -430,7 +512,7 @@ void do_vector_count( Frame *frame )
 	if( num_args > 2 )
 	{
 		Object* startobj = helper.GetLocalN( 2 );
-		helper.ExpectIntegralNumber( startobj );
+		helper.ExpectPositiveIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 3 )
@@ -445,9 +527,9 @@ void do_vector_count( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'count'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'count'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'count': start is greater than end." );
@@ -472,7 +554,7 @@ void do_vector_reverse( Frame *frame )
 	if( num_args > 1 )
 	{
 		Object* startobj = helper.GetLocalN( 1 );
-		helper.ExpectIntegralNumber( startobj );
+		helper.ExpectPositiveIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 2 )
@@ -487,9 +569,9 @@ void do_vector_reverse( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'reverse'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'reverse'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'reverse': start is greater than end." );
@@ -514,7 +596,7 @@ void do_vector_sort( Frame *frame )
 	if( num_args > 1 )
 	{
 		Object* startobj = helper.GetLocalN( 1 );
-		helper.ExpectIntegralNumber( startobj );
+		helper.ExpectPositiveIntegralNumber( startobj );
 		start = (int)startobj->d;
 	}
 	if( num_args > 2 )
@@ -529,9 +611,9 @@ void do_vector_sort( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'sort'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'sort': start is greater than end." );
@@ -885,7 +967,7 @@ void do_vector_slice( Frame *frame )
 	int step = 1;
 
 	Object* startobj = helper.GetLocalN( 1 );
-	helper.ExpectIntegralNumber( startobj );
+	helper.ExpectPositiveIntegralNumber( startobj );
 	start = (int)startobj->d;
 
 	Object* endobj = helper.GetLocalN( 2 );
@@ -904,9 +986,9 @@ void do_vector_slice( Frame *frame )
 	if( end == -1 )
 		end = sz;
 
-	if( start >= sz || start < 0 )
+	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );
-	if( end > sz || end < 0 )
+	if( (size_t)end > sz || end < 0 )
 		throw RuntimeException( "Invalid 'end' argument in vector built-in method 'slice'." );
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'slice': start is greater than end." );

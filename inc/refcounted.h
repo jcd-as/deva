@@ -91,7 +91,7 @@ public:
 //			delete p;
 //		}
 		// ...so do this instead
-		for( int i = 0; i < dead_pool.size(); i++ )
+		for( size_t i = 0; i < dead_pool.size(); i++ )
 		{
 			T* p = *(dead_pool.begin() + i);
 			delete p;
