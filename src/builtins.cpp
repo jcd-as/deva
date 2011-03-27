@@ -553,7 +553,7 @@ void do_read( Frame *frame )
 	// convert to a vector of numbers
 	Vector* vec = CreateVector();
 	vec->reserve( bytes_read );
-	for( int c = 0; c < bytes_read; ++c )
+	for( size_t c = 0; c < bytes_read; ++c )
 	{
 		vec->push_back( Object( (double)(s[c]) ) );
 	}
@@ -577,7 +577,7 @@ void do_readstring( Frame *frame )
 	Object* num_bytes_obj = helper.GetLocalN( 1 );
 	helper.ExpectIntegralNumber( num_bytes_obj );
 	
-	int num_bytes = (int)num_bytes_obj->d;
+	size_t num_bytes = (size_t)num_bytes_obj->d;
 
 	// allocate space for bytes plus a null-terminator
 	char* s = new char[num_bytes + 1];
@@ -746,12 +746,12 @@ void do_write( Frame *frame )
 	Object* source = helper.GetLocalN( 2 );
 	helper.ExpectType( source, obj_vector );
 	
-	int num_bytes = (int)num_bytes_obj->d;
+	size_t num_bytes = (size_t)num_bytes_obj->d;
 
 	size_t len = num_bytes < source->v->size() ? num_bytes : source->v->size();
 	unsigned char* data = new unsigned char[len];
 	// create a native array of unsigned chars to write out
-	for( int c = 0; c < len; ++c )
+	for( size_t c = 0; c < len; ++c )
 	{
 		// ensure this object is a number
 		Object o = source->v->operator[]( c );
@@ -781,7 +781,7 @@ void do_writestring( Frame *frame )
 	Object* source = helper.GetLocalN( 2 );
 	helper.ExpectType( source, obj_string );
 	
-	int num_bytes = (int)num_bytes_obj->d;
+	size_t num_bytes = (size_t)num_bytes_obj->d;
 
 	size_t slen = strlen( source->s );
 	size_t len = num_bytes < slen ? num_bytes : slen;

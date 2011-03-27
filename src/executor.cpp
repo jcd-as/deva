@@ -89,7 +89,7 @@ Executor::Executor() :
 Executor::~Executor()
 {
 	// free the constants' string data
-	for( int i = 0; i < constants.size(); i++ )
+	for( size_t i = 0; i < constants.size(); i++ )
 	{
 		ObjectType type = constants.at( i ).type;
 		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
@@ -103,7 +103,6 @@ Executor::~Executor()
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
 		string s = i->first;
-		Object* f = i->second;
 		if( i->second->type == obj_function )
 			delete i->second->f;
 		delete i->second;
@@ -751,7 +750,7 @@ Opcode Executor::ExecuteInstruction()
 		// create the map
 		Object m = Object( CreateMap() );
 		// populate it with 'arg' pairs off the stack
-		for( int i = 0; i < arg; i++ )
+		for( dword i = 0; i < arg; i++ )
 		{
 			rhs = stack.back();
 			rhs = ResolveSymbol( rhs );
@@ -773,7 +772,7 @@ Opcode Executor::ExecuteInstruction()
 		// create the new vector with 'arg' empty slots
 		Object v = Object( CreateVector( (int)arg ) );
 		// populate it with 'arg' items off the stack
-		for( int i = 0; i < arg; i++ )
+		for( dword i = 0; i < arg; i++ )
 		{
 			o = stack.back();
 			o = ResolveSymbol( o );
@@ -892,6 +891,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_null: stack.push_back( Object( rhs.type == obj_null ) ); break;
 		case obj_boolean: stack.push_back( Object( lhs.b == rhs.b ) ); break;
 		case obj_number: stack.push_back( Object( lhs.d == rhs.d ) ); break;
+		case obj_symbol_name:
 		case obj_string: stack.push_back( Object( strcmp( lhs.s, rhs.s ) == 0 ) ); break;
 		case obj_vector: stack.push_back( Object( lhs.v == rhs.v ) ); break;
 		case obj_map:
@@ -902,6 +902,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_function: stack.push_back( Object( lhs.nf.p == rhs.nf.p ) ); break;
 		case obj_native_obj: stack.push_back( Object( lhs.no == rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz == rhs.sz ) ); break;
+		case obj_end: throw ICE( "Invalid object in op_eq." ); break;
 		}
 		break;
 	case op_neq:
@@ -920,6 +921,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_null: stack.push_back( Object( rhs.type != obj_null ) ); break;
 		case obj_boolean: stack.push_back( Object( lhs.b != rhs.b ) ); break;
 		case obj_number: stack.push_back( Object( lhs.d != rhs.d ) ); break;
+		case obj_symbol_name:
 		case obj_string: stack.push_back( Object( strcmp( lhs.s, rhs.s ) != 0 ) ); break;
 		case obj_vector: stack.push_back( Object( lhs.v != rhs.v ) ); break;
 		case obj_map:
@@ -930,6 +932,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_function: stack.push_back( Object( lhs.nf.p != rhs.nf.p ) ); break;
 		case obj_native_obj: stack.push_back( Object( lhs.no != rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz != rhs.sz ) ); break;
+		case obj_end: throw ICE( "Invalid object in op_neq." ); break;
 		}
 		break;
 	case op_lt:
@@ -1453,7 +1456,7 @@ Opcode Executor::ExecuteInstruction()
 		// 1 arg: number of scopes to leave
 		arg = *((dword*)ip);
 		// leave the scopes
-		for( int i = 0; i < arg; i++ )
+		for( dword i = 0; i < arg; i++ )
 			PopScope();
 		// jump to the new frame's address
 		ip = (byte*)CurrentFrame()->GetReturnAddress();
@@ -1469,7 +1472,7 @@ Opcode Executor::ExecuteInstruction()
 		arg2 = *((dword*)ip);
 		ip += sizeof( dword );
 		// leave the scopes
-		for( int i = 0; i < arg2; i++ )
+		for( dword i = 0; i < arg2; i++ )
 			PopScope();
 		// jump out of loop
 		ip = (byte*)(bp + arg);
@@ -1645,7 +1648,7 @@ Opcode Executor::ExecuteInstruction()
 			// error if arguments aren't integral numbers...
 			if( !is_integral( rhs.d ) )
 				throw RuntimeException( "Index to a vector must be an integral value." );
-			int idx = (int)rhs.d;
+			dword idx = (dword)rhs.d;
 			// out-of-bounds check
 			if( lhs.v->size() <= idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
@@ -1925,7 +1928,7 @@ Opcode Executor::ExecuteInstruction()
 		if( o.type == obj_string )
 		{
 			int start, end;
-			size_t sz = strlen( o.s );
+			int sz = (int)strlen( o.s );
 			if( sz == 0 )
 			{
 				start = 0;
@@ -1966,7 +1969,7 @@ Opcode Executor::ExecuteInstruction()
 		else if( o.type == obj_vector )
 		{
 			int start, end;
-			size_t sz = o.v->size();
+			int sz = (int)o.v->size();
 			if( sz == 0 )
 			{
 				start = 0;
@@ -2044,7 +2047,7 @@ Opcode Executor::ExecuteInstruction()
 		if( o.type == obj_string )
 		{
 			int start, end;
-			size_t sz = strlen( o.s );
+			int sz = (int)strlen( o.s );
 			if( sz == 0 )
 			{
 				start = 0;
@@ -2105,7 +2108,7 @@ Opcode Executor::ExecuteInstruction()
 		else if( o.type == obj_vector )
 		{
 			int start, end;
-			size_t sz = o.v->size();
+			int sz = (int)o.v->size();
 			if( sz == 0 )
 			{
 				start = 0;
@@ -2213,7 +2216,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 			// dec ref the current tos2[tos1], as we're assigning into it
 			DecRef( lhs.v->operator[]( idx ) );
@@ -2253,7 +2256,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !is_integral( idx2.type ) )
 			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
 
-		size_t sz = lhs.v->size();
+		int sz = (int)lhs.v->size();
 		if( sz != 0 )
 		{
 			int start = idx1.type == obj_null ? sz : (int)idx1.d;
@@ -2326,7 +2329,7 @@ Opcode Executor::ExecuteInstruction()
 		if( !is_integral( idx2.type ) && idx2.type != obj_null )
 			throw RuntimeException( "'start' index in slice must be an integral number or '$'." );
 
-		size_t sz = lhs.v->size();
+		int sz = (int)lhs.v->size();
 
 		int start = idx1.type == obj_null ? sz : (int)idx1.d;
 		int end = idx2.type == obj_null ? sz : (int)idx2.d;
@@ -2424,7 +2427,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 
 			Object lhsob = lhs.v->operator[]( idx );
@@ -2515,7 +2518,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 
 			Object lhsob = lhs.v->operator[]( idx );
@@ -2578,7 +2581,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 
 			Object lhsob = lhs.v->operator[]( idx );
@@ -2641,7 +2644,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 
 			Object lhsob = lhs.v->operator[]( idx );
@@ -2704,7 +2707,7 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Index to a vector must be an integral value." );
 			int idx = (int)rhs.d;
 			// out-of-bounds check
-			if( lhs.v->size() <= idx || idx < 0 )
+			if( lhs.v->size() <= (dword)idx || idx < 0 )
 				throw RuntimeException( "Out-of-bounds error indexing vector." );
 
 			Object lhsob = lhs.v->operator[]( idx );
@@ -2744,7 +2747,6 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "right-hand side of '%=' operator must be a number." );
 
 			// ensure integral arguments
-			double intpart;
 			if( !is_integral( o.d ) || !is_integral( lhsob.d ) )
 				throw RuntimeException( "arguments to '%=' must be integral values." );
 
@@ -2756,7 +2758,7 @@ Opcode Executor::ExecuteInstruction()
 		// 1 arg:
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
-		for( int i = 0; i < arg; i++ )
+		for( dword i = 0; i < arg; i++ )
 		{
 			stack.push_back( stack.back() );
 			IncRef( stack.back() );
@@ -2805,7 +2807,7 @@ Opcode Executor::ExecuteInstruction()
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
 		// verify the stack is deep enough
-		if( stack.size() < (int)arg+1 )
+		if( stack.size() < (dword)arg+1 )
 			throw ICE( "Stack error: not enough elements on the stack for 'rot' instruction." );
 		// pop the tos
 		o = stack.back();
@@ -2866,7 +2868,7 @@ Opcode Executor::ExecuteInstruction()
 void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
 {
 	// if this is a method there's an extra arg for 'this'
-	int args_passed = num_args;
+	dword args_passed = (dword)num_args;
 	if( f->IsMethod() )
 	{
 		// if this was called via op_call_method, 'self' was passed implicitly
@@ -2879,9 +2881,9 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 			args_passed--;
 	}
 
-	if( num_args > f->num_args )
+	if( (dword)num_args > f->num_args )
 		throw RuntimeException( boost::format( "Too many arguments passed to function '%1%'." ) % f->name );
-	if( (f->num_args - num_args) > f->NumDefaultArgs() )
+	if( (f->num_args - num_args) > (dword)f->NumDefaultArgs() )
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
@@ -2935,7 +2937,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	PushScope( scope );
 	// jump to the function
 	ip = (byte*)(bp + f->addr);
-	int stack_size = stack.size();
+	size_t stack_size = stack.size();
 	if( stack_size < 0 )
 		throw ICE( "Stack underflow." );
 	// clear the error state/object
@@ -2996,7 +2998,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	PushFrame( frame );
 	PushScope( scope );
 	// save the stack depth & check for underflow
-	int stack_size = stack.size();
+	size_t stack_size = stack.size();
 	if( stack_size < 0 )
 		throw ICE( "Stack underflow." );
 	// clear the error state/object
@@ -3546,10 +3548,10 @@ void Executor::DumpFunctions()
 		cout << "function: " << f->name << ", from file: " << f->filename << ", line: " << f->first_line;
 		cout << endl;
 		cout << f->num_args << " arg(s), default value indices: ";
-		for( int j = 0; j < f->default_args.Size(); j++ )
+		for( size_t j = 0; j < f->default_args.Size(); j++ )
 			cout << f->default_args.At( j ) << " ";
 		cout << endl << f->num_locals << " local(s): ";
-		for( int j = 0; j < f->local_names.size(); j++ )
+		for( size_t j = 0; j < f->local_names.size(); j++ )
 			cout << f->local_names.operator[]( j ) << " ";
 		cout << endl << "code address: " << f->addr << endl;
 	}
@@ -3557,7 +3559,7 @@ void Executor::DumpFunctions()
 void Executor::DumpConstantPool()
 {
 	cout << "Constant data pool:" << endl;
-	for( int i = 0.; i < NumConstants(); i++ )
+	for( size_t i = 0.; i < NumConstants(); i++ )
 	{
 		Object o = GetConstant( i );
 		if( o.type == obj_string || o.type == obj_symbol_name )
@@ -3575,8 +3577,8 @@ void Executor::DumpStackTop()
 {
 	// print the top five stack items
 	cout << "\t\t[";
-	int n = (stack.size() > 5 ? 5 : stack.size());
-	for( int i = n-1; i >= 0; i-- )
+	size_t n = (stack.size() > 5 ? 5 : stack.size());
+	for( size_t i = n-1; i >= 0; i-- )
 	{
 		cout << stack[stack.size()-(n-i)];
 		if( i > 0 )

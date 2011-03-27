@@ -247,7 +247,7 @@ void do_vector_insert( Frame *frame )
 	helper.ExpectIntegralNumber( pos );
 	Object* val = helper.GetLocalN( 2 );
 
-	int i = (int)pos->d;
+	size_t i = (size_t)pos->d;
 	if( i > self->v->size() )
 		throw RuntimeException( "Position argument greater than vector size in vector built-in method 'insert'." );
 

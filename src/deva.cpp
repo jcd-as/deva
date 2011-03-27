@@ -315,15 +315,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		exit( -1 );
 	}
 
-	// free parser, compiler memory
-//	FreePassOneReturnValue( p1rv );
-//	FreeParseReturnValue( prv );
-//
-//	// free the semantics objects (symbol table et al), compiler, executor
+	// free the compiler
 	delete ex;
-//	delete compiler;
-//	delete semantics;
-
 
 	return 0;
 }

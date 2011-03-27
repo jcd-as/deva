@@ -43,6 +43,7 @@ FunctionScope* LocalScope::getParentFun()
 	if( parent )
 		return parent->getParentFun();
 	return NULL;
+		return NULL;
 }
 
 const string & LocalScope::Name() const
