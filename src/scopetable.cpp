@@ -40,6 +40,10 @@ namespace deva
 
 Scope::~Scope()
 {
+	// if we have a namespace name, delete it
+	if( name )
+		delete [] name;
+
 	// release-ref and 'zero' out the locals, to error out in case they get 
 	// accidentally used after they should be gone, and to ensure they aren't 
 	// DecRef'd again if/when a new value is assigned to them (e.g. in a loop)

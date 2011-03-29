@@ -1,8 +1,35 @@
-import foo;
-#local x = foo.bar;
-#print( x );
-print( foo.bar );
-print( "done" );
+local v = [0,1,2,3];
+for( i in v )
+	print( i );
+
+# test vector functional builtins with methods
+#class C { def foo(n){ if( n < 4 ) print( "true" ); } }
+#class C2 { def foo(){ print( "foo" ); } }
+#def fcn( f )
+#{
+#	f( C, 2 );
+#}
+#def fcn2( f )
+#{
+#	f( C );
+#}
+#fcn( C.foo );
+#fcn2( C2.foo );
+
+# test vector functional builtins with methods
+#class C { def foo(n){ if( n < 4 ) return true; } }
+#local v = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+#local v2 = v.filter( C.foo, C );
+#print( v2 );
+
+
+# test import:
+#import foo;
+##local x = foo.bar;
+##print( x );
+##print( foo.bar );
+#foo.bar();
+#print( "done" );
 
 # TEST error stack trace:
 #def Foo()

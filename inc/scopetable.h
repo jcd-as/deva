@@ -46,6 +46,10 @@ namespace deva
 
 class Scope
 {
+	// the name of the scope, if the scope is a namespace (module)
+	// otherwise, NULL
+	char* name;
+
 	// pointers to:
 	// - locals (actual objects stored in the frame, but the scope
 	// controls freeing objects when they go out of scope) and
@@ -54,8 +58,10 @@ class Scope
 	map<string, Object*> data;
 
 public:
-	Scope() {}
+	Scope() : name( NULL ) {}
+	Scope( char* n ) : name( n ) {}
 	~Scope();
+	const char* Name() { return name; }
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
 	// THE EXECUTOR!)
 	inline void AddSymbol( string name, Object* ob )

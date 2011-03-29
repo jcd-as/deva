@@ -40,6 +40,7 @@
 #include "scopetable.h"
 #include "frame.h"
 #include "builtins.h"
+#include "string_builtins.h"
 #include "vector_builtins.h"
 #include "map_builtins.h"
 
@@ -52,6 +53,13 @@ using namespace std;
 namespace deva
 {
 
+
+// number of 'global' constant symbols (true, false, null, 'delete', 'new' etc)
+extern const int num_of_constant_symbols;
+
+// number of 'default' constants ('global' constants like true, false, null
+// etc, plus all the builtins)
+//const int num_of_default_constants = num_of_constant_symbols + num_of_builtins + num_of_string_builtins + num_of_vector_builtins + num_of_map_builtins;
 
 struct Code
 {
@@ -91,14 +99,11 @@ class Executor
 	// 'global' scope table (namespace)
 	ScopeTable* scopes;
 
-	// currently executing scope table (namespace
-	ScopeTable* current_scopes;
-
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
-	// loaded modules (namespaces)
-	vector< pair<string, ScopeTable*> > namespaces;
+	// list of modules that have been imported
+	set<string> imported_module_names;
 
 	// set of function objects
 	multimap<string, Object*> functions;
@@ -124,21 +129,21 @@ public:
 	// TODO: calculate using module bp!!!
 	inline size_t GetOffsetForCallSite( byte* addr ) const { return addr - bp; }
 
-	inline Scope* CurrentScope() { return current_scopes->CurrentScope(); }
-	inline Scope* GlobalScope() { return current_scopes->At( 0 ); }
+	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
+	inline Scope* GlobalScope() { return scopes->At( 0 ); }
 	inline Frame* CurrentFrame() { return callstack.back(); }
 	inline Frame* MainFrame() { return callstack[0]; }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
 	inline void PopFrame() { delete callstack.back(); callstack.pop_back(); }
 
-	inline void PushScope( Scope* s ) { current_scopes->PushScope( s ); }
-	inline void PopScope() { current_scopes->PopScope(); }
+	inline void PushScope( Scope* s ) { scopes->PushScope( s ); }
+	inline void PopScope() { if( CurrentScope()->Name() ) imported_module_names.erase( string( CurrentScope()->Name() ) ); scopes->PopScope(); }
 
 	inline void PushStack( Object o ) { stack.push_back( o ); }
 	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
 
-	inline Object* FindSymbol( const char* name ) { return current_scopes->FindSymbol( name ); }
+	Object* FindSymbol( const char* name, const char* module = NULL );
 	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
 	// helpers

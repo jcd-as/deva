@@ -43,6 +43,26 @@ using namespace std;
 namespace deva
 {
 
+
+// symbols that always exist
+const Object constant_symbols[] = 
+{
+	Object( true ),
+	Object( false ),
+	Object( obj_null ),
+	Object( obj_symbol_name, copystr( "__name__" ) ),
+	Object( obj_symbol_name, copystr( "__class__" ) ),
+	Object( obj_symbol_name, copystr( "__bases__" ) ),
+	Object( obj_symbol_name, copystr( "__module__" ) ),
+	Object( obj_symbol_name, copystr( "new" ) ),
+	Object( obj_symbol_name, copystr( "delete" ) ),
+	Object( obj_symbol_name, copystr( "self" ) ),
+	Object( obj_symbol_name, copystr( "rewind" ) ),
+	Object( obj_symbol_name, copystr( "next" ) )
+};
+const int num_of_constant_symbols = sizeof( constant_symbols ) / sizeof( Object );
+
+
 /////////////////////////////////////////////////////////////////////////////
 // executive/VM functions and globals
 /////////////////////////////////////////////////////////////////////////////
@@ -58,7 +78,6 @@ Executor::Executor() :
 	bp( NULL ), 
 	end( NULL ), 
 	scopes( NULL ),
-	current_scopes( NULL ),
 	is_error( false ),
 	debug( false ), 
 	trace( false )
@@ -72,18 +91,39 @@ Executor::Executor() :
 	constants.reserve( 256 );
 
 	// add names that always exist
-	AddConstant( Object( true ) );
-	AddConstant( Object( false ) );
-	AddConstant( Object( obj_null ) );
-	AddConstant( Object( obj_symbol_name, copystr( "__name__" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "__class__" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "__bases__" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "__module__" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "new" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "delete" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "self" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "rewind" ) ) );
-	AddConstant( Object( obj_symbol_name, copystr( "next" ) ) );
+	for( int i = 0; i < num_of_constant_symbols; i++ )
+	{
+		AddConstant( constant_symbols[i] );
+	}
+	// add the builtins, string builtins, vector builtins and map builtins to the constant pool
+	// builtins
+	for( int i = 0; i < num_of_builtins; i++ )
+	{
+		char* s = copystr( builtin_names[i].c_str() );
+		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
+	// string builtins
+	for( int i = 0; i < num_of_string_builtins; i++ )
+	{
+		char* s = copystr( string_builtin_names[i].c_str() );
+		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
+	// vector builtins
+	for( int i = 0; i < num_of_vector_builtins; i++ )
+	{
+		char* s = copystr( vector_builtin_names[i].c_str() );
+		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
+	// map builtins
+	for( int i = 0; i < num_of_map_builtins; i++ )
+	{
+		char* s = copystr( map_builtin_names[i].c_str() );
+		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+			delete [] s;
+	}
 }
 
 Executor::~Executor()
@@ -93,11 +133,6 @@ Executor::~Executor()
 	{
 		ObjectType type = constants.at( i ).type;
 		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
-	}
-	// free the namespaces (scope tables)
-	for( vector< pair<string, ScopeTable*> >::iterator i = namespaces.begin(); i != namespaces.end(); ++i )
-	{
-		delete i->second;
 	}
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
@@ -135,6 +170,18 @@ Object* Executor::FindFunction( string name, size_t offset )
 	return NULL;
 }
 
+// locate a symbol, possibly in a given module
+Object* Executor::FindSymbol( const char* name, const char* module /*= NULL*/ )
+{
+	if( module )
+	{
+		// TODO: look for the scope with the given name
+		return scopes->FindSymbol( name );
+	}
+	else
+		return scopes->FindSymbol( name );
+}
+
 // return a resolved symbol - if sym is a symbol name, find the symbol,
 // otherwise return sym unmodified
 Object Executor::ResolveSymbol( Object sym )
@@ -142,7 +189,9 @@ Object Executor::ResolveSymbol( Object sym )
 	if( sym.type != obj_symbol_name )
 		return sym;
 
-	Object* obj = current_scopes->FindSymbol( sym.s );
+	// TODO: symbols in loaded modules???
+
+	Object* obj = scopes->FindSymbol( sym.s );
 
 	if( !obj )
 	{
@@ -150,20 +199,24 @@ Object Executor::ResolveSymbol( Object sym )
 		NativeFunction nf = GetBuiltin( sym.s );
 		if( nf.p )
 			return Object( nf );
+		// module name?
+		if( module_names.count( sym.s ) != 0 )
+			return sym;
+
+		// type built-ins will conflict with each other,
+		// just put the symbol name back on the stack
+		//
 		// string builtin?
 		nf = GetStringBuiltin( sym.s );
 		if( nf.p )
-			return Object( nf );
+			return sym;
 		// vector builtin?
 		nf = GetVectorBuiltin( sym.s );
 		if( nf.p )
-			return Object( nf );
+			return sym;
 		// map builtin?
 		nf = GetMapBuiltin( sym.s );
 		if( nf.p )
-			return Object( nf );
-		// module name?
-		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
 		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
@@ -266,12 +319,11 @@ void Executor::Execute( const Code* const code )
 //	ip = bp;
 
 	scopes = new ScopeTable();
-	current_scopes = scopes;
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
-//	Frame* frame = new Frame( NULL, current_scopes, bp, bp, 0, main->f );
-	Frame* frame = new Frame( NULL, current_scopes, code->code, code->code, 0, main->f );
+//	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
@@ -454,8 +506,8 @@ Opcode Executor::ExecuteInstruction()
 			// TODO: Resolve the constant sym *here* and remove all the calls to
 			// ResolveSymbol when an obj is popped off the stack ???
 			Object tmp = GetConstant( arg );
-			Object tmp2 = ResolveSymbol( tmp );
-			IncRef( tmp2 );
+			tmp = ResolveSymbol( tmp );
+			IncRef( tmp );
 			stack.push_back( tmp );
 		}
 		ip += sizeof( dword );
@@ -481,7 +533,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant(arg);
 		// find the variable
-		plhs = CurrentScope()->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		DecRef( *plhs );
@@ -494,7 +546,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant(arg);
 		// find the variable
-		plhs = CurrentScope()->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		DecRef( *plhs );
@@ -507,7 +559,7 @@ Opcode Executor::ExecuteInstruction()
 		// look-up the constant
 		o = GetConstant(arg);
 		// find the variable
-		plhs = CurrentScope()->FindSymbol( o.s );
+		plhs = FindSymbol( o.s );
 		if( !plhs )
 			throw RuntimeException( boost::format( "Symbol '%1%' not found." ) % o.s );
 		DecRef( *plhs );
@@ -1351,8 +1403,8 @@ Opcode Executor::ExecuteInstruction()
 		ip += sizeof( dword );
 		// get the fcn
 		o = stack.back();
-		Object tmp = ResolveSymbol( o );
-		DecRef( tmp );
+		o = ResolveSymbol( o );
+		DecRef( o );
 		stack.pop_back();
 		// TODO: if addr relative to another code block (module)??
 		//
@@ -1594,11 +1646,10 @@ Opcode Executor::ExecuteInstruction()
 			if( rhs.type != obj_string )
 				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
 			// see if there is a module with this name
-			vector< pair<string, ScopeTable*> >::iterator it = FindNamespace( string( lhs.s ) );
-			if( it == namespaces.end() )
+			if( module_names.count( string( lhs.s ) ) == 0 )
 				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
 			// look up the rhs as a symbol in the module
-			Object* obj = it->second->FindSymbol( rhs.s );
+			Object* obj = FindSymbol( rhs.s, lhs.s );
 			if( !obj )
 				throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
 			IncRef( *obj );
@@ -1671,6 +1722,9 @@ Opcode Executor::ExecuteInstruction()
 				{
 					// look for it in the map first...
 					Map::iterator it = lhs.m->find( Object( rhs.s ) );
+					// not found? try it as a symbol name
+					if( it == lhs.m->end() )
+						it = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
 					if( it != lhs.m->end() )
 					{
 						Object obj = it->second;
@@ -1684,14 +1738,6 @@ Opcode Executor::ExecuteInstruction()
 						// push the object
 						stack.push_back( obj );
 					}
-					// try it as a symbol name
-					it = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
-					if( it != lhs.m->end() )
-					{
-						Object obj = it->second;
-						// push the object
-						stack.push_back( obj );
-					}
 					// else try it as a built-in method
 					else
 					{
@@ -1701,6 +1747,7 @@ Opcode Executor::ExecuteInstruction()
 						{
 							if( !nf.is_method )
 								throw ICE( "Map builtin not marked as a method." );
+							// push the method
 							stack.push_back( Object( nf ) );
 						}
 						else
@@ -1728,7 +1775,7 @@ Opcode Executor::ExecuteInstruction()
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
-			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class or instance)." ) % lhs );
+			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
 		// string:
 		if( lhs.type == obj_string )
@@ -2887,7 +2934,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), current_scopes, ip, ip - sizeof(dword) - 1, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
 
 	// set the args for the frame
@@ -2967,7 +3014,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	}
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), current_scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
 	Scope* scope = new Scope();
 	// set the args for the frame
 
@@ -3036,21 +3083,6 @@ Object Executor::GetError()
 		return error;
 	else
 		return Object( obj_null );
-}
-
-// helper function to locate a namespace by (module) name
-// helper (functor) class
-class equal_to_first
-{
-	string value;
-public:
-	equal_to_first( string val ) : value( val ) {}
-	bool operator()(pair<string, void*> n ) { return n.first == value; }
-};
-// find a namespace
-vector< pair<string, ScopeTable*> >::iterator Executor::FindNamespace( string mod )
-{
-	return find_if( namespaces.begin(), namespaces.end(), equal_to_first( mod ) );
 }
 
 // helper function for ImportModule
@@ -3167,9 +3199,7 @@ bool Executor::ImportModule( const char* module_name )
 
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
-	it = FindNamespace( module_name );
-	// if we found the namespace
-	if( it != namespaces.end() )
+	if( imported_module_names.count( string( module_name ) ) != 0 )
 		return true;
 
 	// otherwise look for the .dv/.dvc file to import
@@ -3183,25 +3213,20 @@ bool Executor::ImportModule( const char* module_name )
 	byte* orig_ip = ip;
 	byte* orig_bp = bp;
 	byte* orig_end = end;
-	// save the current scope table
-	ScopeTable* orig_scopes = current_scopes;
 	// create a new namespace and set it at the current scope
 	// TODO: currently this only adds the "short" name of the module as a
 	// namespace. should the full path be used somehow?? foo::bar? foo.bar?
 	// foo-bar? foo/bar?
 	string mod( module_name );
 	mod = get_file_part( mod );
-	ScopeTable* st = new ScopeTable();
-	namespaces.push_back( pair<string, ScopeTable*>(mod, st) );
-	current_scopes = st;
 
 	// TODO: need a new frame for the module
-	// where should it be stored??
-//	Frame* frame = new Frame( NULL, current_scopes, code->code, code->code, 0, main->f );
+	// if it is pushed onto the callstack, how/when will it be popped???
+//	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 //	PushFrame( frame );
 
 	// create a 'file/module' level scope for the namespace
-	PushScope( new Scope() );
+	PushScope( new Scope( copystr( mod ) ) );
 //	// compile the file, if needed
 //	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 //	// and then run the file
@@ -3218,9 +3243,6 @@ bool Executor::ImportModule( const char* module_name )
 	ip = orig_ip;
 	bp = orig_bp;
 	end = orig_end;
-
-	// restore the current scope table
-	current_scopes = orig_scopes;
 
 	return true;
 }
@@ -3578,11 +3600,14 @@ void Executor::DumpStackTop()
 	// print the top five stack items
 	cout << "\t\t[";
 	size_t n = (stack.size() > 5 ? 5 : stack.size());
-	for( size_t i = n-1; i >= 0; i-- )
+	if( n != 0 )
 	{
-		cout << stack[stack.size()-(n-i)];
-		if( i > 0 )
-			cout << ", ";
+		for( int i = n-1; i >= 0; i-- )
+		{
+			cout << stack[stack.size()-(n-i)];
+			if( i > 0 )
+				cout << ", ";
+		}
 	}
 	cout << "]";
 	if( stack.size() > 5 )

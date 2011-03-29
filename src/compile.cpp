@@ -109,29 +109,6 @@ Compiler::Compiler( Semantics* sem ) :
 		delete [] *i;
 	}
 
-	// add the builtins, vector builtins and map builtins to the constant pool
-	// builtins
-	for( int i = 0; i < num_of_builtins; i++ )
-	{
-		char* s = copystr( builtin_names[i].c_str() );
-		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
-			delete [] s;
-	}
-	// vector builtins
-	for( int i = 0; i < num_of_vector_builtins; i++ )
-	{
-		char* s = copystr( vector_builtin_names[i].c_str() );
-		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
-			delete [] s;
-	}
-	// map builtins
-	for( int i = 0; i < num_of_map_builtins; i++ )
-	{
-		char* s = copystr( map_builtin_names[i].c_str() );
-		if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
-			delete [] s;
-	}
-
 	// add our 'global' function, "@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
 	Function* f = new Function();

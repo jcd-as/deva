@@ -161,6 +161,14 @@ char* copystr( const char* in )
 	return ret;
 }
 
+// allocate and return a copy of a string
+char* copystr( string in )
+{
+	char* ret = new char[in.length() + 1];
+	strcpy( ret, in.c_str() );
+	return ret;
+}
+
 // allocate a concatenation of two strings
 char* catstr( const char* s1, const char* s2 )
 {

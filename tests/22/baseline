@@ -24,15 +24,6 @@ delete
 self
 rewind
 next
-0
-b
-c
-d
-a
-b
-c
-d
-x
 print
 str
 chr
@@ -66,25 +57,51 @@ error
 seterror
 geterror
 concat
-min
-max
-pop
 insert
 remove
 find
 rfind
-count
 reverse
 sort
+slice
+strip
+lstrip
+rstrip
+split
+replace
+upper
+lower
+isalphanum
+isalpha
+isdigit
+islower
+isupper
+isspace
+ispunct
+iscntrl
+isprint
+isxdigit
+min
+max
+pop
+count
 map
 filter
 reduce
 any
 all
-slice
 keys
 values
 merge
+0
+b
+c
+d
+a
+b
+c
+d
+x
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -101,30 +118,30 @@ Instructions:
    3: jmpf		40
    8: enter		 
    9: pushlocal0		 
-  10: pushconst		13 (b)
+  10: pushconst		82 (b)
   15: tbl_load	
-  16: pushconst		14 (c)
+  16: pushconst		83 (c)
   21: tbl_load	
-  22: pushconst		15 (d)
+  22: pushconst		84 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
   34: leave		 
   35: jmp		2
   40: pushlocal0		 
-  41: pushconst		13 (b)
+  41: pushconst		82 (b)
   46: tbl_load	
-  47: pushconst		14 (c)
+  47: pushconst		83 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	20 (x), 73
+  59: def_function	89 (x), 73
   68: jmp		104
   73: enter		 
-  74: pushconst		16 (a)
-  79: pushconst		13 (b)
+  74: pushconst		85 (a)
+  79: pushconst		82 (b)
   84: tbl_load	
-  85: pushconst		14 (c)
+  85: pushconst		83 (c)
   90: method_load	
   91: call_method		0
   96: pop		 

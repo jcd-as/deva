@@ -36,20 +36,6 @@ delete
 self
 rewind
 next
-0
-1
-5
-10
-foo
-append
-print
-foo
-a
-b
-io
-key
-value
-x
 print
 str
 chr
@@ -83,25 +69,56 @@ error
 seterror
 geterror
 concat
-min
-max
-pop
 insert
 remove
 find
 rfind
-count
 reverse
 sort
+slice
+strip
+lstrip
+rstrip
+split
+replace
+upper
+lower
+isalphanum
+isalpha
+isdigit
+islower
+isupper
+isspace
+ispunct
+iscntrl
+isprint
+isxdigit
+min
+max
+pop
+count
 map
 filter
 reduce
 any
 all
-slice
 keys
 values
 merge
+0
+1
+5
+10
+foo
+append
+print
+foo
+a
+b
+io
+key
+value
+x
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -112,7 +129,7 @@ function: foo, from file: input.dv, line: 1
 2 local(s): a b 
 code address: 14
 Instructions:
-   0: def_function	19 (foo), 14
+   0: def_function	88 (foo), 14
    9: jmp		70
   14: enter		 
   15: pushlocal0		 
@@ -142,7 +159,7 @@ Instructions:
   75: def_local0		 
   76: push		5
   81: pushlocal0		 
-  82: pushconst		17 (append)
+  82: pushconst		86 (append)
   87: method_load	
   88: call_method		1
   93: pop		 
@@ -150,21 +167,21 @@ Instructions:
   99: def_local1		 
  100: pushlocal1		 
  101: push_zero		 
- 102: pushconst		16 (foo)
+ 102: pushconst		85 (foo)
  107: tbl_store	
  108: pushlocal1		 
- 109: pushconst		16 (foo)
- 114: pushconst		19 (foo)
+ 109: pushconst		85 (foo)
+ 114: pushconst		88 (foo)
  119: tbl_store	
  120: push_zero		 
  121: push_one		 
  122: pushlocal1		 
- 123: pushconst		16 (foo)
+ 123: pushconst		85 (foo)
  128: tbl_load	
  129: call		2
  134: pop		 
  135: pushlocal1		 
- 136: pushconst		16 (foo)
+ 136: pushconst		85 (foo)
  141: tbl_load	
  142: def_local2		 
  143: push_zero		 
@@ -183,14 +200,14 @@ Instructions:
  172: def_local3		 
  173: enter		 
  174: pushlocal3		 
- 175: pushconst		27 (str)
+ 175: pushconst		13 (str)
  180: call		1
  185: pushlocal4		 
- 186: pushconst		27 (str)
+ 186: pushconst		13 (str)
  191: call		1
  196: add		 
- 197: pushconst		22 (io)
- 202: pushconst		18 (print)
+ 197: pushconst		91 (io)
+ 202: pushconst		87 (print)
  207: method_load	
  208: call_method		1
  213: pop		 
@@ -207,10 +224,10 @@ Instructions:
  236: add		 
  237: storelocal0		 
  238: pushlocal0		 
- 239: pushconst		27 (str)
+ 239: pushconst		13 (str)
  244: call		1
- 249: pushconst		22 (io)
- 254: pushconst		18 (print)
+ 249: pushconst		91 (io)
+ 254: pushconst		87 (print)
  259: method_load	
  260: call_method		1
  265: pop		 

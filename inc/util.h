@@ -66,6 +66,7 @@ void replace( string& src, const char* const in, const char* const out );
 void split( const string& in, const char* const splitchars, vector<string> & out );
 // allocate and return a copy of a string
 char* copystr( const char* in );
+char* copystr( string in );
 // allocate a concatenation of two strings
 char* catstr( const char* s1, const char* s2 );
 

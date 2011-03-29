@@ -51,7 +51,7 @@ void emit_error( RuntimeException & e )
 void emit_error( ICE & e )
 {
 	// format = filename:linenum: msg
-	cerr << current_file << ":" << " Interal Compiler Error: " << e.what() << endl;
+	cerr << current_file << ":" << " Internal Compiler Error: " << e.what() << endl;
 }
 
 void emit_warning( char* warning, int line )

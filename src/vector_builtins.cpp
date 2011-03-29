@@ -628,7 +628,7 @@ void do_vector_map( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "map", frame );
 
-	helper.CheckNumberOfArguments( 2 );
+	helper.CheckNumberOfArguments( 2, 3 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
@@ -642,14 +642,25 @@ void do_vector_map( Frame *frame )
 
 	bool is_method = false;
 
+	int num_args = frame->NumArgsPassed();
+
 	if( o->type == obj_function )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
-	// TODO: allow methods
-	if( is_method )
-		throw RuntimeException( "Cannot pass methods to vector built-in method 'map'." );
+	bool has_self = is_method && num_args == 3;
+
+	// a non-method can't have an object passed as argument #2
+	if( has_self == 3 )
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+
+	Object* method_self;
+	if( num_args == 3 )
+	{
+		method_self = helper.GetLocalN( 2 ); 
+		helper.ExpectTypes( method_self, obj_string, obj_vector, obj_map, obj_class, obj_instance );
+	}
 
 	// walk each item in the vector
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
@@ -657,17 +668,18 @@ void do_vector_map( Frame *frame )
 		// push the item
 		ex->PushStack( *i );
 		// push 'self', for methods
-//		if( is_method )
-//		{
-//			// push the object ("self") first
-//			ex->PushStack( *self );
-//		}
+		if( has_self )
+		{
+			// push the object ("self") first
+			IncRef( *method_self );
+			ex->PushStack( *method_self );
+		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, false );
+			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1, false );
+			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value) and push it onto our return collection
 		Object retval = ex->PopStack();
 		// if we got a string back, we need to allocate a copy in our parent's
@@ -687,28 +699,38 @@ void do_vector_filter( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "filter", frame );
 
-	helper.CheckNumberOfArguments( 2 );
+	helper.CheckNumberOfArguments( 2, 3 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
 	Object* o = helper.GetLocalN( 1 );
-
 	helper.ExpectTypes( o, obj_function, obj_native_function );
 
-	// return vector
-	Vector* ret = CreateVector();
-	ret->reserve( self->v->size() );
-
 	bool is_method = false;
+	int num_args = frame->NumArgsPassed();
 
 	if( o->type == obj_function )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
+	bool has_self = is_method && num_args == 3;
+
+	// a non-method can't have an object passed as argument #2
+	if( has_self == 3 )
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'filter' for a first argument which is not a method." );
+
 	// TODO: allow methods
-	if( is_method )
-		throw RuntimeException( "Cannot pass methods to vector built-in method 'filter'." );
+	Object* method_self;
+	if( num_args == 3 )
+	{
+		method_self = helper.GetLocalN( 2 ); 
+		helper.ExpectTypes( method_self, obj_string, obj_vector, obj_map, obj_class, obj_instance );
+	}
+
+	// return vector
+	Vector* ret = CreateVector();
+	ret->reserve( self->v->size() );
 
 	// walk each item in the vector
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
@@ -717,7 +739,7 @@ void do_vector_filter( Frame *frame )
 		IncRef( *i );
 		ex->PushStack( *i );
 		// push 'self', for methods
-		if( is_method )
+		if( has_self )
 		{
 			// TODO:
 			// if this is a method, 'self' for the method is on the stack
@@ -726,15 +748,15 @@ void do_vector_filter( Frame *frame )
 			// loop... (beyond the first, when 'self' is already there)
 
 			// push the object ("self") first
-//			IncRef( *self );
-//			ex->PushStack( *self );
+			IncRef( *method_self );
+			ex->PushStack( *method_self );
 		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, false );
+			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1, false );
+			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value), but only add this item to the returned 
 		// vector if the function returned a 'true' value
 		Object retval = ex->PopStack();
@@ -760,7 +782,7 @@ void do_vector_reduce( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "reduce", frame );
 
-	helper.CheckNumberOfArguments( 2 );
+	helper.CheckNumberOfArguments( 2, 3 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
@@ -770,30 +792,42 @@ void do_vector_reduce( Frame *frame )
 
 	bool is_method = false;
 
+	int num_args = frame->NumArgsPassed();
+
 	if( o->type == obj_function )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
-	// TODO: allow methods
-	if( is_method )
-		throw RuntimeException( "Cannot pass methods to vector built-in method 'reduce'." );
+	bool has_self = is_method && num_args == 3;
+
+	// a non-method can't have an object passed as argument #2
+	if( has_self == 3 )
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+
+	Object* method_self;
+	if( num_args == 3 )
+	{
+		method_self = helper.GetLocalN( 2 ); 
+		helper.ExpectTypes( method_self, obj_string, obj_vector, obj_map, obj_class, obj_instance );
+	}
 
 	size_t sz = self->v->size();
 	// first iteration uses the last two items in the vector
 	ex->PushStack( self->v->operator[]( sz-2 ) );
 	ex->PushStack( self->v->operator[]( sz-1 ) );
 	// push 'self', for methods
-	if( is_method )
+	if( has_self )
 	{
 		// push the object ("self") first
-		ex->PushStack( *self );
+		IncRef( *method_self );
+		ex->PushStack( *method_self );
 	}
 	// call the function
 	if( o->type == obj_function )
-		ex->ExecuteFunction( o->f, 2, false );
+		ex->ExecuteFunction( o->f, 2, has_self ? true : false );
 	else if( o->type == obj_native_function )
-		ex->ExecuteFunction( o->nf, 2, false );
+		ex->ExecuteFunction( o->nf, 2, has_self ? true : false );
 	Object retval = ex->PopStack();
 	// walk the rest of the items in the vector
 	if( self->v->size() > 2 )
@@ -805,17 +839,18 @@ void do_vector_reduce( Frame *frame )
 			// use the retval from the previous iteration as the first arg to the fcn
 			ex->PushStack( retval );
 			// push 'self', for methods
-			if( is_method )
+			if( has_self )
 			{
 				// push the object ("self") first
-				ex->PushStack( *self );
+				IncRef( *method_self );
+				ex->PushStack( *method_self );
 			}
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
 			if( o->type == obj_function )
-				ex->ExecuteFunction( o->f, 2, false );
+				ex->ExecuteFunction( o->f, 2, has_self ? true : false );
 			else if( o->type == obj_native_function )
-				ex->ExecuteFunction( o->nf, 2, false );
+				ex->ExecuteFunction( o->nf, 2, has_self ? true : false );
 			// get the result (return value) and push it onto our return collection
 			retval = ex->PopStack();
 		}
@@ -835,7 +870,7 @@ void do_vector_any( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "any", frame );
 
-	helper.CheckNumberOfArguments( 2 );
+	helper.CheckNumberOfArguments( 2, 3 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
@@ -845,14 +880,25 @@ void do_vector_any( Frame *frame )
 
 	bool is_method = false;
 
+	int num_args = frame->NumArgsPassed();
+
 	if( o->type == obj_function )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
-	// TODO: allow methods
-	if( is_method )
-		throw RuntimeException( "Cannot pass methods to vector built-in method 'any'." );
+	bool has_self = is_method && num_args == 3;
+
+	// a non-method can't have an object passed as argument #2
+	if( has_self == 3 )
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+
+	Object* method_self;
+	if( num_args == 3 )
+	{
+		method_self = helper.GetLocalN( 2 ); 
+		helper.ExpectTypes( method_self, obj_string, obj_vector, obj_map, obj_class, obj_instance );
+	}
 
 	bool value = false;
 
@@ -862,17 +908,18 @@ void do_vector_any( Frame *frame )
 		// push the item
 		ex->PushStack( *i );
 		// push 'self', for methods
-		if( is_method )
+		if( has_self )
 		{
 			// push the object ("self") first
-			ex->PushStack( *self );
+			IncRef( *method_self );
+			ex->PushStack( *method_self );
 		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, false );
+			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1, false );
+			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value)
 		Object retval = ex->PopStack();
 		// if it evaluates to true, bail
@@ -890,7 +937,7 @@ void do_vector_all( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "all", frame );
 
-	helper.CheckNumberOfArguments( 2 );
+	helper.CheckNumberOfArguments( 2, 3 );
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
@@ -900,14 +947,25 @@ void do_vector_all( Frame *frame )
 
 	bool is_method = false;
 
+	int num_args = frame->NumArgsPassed();
+
 	if( o->type == obj_function )
 		is_method = o->f->IsMethod();
 	else if( o->type == obj_native_function )
 		is_method = o->nf.is_method;
 
-	// TODO: allow methods
-	if( is_method )
-		throw RuntimeException( "Cannot pass methods to vector built-in method 'all'." );
+	bool has_self = is_method && num_args == 3;
+
+	// a non-method can't have an object passed as argument #2
+	if( has_self == 3 )
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+
+	Object* method_self;
+	if( num_args == 3 )
+	{
+		method_self = helper.GetLocalN( 2 ); 
+		helper.ExpectTypes( method_self, obj_string, obj_vector, obj_map, obj_class, obj_instance );
+	}
 
 	bool value = true;
 
@@ -917,17 +975,18 @@ void do_vector_all( Frame *frame )
 		// push the item
 		ex->PushStack( *i );
 		// push 'self', for methods
-		if( is_method )
+		if( has_self )
 		{
 			// push the object ("self") first
-			ex->PushStack( *self );
+			IncRef( *method_self );
+			ex->PushStack( *method_self );
 		}
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, false );
+			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
-			ex->ExecuteFunction( o->nf, 1, false );
+			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value)
 		Object retval = ex->PopStack();
 		// if it evaluates to false, bail

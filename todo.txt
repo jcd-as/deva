@@ -18,7 +18,6 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	50 ('_re.delete() not allowed to use keyword & _re/re modules NYI)d
 	53 (os module NYI)
 	62 (json module NYI, seterror/geterror/error builtins NYI)
-	63 (methods can't currently be passed to vector's functional builtins - map, filter, reduce, any all)
 	67 (the 'break inside nested fcn breaks loop outside fcn' trick doesn't work -crashes- in v2)
 	68 (math module NYI)
 
@@ -57,9 +56,11 @@ TODO 2011-02-01 @deva +veryhigh import/modules
 	how do modules work? (each module is compiled into a separate code block, which means the 'import' op needs to create the new code block. all fcns in the module are inside this code block, just like the 'main' code block
 	ISSUE: modules need to reside in their own "namespace" with their own Executor object, or else they can't be loaded as precompiled .dvc files, because the indices in the constant pool will be different for the module when loaded solo vs loaded as an import. _OR_ they could be 'fixed' up at load time by adding the appropriate offset to every constant load...
 	TBD:
-	- each module needs its own 'main' Frame (e.g. 'main@foo') so it will have (persistent) locals. Executor will need to keep a collection of these too.
-	- are functions imported into current_scopes (ScopeTable) correctly? - do we need to encapsulate the current Frame in the namespace/module concept as well as Scope/ScopeTable?
-	- name lookup (foo.bar needs to check for bar in module foo) for both tbl_load and method_load
+	- each module should be on the callstack and scope stack so that locals and scopes work correctly. 
+		= Executor::FindSymbol needs to take an (optional) module name and locate symbols by module
+		= Executor::ResolveSymbol needs to take an (optional) module name and resolve symbols by module
+	- each module needs its own 'main' Frame (e.g. 'main@foo') so it will have (persistent) locals. if these are pushed onto the callstack (which makes a sort of sense), then there needs to be some mechanism whereby to remove them... since they won't be removed by normal 'leave' ops
+	- name lookup (foo.bar needs to check for bar in module foo) for tbl_load, tbl_store and method_load
 
 TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os, re et al)
 
@@ -85,7 +86,11 @@ DONE 2011-02-01 @deva +veryhigh slices!!
 	codegen to generate slice ops
 		VM support to execute them
 
-TODO 2011-02-03 @deva +veryhigh functional vector builtins (map, filter, reduce etc) don't work with methods
+DONE 2011-02-03 @deva +veryhigh functional vector builtins (map, filter, reduce etc) don't work with methods
+	- solution: pass 'self' to builtins as an optional second argument
+    CLOSED: 2011-03-28 18:56:36
+    :LOGBOOK:
+        DONE: 2011-03-28 18:56:36
 
 TODO 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
 
