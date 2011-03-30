@@ -1,28 +1,3 @@
-local v = [0,1,2,3];
-for( i in v )
-	print( i );
-
-# test vector functional builtins with methods
-#class C { def foo(n){ if( n < 4 ) print( "true" ); } }
-#class C2 { def foo(){ print( "foo" ); } }
-#def fcn( f )
-#{
-#	f( C, 2 );
-#}
-#def fcn2( f )
-#{
-#	f( C );
-#}
-#fcn( C.foo );
-#fcn2( C2.foo );
-
-# test vector functional builtins with methods
-#class C { def foo(n){ if( n < 4 ) return true; } }
-#local v = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-#local v2 = v.filter( C.foo, C );
-#print( v2 );
-
-
 # test import:
 #import foo;
 ##local x = foo.bar;
@@ -41,104 +16,123 @@ for( i in v )
 #def Bar(){ Foo(); }
 #Bar();
 
-## BUG: break in nested fcn not working
-## see test 67
-##for( i in range( 0, 10 ) )
-##{
-##	def brk(){ if( i > 3 ) break; }
-##	brk();
-##	print( i );
-##}
-#
-## BUG: doesn't compile
-##local a = 0;
-### this line, in trying to define fcn 'b' which it doesn't know about (but could
-### be valid, depending on what 'a' turns out to be at exec time) defines 'b' as a
-### non-local symbol (mod_none)...
-##a.b();
-### which makes this error at compile time because a local var 'b' cannot be found
-##local b = 1;
-### POSSIBLE FIX: LocalScope::Define() should check if the var it finds in
-### the locals_map has the same mods (local etc) as what was found? locals_map
-### needs to map more than just names?
-#
-## BUG: doesn't compile: "Cannot locate local symbol 'foo'"
-## no refcount leaks
-##def foo( n ){ print( n ); }
+# BUG: break in nested fcn not working
+# see test 67
+#for( i in range( 0, 10 ) )
+#{
+#	def brk(){ if( i > 3 ) break; }
+#	brk();
+#	print( i );
+#}
+
+# BUG: ICE: "Cannot locate local symbol 'b'"
+#local a = 0;
+## this line, in trying to define fcn 'b' which it doesn't know about (but could
+## be valid, depending on what 'a' turns out to be at exec time) defines 'b' as a
+## non-local symbol (mod_none)...
+#a.b();
+## which makes this error at compile time because a local var 'b' cannot be found
+#local b = 1;
+## POSSIBLE FIX: LocalScope::Define() should check if the var it finds in
+## the locals_map has the same mods (local etc) as what was found? locals_map
+## needs to map more than just names?
+
+# BUG: ICE: "Cannot locate local symbol 'foo'"
+# no refcount leaks
+#def foo( n ){ print( n ); }
+#foo( 25 );
+#local foo = 34;
+## error: can't call '34'
 ##foo( 25 );
-##local foo = 34;
-### error: can't call '34'
-###foo( 25 );
-##print( foo );
-#
-## no refcount leaks
-##def fcn( a )
-##{
-##	print( a );
-##}
-##fcn( "foo" );
-##def fcn( a, b )
-##{
-##	print( a, " " );
-##	print( b );
-##}
-##fcn( "foo", "bar" );
-#
-## BUG: vector built-ins broken when passed methods/class methods
-## ('self' for the method is on the stack and the builtins don't account for it
-## and aren't able to pass it to each invokation of the method)
-##class C
-##{
-##	def is_number( n ){ print( "is_number()" ); return type( n ) == "number"; }
-###	def concat( a, b ){ return str(a) + str(b); }
-###	def to_string( n ){ return str( n ); }
-##}
-###local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
-###print( "creating v" );
-##local v = [0];
-###print( "creating c" );
-##local c = new C();
-### method
-###print( "calling filter" );
-##print( v.filter( c.is_number ) );
-### 'class method'
-###print( v.filter( C.is_number ) );
-###print( v.map( c.to_string ) );
-###print( v.reduce( c.concat ) );
-###print( v.any( c.is_number ) );
-###print( v.all( c.is_number ) );
-#
-## BUG: ref count leaks from vector builtins:
-##def fcn( s ){ return "foo" + s; }
-##def test( n ){ return !(!n); }
-##def add( a, b ){ return a + b; }
-##def is_three( n ){ return n == 3; }
-##local v = [0,1,2,3,4];
-##local v2 = v.map( str );
-##print( v );
-##print( v2 );
-##local v3 = v2.map( fcn );
-##print( v3 );
-##local v4 = v.filter( test );
-##print( v4 );
-##local v5 = v4.reduce( add );
-##print( v5 );
-##print( v.any( is_three ) );
-##print( v.all( test ) );
-##print( v4.all( test ) );
-#
-## BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
-##local n = 0;
-##while( true )
-##{
-##	if( n > 3 ) exit( -1 );
-##	print( n );
-##	n += 1;
-##}
-#
+#print( foo );
+
+# BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
+#local n = 0;
+#while( true )
+#{
+#	if( n > 3 ) exit( -1 );
+#	print( n );
+#	n += 1;
+#}
+
 ############################################
 ## END BUG SECTION
 ############################################
+# no refcount leaks
+#class C
+#{
+#	def is_number( n ){ print( "is_number()" ); return type( n ) == "number"; }
+#	def concat( a, b ){ return str(a) + str(b); }
+#	def to_string( n ){ return str( n ); }
+#}
+#print( "creating v" );
+#local v = [0, "1", 2, "3", "4", 5, 6, "7", 8, 9];
+#print( "creating c" );
+#local c = new C();
+## method
+#print( "calling filter" );
+#print( v.filter( c.is_number, c ) );
+## 'class method'
+#print( v.filter( C.is_number, C ) );
+#print( v.map( c.to_string, c ) );
+#print( v.reduce( c.concat, c ) );
+#print( v.any( c.is_number, c ) );
+#print( v.all( c.is_number, c ) );
+
+# no refcount leaks
+#def fcn( s ){ return "foo" + s; }
+#def test( n ){ return !(!n); }
+#def add( a, b ){ return a + b; }
+#def is_three( n ){ return n == 3; }
+#local v = [0,1,2,3,4];
+#local v2 = v.map( str );
+#print( v );
+#print( v2 );
+#local v3 = v2.map( fcn );
+#print( v3 );
+#local v4 = v.filter( test );
+#print( v4 );
+#local v5 = v4.reduce( add );
+#print( v5 );
+#print( v.any( is_three ) );
+#print( v.all( test ) );
+#print( v4.all( test ) );
+
+# no refcount leaks
+#def fcn( a )
+#{
+#	print( a );
+#}
+#fcn( "foo" );
+#def fcn( a, b )
+#{
+#	print( a, " " );
+#	print( b );
+#}
+#fcn( "foo", "bar" );
+
+# no refcount leaks
+# test vector functional builtins with methods
+#class C { def foo(n){ if( n < 4 ) print( "true" ); } }
+#class C2 { def foo(){ print( "foo" ); } }
+#def fcn( f )
+#{
+#	f( C, 2 );
+#}
+#def fcn2( f )
+#{
+#	f( C );
+#}
+#fcn( C.foo );
+#fcn2( C2.foo );
+
+# no refcount leaks
+# test vector functional builtins with methods
+#class C { def foo(n){ if( n < 4 ) return true; } }
+#local v = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+#local v2 = v.filter( C.foo, C );
+#print( v2 );
+
 # no refcount leaks
 #local v = [ [], 1 ];
 #def fcn( v )

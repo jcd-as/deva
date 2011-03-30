@@ -652,7 +652,7 @@ void do_vector_map( Frame *frame )
 	bool has_self = is_method && num_args == 3;
 
 	// a non-method can't have an object passed as argument #2
-	if( has_self == 3 )
+	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
 
 	Object* method_self;
@@ -717,7 +717,7 @@ void do_vector_filter( Frame *frame )
 	bool has_self = is_method && num_args == 3;
 
 	// a non-method can't have an object passed as argument #2
-	if( has_self == 3 )
+	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'filter' for a first argument which is not a method." );
 
 	// TODO: allow methods
@@ -802,7 +802,7 @@ void do_vector_reduce( Frame *frame )
 	bool has_self = is_method && num_args == 3;
 
 	// a non-method can't have an object passed as argument #2
-	if( has_self == 3 )
+	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
 
 	Object* method_self;
@@ -813,6 +813,9 @@ void do_vector_reduce( Frame *frame )
 	}
 
 	size_t sz = self->v->size();
+	if( sz < 2 )
+		throw RuntimeException( "A vector on which the built-in method 'reduce' is called must contain at least two items." );
+
 	// first iteration uses the last two items in the vector
 	ex->PushStack( self->v->operator[]( sz-2 ) );
 	ex->PushStack( self->v->operator[]( sz-1 ) );
@@ -890,7 +893,7 @@ void do_vector_any( Frame *frame )
 	bool has_self = is_method && num_args == 3;
 
 	// a non-method can't have an object passed as argument #2
-	if( has_self == 3 )
+	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
 
 	Object* method_self;
@@ -957,7 +960,7 @@ void do_vector_all( Frame *frame )
 	bool has_self = is_method && num_args == 3;
 
 	// a non-method can't have an object passed as argument #2
-	if( has_self == 3 )
+	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
 
 	Object* method_self;
