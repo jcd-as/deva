@@ -62,7 +62,7 @@ Compiler::Compiler( Semantics* sem ) :
 	in_class( false ),
 	in_constructor( false ),
 	is_dot_rhs( false ),
-	in_for_loop( 0 )
+	loop_kind( loopNone )
 {
 	// create the instruction stream
 	is = new InstructionStream();
@@ -902,7 +902,7 @@ void Compiler::ReturnOp( bool no_val /*= false*/ )
 	{
 		// if we're inside a 'for' loop we need to emit a pop instruction too, 
 		// as for loops have a loop collection var on the stack
-		if( in_for_loop )
+		if( InForLoop() )
 			Emit( op_pop );
 		Emit( op_push_null );
 	}
@@ -911,7 +911,7 @@ void Compiler::ReturnOp( bool no_val /*= false*/ )
 	{
 		// if we're inside a 'for' loop we need to emit a pop instruction too, 
 		// as for loops have a loop collection var on the stack
-		if( in_for_loop )
+		if( InForLoop() )
 		{
 			// the code to get the return value on the stack is already generated,
 			// so we need to swap the tos and tos1 and then pop the loop

@@ -1,3 +1,12 @@
+# BUG: fcn corrupts the stack because it thinks it is returning from inside a
+# for loop - the compiler detection for being inside a for loop is incorrect
+local v = [0,1,2,3];
+for( i in v )
+{
+	def fcn(){ return 4; }
+	print( fcn() );
+}
+
 # test import:
 #import foo;
 ##local x = foo.bar;

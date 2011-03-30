@@ -80,8 +80,8 @@ block
 	;
 
 func_decl[char* classname]
-@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); } }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; compiler->in_loop.push_back(0); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); compiler->in_loop.pop_back(); } }
 	:	^(Def id=ID 
 		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
 		arg_list_decl block) 
@@ -104,6 +104,8 @@ base_class
 	;
 
 while_statement 
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->IncWhileLoopCounter(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->DecWhileLoopCounter(); } }
 	:	^(While { compiler->WhileOpStart(); }
 			^(Condition con=exp[false,NULL]) { compiler->WhileOpConditionJump(); }
 			block { compiler->WhileOpEnd(); }
@@ -111,8 +113,8 @@ while_statement
 	;
 
 for_statement 
-@init { if( PSRSTATE->backtracking == 0 ){ compiler->in_for_loop++; compiler->AddScope(); } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->in_for_loop--; compiler->LeaveScope(); } }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->IncForLoopCounter(); compiler->AddScope(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->DecForLoopCounter(); compiler->LeaveScope(); } }
 	:	^(For in_exp block) { if( PSRSTATE->backtracking == 0 ) compiler->ForOpEnd(); }
 	;
 
