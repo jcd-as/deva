@@ -19,8 +19,9 @@ local a = new A();
 for( i in range( 0, 10 ) )
 {
 	print( i );
-	def brk(){ if( i > 4 ) break; }
-	brk();
+	def brk(){ if( i > 4 ) return true; }
+	if( brk() )
+		break;
 	continue;
 }
 

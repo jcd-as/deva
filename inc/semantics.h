@@ -84,7 +84,10 @@ struct Semantics
 	bool rhs_of_dot;
 
 	// loop tracking
-	int in_loop;
+	// vector of 'in-loop' counters, one for each function scope
+	// if the back item is non-zero then we are inside a loop construct
+	vector<int> in_for_loop;
+	vector<int> in_while_loop;
 
 	// constructor
 	Semantics() : //show_warnings( warn ),
@@ -94,12 +97,13 @@ struct Semantics
 		making_call( false ),
 		in_fcn( 0 ),
 		in_map_key( false ),
-		rhs_of_dot( false ),
-		in_loop( false )
+		rhs_of_dot( false )
 	{
 		// setup the global scope (a fcn scope called "@main")
 		PushScope( (char*)"@main" );
 		global_scope = current_scope;
+		in_for_loop.push_back( 0 );
+		in_while_loop.push_back( 0 );
 	}
 	// destructor
 	~Semantics()
@@ -115,6 +119,14 @@ struct Semantics
 	/////////////////////////////////////////////////////////////////////////////
 	
 	void DumpSymbolTable();
+
+	// loop tracking ////////////////////////////////////////////////////////////
+	bool InForLoop() { return in_for_loop.back() > 0; }
+	bool InWhileLoop() { return in_while_loop.back() > 0; }
+	void IncForLoopCounter(){ int i = in_for_loop.back(); in_for_loop.pop_back(); i++; in_for_loop.push_back( i ); }
+	void DecForLoopCounter(){ int i = in_for_loop.back(); in_for_loop.pop_back(); i--; in_for_loop.push_back( i ); }
+	void IncWhileLoopCounter(){ int i = in_while_loop.back(); in_while_loop.pop_back(); i++; in_while_loop.push_back( i ); }
+	void DecWhileLoopCounter(){ int i = in_while_loop.back(); in_while_loop.pop_back(); i--; in_while_loop.push_back( i ); }
 
 	// scope & symbol table handling ////////////////////////////////////////////
 

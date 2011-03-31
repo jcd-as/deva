@@ -550,7 +550,7 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 void Semantics::CheckBreakContinue( pANTLR3_BASE_TREE node )
 {
 	// invalid if we're not inside a loop
-	if( in_loop == 0 )
+	if( !InForLoop() && !InWhileLoop() )
 		throw SemanticException( "Invalid 'break' or 'continue': must be inside a loop.", node->getLine(node) );
 }
 

@@ -61,8 +61,7 @@ Compiler::Compiler( Semantics* sem ) :
 	is_method( false ),
 	in_class( false ),
 	in_constructor( false ),
-	is_dot_rhs( false ),
-	loop_kind( loopNone )
+	is_dot_rhs( false )
 {
 	// create the instruction stream
 	is = new InstructionStream();
@@ -125,6 +124,10 @@ Compiler::Compiler( Semantics* sem ) :
 		f->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
 	ex->AddFunction( "@main", f );
+
+	// with its loop-tracking variables
+	in_for_loop.push_back( 0 );
+	in_while_loop.push_back( 0 );
 
 	// set-up the scope stack to match
 	AddScope();
@@ -275,6 +278,8 @@ void Compiler::EndFun()
 
 	// back-patch the jump over fcn body
 	BackpatchToCur();
+
+	fcn_scope_stack.pop_back();
 }
 
 // define a class

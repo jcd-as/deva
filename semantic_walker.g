@@ -77,7 +77,8 @@ block
 	;
 
 func_decl[char* classname]
-@after { semantics->in_fcn--; semantics->PopScope(); }
+@init { semantics->in_for_loop.push_back( 0 ); semantics->in_while_loop.push_back( 0 ); }
+@after { semantics->in_fcn--; semantics->PopScope(); semantics->in_for_loop.pop_back(); semantics->in_while_loop.pop_back(); }
 	:	^(Def id=ID 
 		{ semantics->in_fcn++; semantics->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); semantics->PushScope( (char*)$ID.text->chars, classname ); if( classname ) semantics->DefineVar( (char*)"self", $id->getLine($id), mod_local ); }
 		arg_list_decl { semantics->CheckAndResetFun( $id->getLine($id) ); }
@@ -97,14 +98,14 @@ class_decl
 	;
 
 while_statement 
-@init { semantics->in_loop++; }
-@after { semantics->in_loop--; }
+@init { semantics->IncWhileLoopCounter(); }
+@after { semantics->DecWhileLoopCounter(); }
 	:	^(While ^(Condition con=exp[false]) block) { semantics->CheckConditional( $con.start ); }
 	;
 
 for_statement 
-@init { semantics->in_loop++; semantics->PushScope(); }
-@after { semantics->in_loop--; semantics->PopScope(); }
+@init { semantics->IncForLoopCounter(); semantics->PushScope(); }
+@after { semantics->DecForLoopCounter(); semantics->PopScope(); }
 	:	^(For in_exp block)
 	;
 

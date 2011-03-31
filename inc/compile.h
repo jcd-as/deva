@@ -106,13 +106,6 @@ private:
 	}
 };
 
-enum loopKind
-{
-	loopNone,
-	loopWhile,
-	loopFor
-};
-
 class Compiler
 {
 private:
@@ -151,11 +144,8 @@ public:
 	// are we in a loop? 
 	// vector of 'in-loop' counters, one for each function scope
 	// if the back item is non-zero then we are inside a loop construct
-	vector<int> in_loop;
-	// flag to indicate what kind of loop we're in
-	// (just because this flag is set, doesn't mean we ARE in a loop, but if we
-	// are in a loop then the flag will indicate what kind of loop it is)
-	loopKind loop_kind;
+	vector<int> in_for_loop;
+	vector<int> in_while_loop;
 
 	// instruction stream
 	InstructionStream* is;
@@ -163,8 +153,8 @@ public:
 	// private helper functions
 	/////////////////////////////////////////////////////////////////////////
 private:
-	bool InForLoop() { return in_loop.back() > 0 && loop_kind == loopFor; }
-	bool InWhileLoop() { return in_loop.back() > 0 && loop_kind == loopWhile; }
+	bool InForLoop() { return in_for_loop.back() > 0; }
+	bool InWhileLoop() { return in_while_loop.back() > 0; }
 
 	// find index of constant
 	int GetConstant( const Object & o ) { return ex->FindConstant( o ); }
@@ -276,14 +266,11 @@ public:
 	void ElseOpJump();
 	void ElseOpEndLabel();
 
-	// TODO: THIS WON'T WORK. WHEN WE DECREMENT THE COUNTER, WE DON'T KNOW WHICH
-	// KIND OF LOOP WE'RE GOING BACK INTO. NEED TO TRACK THE TWO LOOP TYPES WITH
-	// SEPARATE STACKS.
 	// loop tracking
-	void IncForLoopCounter(){ int i = in_loop.back(); in_loop.pop_back(); i++; in_loop.push_back( i ); loop_kind = loopFor; }
-	void DecForLoopCounter(){ int i = in_loop.back(); in_loop.pop_back(); i--; in_loop.push_back( i ); }
-	void IncWhileLoopCounter(){ int i = in_loop.back(); in_loop.pop_back(); i++; in_loop.push_back( i ); loop_kind = loopWhile; }
-	void DecWhileLoopCounter(){ int i = in_loop.back(); in_loop.pop_back(); i--; in_loop.push_back( i ); }
+	void IncForLoopCounter(){ int i = in_for_loop.back(); in_for_loop.pop_back(); i++; in_for_loop.push_back( i ); }
+	void DecForLoopCounter(){ int i = in_for_loop.back(); in_for_loop.pop_back(); i--; in_for_loop.push_back( i ); }
+	void IncWhileLoopCounter(){ int i = in_while_loop.back(); in_while_loop.pop_back(); i++; in_while_loop.push_back( i ); }
+	void DecWhileLoopCounter(){ int i = in_while_loop.back(); in_while_loop.pop_back(); i--; in_while_loop.push_back( i ); }
 
 	// while statement
 	void WhileOpStart();

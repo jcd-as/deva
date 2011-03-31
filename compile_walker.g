@@ -80,8 +80,8 @@ block
 	;
 
 func_decl[char* classname]
-@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; compiler->in_loop.push_back(0); } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); compiler->in_loop.pop_back(); } }
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; compiler->in_for_loop.push_back(0); compiler->in_while_loop.push_back(0); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); compiler->in_for_loop.pop_back(); compiler->in_while_loop.pop_back(); } }
 	:	^(Def id=ID 
 		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
 		arg_list_decl block) 
