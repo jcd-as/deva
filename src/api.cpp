@@ -119,7 +119,7 @@ PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 	return ret;
 }
 
-void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags )
+void PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags flags )
 {
 	pcompile_walker cmpPsr;
 
@@ -132,7 +132,7 @@ void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags )
 	// TODO: other flags (debug et al)
 	ex->trace = flags.trace;
 
-	compiler = new Compiler( semantics );
+	compiler = new Compiler( module_name, semantics );
 
 	cmpPsr = compile_walkerNew( p1rv.nodes );
 	cmpPsr->translation_unit( cmpPsr );
@@ -141,10 +141,10 @@ void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags )
 	cmpPsr->free( cmpPsr );      
 }
 
-PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )
+PassOneReturnValue Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )
 {
 	PassOneReturnValue p1rv = PassOne( prv, p1flags );
-	PassTwo( p1rv, p2flags );
+	PassTwo( module_name, p1rv, p2flags );
 	return p1rv;
 }
 

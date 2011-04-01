@@ -61,7 +61,7 @@ TODO 2011-02-01 @deva +veryhigh import/modules
 	- each module needs its own 'main' Frame (e.g. 'main@foo') so it will have (persistent) locals. if these are pushed onto the callstack (which makes a sort of sense), then there needs to be some mechanism whereby to remove them... since they won't be removed by normal 'leave' ops
 	- name lookup (foo.bar needs to check for bar in module foo) for tbl_load, tbl_store and method_load
 
-TODO 2011-03-02 @deva +veryhigh implement modules (math, bit, os, re et al)
+TODO 2011-03-02 @deva +veryhigh implement built-in modules (math, bit, os, re et al)
 
 TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
 

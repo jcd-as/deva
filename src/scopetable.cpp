@@ -40,10 +40,6 @@ namespace deva
 
 Scope::~Scope()
 {
-	// if we have a namespace name, delete it
-	if( name )
-		delete [] name;
-
 	// release-ref and 'zero' out the locals, to error out in case they get 
 	// accidentally used after they should be gone, and to ensure they aren't 
 	// DecRef'd again if/when a new value is assigned to them (e.g. in a loop)
@@ -102,6 +98,17 @@ const char* Scope::FindSymbolName( Object* o )
 	return NULL;
 }
 
+vector<Function*> Scope::GetFunctions()
+{
+	vector<Function*> fcns;
+	for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
+	{
+		if( i->second->type == obj_function )
+			fcns.push_back( i->second->f );
+	}
+	return fcns;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // ScopeTable methods:
 /////////////////////////////////////////////////////////////////////////////
@@ -117,14 +124,20 @@ ScopeTable::~ScopeTable()
 
 void ScopeTable::PopScope()
 { 
-	// if this is the last scope (main), we need to free up the executor's
-	// error object (because it will go into the dead pool, which the scope
-	// cleans up - if we wait for the Executor's destructor, the scope will 
-	// already be deleted and it will be too late to add things to the dead
-	// pool and thus will leak)
-	if( data.size() ==1 )
-		ex->DeleteErrorObject();
-	delete data.back();
+	Scope* s = data.back();
+	// module scopes are not deleted by the ScopeTable, but rather by the executor,
+	// on exit
+	if( !s->IsModule() )
+	{
+		// if this is the last scope (main), we need to free up the executor's
+		// error object (because it will go into the dead pool, which the scope
+		// cleans up - if we wait for the Executor's destructor, the scope will 
+		// already be deleted and it will be too late to add things to the dead
+		// pool and thus will leak)
+		if( data.size() == 1 )
+			ex->DeleteErrorObject();
+		delete data.back();
+	}
 	data.pop_back();
 }
 

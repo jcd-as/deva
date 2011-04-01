@@ -237,6 +237,8 @@ void IncRef( Object & o );
 void IncRefChildren( Object & o );
 int DecRef( Object & o );
 
+class Module;
+
 struct Function
 {
 	// name
@@ -258,7 +260,14 @@ struct Function
 	// offset in code section of the code for this function
 	dword addr;
 
-	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ) {}
+	// does this function reside in a module? (not in 'main')
+	bool in_module;
+	// module the fcn resides in, NULL if 'main' or unset
+	// (pointer is not set at creation time if the function is in a module,
+	// it won't be set until the first call to it)
+	Module* module;
+
+	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ), module( NULL ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
 	inline size_t NumDefaultArgs() { return default_args.Size(); }

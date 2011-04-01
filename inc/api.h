@@ -80,12 +80,12 @@ struct PassOneReturnValue
 };
 
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM in );
-ParseReturnValue Parse( const char* filename );
+ParseReturnValue Parse( const char* module );
 // free parser memory, call after completely finished with parser items, ast etc
 void FreeParseReturnValue( ParseReturnValue & prv );
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags );
-void PassTwo( PassOneReturnValue p1rv, PassTwoFlags flags );
-PassOneReturnValue Compile( ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
+void PassTwo( const char* filename, PassOneReturnValue p1rv, PassTwoFlags flags );
+PassOneReturnValue Compile( const char* filename, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
 // free pass one/compilation memory, call after finished compiling, using ast
 void FreePassOneReturnValue( PassOneReturnValue & p1rv );
 

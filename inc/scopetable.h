@@ -46,10 +46,7 @@ namespace deva
 
 class Scope
 {
-	// the name of the scope, if the scope is a namespace (module)
-	// otherwise, NULL
-	char* name;
-
+	bool is_module;
 	// pointers to:
 	// - locals (actual objects stored in the frame, but the scope
 	// controls freeing objects when they go out of scope) and
@@ -58,10 +55,9 @@ class Scope
 	map<string, Object*> data;
 
 public:
-	Scope() : name( NULL ) {}
-	Scope( char* n ) : name( n ) {}
+	Scope( bool is_mod = false ) : is_module( is_mod ) {}
 	~Scope();
-	const char* Name() { return name; }
+	inline bool IsModule() { return is_module; }
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
 	// THE EXECUTOR!)
 	inline void AddSymbol( string name, Object* ob )
@@ -76,6 +72,8 @@ public:
 	Object* FindSymbol( const char* name ) const;
 	int FindSymbolIndex( Object* o, Frame* f ) const;
 	const char* FindSymbolName( Object* o );
+
+	vector<Function*> GetFunctions();
 };
 
 class ScopeTable
@@ -86,6 +84,7 @@ public:
 	~ScopeTable();
 	inline void PushScope( Scope* s ) { data.push_back( s ); }
 	void PopScope();
+	void PopModuleScope();
 	inline Scope* CurrentScope() const { return data.back(); }
 	inline Scope* At( size_t idx ) const { return data[idx]; }
 	Object* FindSymbol( const char* name, bool local_only = false ) const;

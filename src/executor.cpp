@@ -134,6 +134,11 @@ Executor::~Executor()
 		ObjectType type = constants.at( i ).type;
 		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
 	}
+	// free the module objects
+	for( map<string, Module*>::iterator i = modules.begin(); i != modules.end(); ++i )
+	{
+		delete i->second;
+	}
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
@@ -175,8 +180,13 @@ Object* Executor::FindSymbol( const char* name, const char* module /*= NULL*/ )
 {
 	if( module )
 	{
-		// TODO: look for the scope with the given name
-		return scopes->FindSymbol( name );
+		// find the named module
+		map<string, Module*>::iterator i = modules.find( string( module ) );
+		if( i == modules.end() )
+			return NULL;
+		Scope* scope = i->second->scope;
+		Object* o = scope->FindSymbol( name );
+		return o;
 	}
 	else
 		return scopes->FindSymbol( name );
@@ -312,17 +322,10 @@ void Executor::Execute( const Code* const code )
 	// add it to that frame's strings collection (i.e. call
 	// CurrentFrame()->AddString())
 
-//	Opcode op = op_nop;
-
-//	end = code->code + code->len;
-//	bp = code->code;
-//	ip = bp;
-
 	scopes = new ScopeTable();
 
 	// a starting ('global') frame
 	Object *main = FindFunction( string( "@main" ), 0 );
-//	Frame* frame = new Frame( NULL, scopes, bp, bp, 0, main->f );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
@@ -334,10 +337,6 @@ void Executor::Execute( const Code* const code )
 
 	// execute until end
 	ExecuteCode( code );
-//	while( ip < end && op < op_halt )
-//	{
-//		op = ExecuteInstruction();
-//	}
 
 	// pop the 'global' scope
 	PopScope();
@@ -390,6 +389,9 @@ bool if_step_ex( Object )
 	else
 		return true;
 }
+
+// static used for importing modules
+static Module* s_currently_importing_module = NULL;
 
 Opcode Executor::ExecuteInstruction()
 {
@@ -777,6 +779,9 @@ Opcode Executor::ExecuteInstruction()
 		Object* objf = FindFunction( name, (size_t)arg3 );
 		if( !objf )
 			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
+		// if we're currently importing a module, set the functions module ptr
+		if( s_currently_importing_module )
+			objf->f->module = s_currently_importing_module;
 		// is there a local of this name that we need to override?
 		Object* local_obj = CurrentScope()->FindSymbol( fcnname.s );
 		if( local_obj )
@@ -1639,7 +1644,7 @@ Opcode Executor::ExecuteInstruction()
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
-		// TODO: module/namespace lookup
+		// TODO: correct module/namespace lookup
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
@@ -1774,11 +1779,27 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_string )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
+		// TODO: correct module/namespace lookup
+		if( lhs.type == obj_symbol_name )
+		{
+			// TODO: is this runtime error or ICE?
+			if( rhs.type != obj_string )
+				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+			// see if there is a module with this name
+			if( module_names.count( string( lhs.s ) ) == 0 )
+				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+			// look up the rhs as a symbol in the module
+			Object* obj = FindSymbol( rhs.s, lhs.s );
+			if( !obj )
+				throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
+			IncRef( *obj );
+			stack.push_back( *obj );
+		}
 		// string:
-		if( lhs.type == obj_string )
+		else if( lhs.type == obj_string )
 		{
 			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
 				throw RuntimeException( boost::format( "Expected method name, found '%1%'." ) % rhs );
@@ -2933,6 +2954,23 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	if( (f->num_args - num_args) > (dword)f->NumDefaultArgs() )
 		throw RuntimeException( boost::format( "Not enough arguments passed to function '%1%'." ) % f->name );
 
+	// if this is a module, push the module scope and frame
+	// and set the ip, bp, end ptrs
+	byte *orig_ip, *orig_bp, *orig_end;
+	if( f->in_module )
+	{
+		// TODO: do we need to assert that the module was set??
+		// assert( f->module != NULL );
+		PushFrame( f->module->frame );
+		PushScope( f->module->scope );
+		orig_end = end;
+		orig_bp = bp;
+		orig_ip = ip;
+		bp = f->module->code->code;
+		end = bp + f->module->code->len;
+		ip = bp;
+	}
+
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
@@ -2979,6 +3017,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 			frame->SetLocal( num_args+i, o );
 		}
 	}
+
 	// push the frame onto the callstack
 	PushFrame( frame );
 	PushScope( scope );
@@ -2995,6 +3034,17 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	ExecuteToReturn( is_destructor );
 	if( stack.size() != stack_size + 1 )
 		throw ICE( boost::format( "Function '%1%' corrupted the stack." ) % f->name );
+
+	// if this is a module, pop the module scope and frame
+	// and restore the ip, bp and end ptrs
+	if( f->in_module )
+	{
+		PopScope();
+		PopFrame();
+		end = orig_end;
+		bp = orig_bp;
+		ip = orig_ip;
+	}
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )
@@ -3147,7 +3197,7 @@ string Executor::FindModule( string mod )
 }
 
 // helper fcn for parsing and compiling a module
-const Code* const Executor::LoadModule( string fname )
+const Code* const Executor::LoadModule( string module_name, string fname )
 {
 	ParseReturnValue prv;
 	PassOneReturnValue p1rv;
@@ -3168,7 +3218,7 @@ const Code* const Executor::LoadModule( string fname )
 		p1rv = PassOne( prv, p1f );
 
 		// PASS TWO: compile
-		PassTwo( p1rv, p2f );
+		PassTwo( module_name.c_str(), p1rv, p2f );
 		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
 
 		// free parser, compiler memory
@@ -3187,6 +3237,14 @@ const Code* const Executor::LoadModule( string fname )
 		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % fname );
 }
 
+Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f )
+{
+	// add the module to the collection
+	Module* mod = new Module( c, s, f );
+	modules.insert( pair<string, Module*>(name, mod ) );
+	return mod;
+}
+
 bool Executor::ImportModule( const char* module_name )
 {
 	// TODO: need to track a current callstack (Frame stack) as well as current
@@ -3199,7 +3257,7 @@ bool Executor::ImportModule( const char* module_name )
 
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
-	if( imported_module_names.count( string( module_name ) ) != 0 )
+	if( modules.count( string( module_name ) ) != 0 )
 		return true;
 
 	// otherwise look for the .dv/.dvc file to import
@@ -3220,24 +3278,40 @@ bool Executor::ImportModule( const char* module_name )
 	string mod( module_name );
 	mod = get_file_part( mod );
 
-	// TODO: need a new frame for the module
-	// if it is pushed onto the callstack, how/when will it be popped???
-//	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
-//	PushFrame( frame );
+	// load (compile) the module
+	const Code* code = LoadModule( mod, dvfile );
+	if( !code )
+		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
 
-	// create a 'file/module' level scope for the namespace
-	PushScope( new Scope( copystr( mod ) ) );
+	// create a new module and add it to the module collection
+	// find our 'module' function, "module@main"
+	Object *mod_main = FindFunction( mod + "@main", 0 );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, mod_main->f, true );
+	PushFrame( frame );
+	Scope* scope = new Scope( true );
+	PushScope( scope );
+	Module* cur_module = AddModule( mod.c_str(), code, scope, frame );
+
 //	// compile the file, if needed
 //	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 //	// and then run the file
 //	RunFile( dvcfile.c_str() );
 
-	// load (compile) the module
-	const Code* code = LoadModule( dvfile );
-	if( !code )
-		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
+	// currently importing 'mod', set the flag
+	Module* prev_mod = s_currently_importing_module;
+	s_currently_importing_module = cur_module;
+
 	// execute it
 	ExecuteCode( code );
+	
+	// no longer importing this module, reset the flag
+	s_currently_importing_module = prev_mod;
+
+	// pop the scope and frame (because these are _module_-level scopes and
+	// frames they will not be deleted - the Module object has a ptr to them
+	// which will be deleted at exit)
+	PopScope();
+	PopFrame();
 	
 	// restore the ip, bp and end ptrs
 	ip = orig_ip;

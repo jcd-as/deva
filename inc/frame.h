@@ -47,6 +47,7 @@ namespace deva
 
 class Frame
 {
+	bool is_module;
 	Frame* parent;
 
 	union
@@ -79,9 +80,10 @@ class Frame
 	// TODO: what else? debugging info?
 	
 public:
-	Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f );
+	Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f, bool is_mod = false );
 	Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, NativeFunction f );
 	~Frame();
+	inline bool IsModule() { return is_module; }
 	inline Frame* GetParent() { return parent; }
 	inline bool IsNative() const { return is_native; }
 	inline Function* GetFunction() const { return (is_native ? NULL : function ); }

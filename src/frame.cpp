@@ -40,7 +40,8 @@ namespace deva
 {
 
 
-Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f ) :
+Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, Function* f, bool is_mod /*= false*/ ) :
+	is_module( is_mod ),
 	parent( p ),
 	function( f ), 
 	is_native( false ), 
@@ -55,6 +56,7 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, F
 }
 
 Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, NativeFunction f ) :
+	is_module( false ),
 	parent( p ),
 	native_function( f ), 
 	is_native( true ), 

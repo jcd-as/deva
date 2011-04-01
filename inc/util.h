@@ -51,6 +51,7 @@ extern const char* env_var_path_seps;
 
 string get_cwd();
 string get_extension( string & path );
+string get_stem( string & path );
 string get_file_part( string & path );
 string get_dir_part( string & path );
 bool exists( string & path );

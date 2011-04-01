@@ -53,9 +53,10 @@ static vector< vector<dword>* > loop_break_locations;
 static vector<dword> fcn_scope_stack;
 
 
-Compiler::Compiler( Semantics* sem ) : 
+Compiler::Compiler( const char* mod_name, Semantics* sem ) : 
 	emit_debug_info( true ),
 	max_scope_idx( 0 ),
+	module_name( mod_name ),
 	num_locals( 0 ),
 	fcn_nesting( 0 ),
 	is_method( false ),
@@ -108,7 +109,7 @@ Compiler::Compiler( Semantics* sem ) :
 		delete [] *i;
 	}
 
-	// add our 'global' function, "@main"
+	// add our 'global' function, "[module]@main"
 	FunctionScope* scope = dynamic_cast<FunctionScope*>(sem->global_scope);
 	Function* f = new Function();
 	f->name = string( "@main" );
@@ -123,7 +124,15 @@ Compiler::Compiler( Semantics* sem ) :
 	{
 		f->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
-	ex->AddFunction( "@main", f );
+	// compiling a module?
+	f->module = NULL;
+	if( !module_name || strlen( module_name ) == 0 )
+		f->in_module = false;
+	else
+		f->in_module = true;
+	string fcnname = module_name;
+	fcnname += "@main";
+	ex->AddFunction( fcnname.c_str(), f );
 
 	// with its loop-tracking variables
 	in_for_loop.push_back( 0 );
@@ -225,6 +234,13 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn->addr = is->Length();
+
+	// compiling a module?
+	fcn->module = NULL;
+	if( !module_name || strlen( module_name ) == 0 )
+		fcn->in_module = false;
+	else
+		fcn->in_module = true;
 
 	// add the locals
 	for( size_t i = 0; i < scope->GetLocals().size(); i++ )

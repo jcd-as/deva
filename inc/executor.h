@@ -39,6 +39,7 @@
 #include "util.h"
 #include "scopetable.h"
 #include "frame.h"
+#include "module.h"
 #include "builtins.h"
 #include "string_builtins.h"
 #include "vector_builtins.h"
@@ -102,8 +103,8 @@ class Executor
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
-	// list of modules that have been imported
-	set<string> imported_module_names;
+	// modules that have been imported
+	map<string, Module*> modules;
 
 	// set of function objects
 	multimap<string, Object*> functions;
@@ -135,10 +136,10 @@ public:
 	inline Frame* MainFrame() { return callstack[0]; }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
-	inline void PopFrame() { delete callstack.back(); callstack.pop_back(); }
+	inline void PopFrame() { if( !callstack.back()->IsModule() ) delete callstack.back(); callstack.pop_back(); }
 
 	inline void PushScope( Scope* s ) { scopes->PushScope( s ); }
-	inline void PopScope() { if( CurrentScope()->Name() ) imported_module_names.erase( string( CurrentScope()->Name() ) ); scopes->PopScope(); }
+	inline void PopScope() { scopes->PopScope(); }
 
 	inline void PushStack( Object o ) { stack.push_back( o ); }
 	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
@@ -154,6 +155,8 @@ private:
 
 	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
 	Object ResolveSymbol( Object sym );
+
+	Module* AddModule( const char* name, const Code* c, Scope* s, Frame* f );
 
 public:
 
@@ -196,7 +199,7 @@ private:
 	// helper fcn for ImportModule:
 	string FindModule( string mod );
 	// helper fcn for parsing and compiling a module
-	const Code* const LoadModule( string path );
+	const Code* const LoadModule( string module_name, string path );
 	bool ImportModule( const char* module_name );
 
 	// debug and output methods:

@@ -57,6 +57,12 @@ string get_extension( string & path )
 	return p.extension();
 }
 
+string get_stem( string & path )
+{
+	filesystem::path p( path );
+	return p.stem();
+}
+
 string get_file_part( string & path )
 {
 	filesystem::path p( path );
