@@ -10,7 +10,6 @@ TODO 2011-03-09 @deva +medium fix minor issues with tests:
 
 TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
-	28 (import NYI)
 	29 (import NYI, .dvc NYI)
 	37 (bit module NYI)
 	38 (math module NYI)
@@ -50,7 +49,10 @@ DONE 2011-02-27 @deva +veryhigh implement string builtins!!
     :LOGBOOK:
         DONE: 2011-03-09 19:46:05
 
-TODO 2011-02-01 @deva +veryhigh import/modules
+DONE 2011-02-01 @deva +veryhigh import/modules
+    CLOSED: 2011-04-01 16:57:59
+    :LOGBOOK:
+        DONE: 2011-04-01 16:57:59
 	better module/package architecture: allow packages (dirs) of modules? 
 	how do modules work? (each module is compiled into a separate code block, which means the 'import' op needs to create the new code block. all fcns in the module are inside this code block, just like the 'main' code block
 	ISSUE: modules need to reside in their own "namespace" with their own Executor object, or else they can't be loaded as precompiled .dvc files, because the indices in the constant pool will be different for the module when loaded solo vs loaded as an import. _OR_ they could be 'fixed' up at load time by adding the appropriate offset to every constant load...
