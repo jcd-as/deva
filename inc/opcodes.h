@@ -140,6 +140,7 @@ enum Opcode
 	op_def_local0, op_def_local1, op_def_local2, op_def_local3, op_def_local4,
 	op_def_local5, op_def_local6, op_def_local7, op_def_local8, op_def_local9,
 	op_def_function,// create a new local function object. <Op0> has <constant index of> function name, <Op1> has address
+	op_def_method,// create a new method object. <Op0> has <constant index of> function name, <Op1> has the <constant index of> class name, <Op2> has address
 	op_new_map,		// create a new map object and push onto tos. <Op0> has count of items on stack
 	op_new_vec,		// create a new vector object and push onto tos. <Op0> has count of items on stack
 	op_new_class,	// create a new class object and push onto the tos. <Op0> has count of items on stack
@@ -207,7 +208,7 @@ enum Opcode
 
 	op_import,
 
-	// 117 (update as opcodes are added above)
+	// 118 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };

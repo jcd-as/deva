@@ -49,6 +49,11 @@ DONE 2011-02-27 @deva +veryhigh implement string builtins!!
     :LOGBOOK:
         DONE: 2011-03-09 19:46:05
 
+DONE 2011-04-01 @deva +veryhigh importing (modules w/) classes w/ constructors/destructors segfaults (see deva-files/foo.dv). also calling methods on imported classes
+    CLOSED: 2011-04-01 20:13:33
+    :LOGBOOK:
+        DONE: 2011-04-01 20:13:33
+
 DONE 2011-02-01 @deva +veryhigh import/modules
     CLOSED: 2011-04-01 16:57:59
     :LOGBOOK:

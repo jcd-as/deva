@@ -1,11 +1,19 @@
+class C
+{
+	def foo(){ print( "foo called" ); }
+}
+
+local c = new C();
+c.foo();
+
 # test import:
-import foo;
-#local x = foo.bar;
-#print( x );
-#print( foo.bar );
-foo.bar();
-print( foo.jam );
-print( "done" );
+#import foo;
+##local x = foo.bar;
+##print( x );
+##print( foo.bar );
+#foo.bar();
+#print( foo.jam );
+#print( "done" );
 
 # TEST error stack trace:
 #def Foo()

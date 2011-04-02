@@ -86,6 +86,7 @@ const char* opcodeNames[] =
 	"def_local8", 
 	"def_local9",
 	"def_function",
+	"def_method",
 	"new_map",
 	"new_vec",
 	"new_class",

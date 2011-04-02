@@ -193,16 +193,28 @@ void Compiler::ExitBlock()
 // define a function
 void Compiler::DefineFun( char* name, char* classname, int line )
 {
-	// generate def_function op
+	// generate def_function/def_method op
 	
+	int i = GetConstant( Object( obj_symbol_name, name ) );
+	if( i == -1 )
+		throw ICE( boost::format( "Cannot find constant '%1%' for function name." ) % name );
+
+	// methods emit an op_def_method instruction
+	if( classname )
+	{
+		// get the constant index of this class
+		int i2 = GetConstant( Object( obj_symbol_name, classname ) );
+		if( i2 == -1 )
+			throw ICE( boost::format( "Cannot find constant '%1%' for class name." ) % classname );
+
+		// add the size of 'op_def_method <Op0> <Op1> <Op2>' and 'jmp <Op0>'
+		int sz = sizeof( dword ) * 4 + 2;
+		Emit( op_def_method, (dword)i, (dword)i2, (dword)(is->Length() + sz) );
+	}
 	// non-methods: emit an op_def_function instruction
-	if( !classname )
+	else
 	{
 		// get the constant index of this function
-		//int i = GetConstant( Object( name ) );
-		int i = GetConstant( Object( obj_symbol_name, name ) );
-		if( i == -1 )
-			throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 		// add the size of 'op_def_function <Op0> <Op1>' and 'jmp <Op0>'
 		int sz = sizeof( dword ) * 3 + 2;
 		Emit( op_def_function, (dword)i, (dword)(is->Length() + sz) );

@@ -799,6 +799,41 @@ Opcode Executor::ExecuteInstruction()
 		CurrentScope()->AddFunction( name, objf );
 		}
 		break;
+	case op_def_method:
+		{
+		// 3 args: constant index of fcn name, const index of class name, address of fcn
+		arg = *((dword*)ip);
+		ip += sizeof( dword );
+		arg2 = *((dword*)ip);
+		ip += sizeof( dword );
+		arg3 = *((dword*)ip);
+		ip += sizeof( dword );
+
+		// if we're currently importing a module, set the functions module ptr
+		if( s_currently_importing_module )
+		{
+			// find the function name
+			Object fcnname = GetConstant( arg );
+			if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
+				throw ICE( "def_method instruction called with an object that is not a class name." );
+			string function_name( fcnname.s );
+			// find the class name
+			Object clsname = GetConstant( arg2 );
+			if( clsname.type != obj_string && clsname.type != obj_symbol_name )
+				throw ICE( "def_method instruction called with an object that is not a class name." );
+			string class_name( clsname.s );
+			function_name += "@";
+			function_name += class_name;
+
+			// find the function
+			Object* objf = FindFunction( function_name, (size_t)arg3 );
+			if( !objf )
+				throw RuntimeException( boost::format( "Function '%1%' not found." ) % function_name );
+
+			objf->f->module = s_currently_importing_module;
+		}
+		}
+		break;
 	case op_new_map:
 		{
 		// 1 arg: size
@@ -3475,6 +3510,21 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// look-up the constant
 		o = GetConstant( arg );
 		cout << arg << " (" << o << ")";
+		// address
+		arg = *((dword*)( p + sizeof( dword ) ) );
+		cout << ", " << arg;
+		ret = sizeof( dword ) * 2;
+		break;
+	case op_def_method:
+		// 3 args: constant index of function name, constant index of class name, fcn address
+		arg = *((dword*)p);
+		// look-up the function name constant
+		o = GetConstant( arg );
+		cout << arg << " (" << o;
+		// look-up the class name constant
+		arg = *((dword*)( p + sizeof( dword ) ) );
+		o = GetConstant( arg );
+		cout << "@" << o << ")";
 		// address
 		arg = *((dword*)( p + sizeof( dword ) ) );
 		cout << ", " << arg;
