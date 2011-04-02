@@ -3172,24 +3172,28 @@ string Executor::FindModule( string mod )
 	else
 	{
 		// get the DEVA env var
-		string devapath( getenv( "DEVA" ) );
-		// split it into separate paths (on the ":" char in un*x)
-		vector<string> paths;
-		split_env_var_paths( devapath, paths );
-		// for each of the paths, append the mod
-		// and see if it exists
-		for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
+		char* deva_env = getenv( "DEVA" );
+		if( deva_env )
 		{
-			modpath = join_paths( *it, mod );
-			// check for .dv/.dvc files on disk
-			struct stat statbuf;
-			// if we can't open the module file, error out
-			string dv = modpath + ".dv";
-			if( stat( dv.c_str(), &statbuf ) != -1 )
-				return modpath;
-			string dvc = modpath + ".dvc";
-			if( stat( dvc.c_str(), &statbuf ) != -1 )
-				return modpath;
+			string devapath( deva_env );
+			// split it into separate paths (on the ":" char in un*x)
+			vector<string> paths;
+			split_env_var_paths( devapath, paths );
+			// for each of the paths, append the mod
+			// and see if it exists
+			for( vector<string>::iterator it = paths.begin(); it != paths.end(); ++it )
+			{
+				modpath = join_paths( *it, mod );
+				// check for .dv/.dvc files on disk
+				struct stat statbuf;
+				// if we can't open the module file, error out
+				string dv = modpath + ".dv";
+				if( stat( dv.c_str(), &statbuf ) != -1 )
+					return modpath;
+				string dvc = modpath + ".dvc";
+				if( stat( dvc.c_str(), &statbuf ) != -1 )
+					return modpath;
+			}
 		}
 	}
 	// not found, error
