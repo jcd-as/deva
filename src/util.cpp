@@ -127,9 +127,9 @@ void split_env_var_paths( const string & var, vector<string> & paths )
 // 'out'
 void replace( string& src, const char* const in, const char* const out )
 {
-	int len = strlen( in );
+	int len = (int)strlen( in );
 	size_t pos = src.find( in );
-	int delta = strlen( out );
+	int delta = (int)strlen( out );
 	while( pos != string::npos )
 	{
 		// found 'in' at 'i'. replace with 'out'

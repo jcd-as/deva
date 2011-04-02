@@ -209,7 +209,7 @@ void do_vector_length( Frame *frame )
 	Object* po = helper.GetLocalN( 0 );
 	helper.ExpectType( po, obj_vector );
 
-	int len = po->v->size();
+	int len = (int)po->v->size();
 
 	helper.ReturnVal( Object( (double)len ) );
 }
@@ -362,7 +362,7 @@ void do_vector_remove( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'remove'." );
@@ -409,7 +409,7 @@ void do_vector_find( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'find'." );
@@ -467,7 +467,7 @@ void do_vector_rfind( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'rfind'." );
@@ -525,7 +525,7 @@ void do_vector_count( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'count'." );
@@ -535,7 +535,7 @@ void do_vector_count( Frame *frame )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'count': start is greater than end." );
 
 	// count the value
-	int num = count( self->v->begin() + start, self->v->begin() + end, *value );
+	int num = (int)count( self->v->begin() + start, self->v->begin() + end, *value );
 
 	helper.ReturnVal( Object( (double)num ) );
 }
@@ -567,7 +567,7 @@ void do_vector_reverse( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'reverse'." );
@@ -609,7 +609,7 @@ void do_vector_sort( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'sort'." );
@@ -835,7 +835,7 @@ void do_vector_reduce( Frame *frame )
 	// walk the rest of the items in the vector
 	if( self->v->size() > 2 )
 	{
-		for( int i = sz-3; i >= 0; i-- )
+		for( int i = (int)sz-3; i >= 0; i-- )
 		{
 			// push the item
 			ex->PushStack( self->v->operator[]( i ) );
@@ -1046,7 +1046,7 @@ void do_vector_slice( Frame *frame )
 	size_t sz = self->v->size();
 
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz || start < 0 )
 		throw RuntimeException( "Invalid 'start' argument in vector built-in method 'slice'." );

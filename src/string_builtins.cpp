@@ -294,7 +294,7 @@ void do_string_remove( Frame *frame )
 
 	size_t sz = strlen( self->s );
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'remove'." );
@@ -346,7 +346,7 @@ void do_string_find( Frame *frame )
 	size_t sz_val = strlen( val->s );
 	// if a sub-string length wasn't passed, use the entire search string
 	if( len == -1 )
-		len = sz_val;
+		len = (int)sz_val;
 	// nothing to find in an empty string, and an empty string will never be
 	// found
 	if( sz == 0 || sz_val == 0 || len == 0 )
@@ -385,7 +385,7 @@ void do_string_rfind( Frame *frame )
 	helper.ExpectType( val, obj_string );
 
 	// start arg defaults to end-of-string
-	long start = string::npos;
+	long start = (long)string::npos;
 	if( frame->NumArgsPassed() > 2 )
 	{
 		Object* startobj = helper.GetLocalN( 2 );
@@ -406,10 +406,10 @@ void do_string_rfind( Frame *frame )
 	size_t sz_val = strlen( val->s );
 	// convert a start val of '-1' into end-of-string
 	if( start == -1 )
-		start = string::npos;
+		start = (int)string::npos;
 	// if a sub-string length wasn't passed, use the entire search string
 	if( len == -1 )
-		len = sz_val;
+		len = (int)sz_val;
 	// nothing to find in an empty string, and an empty string will never be
 	// found
 	if( sz == 0 || sz_val == 0 || len == 0 )
@@ -463,7 +463,7 @@ void do_string_reverse( Frame *frame )
 
 	size_t sz = strlen( self->s );
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'reverse'." );
@@ -509,7 +509,7 @@ void do_string_sort( Frame *frame )
 
 	size_t sz = strlen( self->s );
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'sort'." );
@@ -564,7 +564,7 @@ void do_string_slice( Frame *frame )
 
 	size_t sz = strlen( self->s );
 	if( end == -1 )
-		end = sz;
+		end = (int)sz;
 
 	if( (size_t)start >= sz )
 		throw RuntimeException( "Invalid 'start' argument in string built-in method 'slice'." );

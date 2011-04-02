@@ -88,7 +88,7 @@ bool LocalScope::Define( const Symbol* const s )
 	{
 		FunctionScope* fun = getParentFun();
 		fun->GetLocals().push_back( string( s->Name() ) );
-		int idx = fun->GetLocals().size() -1;
+		int idx = (int)(fun->GetLocals().size() - 1);
 		local_map.insert( pair<string, int>( s->Name(), idx ) );
 	}
 

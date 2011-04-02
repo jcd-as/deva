@@ -205,7 +205,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 		// add the size of 'op_def_function <Op0> <Op1>' and 'jmp <Op0>'
 		int sz = sizeof( dword ) * 3 + 2;
-		Emit( op_def_function, i, is->Length() + sz );
+		Emit( op_def_function, (dword)i, (dword)(is->Length() + sz) );
 	}
 	
 	// generate jump around fcn so 'main' (or module 'global' as the case
@@ -233,7 +233,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->num_args = classname ? scope->NumArgs() + 1 : scope->NumArgs();
 	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
-	fcn->addr = is->Length();
+	fcn->addr = (dword)is->Length();
 
 	// compiling a module?
 	fcn->module = NULL;
@@ -949,7 +949,7 @@ void Compiler::ReturnOp( bool no_val /*= false*/ )
 void Compiler::ContinueOp()
 {
 	dword scopecount = loop_scope_stack.back();
-	dword address = labelstack.back();
+	dword address = (dword)labelstack.back();
 	Emit( op_exit_loop, address, scopecount );
 }
 
@@ -963,7 +963,7 @@ void Compiler::BreakOp()
 		throw ICE( "Invalid break statement: Not inside a loop.." );
 
 	Emit( op_exit_loop, (dword)-1, scopecount );
-	loop_break_locations.back()->push_back( is->Length() - (2 * sizeof(dword)) );
+	loop_break_locations.back()->push_back( (dword)(is->Length() - (2 * sizeof(dword))) );
 }
 
 

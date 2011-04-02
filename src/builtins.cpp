@@ -354,17 +354,17 @@ void do_length( Frame *frame )
 	// string
 	if( o->type == obj_string )
 	{
-		len = string( o->s ).size();
+		len = (int)string( o->s ).size();
 	}
 	// vector
 	else if( o->type == obj_vector )
 	{
-		len = o->v->size();
+		len = (int)o->v->size();
 	}
 	// map, class, instance
 	else if( o->type == obj_map || o->type == obj_class || o->type == obj_instance )
 	{
-		len = o->m->size();
+		len = (int)o->m->size();
 	}
 
 	helper.ReturnVal( Object( (double)len ) );
@@ -487,16 +487,16 @@ void do_num( Frame *frame )
 			d = 1.0;
 		break;
 	case obj_size:
-		d = o->sz;
+		d = (size_t)o->sz;
 		break;
 	case obj_native_obj:
-		d = (size_t)o->no;
+		d = (double)(size_t)o->no;
 		break;
 	case obj_native_function:
-		d = (size_t)o->nf.p;
+		d = (double)(size_t)o->nf.p;
 		break;
 	case obj_function:
-		d = (size_t)o->f->addr;
+		d = (double)(size_t)o->f->addr;
 		break;
 	case obj_null:
 		break;
@@ -532,8 +532,8 @@ void do_range( Frame *frame )
 	}
 	helper.ExpectIntegralNumber( startobj );
 	helper.ExpectIntegralNumber( endobj );
-	int start = startobj->d;
-	int end = endobj->d;
+	int start = (int)startobj->d;
+	int end = (int)endobj->d;
 
 	if( start < 0 || end < 0 || step < 0 )
 		throw RuntimeException( "Arguments to 'range' must be positive integral numbers." );
@@ -915,11 +915,11 @@ void do_writeline( Frame *frame )
 	Object* source = helper.GetLocalN( 1 );
 	helper.ExpectType( source, obj_string );
 	
-	int ret = 1;
+	bool ret = true;
 	if( fputs( source->s, (FILE*)(file->no) ) < 0 )
-		ret = 0;
+		ret = false;
 
-	helper.ReturnVal( Object( (bool)ret ) );
+	helper.ReturnVal( Object( ret ) );
 }
 
 void do_writelines( Frame *frame )

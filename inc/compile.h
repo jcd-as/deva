@@ -165,8 +165,8 @@ private:
 	// label and back-patching helpers
 	inline void AddLabel() { labelstack.push_back( is->Length() ); }
 	inline void AddPatchLoc() { patchstack.push_back( is->Length() - sizeof(dword) ); }
-	inline void BackpatchToCur() { is->Set( patchstack.back(), (size_t)is->Length() ); patchstack.pop_back(); }
-	inline void BackpatchToLastLabel() { is->Set( patchstack.back(), labelstack.back() ); patchstack.pop_back(); labelstack.pop_back(); }
+	inline void BackpatchToCur() { is->Set( patchstack.back(), (dword)is->Length() ); patchstack.pop_back(); }
+	inline void BackpatchToLastLabel() { is->Set( patchstack.back(), (dword)labelstack.back() ); patchstack.pop_back(); labelstack.pop_back(); }
 
 	// clean-up loop/break tracking helper
 	void CleanupEndLoop();

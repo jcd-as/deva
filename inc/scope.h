@@ -148,7 +148,7 @@ public:
 
 	// function scope methods
 	inline const int NumArgs() const { return numArgs; }
-	inline const int NumLocals() const { return locals.size(); }
+	inline const int NumLocals() const { return (int)locals.size(); }
 	inline OrderedMultiSet<Symbol*, SB_ptr_lt> & GetNames() { return names; }
 	inline OrderedSet<Object> & GetDefaultArgVals() { return default_arg_values; }
 	inline vector<string> & GetLocals() { return locals; }

@@ -151,7 +151,7 @@ void do_map_length( Frame *frame )
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectMapType( self );
 
-	int len = self->m->size();
+	int len = (int)self->m->size();
 
 	helper.ReturnVal( Object( (double)len ) );
 }

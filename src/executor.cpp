@@ -2862,7 +2862,7 @@ Opcode Executor::ExecuteInstruction()
 	case op_swap:	// tos = tos1; tos1 = tos
 		// verify the stack
 		{
-		int stack_size = stack.size();
+		int stack_size = (int)stack.size();
 		if( stack_size < 2 )
 			throw ICE( "Stack error: not enough elements on the stack for 'swap' instruction." );
 		Object tmp = stack[stack_size-1];
@@ -3009,7 +3009,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	int num_defaults = f->num_args - num_args;
 	if( num_defaults != 0 )
 	{
-		int non_defaults = f->num_args - f->default_args.Size();
+		int non_defaults = (int)(f->num_args - f->default_args.Size());
 		for( int i = 0; i < num_defaults; i++ )
 		{
 			int idx = f->default_args.At( num_args + i - non_defaults );
@@ -3659,9 +3659,9 @@ void Executor::DumpFunctions()
 void Executor::DumpConstantPool()
 {
 	cout << "Constant data pool:" << endl;
-	for( size_t i = 0.; i < NumConstants(); i++ )
+	for( size_t i = 0; i < NumConstants(); i++ )
 	{
-		Object o = GetConstant( i );
+		Object o = GetConstant( (int)i );
 		if( o.type == obj_string || o.type == obj_symbol_name )
 			cout << o.s << endl;
 		else if( o.type == obj_number )
@@ -3680,7 +3680,7 @@ void Executor::DumpStackTop()
 	size_t n = (stack.size() > 5 ? 5 : stack.size());
 	if( n != 0 )
 	{
-		for( int i = n-1; i >= 0; i-- )
+		for( int i = (int)n-1; i >= 0; i-- )
 		{
 			cout << stack[stack.size()-(n-i)];
 			if( i > 0 )

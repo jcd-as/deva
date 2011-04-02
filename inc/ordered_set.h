@@ -51,7 +51,7 @@ template<typename T, typename BinaryPredicate, bool allowDuplicates> class _Orde
 
 public:
 	void Reserve( int n ) { data.reserve( n ); }
-	T& At( int n ) { return data[n]; }
+	T& At( size_t n ) { return data[n]; }
 	size_t Size() const { return data.size(); }
 	// adds. if a rejected dup (if dups rejected), returns false, else true
 	bool Add( const T& t )

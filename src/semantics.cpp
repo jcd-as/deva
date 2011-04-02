@@ -602,7 +602,7 @@ void Semantics::DefaultArgVal( pANTLR3_BASE_TREE node, bool negate /*= false*/ )
 
 	// if this is the first default arg for this fcn, mark it
 	if( default_arg_values.size() == 0 )
-		first_default_arg = arg_names.size() - 1;
+		first_default_arg = (int)(arg_names.size() - 1);
 
 	unsigned int type = node->getType( node );
 	char* text = (char*)node->getText( node )->chars;

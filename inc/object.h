@@ -237,7 +237,7 @@ void IncRef( Object & o );
 void IncRefChildren( Object & o );
 int DecRef( Object & o );
 
-class Module;
+struct Module;
 
 struct Function
 {
