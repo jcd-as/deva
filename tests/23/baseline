@@ -140,7 +140,7 @@ function: bubble_sort, from file: input.dv, line: 3
 code address: 14
 Instructions:
    0: def_function	95 (bubble_sort), 14
-   9: jmp		137
+   9: jmp		131
   14: enter		 
   15: pushlocal0		 
   16: pushconst		16 (length)
@@ -218,102 +218,100 @@ Instructions:
  124: pushlocal0		 
  125: return		1
  130: leave		 
- 131: push_null		 
- 132: return		0
- 137: new_vec		0
- 142: def_local0		 
- 143: pushlocal0		 
- 144: push		2
- 149: pushconst		15 (append)
- 154: call		2
- 159: pop		 
- 160: pushlocal0		 
- 161: push_one		 
- 162: pushconst		15 (append)
- 167: call		2
- 172: pop		 
- 173: pushlocal0		 
- 174: push		4
- 179: pushconst		15 (append)
- 184: call		2
- 189: pop		 
- 190: pushlocal0		 
- 191: push		3
- 196: pushconst		15 (append)
- 201: call		2
- 206: pop		 
- 207: pushlocal0		 
- 208: push		6
- 213: pushconst		15 (append)
- 218: call		2
- 223: pop		 
- 224: pushlocal0		 
- 225: push		5
- 230: pushconst		15 (append)
- 235: call		2
- 240: pop		 
- 241: pushlocal0		 
- 242: push		8
- 247: pushconst		15 (append)
- 252: call		2
- 257: pop		 
- 258: pushlocal0		 
- 259: push		7
- 264: pushconst		15 (append)
- 269: call		2
- 274: pop		 
- 275: pushlocal0		 
- 276: push		10
- 281: pushconst		15 (append)
- 286: call		2
- 291: pop		 
- 292: pushlocal0		 
- 293: push		9
- 298: pushconst		15 (append)
- 303: call		2
- 308: pop		 
- 309: pushconst		93 (un-sorted:)
- 314: pushconst		12 (print)
- 319: call		1
- 324: pop		 
- 325: pushlocal0		 
- 326: dup1		 
- 327: pushconst		10 (rewind)
- 332: method_load	
- 333: call_method		0
- 338: pop		 
- 339: for_iter		364
- 344: def_local1		 
- 345: enter		 
- 346: pushlocal1		 
- 347: pushconst		12 (print)
- 352: call		1
- 357: pop		 
- 358: leave		 
- 359: jmp		339
- 364: pop		 
- 365: pushlocal0		 
- 366: pushconst		95 (bubble_sort)
- 371: call		1
- 376: def_local2		 
- 377: pushconst		92 (sorted:)
- 382: pushconst		12 (print)
- 387: call		1
- 392: pop		 
- 393: pushlocal2		 
- 394: dup1		 
- 395: pushconst		10 (rewind)
- 400: method_load	
- 401: call_method		0
- 406: pop		 
- 407: for_iter		432
- 412: def_local3		 
- 413: enter		 
- 414: pushlocal3		 
- 415: pushconst		12 (print)
- 420: call		1
- 425: pop		 
- 426: leave		 
- 427: jmp		407
- 432: pop		 
- 433: halt		 
+ 131: new_vec		0
+ 136: def_local0		 
+ 137: pushlocal0		 
+ 138: push		2
+ 143: pushconst		15 (append)
+ 148: call		2
+ 153: pop		 
+ 154: pushlocal0		 
+ 155: push_one		 
+ 156: pushconst		15 (append)
+ 161: call		2
+ 166: pop		 
+ 167: pushlocal0		 
+ 168: push		4
+ 173: pushconst		15 (append)
+ 178: call		2
+ 183: pop		 
+ 184: pushlocal0		 
+ 185: push		3
+ 190: pushconst		15 (append)
+ 195: call		2
+ 200: pop		 
+ 201: pushlocal0		 
+ 202: push		6
+ 207: pushconst		15 (append)
+ 212: call		2
+ 217: pop		 
+ 218: pushlocal0		 
+ 219: push		5
+ 224: pushconst		15 (append)
+ 229: call		2
+ 234: pop		 
+ 235: pushlocal0		 
+ 236: push		8
+ 241: pushconst		15 (append)
+ 246: call		2
+ 251: pop		 
+ 252: pushlocal0		 
+ 253: push		7
+ 258: pushconst		15 (append)
+ 263: call		2
+ 268: pop		 
+ 269: pushlocal0		 
+ 270: push		10
+ 275: pushconst		15 (append)
+ 280: call		2
+ 285: pop		 
+ 286: pushlocal0		 
+ 287: push		9
+ 292: pushconst		15 (append)
+ 297: call		2
+ 302: pop		 
+ 303: pushconst		93 (un-sorted:)
+ 308: pushconst		12 (print)
+ 313: call		1
+ 318: pop		 
+ 319: pushlocal0		 
+ 320: dup1		 
+ 321: pushconst		10 (rewind)
+ 326: method_load	
+ 327: call_method		0
+ 332: pop		 
+ 333: for_iter		358
+ 338: def_local1		 
+ 339: enter		 
+ 340: pushlocal1		 
+ 341: pushconst		12 (print)
+ 346: call		1
+ 351: pop		 
+ 352: leave		 
+ 353: jmp		333
+ 358: pop		 
+ 359: pushlocal0		 
+ 360: pushconst		95 (bubble_sort)
+ 365: call		1
+ 370: def_local2		 
+ 371: pushconst		92 (sorted:)
+ 376: pushconst		12 (print)
+ 381: call		1
+ 386: pop		 
+ 387: pushlocal2		 
+ 388: dup1		 
+ 389: pushconst		10 (rewind)
+ 394: method_load	
+ 395: call_method		0
+ 400: pop		 
+ 401: for_iter		426
+ 406: def_local3		 
+ 407: enter		 
+ 408: pushlocal3		 
+ 409: pushconst		12 (print)
+ 414: call		1
+ 419: pop		 
+ 420: leave		 
+ 421: jmp		401
+ 426: pop		 
+ 427: halt		 

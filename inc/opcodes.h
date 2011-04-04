@@ -112,9 +112,7 @@ enum Opcode
 {
 	op_nop,
 	op_pop,			// pop tos
-	// TODO: this is the same as op_push_const! (should use this instead to push
-	// integer values directly)
-	op_push,		// push object named at constants slot <Op0> 
+	op_push,		// push integer <Op0> onto stack
 	op_push_true,	// push boolean 'true' to tos
 	op_push_false,	// push boolean 'false' to tos
 	op_push_null,	// push null to tos

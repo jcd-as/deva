@@ -130,6 +130,8 @@ add_executable( deva
 	src/string_builtins.cpp
 	src/builtins_helpers.cpp
 	src/map_builtins.cpp
+	src/module_os.cpp
+	src/module_bit.cpp
 	src/frame.cpp
 	src/scopetable.cpp
 	devaLexer.c

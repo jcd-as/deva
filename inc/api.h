@@ -76,7 +76,8 @@ struct PassTwoFlags
 struct PassOneReturnValue
 {
 	pANTLR3_COMMON_TREE_NODE_STREAM nodes;
-	PassOneReturnValue() : nodes( NULL ) {}
+	size_t num_constants;
+	PassOneReturnValue() : nodes( NULL ), num_constants( 0 ) {}
 };
 
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM in );

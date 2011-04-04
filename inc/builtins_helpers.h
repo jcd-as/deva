@@ -48,11 +48,11 @@ class BuiltinHelper
 	bool is_method;
 
 public:
-	BuiltinHelper( const char* t, const char* n, Frame* f ) : 
+	BuiltinHelper( const char* t, const char* n, Frame* f, bool module = false ) : 
 		type( (t ? t : "") ), 
 		name( n ), 
 		frame( f ), 
-		is_method( !!t )
+		is_method( !!t && !module )
 	{ }
 
 	// expectations/assertions

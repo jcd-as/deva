@@ -30,6 +30,8 @@
 //
 
 #include "api.h"
+#include "module_os.h"
+#include "module_bit.h"
 
 #include <iostream>
 #include <vector>
@@ -56,8 +58,11 @@ using namespace deva_compile;
 // global object to track current filename
 const char* deva::current_file;
 
+namespace deva
+{
 int _argc;
 char** _argv;
+}
 
 // global to enable tracing refcounts
 bool deva::reftrace;
@@ -70,8 +75,8 @@ bool deva::reftrace;
 //
 int ANTLR3_CDECL main( int argc, char *argv[] )
 {
-	_argc = argc;
-	_argv = argv;
+	deva::_argc = argc;
+	deva::_argv = argv;
 
 	// declare the command line options
 	bool debug_dump = false;
@@ -227,7 +232,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// PASS TWO: compile
 			ex = new Executor();
 			PassTwo( "", p1rv, p2f );
-			Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
+			Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
 
 			// debug dumps
 #ifdef DEBUG
@@ -259,6 +264,8 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// execute the code
 			if( !compile_only )
 			{
+				ex->AddNativeModule( "os", GetModuleOsFunction );
+				ex->AddNativeModule( "bit", GetModuleBitFunction );
 				ex->Execute( code );
 			}
 			else

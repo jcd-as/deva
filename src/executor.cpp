@@ -1679,7 +1679,6 @@ Opcode Executor::ExecuteInstruction()
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
-		// TODO: correct module/namespace lookup
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
@@ -1688,12 +1687,30 @@ Opcode Executor::ExecuteInstruction()
 			// see if there is a module with this name
 			if( module_names.count( string( lhs.s ) ) == 0 )
 				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-			// look up the rhs as a symbol in the module
-			Object* obj = FindSymbol( rhs.s, lhs.s );
-			if( !obj )
-				throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
-			IncRef( *obj );
-			stack.push_back( *obj );
+			else
+			{
+				// see if there is a native module with this name
+				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
+				if( i != imported_native_modules.end() )
+				{
+					// get the native function for this function
+					NativeFunction nf = (i->second)( string( rhs.s ) );
+					if( !nf.p )
+						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
+					Object fo( nf );
+					stack.push_back( fo );
+				}
+				// no native module, try as a deva symbol/module
+				else
+				{
+					// look up the rhs as a symbol in the module
+					Object* obj = FindSymbol( rhs.s, lhs.s );
+					if( !obj )
+						throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
+					IncRef( *obj );
+					stack.push_back( *obj );
+				}
+			}
 		}
 		// string:
 		else if( lhs.type == obj_string )
@@ -1817,7 +1834,6 @@ Opcode Executor::ExecuteInstruction()
 		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
-		// TODO: correct module/namespace lookup
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
@@ -1826,12 +1842,30 @@ Opcode Executor::ExecuteInstruction()
 			// see if there is a module with this name
 			if( module_names.count( string( lhs.s ) ) == 0 )
 				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-			// look up the rhs as a symbol in the module
-			Object* obj = FindSymbol( rhs.s, lhs.s );
-			if( !obj )
-				throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
-			IncRef( *obj );
-			stack.push_back( *obj );
+			else
+			{
+				// see if there is a native module with this name
+				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
+				if( i != imported_native_modules.end() )
+				{
+					// get the native function for this function
+					NativeFunction nf = (i->second)( string( rhs.s ) );
+					if( !nf.p )
+						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
+					Object fo( nf );
+					stack.push_back( fo );
+				}
+				// no native module, try as a deva symbol/module
+				else
+				{
+					// look up the rhs as a symbol in the module
+					Object* obj = FindSymbol( rhs.s, lhs.s );
+					if( !obj )
+						throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
+					IncRef( *obj );
+					stack.push_back( *obj );
+				}
+			}
 		}
 		// string:
 		else if( lhs.type == obj_string )
@@ -2968,6 +3002,153 @@ Opcode Executor::ExecuteInstruction()
 	return op;
 }
 
+Opcode Executor::SkipInstruction()
+{
+	// decode opcode
+	Opcode op = (Opcode)*ip;
+
+	ip++;
+	switch( op )
+	{
+	// 0 args
+	case op_nop:
+	case op_pop:
+	case op_push_true:
+	case op_push_false:
+	case op_push_null:
+	case op_push_zero:
+	case op_push_one:
+	case op_push0:
+	case op_push1:
+	case op_push2:
+	case op_push3:
+	case op_pushlocal0:
+	case op_pushlocal1:
+	case op_pushlocal2:
+	case op_pushlocal3:
+	case op_pushlocal4:
+	case op_pushlocal5:
+	case op_pushlocal6:
+	case op_pushlocal7:
+	case op_pushlocal8:
+	case op_pushlocal9:
+	case op_storelocal0:
+	case op_storelocal1:
+	case op_storelocal2:
+	case op_storelocal3:
+	case op_storelocal4:
+	case op_storelocal5:
+	case op_storelocal6:
+	case op_storelocal7:
+	case op_storelocal8:
+	case op_storelocal9:
+	case op_def_local0:
+	case op_def_local1:
+	case op_def_local2:
+	case op_def_local3:
+	case op_def_local4:
+	case op_def_local5:
+	case op_def_local6:
+	case op_def_local7:
+	case op_def_local8:
+	case op_def_local9:
+	case op_eq:
+	case op_neq:
+	case op_lt:
+	case op_lte:
+	case op_gt:
+	case op_gte:
+	case op_or:
+	case op_and:
+	case op_neg:
+	case op_not:
+	case op_add:
+	case op_sub:
+	case op_mul:
+	case op_div:
+	case op_mod:
+	case op_enter:
+	case op_leave:
+	case op_tbl_load:
+	case op_method_load:
+	case op_loadslice2:
+	case op_loadslice3:
+	case op_tbl_store:
+	case op_storeslice2:
+	case op_storeslice3:
+	case op_add_tbl_store:
+	case op_sub_tbl_store:
+	case op_mul_tbl_store:
+	case op_div_tbl_store:
+	case op_mod_tbl_store:
+	case op_dup1:
+	case op_dup2:
+	case op_dup3:
+	case op_dup_top_n:
+	case op_dup_top1:
+	case op_dup_top2:
+	case op_dup_top3:
+	case op_swap:
+	case op_rot2:
+	case op_rot3:
+	case op_rot4:
+	case op_halt:
+		break;
+
+	// 1 arg
+	case op_push:
+	case op_pushlocal:
+	case op_pushconst:
+	case op_storeconst:
+	case op_store_true:
+	case op_store_false:
+	case op_store_null:
+	case op_storelocal:
+	case op_def_local:
+	case op_def_function:
+	case op_new_map:
+	case op_new_vec:
+	case op_new_class:
+	case op_jmp:
+	case op_jmpf:
+	case op_add_assign:
+	case op_sub_assign:
+	case op_div_assign:
+	case op_mod_assign:
+	case op_add_assign_local:
+	case op_sub_assign_local:
+	case op_mul_assign_local:
+	case op_div_assign_local:
+	case op_mod_assign_local:
+	case op_call:
+	case op_call_method:
+	case op_return:
+	case op_for_iter:
+	case op_for_iter_pair:
+	case op_dup:
+	case op_rot:
+	case op_import:
+		ip += sizeof( dword );
+		break;
+
+	// 2 args
+	case op_exit_loop:
+		ip += 2 * sizeof( dword );
+		break;
+
+	// 3 args
+	case op_def_method:
+		ip += 3 * sizeof( dword );
+		break;
+
+	case op_illegal:
+	default:
+		throw ICE( "Illegal instruction" );
+		break;
+	}
+	return op;
+}
+
 void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
 {
 	// if this is a method there's an extra arg for 'this'
@@ -3170,6 +3351,15 @@ Object Executor::GetError()
 		return Object( obj_null );
 }
 
+bool Executor::ImportBuiltinModule( const char* module_name )
+{
+	map<string, module_fcn_finder>::iterator i = native_modules.find( string( module_name ) );
+	if( i == native_modules.end() )
+		return false;
+	imported_native_modules.insert( *i );
+	return true;
+}
+
 // helper function for ImportModule
 string Executor::FindModule( string mod )
 {
@@ -3258,7 +3448,7 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 
 		// PASS TWO: compile
 		PassTwo( module_name.c_str(), p1rv, p2f );
-		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length() );
+		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
 
 		// free parser, compiler memory
 		FreeParseReturnValue( prv );
@@ -3284,19 +3474,51 @@ Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f
 	return mod;
 }
 
+void Executor::FixupConstants()
+{
+	// delta to adjust constant indices is the number of constants defined in
+	// the main module
+	size_t delta = (ex->constants.size() - num_of_constant_symbols);
+
+	// find each 'pushconst' or 'storeconst' instruction and fixup its argument
+	Opcode op = op_nop;
+
+	dword arg;
+
+	// save the ip
+	byte* orig_ip = ip;
+
+	// execute until end
+	while( ip < end && op < op_halt )
+	{
+		//op = ExecuteInstruction();
+		// decode opcode
+		Opcode op = (Opcode)*ip;
+
+		if( op == op_pushconst || op == op_storeconst )
+		{
+			// fixup the arg
+			arg = *((dword*)ip);
+			arg += delta;
+			*((dword*)ip) = arg;
+		}
+		// next instruction
+		SkipInstruction();
+	}
+
+	// reset the ip
+	ip = orig_ip;
+}
+
 bool Executor::ImportModule( const char* module_name )
 {
-	// TODO: need to track a current callstack (Frame stack) as well as current
-	// ScopeTable
-	//
-	// TODO: builtin modules
-	// check the list of builtin modules first
-//	if( ImportBuiltinModule( mod ) )
-//		return true;
-
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
 	if( modules.count( string( module_name ) ) != 0 )
+		return true;
+
+	// check the list of builtin modules first
+	if( ImportBuiltinModule( module_name ) )
 		return true;
 
 	// otherwise look for the .dv/.dvc file to import
@@ -3321,6 +3543,11 @@ bool Executor::ImportModule( const char* module_name )
 	const Code* code = LoadModule( mod, dvfile );
 	if( !code )
 		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
+
+	// TODO: fixup the indices of constants in the code stream of imported .dvc
+	// files
+//	if( dvc )
+//		FixupConstants( code );
 
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"

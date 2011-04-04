@@ -116,6 +116,7 @@ PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 
 	PassOneReturnValue ret;
 	ret.nodes = nodes;
+	ret.num_constants = semantics->constants.size();
 	return ret;
 }
 

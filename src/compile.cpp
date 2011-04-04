@@ -298,7 +298,7 @@ void Compiler::EndFun()
 	// in case there isn't one that will be hit
 	// (check the immediately preceding instruction so we at least don't
 	// generate two returns in a row...)
-	if( is->Length() <= 5 || (Opcode)*(is->Current()-5) != op_return )
+	if( is->Length() <= 6 || (Opcode)*(is->Current()-6) != op_return )
 	{
 		Emit( op_push_null );
 		Emit( op_return, 0 );

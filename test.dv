@@ -1,19 +1,12 @@
-class C
+# test builtin os module
+import os;
+
+local names = os.dirwalk( "." );
+names.sort();
+for( name in names )
 {
-	def foo(){ print( "foo called" ); }
+	print( name );
 }
-
-local c = new C();
-c.foo();
-
-# test import:
-#import foo;
-##local x = foo.bar;
-##print( x );
-##print( foo.bar );
-#foo.bar();
-#print( foo.jam );
-#print( "done" );
 
 # TEST error stack trace:
 #def Foo()

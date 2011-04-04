@@ -1,12 +1,6 @@
-DONE 2011-03-20 @deva +veryhigh add 'dotest_valgrind_compile' to mercurial (so that tests 6 and 22 can pass valgrind clean)
-    CLOSED: 2011-03-24 18:08:04
-    :LOGBOOK:
-        DONE: 2011-03-24 18:08:04
-
 TODO 2011-03-09 @deva +medium fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
-
 
 TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
@@ -15,24 +9,41 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	38 (math module NYI)
 	48 (eval builtin NYI)
 	50 ('_re.delete() not allowed to use keyword & _re/re modules NYI)d
-	53 (os module NYI)
+	53 (os,glob modules NYI)
 	62 (json module NYI, seterror/geterror/error builtins NYI)
 	68 (math module NYI)
 
-DONE 2011-03-03 @deva +veryhigh need to unify run-time symbol look-ups - functions should be in the same look-up as variables/classes/etc. - need local vs 'extern' look-up methods ('extern' look-up will follow the scope chain to main, including modules, looking for the symbocal)
-    CLOSED: 2011-03-03 23:38:33
-    :LOGBOOK:
-        DONE: 2011-03-03 23:38:33
-
-DONE 2011-03-02 @deva +veryhigh function defs don't override local vars, causing bad code gen (see test 8)
-    CLOSED: 2011-03-02 19:52:44
-    :LOGBOOK:
-        DONE: 2011-03-02 19:52:44
-        TODO: 2011-03-02 19:52:43
-        CANCELLED: 2011-03-02 19:52:42
-        DONE: 2011-03-02 19:52:41
-
 TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
+
+TODO 2011-03-02 @deva +veryhigh implement built-in modules
+	[ ] math
+	[x] bit
+	[x] os
+	[ ] re
+
+TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
+	so that executor can read .dvc files and execute them without needing to compile the .dv file
+
+TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
+
+TODO 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
+
+TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;' ??
+
+TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
+
+TODO 2011-02-01 @deva +high short-circuiting && and || ops ??
+
+TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
+
+TODO 2011-02-01 @deva +high store classes separately
+	classes need to be stored in a separate collection from other objects so that all the instances can be deleted *before* the classes (otherwise destructors won't operate properl
+
+TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
+
+TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
+
+TODO 2011-02-04 @deva +high fix error messages - prevent things like "Missing <invalid>"
 
 DONE 2011-02-26 @deva +veryhigh octal and binary numbers not handled (parsed) correctly
     CLOSED: 2011-02-27 16:15:44
@@ -68,10 +79,6 @@ DONE 2011-02-01 @deva +veryhigh import/modules
 	- each module needs its own 'main' Frame (e.g. 'main@foo') so it will have (persistent) locals. if these are pushed onto the callstack (which makes a sort of sense), then there needs to be some mechanism whereby to remove them... since they won't be removed by normal 'leave' ops
 	- name lookup (foo.bar needs to check for bar in module foo) for tbl_load, tbl_store and method_load
 
-TODO 2011-03-02 @deva +veryhigh implement built-in modules (math, bit, os, re et al)
-
-TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
-
 DONE 2011-02-01 @deva +veryhigh overriding/scoping functions doesn't work
     CLOSED: 2011-02-27 16:20:02
     :LOGBOOK:
@@ -98,24 +105,21 @@ DONE 2011-02-03 @deva +veryhigh functional vector builtins (map, filter, reduce 
     :LOGBOOK:
         DONE: 2011-03-28 18:56:36
 
-TODO 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
+DONE 2011-03-20 @deva +veryhigh add 'dotest_valgrind_compile' to mercurial (so that tests 6 and 22 can pass valgrind clean)
+    CLOSED: 2011-03-24 18:08:04
+    :LOGBOOK:
+        DONE: 2011-03-24 18:08:04
 
-TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;' ??
+DONE 2011-03-03 @deva +veryhigh need to unify run-time symbol look-ups - functions should be in the same look-up as variables/classes/etc. - need local vs 'extern' look-up methods ('extern' look-up will follow the scope chain to main, including modules, looking for the symbocal)
+    CLOSED: 2011-03-03 23:38:33
+    :LOGBOOK:
+        DONE: 2011-03-03 23:38:33
 
-TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
+DONE 2011-03-02 @deva +veryhigh function defs don't override local vars, causing bad code gen (see test 8)
+    CLOSED: 2011-03-02 19:52:44
+    :LOGBOOK:
+        DONE: 2011-03-02 19:52:44
+        TODO: 2011-03-02 19:52:43
+        CANCELLED: 2011-03-02 19:52:42
+        DONE: 2011-03-02 19:52:41
 
-TODO 2011-02-01 @deva +high short-circuiting && and || ops ??
-
-TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
-
-TODO 2011-02-01 @deva +high store classes separately
-	classes need to be stored in a separate collection from other objects so that all the instances can be deleted *before* the classes (otherwise destructors won't operate properl
-
-TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
-
-TODO 2011-02-01 @deva +high un-entangle compiler and execution engine
-	so that executor can read .dvc files and execute them without needing to compile the .dv file
-
-TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
-
-TODO 2011-02-04 @deva +high fix error messages - prevent things like "Missing <invalid>"

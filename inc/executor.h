@@ -67,9 +67,16 @@ struct Code
 	byte* code;
 	size_t len;
 
-	Code( byte* c, size_t l ) : code( c ), len( l ) { }
+	// number of constants defined/used in this code
+	size_t num_constants;
+
+	// TODO: line number mapping, other debug info?
+
+	Code( byte* c, size_t l, size_t n ) : code( c ), len( l ), num_constants( n ) { }
 	~Code(){ delete[] code; }
 };
+
+typedef NativeFunction (*module_fcn_finder)(const string&);
 
 // singleton class for deva VM execution engine
 class Executor
@@ -100,6 +107,12 @@ class Executor
 	// 'global' scope table (namespace)
 	ScopeTable* scopes;
 
+	// available native modules
+	map<string, module_fcn_finder> native_modules;
+
+	// native modules that have been imported
+	map<string, module_fcn_finder> imported_native_modules;
+	
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
@@ -160,6 +173,9 @@ private:
 
 public:
 
+	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( make_pair( string( name ), fcn ) ); }
+
+
 	// constant pool handling methods
 	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
 	inline int FindConstant( const Object & o )
@@ -183,6 +199,7 @@ public:
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
 	void ExecuteCode( const Code* const code );
+	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
@@ -194,6 +211,9 @@ public:
 private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
+	bool ImportBuiltinModule( const char* module_name );
+	// helper to fixup the constants in compiled code (imported dvc file)
+	void FixupConstants();
 	// helper fcn to find a loaded module (namespace)
 	vector< pair<string, ScopeTable*> >::iterator FindNamespace( string mod );
 	// helper fcn for ImportModule:
