@@ -1,4 +1,4 @@
-// Copyright (c) 2011 Jbithua C. Shepard
+// Copyright (c) 2011 Jmathhua C. Shepard
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,15 +21,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// module_bit.h
-// native bit operations module for deva language, v2
-// created by jcs, april 2, 2011
+// module_math.h
+// native math operations module for deva language, v2
+// created by jcs, april 3, 2011
 
 // TODO:
 // * 
 
-#ifndef __MODULE_BIT_H__
-#define __MODULE_BIT_H__
+#ifndef __MODULE_MATH_H__
+#define __MODULE_MATH_H__
 
 #include "object.h"
 //#include <string>
@@ -45,24 +45,42 @@ namespace deva
 class Frame;
 
 // pre-decls for builtin executors
-void do_bit_and( Frame* f );
-void do_bit_or( Frame* f );
-void do_bit_xor( Frame* f );
-void do_bit_complement( Frame* f );
-void do_bit_shift_left( Frame* f );
-void do_bit_shift_right( Frame* f );
+void do_math_cos( Frame* f );
+void do_math_sin( Frame* f );
+void do_math_tan( Frame* f );
+void do_math_acos( Frame* f );
+void do_math_asin( Frame* f );
+void do_math_atan( Frame* f );
+void do_math_cosh( Frame* f );
+void do_math_sinh( Frame* f );
+void do_math_tanh( Frame* f );
+void do_math_exp( Frame* f );
+void do_math_log( Frame* f );
+void do_math_log10( Frame* f );
+void do_math_abs( Frame* f );
+void do_math_sqrt( Frame* f );
+void do_math_pow( Frame* f );
+void do_math_modf( Frame* f );
+void do_math_fmod( Frame* f );
+void do_math_floor( Frame* f );
+void do_math_ceil( Frame* f );
+void do_math_pi( Frame* f );
+void do_math_radians( Frame* f );
+void do_math_degrees( Frame* f );
+void do_math_round( Frame* f );
 
-extern const string module_bit_names[];
+extern const string module_math_names[];
 // ...and function pointers to the executor functions for them
-extern NativeFunction module_bit_fcns[];
-extern const int num_of_module_bit_fcns;
+extern NativeFunction module_math_fcns[];
+extern const int num_of_module_math_fcns;
 
 // is a given name a builtin function?
-bool IsModuleBitFunction( const string & name );
-NativeFunction GetModuleBitFunction( const string & name );
+bool IsModuleMathFunction( const string & name );
+NativeFunction GetModuleMathFunction( const string & name );
 
 
 } // namespace deva
 
-#endif // __MODULE_BIT_H__
+#endif // __MODULE_MATH_H__
+
 

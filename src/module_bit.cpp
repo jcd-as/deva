@@ -99,14 +99,14 @@ NativeFunction GetModuleBitFunction( const string & name )
 /////////////////////////////////////////////////////////////////////////////
 void do_bit_and( Frame* f )
 {
-	BuiltinHelper helper( "bit", "", f, true );
+	BuiltinHelper helper( "bit", "and", f, true );
 	helper.CheckNumberOfArguments( 2 );
 
 	Object* o = helper.GetLocalN( 0 );
 	helper.ExpectType( o, obj_number );
 
 	Object* a = helper.GetLocalN( 1 );
-	helper.ExpectType( o, obj_number );
+	helper.ExpectType( a, obj_number );
 
 	size_t n = (size_t)(o->d);
 	size_t op = (size_t)(a->d);
@@ -124,7 +124,7 @@ void do_bit_or( Frame* f )
 	helper.ExpectType( o, obj_number );
 
 	Object* a = helper.GetLocalN( 1 );
-	helper.ExpectType( o, obj_number );
+	helper.ExpectType( a, obj_number );
 
 	size_t n = (size_t)(o->d);
 	size_t op = (size_t)(a->d);
@@ -142,7 +142,7 @@ void do_bit_xor( Frame* f )
 	helper.ExpectType( o, obj_number );
 
 	Object* a = helper.GetLocalN( 1 );
-	helper.ExpectType( o, obj_number );
+	helper.ExpectType( a, obj_number );
 
 	size_t n = (size_t)(o->d);
 	size_t op = (size_t)(a->d);
@@ -174,7 +174,7 @@ void do_bit_shift_left( Frame* f )
 	helper.ExpectType( o, obj_number );
 
 	Object* a = helper.GetLocalN( 1 );
-	helper.ExpectType( o, obj_number );
+	helper.ExpectType( a, obj_number );
 
 	size_t n = (size_t)(o->d);
 	size_t op = (size_t)(a->d);
@@ -192,7 +192,7 @@ void do_bit_shift_right( Frame* f )
 	helper.ExpectType( o, obj_number );
 
 	Object* a = helper.GetLocalN( 1 );
-	helper.ExpectType( o, obj_number );
+	helper.ExpectType( a, obj_number );
 
 	size_t n = (size_t)(o->d);
 	size_t op = (size_t)(a->d);

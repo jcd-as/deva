@@ -32,6 +32,7 @@
 #include "api.h"
 #include "module_os.h"
 #include "module_bit.h"
+#include "module_math.h"
 
 #include <iostream>
 #include <vector>
@@ -266,6 +267,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			{
 				ex->AddNativeModule( "os", GetModuleOsFunction );
 				ex->AddNativeModule( "bit", GetModuleBitFunction );
+				ex->AddNativeModule( "math", GetModuleMathFunction );
 				ex->Execute( code );
 			}
 			else

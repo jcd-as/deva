@@ -5,7 +5,6 @@ TODO 2011-03-09 @deva +medium fix minor issues with tests:
 TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import NYI, .dvc NYI)
-	37 (bit module NYI)
 	38 (math module NYI)
 	48 (eval builtin NYI)
 	50 ('_re.delete() not allowed to use keyword & _re/re modules NYI)d
@@ -16,7 +15,7 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 TODO 2011-03-02 @deva +veryhigh implement built-in modules
-	[ ] math
+	[x] math
 	[x] bit
 	[x] os
 	[ ] re

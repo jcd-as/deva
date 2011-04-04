@@ -1,0 +1,53 @@
+.TH DEVA 1
+
+.SH NAME
+deva \- Deva is a small, simple, interpreted, dynamic programming language.
+
+.SH SYNOPSIS
+\fBdeva\fP [\--help] [\--version | \-v] [\-no-dvc] [\--compile-only | \-c] [\--options] \fIinput-file
+
+.SH DESCRIPTION
+\fIDeva\fP is a small, simple, interpreted, dynamic programming language. It is similar to C in syntax while semantically similar to Python and other dynamic languages. It is embeddable in C++ programs or usable on its own. Deva is a multi-paradigm language, supporting procedural (imperative), object-oriented and functional language features.
+
+The key design goals of Deva were to 1) be easily embeddable in C++, and 2) to provide a language that is as simple as possible in both implementation and use, while providing basic support for key language features.
+
+For a full discussion of the language and its features, you are referred to 'The Deva Language v2' document for language documentation.
+
+.SH OPTIONS
+\fPDeva supports the following options:
+.TP
+\fB--help\fP
+Print help
+.TP
+\fB--version, \-v\fP
+Print version information
+.TP
+\fB-no-dvc\fP
+Do not generate a .dvc byte-code compiled file
+.TP
+\fB--compile-only, \-c\fP
+Compile only, do not execute
+.TP
+\fB--options\fP
+Options to pass to the source program
+.TP
+\fIinput-file\fP
+Input deva source code file
+
+.SH ENVIRONMENT VARIABLES 
+\fIDEVA\fP
+
+If the DEVA environment variable is set, deva will look for files and modules in the paths pointed to by the environment variable immediately after looking in the working directory.
+
+.SH COPYRIGHT
+deva is Copyright (c) 2011-2011 Joshua C. Shepard
+
+.SH LICENSE
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+.SH AUTHORS
+Joshua C. Shepard
+
+E-mail : josh.shepard@gmail.com
+

@@ -132,6 +132,7 @@ add_executable( deva
 	src/map_builtins.cpp
 	src/module_os.cpp
 	src/module_bit.cpp
+	src/module_math.cpp
 	src/frame.cpp
 	src/scopetable.cpp
 	devaLexer.c
@@ -187,6 +188,12 @@ endif()
 # 'install' target
 ##################
 install( TARGETS deva RUNTIME DESTINATION bin )
+
+# install man page
+##################
+if( ${UNIX} )
+	install( FILES deva.1 DESTINATION share/man/man1/ )
+endif()
 
 # setup package generation for .deb
 ##########################################
