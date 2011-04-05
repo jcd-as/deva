@@ -36,7 +36,13 @@
 
 using namespace boost;
 
+#ifdef MS_WINDOWS
+#define chdir(x) _chdir(x)
+#include <direct.h>
+extern __declspec(dllimport) char** environ;
+#else
 extern char** environ;
+#endif
 
 namespace deva
 {
