@@ -213,7 +213,7 @@ void do_re_replace( Frame* f )
 	Object* s = helper.GetLocalN( 1 );
 	helper.ExpectType( s, obj_string );
 
-	Object* fmt = helper.GetLocalN( 1 );
+	Object* fmt = helper.GetLocalN( 2 );
 	helper.ExpectType( fmt, obj_string );
 
 	string result = regex_replace( string( s->s ), *((boost::regex*)(r->no)), string( fmt->s ) );
