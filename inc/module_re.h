@@ -1,4 +1,4 @@
-// Copyright (c) 2011 Jmathhua C. Shepard
+// Copyright (c) 2011 Jrehua C. Shepard
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,15 +21,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// module_math.h
-// native math operations module for deva language, v2
+// module_re.h
+// native re operations module for deva language, v2
 // created by jcs, april 3, 2011
 
 // TODO:
 // * 
 
-#ifndef __MODULE_MATH_H__
-#define __MODULE_MATH_H__
+#ifndef __MODULE_RE_H__
+#define __MODULE_RE_H__
 
 #include "object.h"
 
@@ -44,42 +44,24 @@ namespace deva
 class Frame;
 
 // pre-decls for builtin executors
-void do_math_cos( Frame* f );
-void do_math_sin( Frame* f );
-void do_math_tan( Frame* f );
-void do_math_acos( Frame* f );
-void do_math_asin( Frame* f );
-void do_math_atan( Frame* f );
-void do_math_cosh( Frame* f );
-void do_math_sinh( Frame* f );
-void do_math_tanh( Frame* f );
-void do_math_exp( Frame* f );
-void do_math_log( Frame* f );
-void do_math_log10( Frame* f );
-void do_math_abs( Frame* f );
-void do_math_sqrt( Frame* f );
-void do_math_pow( Frame* f );
-void do_math_modf( Frame* f );
-void do_math_fmod( Frame* f );
-void do_math_floor( Frame* f );
-void do_math_ceil( Frame* f );
-void do_math_pi( Frame* f );
-void do_math_radians( Frame* f );
-void do_math_degrees( Frame* f );
-void do_math_round( Frame* f );
+void do_re_compile( Frame* f );
+void do_re_match( Frame* f );
+void do_re_search( Frame* f );
+void do_re_replace( Frame* f );
+void do_re_delete( Frame* f );
 
-extern const string module_math_names[];
+extern const string module_re_names[];
 // ...and function pointers to the executor functions for them
-extern NativeFunction module_math_fcns[];
-extern const int num_of_module_math_fcns;
+extern NativeFunction module_re_fcns[];
+extern const int num_of_module_re_fcns;
 
 // is a given name a builtin function?
-bool IsModuleMathFunction( const string & name );
-NativeFunction GetModuleMathFunction( const string & name );
+bool IsModuleReFunction( const string & name );
+NativeFunction GetModuleReFunction( const string & name );
 
 
 } // namespace deva
 
-#endif // __MODULE_MATH_H__
+#endif // __MODULE_RE_H__
 
 

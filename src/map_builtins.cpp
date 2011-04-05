@@ -207,8 +207,11 @@ void do_map_next( Frame *frame )
 
 		pair<Object, Object> p = *it;
 
+		// push the key/value pair
 		key_val->push_back( p.first );
+		IncRef( p.first );
 		key_val->push_back( p.second );
+		IncRef( p.second );
 		ret->push_back( Object( true ) );
 		Object keyobj( key_val );
 		IncRef( keyobj );
