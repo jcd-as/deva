@@ -1150,6 +1150,7 @@ void do_vector_next( Frame *frame )
 	if( !last )
 	{
 		Object out = po->v->operator[]( po->v->index );
+		IncRef( out );
 		ret->push_back( Object( true ) );
 		ret->push_back( out );
 	}

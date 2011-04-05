@@ -1,12 +1,41 @@
-# test builtin os module
-import os;
+# BUG: leaks the vector 
+# ONLY if the for loop is executed AND the 'if' statement exists
+local v = [0,1];
+if( v )
+	for( i in v )
+	{
+	}
 
-local names = os.dirwalk( "." );
-names.sort();
-for( name in names )
-{
-	print( name );
-}
+# BUG: leaks the return value (vector) from _re.search
+# ONLY if the for loop is executed AND the 'if' statement exists
+#import _re;
+#local regexp = _re.compile( "(\w+)\W+(\w+)" );
+#local s = "@abc def--";
+#local matches = _re.search( regexp, s );
+##print( matches );
+##local i = 0;
+#if( matches )
+#	for( m in matches )
+#	{
+##		print( m.start, ":" );
+##		print( m.end );
+##		print( "match " + str( i ) + ": ", "" );
+##		print( s[m.start:m.end] );
+##		print( m.str );
+##		i += 1;
+#	}
+#
+#_re.delete( regexp );
+
+# test builtin os module
+#import os;
+#
+#local names = os.dirwalk( "." );
+#names.sort();
+#for( name in names )
+#{
+#	print( name );
+#}
 
 # TEST error stack trace:
 #def Foo()

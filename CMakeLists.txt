@@ -133,6 +133,7 @@ add_executable( deva
 	src/module_os.cpp
 	src/module_bit.cpp
 	src/module_math.cpp
+	src/module_re.cpp
 	src/frame.cpp
 	src/scopetable.cpp
 	devaLexer.c

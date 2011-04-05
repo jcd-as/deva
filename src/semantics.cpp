@@ -98,8 +98,6 @@ void Semantics::PopScope()
 void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/ )
 {
 	// disallow non-keyword "keywords":
-	if( strcmp( name, "delete" ) == 0 )
-		throw SemanticException( "Syntax error: keyword used as identifier.", line );
 
 	// disallow 'self' outside of a method
 	if( strcmp( name, "self" ) == 0 && !(in_class && in_fcn) )
@@ -128,11 +126,6 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 // resolve a variable, in the current scope
 void Semantics::ResolveVar( char* name, int line )
 {
-	// TODO: modules???
-	// accept builtins
-	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
-		return;
-
 	// inside a method, always accept 'self'
 	if( in_class && strcmp( name, "self" ) == 0 )
 		return;
@@ -145,6 +138,11 @@ void Semantics::ResolveVar( char* name, int line )
 	// look up the variable in the current scope
 	else if( !current_scope->Resolve( name, sym_end ) )
 	{
+		// accept builtins
+		if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
+			return;
+
+		// otherwise error out
 		throw SemanticException( str(boost::format( "Symbol '%1%' not defined." ) % name).c_str(), line );
 	}
 }

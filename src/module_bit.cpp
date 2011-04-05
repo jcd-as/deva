@@ -23,7 +23,7 @@
 
 // module_bit.cpp
 // native bit operations module for deva language, v2
-// created by jcs, april 2, 2011
+// created by jcs, april 3, 2011
 
 // TODO:
 // * 
