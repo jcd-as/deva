@@ -120,6 +120,51 @@ Object* Frame::FindSymbol( const char* name ) const
 	return NULL;
 }
 
+// copy all the strings in 'o' from the parent to here
+// ('o' can be a string, or a vector/map/class/instance which can then can
+// contain strings - which will be looked for recursively)
+// returns an object wrapper of the object passed in that points to the
+// copied strings
+Object Frame::CopyStringsFromParent( Object & o )
+{
+	if( o.type == obj_string )
+	{
+		// add the string to the parent and get a ptr to it
+		const char* str = GetParent()->AddString( string( o.s ) );
+		return Object( str );
+	}
+	else if( o.type == obj_vector )
+	{
+		for( Vector::iterator i = o.v->begin(); i != o.v->end(); ++i )
+		{
+			CopyStringsFromParent( *i );
+		}
+		return o;
+	}
+	else if( o.type == obj_map || o.type == obj_class || o.type == obj_instance )
+	{
+		for( Map::iterator i = o.m->begin(); i != o.m->end(); ++i )
+		{
+			Object first = i->first;
+			Object obj1 = CopyStringsFromParent( first );
+			// if obj1 is a string, force i->first.s to its value
+			// (though forcing a 'set' to a const var in a loop like this is questionable at best,
+			// in this case it is safe because the strings are identical in value, and Object's 
+			// with a string type are compared by strcmp)
+			if( obj1.type == obj_string )
+			{
+				char** s = (char**)&(i->first.s);
+				*s = obj1.s;
+			}
+			Object obj2 = CopyStringsFromParent( i->second );
+			if( obj2.type == obj_string )
+				i->second = obj2;
+		}
+		return o;
+	}
+	else
+		return o;
+}
 
 } // end namespace deva
 
