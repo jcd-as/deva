@@ -6,8 +6,6 @@
 # [x] cygwin 32-bit (Windows 7)
 # [x] msvc 64-bit (Windows 7)
 
-# ONLY TESTED WITH IN-SOURCE BUILDS
-
 # required vars for the user to set:
 # all platforms:
 #	CMAKE_MODULE_PATH: path where FindANTLR.cmake is located
