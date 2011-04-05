@@ -98,6 +98,13 @@ public:
 	inline void AddString( char* s ) { strings.push_back( s ); }
 	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }
 
+	// copy all the strings in 'o' from the parent to here
+	// ('o' can be a string, or a vector/map/class/instance which can then can
+	// contain strings - which will be looked for recursively)
+	// returns an object wrapper of the object passed in that points to the
+	// copied strings
+	Object CopyStringsFromParent( Object & o );
+
 	// resolve symbols through the scope table
 	Object* FindSymbol( const char* name ) const;
 	// TODO: doesn't find names of builtins, modules, fcns etc

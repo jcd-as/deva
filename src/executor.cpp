@@ -1532,18 +1532,14 @@ Opcode Executor::ExecuteInstruction()
 		}
 		break;
 	case op_return:
-		// TODO: better way: add a Frame::MoveString() method that moves the
-		// string ownership from one scope to another
-		//
-		// if a string is being returned, it needs to be copied to the calling
-		// frame! (string mem in a frame is freed on frame exit)
-		if( stack.back().type == obj_string )
+		// if a string is being returned (including inside a vector or map/class/instance),
+		// it needs to be copied to the calling frame! 
+		// (string mem in a frame is freed on frame exit)
 		{
-			Object o = stack.back();
-			stack.pop_back();
-			const char* str = CurrentFrame()->GetParent()->AddString( string( o.s ) );
-			stack.push_back( Object( str ) );
-		}
+		Object o = stack.back();
+		stack.pop_back();
+		Object obj = CurrentFrame()->CopyStringsFromParent( o );
+		stack.push_back( obj );
 
 		// 1 arg: number of scopes to leave
 		arg = *((dword*)ip);
@@ -1556,6 +1552,7 @@ Opcode Executor::ExecuteInstruction()
 		PopScope();
 		// ... and the current frame
 		PopFrame();
+		}
 		break;
 	case op_exit_loop:
 		// 2 args: jump target address, number of scopes to leave
