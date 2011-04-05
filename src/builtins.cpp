@@ -510,30 +510,43 @@ void do_num( Frame *frame )
 void do_range( Frame *frame )
 {
 	BuiltinHelper helper( NULL, "range", frame );
-	helper.CheckNumberOfArguments( 2, 3 );
+	helper.CheckNumberOfArguments( 1, 3 );
 
 	int step = 1;
+	int start = 0;
+	int end = -1;
+
 	Object *stepobj, *startobj, *endobj;
 
 	int num_args = frame->NumArgsPassed();
+
+	startobj = helper.GetLocalN( 0 );
+	helper.ExpectPositiveIntegralNumber( startobj );
+	start = (int)startobj->d;
+
 	if( num_args == 3 )
 	{
-		startobj = helper.GetLocalN( 0 );
 		endobj = helper.GetLocalN( 1 );
-		stepobj = helper.GetLocalN( 2 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
 
-		helper.ExpectIntegralNumber( stepobj );
+		stepobj = helper.GetLocalN( 2 );
+		helper.ExpectPositiveIntegralNumber( stepobj );
 		step = (int)stepobj->d;
 	}
-	else
+	else if( num_args == 2 )
 	{
-		startobj = helper.GetLocalN( 0 );
 		endobj = helper.GetLocalN( 1 );
+		helper.ExpectIntegralNumber( endobj );
+		end = (int)endobj->d;
 	}
-	helper.ExpectIntegralNumber( startobj );
-	helper.ExpectIntegralNumber( endobj );
-	int start = (int)startobj->d;
-	int end = (int)endobj->d;
+
+	// if we only have one arg, start = 0 and end = start-arg
+	if( end == -1 )
+	{
+		end = start;
+		start = 0;
+	}
 
 	if( start < 0 || end < 0 || step < 0 )
 		throw RuntimeException( "Arguments to 'range' must be positive integral numbers." );

@@ -23,7 +23,7 @@
 
 // module_bit.h
 // native bit operations module for deva language, v2
-// created by jcs, april 2, 2011
+// created by jcs, april 3, 2011
 
 // TODO:
 // * 
@@ -32,7 +32,6 @@
 #define __MODULE_BIT_H__
 
 #include "object.h"
-//#include <string>
 
 using namespace std;
 

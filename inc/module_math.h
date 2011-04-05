@@ -32,7 +32,6 @@
 #define __MODULE_MATH_H__
 
 #include "object.h"
-//#include <string>
 
 using namespace std;
 

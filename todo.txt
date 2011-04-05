@@ -5,12 +5,10 @@ TODO 2011-03-09 @deva +medium fix minor issues with tests:
 TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import NYI, .dvc NYI)
-	38 (math module NYI)
 	48 (eval builtin NYI)
 	50 ('_re.delete() not allowed to use keyword & _re/re modules NYI)d
 	53 (os,glob modules NYI)
 	62 (json module NYI, seterror/geterror/error builtins NYI)
-	68 (math module NYI)
 
 TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
@@ -18,7 +16,7 @@ TODO 2011-03-02 @deva +veryhigh implement built-in modules
 	[x] math
 	[x] bit
 	[x] os
-	[ ] re
+	[x] re
 
 TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
 	so that executor can read .dvc files and execute them without needing to compile the .dv file
