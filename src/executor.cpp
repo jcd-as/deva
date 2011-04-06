@@ -966,6 +966,7 @@ Opcode Executor::ExecuteInstruction()
 			ip = (byte*)(bp + arg);
 		else
 			ip += sizeof( dword );
+		DecRef( o );
 		break;
 	case op_eq:
 		rhs = stack.back();

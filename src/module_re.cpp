@@ -134,9 +134,10 @@ void do_re_match( Frame* f )
 	cmatch match;
 	bool found = regex_match( s->s, match, *((boost::regex*)(r->no)) );
 
-	Vector* vec = CreateVector();
+	Vector* vec;
 	if( found )
 	{
+		vec = CreateVector();
 		vec->reserve( match.size() );
 		for( size_t i = 0; i < match.size(); ++i )
 		{
@@ -151,12 +152,8 @@ void do_re_match( Frame* f )
 			mp->insert( make_pair( Object( str_s ), Object( match_s ) ) );
 			vec->push_back( Object( mp ) );
 		}
-	}
-	else
-		delete vec;
-
-	if( found )
 		helper.ReturnVal( Object( vec ) );
+	}
 	else
 		helper.ReturnVal( Object( obj_null ) );
 }
@@ -175,9 +172,10 @@ void do_re_search( Frame* f )
 	cmatch match;
 	bool found = regex_search( s->s, match, *((boost::regex*)(r->no)) );
 
-	Vector* vec = CreateVector();
+	Vector* vec;
 	if( found )
 	{
+		vec = CreateVector();
 		vec->reserve( match.size() );
 		for( size_t i = 0; i < match.size(); ++i )
 		{
@@ -192,12 +190,8 @@ void do_re_search( Frame* f )
 			mp->insert( make_pair( Object( str_s ), Object( match_s ) ) );
 			vec->push_back( Object( mp ) );
 		}
-	}
-	else
-		delete vec;
-
-	if( found )
 		helper.ReturnVal( Object( vec ) );
+	}
 	else
 		helper.ReturnVal( Object( obj_null ) );
 }
