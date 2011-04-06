@@ -1,10 +1,33 @@
+import _re;
+local card_regexp = "\\A(\\d{3,4})[- ]?(\\d{4})[- ]?(\\d{4})[- ]?(\\d{4})\\z";
+local regexp = _re.compile( card_regexp );
+local machine_format = "\\1\\2\\3\\4";
+local human_format = "\\1-\\2-\\3-\\4";
+local card_num = "4444-0000-1111-2222";
+local human_readable_card_num = _re.replace( regexp, card_num, machine_format );
+print( human_readable_card_num );
+local machine_readable_card_num = _re.replace( regexp, human_readable_card_num, human_format );
+print( machine_readable_card_num );
+_re.delete( regexp );
+
+
+# check for ref leaks
+#import re;
+#{
+#    local regexp = new re.re( "(\w+)\W+(\w+)" );
+#    local s = "@abc def--";
+#    local matches = regexp.search( s );
+#    print( matches );
+#}
+
+# check:
 # BUG: leaks the vector 
 # ONLY if the for loop is executed AND the 'if' statement exists
-local v = [0,1];
-if( v )
-	for( i in v )
-	{
-	}
+#local v = [0,1];
+#if( v )
+#	for( i in v )
+#	{
+#	}
 
 # BUG: leaks the return value (vector) from _re.search
 # ONLY if the for loop is executed AND the 'if' statement exists
