@@ -1007,8 +1007,6 @@ Opcode Executor::ExecuteInstruction()
 		lhs = ResolveSymbol( lhs );
 		DecRef( lhs );
 		stack.pop_back();
-		if( lhs.type != rhs.type )
-			throw RuntimeException( "Inequality operator used on operands of different types." );
 		switch( lhs.type )
 		{
 		case obj_null: stack.push_back( Object( rhs.type != obj_null ) ); break;

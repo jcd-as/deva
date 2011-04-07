@@ -1,3 +1,15 @@
+# BUG: ICE: "Cannot locate local symbol 're'"
+#import re;
+#local re = 0;
+
+# BUG: 
+#def foo( x )
+#{
+#	# this line generates compile error: "Symbol 'x' not found"
+#	x = 12;
+#}
+#foo( 4 );
+
 # test builtin os module
 #import os;
 #

@@ -297,7 +297,7 @@ bool Object::CoerceToBool()
 			return true;
 		break;
 	case obj_boolean:
-			return b;
+		return b;
 		break;
 	case obj_native_obj:
 		if( no != (void*)0 )

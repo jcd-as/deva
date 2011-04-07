@@ -383,7 +383,7 @@ void do_os_dirwalk( Frame* f )
 	}
 
 	Object ret;
-	Vector* dw_data = CreateVector();
+	Vector* dw_data;
 
 	// ensure dir exists and is a directory
 	filesystem::path p( o->s );
@@ -393,6 +393,7 @@ void do_os_dirwalk( Frame* f )
 		ret = Object( obj_null );
 	else
 	{
+		dw_data = CreateVector();
 		if( recurse )
 		{
 			filesystem::recursive_directory_iterator end;

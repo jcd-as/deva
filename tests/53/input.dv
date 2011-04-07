@@ -14,7 +14,15 @@ for( name in glob.fnmatch( names, "*.tst" ) )
 	print( name );
 }
 
-print( glob.glob( "./*.tst" ) );
-print( glob.glob( "*.dv" ) );
-print( glob.glob( "d/*.[abc]" ) );
-print( glob.glob( "b?s?l?n[efg]" ) );
+local v = glob.glob( "./*.tst" );
+v.sort();
+print( v );
+v = glob.glob( "*.dv" );
+v.sort();
+print( v );
+v = glob.glob( "d/*.[abc]" );
+v.sort();
+print( v );
+v = glob.glob( "b?s?l?n[efg]" );
+v.sort();
+print( v );

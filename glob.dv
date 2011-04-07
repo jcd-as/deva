@@ -1,0 +1,135 @@
+import re;
+import os;
+
+# Return the subset of the list 'names' that match 'pattern'
+# Translate a shell pattern 'pat' to a regular expression string
+def glob_to_re( pat )
+{
+    local i = 0;
+    local n = length( pat );
+    local res = '';
+    while( i < n )
+    {
+        local c = pat[i];
+        i += 1;
+        if( c == '*' )
+            res = res + '.*';
+        else if( c == '?' )
+            res = res + '.';
+        else if( c == '[' )
+        {
+            local j = i;
+            if( j < n && pat[j] == '!' )
+                j += 1;
+            if( j < n && pat[j] == ']' )
+                j += 1;
+            while( j < n && pat[j] != ']' )
+                j += 1;
+            if( j >= n )
+                res = res + '\\[';
+            else
+            {
+                local stuff = pat[i:j];
+                stuff = stuff.replace( '\\', '\\\\' );
+                i = j + 1;
+                if( stuff[0] == '!' )
+                    stuff = '^' + stuff[1:-1];
+                else if( stuff[0] == '^' )
+                    stuff = '\\' + stuff;
+                res = res + '[' + stuff + ']';
+            }
+        }
+        else
+            # escape 'c' here for regex syntax
+            res = res + re.escape( c );
+    }
+    return res + "$";
+}
+
+def fnmatch( names, pattern )
+{
+    local result = [];
+	local res = glob_to_re( pattern );
+	local exp = new re.re( res );
+    for( name in names )
+    {
+        if( exp.match( name ) )
+            result.append( name );
+    }
+    return result;
+}
+
+# These 2 helper functions non-recursively glob inside a literal directory.
+# They return a list of basenames. `glob1` accepts a pattern while `glob0`
+# takes a literal basename (so it only has to check for its existence).
+
+# non-recursive glob helper, with a pattern
+def glob1( dirname, pattern )
+{
+    if( !dirname )
+        dirname = os.getcwd();
+    
+    local names = os.dirwalk( dirname, false );
+	# dirwalk will return values with dirname included (full paths)
+	local pat = os.joinpaths( [dirname, pattern] );
+    return fnmatch( names, pat );
+}
+
+# non-recursive glob helper, no pattern
+def glob0( dirname, filename )
+{
+	if( filename == '' )
+	{
+		if( os.isdir( dirname ) )
+			return [filename];
+	}
+	else
+	{
+		if( os.exists( os.joinpaths( [dirname, filename] ) ) )
+			return [filename];
+	}
+	return [];
+}
+
+def has_magic( s )
+{
+	local magic_check = new re.re( '[*?[]' );
+    local val = magic_check.search( s );
+	return val != null;
+}
+
+def glob( path )
+{
+    # if there aren't any 'magic' characters, just return the path as-is,
+    # if it exists
+    if( !has_magic( path ) )
+        if( os.exists( path ) )
+            return path;
+
+    local dirname = os.getdir( path );
+    local filename = os.getfile( path );
+    # if the dir part is empty, we just have a file part
+    if( !dirname )
+        return glob1( os.curdir(), filename );
+
+	local dirs = null;
+    if( has_magic( dirname ) )
+        dirs = glob( dirname );
+    else
+        dirs = [dirname];
+
+	local glob_in_dir = null;
+    if( has_magic( filename ) )
+        glob_in_dir = glob1;
+    else
+        glob_in_dir = glob0;
+
+    local ret = [];
+    for( dn in dirs )
+    {
+        for( name in glob_in_dir( dn, filename ) )
+            ret.append( name );
+    }
+    return ret;
+}
+

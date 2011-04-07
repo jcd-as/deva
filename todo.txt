@@ -6,12 +6,17 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import .dvc NYI)
 	48 (eval builtin NYI)
-	53 (glob modules NYI)
 	62 (json module NYI)
+	50/53 (running, not valgrind clean - leaking)
+
+TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
 
 TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
-TODO 2011-03-02 @deva +veryhigh implement built-in modules
+DONE 2011-03-02 @deva +veryhigh implement built-in modules
+    CLOSED: 2011-04-05 21:12:08
+    :LOGBOOK:
+        DONE: 2011-04-05 21:12:08
 	[x] math
 	[x] bit
 	[x] os

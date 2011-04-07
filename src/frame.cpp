@@ -137,7 +137,7 @@ Object Frame::CopyStringsFromParent( Object & o )
 	{
 		for( Vector::iterator i = o.v->begin(); i != o.v->end(); ++i )
 		{
-			CopyStringsFromParent( *i );
+			*i = CopyStringsFromParent( *i );
 		}
 		return o;
 	}
