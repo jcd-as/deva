@@ -314,8 +314,7 @@ bool Object::CoerceToBool()
 	case obj_string:
 		if( strlen( s ) > 0 )
 			return true;
-		else
-			return false;
+		break;
 	case obj_vector:
 	case obj_map:
 	case obj_instance:

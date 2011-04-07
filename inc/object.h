@@ -98,19 +98,20 @@ struct Object
 	ObjectType type;
 	union
 	{
-		double d;
-		char* s;
-		bool b;
-		Vector* v;
-		Map* m;
-		Function* f;
-		NativeFunction nf;
-		void* no;
-		size_t sz;
+		double d;			// obj_number
+		char* s;			// obj_string / obj_symbol_name
+		int b;				// obj_boolean - valgrind gets cranky if you use 'bool' here
+		Vector* v;			// obj_vector
+		Map* m;				// obj_map / obj_class / obj_instance
+		Function* f;		// obj_function
+		NativeFunction nf;	// obj_native_function
+		void* no;			// obj_native_obj
+		size_t sz;			// obj_size
 	};
 
 	Object() : type( obj_end ), d( 0.0 ) {} // invalid object
-	Object( ObjectType t ) : type( t ) {} // uninitialized object
+	Object( ObjectType t ) : type( t ), d( 0.0 ) // uninitialized object
+	{ /*assert( t == obj_null );*/ }
 	Object( double n ) : type( obj_number ), d( n ) {}
 	Object( char* n ) : type( obj_string ), s( n ) {}
 	Object( const char* n ) : type( obj_string ), s( const_cast<char*>(n) ) {}
