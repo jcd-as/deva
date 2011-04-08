@@ -35,6 +35,7 @@ type
 exit
 num
 range
+eval
 open
 close
 flush
@@ -118,30 +119,30 @@ Instructions:
    3: jmpf		40
    8: enter		 
    9: pushlocal0		 
-  10: pushconst		82 (b)
+  10: pushconst		83 (b)
   15: tbl_load	
-  16: pushconst		83 (c)
+  16: pushconst		84 (c)
   21: tbl_load	
-  22: pushconst		84 (d)
+  22: pushconst		85 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
   34: leave		 
   35: jmp		2
   40: pushlocal0		 
-  41: pushconst		82 (b)
+  41: pushconst		83 (b)
   46: tbl_load	
-  47: pushconst		83 (c)
+  47: pushconst		84 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	89 (x), 73
+  59: def_function	90 (x), 73
   68: jmp		104
   73: enter		 
-  74: pushconst		85 (a)
-  79: pushconst		82 (b)
+  74: pushconst		86 (a)
+  79: pushconst		83 (b)
   84: tbl_load	
-  85: pushconst		83 (c)
+  85: pushconst		84 (c)
   90: method_load	
   91: call_method		0
   96: pop		 

@@ -47,6 +47,7 @@ type
 exit
 num
 range
+eval
 open
 close
 flush
@@ -129,7 +130,7 @@ function: foo, from file: input.dv, line: 1
 2 local(s): a b 
 code address: 14
 Instructions:
-   0: def_function	88 (foo), 14
+   0: def_function	89 (foo), 14
    9: jmp		70
   14: enter		 
   15: pushlocal0		 
@@ -159,7 +160,7 @@ Instructions:
   75: def_local0		 
   76: push		5
   81: pushlocal0		 
-  82: pushconst		86 (append)
+  82: pushconst		87 (append)
   87: method_load	
   88: call_method		1
   93: pop		 
@@ -167,21 +168,21 @@ Instructions:
   99: def_local1		 
  100: pushlocal1		 
  101: push_zero		 
- 102: pushconst		85 (foo)
+ 102: pushconst		86 (foo)
  107: tbl_store	
  108: pushlocal1		 
- 109: pushconst		85 (foo)
- 114: pushconst		88 (foo)
+ 109: pushconst		86 (foo)
+ 114: pushconst		89 (foo)
  119: tbl_store	
  120: push_zero		 
  121: push_one		 
  122: pushlocal1		 
- 123: pushconst		85 (foo)
+ 123: pushconst		86 (foo)
  128: tbl_load	
  129: call		2
  134: pop		 
  135: pushlocal1		 
- 136: pushconst		85 (foo)
+ 136: pushconst		86 (foo)
  141: tbl_load	
  142: def_local2		 
  143: push_zero		 
@@ -206,8 +207,8 @@ Instructions:
  186: pushconst		13 (str)
  191: call		1
  196: add		 
- 197: pushconst		91 (io)
- 202: pushconst		87 (print)
+ 197: pushconst		92 (io)
+ 202: pushconst		88 (print)
  207: method_load	
  208: call_method		1
  213: pop		 
@@ -226,8 +227,8 @@ Instructions:
  238: pushlocal0		 
  239: pushconst		13 (str)
  244: call		1
- 249: pushconst		91 (io)
- 254: pushconst		87 (print)
+ 249: pushconst		92 (io)
+ 254: pushconst		88 (print)
  259: method_load	
  260: call_method		1
  265: pop		 

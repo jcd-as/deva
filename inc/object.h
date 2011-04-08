@@ -252,8 +252,7 @@ struct Function
 	string classname;
 	// number of arguments
 	dword num_args;
-	// TODO: need to store default values for args too
-//	OrderedSet<int> default_args;
+	// default args
 	vector<int> default_args;
 	// number of locals
 	dword num_locals;
@@ -264,6 +263,8 @@ struct Function
 
 	// does this function reside in a module? (not in 'main')
 	bool in_module;
+	// does this function reside in an eval'd text block? (not in 'main')
+	bool in_eval;
 	// module the fcn resides in, NULL if 'main' or unset
 	// (pointer is not set at creation time if the function is in a module,
 	// it won't be set until the first call to it)

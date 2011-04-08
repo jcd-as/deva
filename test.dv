@@ -1,4 +1,6 @@
-local s = "local m = 0; print( m );";
+local n = 0;
+def foo(){ print( "foo called" ); }
+local s = "local m = \"foo\"; foo(); print( m );";
 eval( s );
 
 # BUG: ICE: "Cannot locate local symbol 're'"

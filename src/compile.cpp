@@ -126,10 +126,15 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	}
 	// compiling a module?
 	f->module = NULL;
-	if( !module_name || strlen( module_name ) == 0 )
-		f->in_module = false;
-	else
-		f->in_module = true;
+	f->in_module = false;
+	f->in_eval = false;
+	if( module_name && strlen( module_name ) != 0 )
+	{
+		if( strncmp( module_name, "[TEXT", 5 ) == 0 )
+			f->in_eval = true;
+		else
+			f->in_module = true;
+	}
 	string fcnname = module_name;
 	fcnname += "@main";
 	ex->AddFunction( fcnname.c_str(), f );
@@ -249,10 +254,15 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 	// compiling a module?
 	fcn->module = NULL;
-	if( !module_name || strlen( module_name ) == 0 )
-		fcn->in_module = false;
-	else
-		fcn->in_module = true;
+	fcn->in_module = false;
+	fcn->in_eval = false;
+	if( module_name && strlen( module_name ) != 0 )
+	{
+		if( strncmp( module_name, "[TEXT", 5 ) == 0 )
+			fcn->in_eval = true;
+		else
+			fcn->in_module = true;
+	}
 
 	// add the locals
 	for( size_t i = 0; i < scope->GetLocals().size(); i++ )

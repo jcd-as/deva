@@ -49,6 +49,7 @@ type
 exit
 num
 range
+eval
 open
 close
 flush
@@ -139,7 +140,7 @@ function: bubble_sort, from file: input.dv, line: 3
 6 local(s): a len swap i j temp 
 code address: 14
 Instructions:
-   0: def_function	95 (bubble_sort), 14
+   0: def_function	96 (bubble_sort), 14
    9: jmp		131
   14: enter		 
   15: pushlocal0		 
@@ -270,7 +271,7 @@ Instructions:
  292: pushconst		15 (append)
  297: call		2
  302: pop		 
- 303: pushconst		93 (un-sorted:)
+ 303: pushconst		94 (un-sorted:)
  308: pushconst		12 (print)
  313: call		1
  318: pop		 
@@ -291,10 +292,10 @@ Instructions:
  353: jmp		333
  358: pop		 
  359: pushlocal0		 
- 360: pushconst		95 (bubble_sort)
+ 360: pushconst		96 (bubble_sort)
  365: call		1
  370: def_local2		 
- 371: pushconst		92 (sorted:)
+ 371: pushconst		93 (sorted:)
  376: pushconst		12 (print)
  381: call		1
  386: pop		 

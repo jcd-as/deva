@@ -367,8 +367,32 @@ void Executor::ExecuteCode( const Code* const code )
 
 void Executor::ExecuteText( const char* const text )
 {
-	const Code* code = LoadText( text );
+	static dword count = 0;
+	ostringstream s;
+	s << "[TEXT" << count << "]";
+	string name = s.str();
+	const Code* code = LoadText( text, name.c_str() );
+
+	byte* orig_ip = ip;
+	byte* orig_bp = bp;
+	byte* orig_end = end;
+
+	// find our 'module' function, "name@main"
+	Object *eval_main = FindFunction( name + "@main", 0 );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f );
+	PushFrame( frame );
+	Scope* scope = new Scope();
+	PushScope( scope );
+
 	ExecuteCode( code );
+
+	// pop the scope and frame
+	PopScope();
+	PopFrame();
+
+	ip = orig_ip;
+	bp = orig_bp;
+	end = orig_end;
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -3430,7 +3454,7 @@ string Executor::FindModule( string mod )
 	throw RuntimeException( boost::format( "Unable to locate module '%1%' for import." ) % mod );
 }
 
-const Code* Executor::LoadText( const char* const text )
+const Code* Executor::LoadText( const char* const text, const char* const name )
 {
 	// load and parse the text
 	ParseReturnValue prv;
@@ -3452,7 +3476,7 @@ const Code* Executor::LoadText( const char* const text )
 		p1rv = PassOne( prv, p1f );
 
 		// PASS TWO: compile
-		PassTwo( "", p1rv, p2f );
+		PassTwo( name, p1rv, p2f );
 		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
 
 		// free parser, compiler memory
@@ -4053,11 +4077,19 @@ void Executor::DumpTrace( ostream & os )
 		// (frame->addr) to a line number. otherwise, subtract the bp (for this
 		// module) from it to produce the code offset
 		if( depth == 1 )
-			os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
+		{
+			if( line == -1 )
+				os << "file: " << file << ", line: " << "[unknown line]" << ", in " << fcn << endl;
+			else
+				os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
+		}
 		else
 		{
 			size_t call_site = GetOffsetForCallSite( f->GetCallSite() );
-			os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
+			if( call_site == (size_t)-1 )
+				os << "file: " << file << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
+			else
+				os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
 //		os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
 		}
 

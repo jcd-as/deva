@@ -58,10 +58,6 @@ namespace deva
 // number of 'global' constant symbols (true, false, null, 'delete', 'new' etc)
 extern const int num_of_constant_symbols;
 
-// number of 'default' constants ('global' constants like true, false, null
-// etc, plus all the builtins)
-//const int num_of_default_constants = num_of_constant_symbols + num_of_builtins + num_of_string_builtins + num_of_vector_builtins + num_of_map_builtins;
-
 struct Code
 {
 	byte* code;
@@ -71,6 +67,7 @@ struct Code
 	size_t num_constants;
 
 	// TODO: line number mapping, other debug info?
+//	map<int, int> lines;
 
 	Code( byte* c, size_t l, size_t n ) : code( c ), len( l ), num_constants( n ) { }
 	~Code(){ delete[] code; }
@@ -213,7 +210,7 @@ private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
 	// helper fcn for parsing and compiling a block of text
-	const Code* LoadText( const char* const text );
+	const Code* LoadText( const char* const text, const char* const name );
 
 	bool ImportBuiltinModule( const char* module_name );
 	// helper to fixup the constants in compiled code (imported dvc file)

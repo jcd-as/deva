@@ -59,6 +59,7 @@ type
 exit
 num
 range
+eval
 open
 close
 flush
@@ -172,7 +173,7 @@ Instructions:
   27: storelocal0		 
   28: leave		 
   29: jmp		19
-  34: def_function	91 (foo), 48
+  34: def_function	92 (foo), 48
   43: jmp		56
   48: enter		 
   49: leave		 
@@ -182,7 +183,7 @@ Instructions:
   57: def_local2		 
   58: push_zero		 
   59: def_local3		 
-  60: def_function	99 (z), 74
+  60: def_function	100 (z), 74
   69: jmp		82
   74: enter		 
   75: leave		 
@@ -194,7 +195,7 @@ Instructions:
   89: pushlocal3		 
   90: jmpf		108
   95: enter		 
-  96: pushconst		99 (z)
+  96: pushconst		100 (z)
  101: call		0
  106: pop		 
  107: leave		 
@@ -205,7 +206,7 @@ Instructions:
  116: pushlocal3		 
  117: jmpf		135
  122: enter		 
- 123: pushconst		99 (z)
+ 123: pushconst		100 (z)
  128: call		0
  133: pop		 
  134: leave		 
@@ -221,57 +222,57 @@ Instructions:
  148: jmp		155
  153: enter		 
  154: leave		 
- 155: def_function	95 (fcn), 169
+ 155: def_function	96 (fcn), 169
  164: jmp		193
  169: enter		 
- 170: pushconst		89 (fcn called)
+ 170: pushconst		90 (fcn called)
  175: pushconst		12 (print)
  180: call		1
  185: pop		 
  186: leave		 
  187: push_null		 
  188: return		0
- 193: pushconst		86 (b)
- 198: pushconst		95 (fcn)
+ 193: pushconst		87 (b)
+ 198: pushconst		96 (fcn)
  203: new_map		1
  208: storelocal0		 
  209: pushlocal0		 
- 210: pushconst		86 (b)
+ 210: pushconst		87 (b)
  215: method_load	
  216: call_method		0
  221: pop		 
  222: pushlocal0		 
- 223: pushconst		86 (b)
- 228: pushconst		87 (c)
- 233: pushconst		88 (d)
+ 223: pushconst		87 (b)
+ 228: pushconst		88 (c)
+ 233: pushconst		89 (d)
  238: push_one		 
  239: new_map		1
  244: new_map		1
  249: tbl_store	
  250: pushlocal0		 
- 251: pushconst		86 (b)
+ 251: pushconst		87 (b)
  256: tbl_load	
- 257: pushconst		87 (c)
+ 257: pushconst		88 (c)
  262: tbl_load	
- 263: pushconst		88 (d)
+ 263: pushconst		89 (d)
  268: push_zero		 
  269: tbl_store	
  270: pushlocal0		 
- 271: pushconst		86 (b)
+ 271: pushconst		87 (b)
  276: tbl_load	
- 277: pushconst		87 (c)
+ 277: pushconst		88 (c)
  282: tbl_load	
- 283: pushconst		88 (d)
+ 283: pushconst		89 (d)
  288: new_map		0
  293: tbl_store	
  294: pushlocal0		 
- 295: pushconst		86 (b)
+ 295: pushconst		87 (b)
  300: tbl_load	
- 301: pushconst		87 (c)
+ 301: pushconst		88 (c)
  306: tbl_load	
- 307: pushconst		88 (d)
+ 307: pushconst		89 (d)
  312: tbl_load	
- 313: pushconst		90 (foo)
+ 313: pushconst		91 (foo)
  318: push_one		 
  319: tbl_store	
  320: push_one		 
