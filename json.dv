@@ -8,6 +8,26 @@
 import re;
 
 #############################################################################
+# module-scope variables:
+#############################################################################
+local re_str = new re.re( '"[\\s\\S]*"' );
+local re_bool = new re.re( "\\s*true|false\\s*" );
+# num regex, unescaped = -?(0|\d+)(\.\d+([eE]?[-+]?\d+)?)?
+local re_num = new re.re( "-?(0|\\d+)(\\.\\d+([eE]?[-+]?\\d+)?)?" );
+
+#############################################################################
+# pre-declarations for compiler
+#############################################################################
+local check_nesting = null;
+local decode_object = null;
+local encode_object = null;
+local get_items = null;
+local decode_pair = null;
+local decode_array = null;
+local decode_value = null;
+local get_next_item = null;
+
+#############################################################################
 # "public" functions:
 #############################################################################
 
@@ -42,10 +62,6 @@ def encode( obj )
 #############################################################################
 # "private" helper functions:
 #############################################################################
-re_str = new re.re( '"[\\s\\S]*"' );
-re_bool = new re.re( "\\s*true|false\\s*" );
-# num regex, unescaped = -?(0|\d+)(\.\d+([eE]?[-+]?\d+)?)?
-re_num = new re.re( "-?(0|\\d+)(\\.\\d+([eE]?[-+]?\\d+)?)?" );
 
 # recursive function to pull simple objects out of a json encoded string
 def decode_object( json, start = 0, end = -1 )

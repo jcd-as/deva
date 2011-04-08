@@ -51,7 +51,7 @@ const string builtin_names[] =
 	string( "exit" ),
 	string( "num" ),
 	string( "range" ),
-//	string( "eval" ),
+	string( "eval" ),
 	string( "open" ),
 	string( "close" ),
 	string( "flush" ),
@@ -89,7 +89,7 @@ NativeFunction builtin_fcns[] =
 	{do_exit, false},
 	{do_num, false},
 	{do_range, false},
-//	{do_eval, false},
+	{do_eval, false},
 	{do_open, false},
 	{do_close, false},
 	{do_flush, false},
@@ -126,7 +126,7 @@ Object builtin_fcn_objs[] =
 	Object( do_exit ),
 	Object( do_num ),
 	Object( do_range ),
-//	Object( do_eval ),
+	Object( do_eval ),
 	Object( do_open ),
 	Object( do_close ),
 	Object( do_flush ),
@@ -563,39 +563,19 @@ void do_range( Frame *frame )
 	helper.ReturnVal( Object( vec ) );
 }
 
-/*
 void do_eval( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'eval'." );
+	BuiltinHelper helper( NULL, "eval", frame );
 
-	// string to eval must be at top of stack
-	DevaObject obj = ex->stack.back();
-	ex->stack.pop_back();
-	
-	DevaObject* o = NULL;
-	if( obj.Type() == sym_unknown )
-	{
-		o = ex->find_symbol( obj );
-		if( !o )
-			throw DevaRuntimeException( "Symbol not found in call to built-in function 'eval'." );
-	}
-	if( !o )
-		o = &obj;
+	helper.CheckNumberOfArguments( 1 );
 
-	// had better be a string
-	if( o->Type() != sym_string )
-		throw DevaRuntimeException( "eval() builtin function called with a non-string argument." );
+	Object* s = helper.GetLocalN( 0 );
+	helper.ExpectType( s, obj_string );
 
-	ex->RunText( o->str_val );
+	ex->ExecuteText( s->s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// all fcns return *something*
-	ex->stack.push_back( DevaObject( "", sym_null ) );
+	helper.ReturnVal( Object( obj_null ) );
 }
-*/
 
 void do_open( Frame *frame )
 {

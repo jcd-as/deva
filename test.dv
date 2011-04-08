@@ -1,14 +1,9 @@
+local s = "local m = 0; print( m );";
+eval( s );
+
 # BUG: ICE: "Cannot locate local symbol 're'"
 #import re;
 #local re = 0;
-
-# BUG: 
-#def foo( x )
-#{
-#	# this line generates compile error: "Symbol 'x' not found"
-#	x = 12;
-#}
-#foo( 4 );
 
 # test builtin os module
 #import os;
@@ -72,6 +67,16 @@
 ############################################
 ## END BUG SECTION
 ############################################
+#no refcount leaks
+#def foo( start = 32, bar = 1, end = -1, x = 255 )
+#{
+#	print( start );
+#	print( bar );
+#	print( end );
+#	print( x );
+#}
+#foo();
+
 # no refcount leaks
 #local v = [0,1,2,3];
 #for( i in v )

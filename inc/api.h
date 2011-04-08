@@ -82,6 +82,7 @@ struct PassOneReturnValue
 
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM in );
 ParseReturnValue Parse( const char* module );
+ParseReturnValue Parse( const char* input, size_t length );
 // free parser memory, call after completely finished with parser items, ast etc
 void FreeParseReturnValue( ParseReturnValue & prv );
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags );

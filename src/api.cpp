@@ -91,6 +91,22 @@ ParseReturnValue Parse( const char* filename )
 	return Parse( input_stream );
 }
 
+// parse from a string
+ParseReturnValue Parse( const char* input, size_t length )
+{
+	pANTLR3_INPUT_STREAM input_stream;
+	input_stream = antlr3NewAsciiStringInPlaceStream( (uint8_t*)input, (ANTLR3_UINT32)length, NULL );
+
+	current_file = "[TEXT]";
+
+	// The input will be created successfully, providing that there is enough
+	// memory etc
+	if( !input_stream )
+	   throw RuntimeException( "Error creating input for parser." );
+
+	return Parse( input_stream );
+}
+
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 {
 	pANTLR3_COMMON_TREE_NODE_STREAM nodes;

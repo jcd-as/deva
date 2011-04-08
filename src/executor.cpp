@@ -365,6 +365,12 @@ void Executor::ExecuteCode( const Code* const code )
 	}
 }
 
+void Executor::ExecuteText( const char* const text )
+{
+	const Code* code = LoadText( text );
+	ExecuteCode( code );
+}
+
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
 {
 	Opcode op = op_nop;
@@ -978,7 +984,10 @@ Opcode Executor::ExecuteInstruction()
 		DecRef( lhs );
 		stack.pop_back();
 		if( lhs.type != rhs.type )
-			throw RuntimeException( "Equality operator used on operands of different types." );
+		{
+			stack.push_back( Object( false ) );
+			break;
+		}
 		switch( lhs.type )
 		{
 		case obj_null: stack.push_back( Object( rhs.type == obj_null ) ); break;
@@ -3221,10 +3230,10 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	int num_defaults = f->num_args - num_args;
 	if( num_defaults != 0 )
 	{
-		int non_defaults = (int)(f->num_args - f->default_args.Size());
+		int non_defaults = (int)(f->num_args - f->NumDefaultArgs());
 		for( int i = 0; i < num_defaults; i++ )
 		{
-			int idx = f->default_args.At( num_args + i - non_defaults );
+			int idx = f->default_args.at( num_args + i - non_defaults );
 			Object o = GetConstant( idx );
 			frame->SetLocal( num_args+i, o );
 		}
@@ -3419,6 +3428,47 @@ string Executor::FindModule( string mod )
 	}
 	// not found, error
 	throw RuntimeException( boost::format( "Unable to locate module '%1%' for import." ) % mod );
+}
+
+const Code* Executor::LoadText( const char* const text )
+{
+	// load and parse the text
+	ParseReturnValue prv;
+	PassOneReturnValue p1rv;
+
+	// NOTE: compiler and semantics global objects should be free'd and NULL at
+	// this point!
+
+	// parse the file
+	prv = Parse( text, strlen( text ) );
+
+	if( prv.successful )
+	{
+		PassOneFlags p1f; // currently no pass one flags
+		PassTwoFlags p2f;
+		p2f.trace = trace;
+
+		// PASS ONE: build the symbol table and check semantics
+		p1rv = PassOne( prv, p1f );
+
+		// PASS TWO: compile
+		PassTwo( "", p1rv, p2f );
+		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
+
+		// free parser, compiler memory
+		FreeParseReturnValue( prv );
+		FreePassOneReturnValue( p1rv );
+		// free the semantics and compiler objects (symbol table et al) 
+		delete compiler;
+		compiler = NULL;
+		delete semantics;
+		semantics = NULL;
+
+		// return the code
+		return c;
+	}
+	else
+		throw RuntimeException( "Unable to load input text." );
 }
 
 // helper fcn for parsing and compiling a module
@@ -3921,8 +3971,8 @@ void Executor::DumpFunctions()
 		cout << "function: " << f->name << ", from file: " << f->filename << ", line: " << f->first_line;
 		cout << endl;
 		cout << f->num_args << " arg(s), default value indices: ";
-		for( size_t j = 0; j < f->default_args.Size(); j++ )
-			cout << f->default_args.At( j ) << " ";
+		for( size_t j = 0; j < f->NumDefaultArgs(); j++ )
+			cout << f->default_args.at( j ) << " ";
 		cout << endl << f->num_locals << " local(s): ";
 		for( size_t j = 0; j < f->local_names.size(); j++ )
 			cout << f->local_names.operator[]( j ) << " ";

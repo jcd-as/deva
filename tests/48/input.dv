@@ -1,7 +1,8 @@
 # test eval
 
-eval( "def foo(){ print( \"foo\" ); }" );
-foo();
+#eval( "def foo(){ print( \"foo\" ); }" );
+#foo();
+#eval( "def foo(){ print( \"foo\" ); } foo();" );
 def bar()
 {
 	local s = "bar";

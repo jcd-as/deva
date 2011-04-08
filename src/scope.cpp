@@ -90,6 +90,9 @@ bool LocalScope::Define( const Symbol* const s )
 		fun->GetLocals().push_back( string( s->Name() ) );
 		int idx = (int)(fun->GetLocals().size() - 1);
 		local_map.insert( pair<string, int>( s->Name(), idx ) );
+		// is this an arg? mark it 'generated' for this fcn scope
+		if( s->IsArg() )
+			fun->SetLocalGenerated( idx );
 	}
 
 	return true;

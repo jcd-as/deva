@@ -652,7 +652,8 @@ void Semantics::CheckAndResetFun( int line )
 		throw ICE( "Local scope found where function scope expected" );
 	for( size_t i = 0; i < default_arg_values.size(); i++ )
 	{
-		scope->GetDefaultArgVals().Add( default_arg_values[i]  );
+		scope->AddDefaultArgVal( default_arg_values[i] );
+	
 	}
 
 	// reset our fcn tracking vars

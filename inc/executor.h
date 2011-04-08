@@ -199,6 +199,7 @@ public:
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
 	void ExecuteCode( const Code* const code );
+	void ExecuteText( const char* const text );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
@@ -210,6 +211,9 @@ public:
 	Object GetError();
 private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
+
+	// helper fcn for parsing and compiling a block of text
+	const Code* LoadText( const char* const text );
 
 	bool ImportBuiltinModule( const char* module_name );
 	// helper to fixup the constants in compiled code (imported dvc file)

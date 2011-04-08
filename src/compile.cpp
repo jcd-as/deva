@@ -260,11 +260,11 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		fcn->local_names.push_back( scope->GetLocals().operator[]( i ) );
 	}
 	// add the default arg indices for this (function) scope
-	for( size_t i = 0; i < scope->GetDefaultArgVals().Size(); i++ )
+	for( size_t i = 0; i < scope->GetDefaultArgVals().size(); i++ )
 	{
 		int idx = -1;
 		// find the index for this constant
-		Object obj = scope->GetDefaultArgVals().At( i );
+		Object obj = scope->GetDefaultArgVals().at( i );
 		if( obj.type == obj_string )
 		{
 			// strip the string of quotes and unescape it
@@ -279,7 +279,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 			idx = GetConstant( obj );
 		if( idx == -1 )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % obj );
-		fcn->default_args.Add( idx );
+		fcn->default_args.push_back( idx );
 	}
 
 	// add to the list of fcn objects

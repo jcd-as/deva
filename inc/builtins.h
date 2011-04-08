@@ -60,7 +60,7 @@ void do_type( Frame *f );
 void do_exit( Frame *f );
 void do_num( Frame *f );
 void do_range( Frame *f );
-//void do_eval( Frame *f );
+void do_eval( Frame *f );
 void do_open( Frame *f );
 void do_close( Frame *f );
 void do_flush( Frame *f );

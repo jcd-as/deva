@@ -253,7 +253,8 @@ struct Function
 	// number of arguments
 	dword num_args;
 	// TODO: need to store default values for args too
-	OrderedSet<int> default_args;
+//	OrderedSet<int> default_args;
+	vector<int> default_args;
 	// number of locals
 	dword num_locals;
 	// local names (for debugging & reflection)
@@ -271,7 +272,7 @@ struct Function
 	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ), module( NULL ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
-	inline size_t NumDefaultArgs() { return default_args.Size(); }
+	inline size_t NumDefaultArgs() { return default_args.size(); }
 
 	bool operator == ( const Function & rhs ) const
 	{
