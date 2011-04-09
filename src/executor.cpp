@@ -50,6 +50,7 @@ const Object constant_symbols[] =
 	Object( true ),
 	Object( false ),
 	Object( obj_null ),
+	Object( obj_symbol_name, copystr( "" ) ),			// empty string for 'main' module name
 	Object( obj_symbol_name, copystr( "__name__" ) ),
 	Object( obj_symbol_name, copystr( "__class__" ) ),
 	Object( obj_symbol_name, copystr( "__bases__" ) ),
@@ -154,18 +155,19 @@ Executor::~Executor()
 	}
 }
 
-Object* Executor::FindFunction( string name, size_t offset )
+Object* Executor::FindFunction( string name, string modulename, size_t offset )
 {
 	multimap<string, Object*>::iterator i = functions.find( name );
 	for( ; i != functions.end(); ++i )
 	{
 		if( i->second->type == obj_function )
 		{
-			if( (size_t)i->second->f->addr == offset )
+			if( i->second->f->modulename == modulename && (size_t)i->second->f->addr == offset )
 				return i->second;
 		}
 		else if( i->second->type == obj_native_function )
 		{
+			// TODO: any check we can do for native fcns module name?
 			if( (size_t)i->second->nf.p == offset )
 				return i->second;
 		}
@@ -325,7 +327,7 @@ void Executor::Execute( const Code* const code )
 	scopes = new ScopeTable();
 
 	// a starting ('global') frame
-	Object *main = FindFunction( string( "@main" ), 0 );
+	Object *main = FindFunction( string( "@main" ), string( "" ), 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
@@ -378,7 +380,7 @@ void Executor::ExecuteText( const char* const text )
 	byte* orig_end = end;
 
 	// find our 'module' function, "name@main"
-	Object *eval_main = FindFunction( name + "@main", 0 );
+	Object *eval_main = FindFunction( "@main", name, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f );
 	PushFrame( frame );
 	Scope* scope = new Scope();
@@ -795,18 +797,25 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_function:
 		{
-		// 2 args: constant index of fcn name, address of fcn
+		// 3 args: constant index of fcn name, const idx of module name, address of fcn
 		arg2 = *((dword*)ip);
+		ip += sizeof( dword );
+		arg = *((dword*)ip);
 		ip += sizeof( dword );
 		arg3 = *((dword*)ip);
 		ip += sizeof( dword );
-		// find the constant
+		// find the constant for the fcn name
 		Object fcnname = GetConstant( arg2 );
 		if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
 			throw ICE( "def_function instruction called with an object that is not a function name." );
 		string name( fcnname.s );
+		// find the constant for the module name
+		Object modname = GetConstant( arg );
+		if( modname.type != obj_string && modname.type != obj_symbol_name )
+			throw ICE( "def_function instruction called with an object that is not a module name." );
+		string module_name( modname.s );
 		// find the function
-		Object* objf = FindFunction( name, (size_t)arg3 );
+		Object* objf = FindFunction( name, module_name, (size_t)arg3 );
 		if( !objf )
 			throw RuntimeException( boost::format( "Function '%1%' not found." ) % name );
 		// if we're currently importing a module, set the functions module ptr
@@ -831,10 +840,12 @@ Opcode Executor::ExecuteInstruction()
 		break;
 	case op_def_method:
 		{
-		// 3 args: constant index of fcn name, const index of class name, address of fcn
+		// 4 args: constant index of fcn name, const index of class name, const idx of module name, address of fcn
 		arg = *((dword*)ip);
 		ip += sizeof( dword );
 		arg2 = *((dword*)ip);
+		ip += sizeof( dword );
+		dword arg4 = *((dword*)ip);
 		ip += sizeof( dword );
 		arg3 = *((dword*)ip);
 		ip += sizeof( dword );
@@ -855,8 +866,14 @@ Opcode Executor::ExecuteInstruction()
 			function_name += "@";
 			function_name += class_name;
 
+			// find the constant for the module name
+			Object modname = GetConstant( arg4 );
+			if( modname.type != obj_string && modname.type != obj_symbol_name )
+				throw ICE( "def_function instruction called with an object that is not a module name." );
+			string module_name( modname.s );
+
 			// find the function
-			Object* objf = FindFunction( function_name, (size_t)arg3 );
+			Object* objf = FindFunction( function_name, module_name, (size_t)arg3 );
 			if( !objf )
 				throw RuntimeException( boost::format( "Function '%1%' not found." ) % function_name );
 
@@ -3134,7 +3151,6 @@ Opcode Executor::SkipInstruction()
 	case op_store_null:
 	case op_storelocal:
 	case op_def_local:
-	case op_def_function:
 	case op_new_map:
 	case op_new_vec:
 	case op_new_class:
@@ -3166,8 +3182,13 @@ Opcode Executor::SkipInstruction()
 		break;
 
 	// 3 args
-	case op_def_method:
+	case op_def_function:
 		ip += 3 * sizeof( dword );
+		break;
+
+	// 4 args
+	case op_def_method:
+		ip += 4 * sizeof( dword );
 		break;
 
 	case op_illegal:
@@ -3202,7 +3223,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	// if this is a module, push the module scope and frame
 	// and set the ip, bp, end ptrs
 	byte *orig_ip, *orig_bp, *orig_end;
-	if( f->in_module )
+	if( f->InModule() )
 	{
 		// TODO: do we need to assert that the module was set??
 		// assert( f->module != NULL );
@@ -3282,7 +3303,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 
 	// if this is a module, pop the module scope and frame
 	// and restore the ip, bp and end ptrs
-	if( f->in_module )
+	if( f->InModule() )
 	{
 		PopScope();
 		PopFrame();
@@ -3621,7 +3642,8 @@ bool Executor::ImportModule( const char* module_name )
 
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"
-	Object *mod_main = FindFunction( mod + "@main", 0 );
+//	Object *mod_main = FindFunction( mod + "@main", 0 );
+	Object *mod_main = FindFunction( "@main", mod, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, mod_main->f, true );
 	PushFrame( frame );
 	Scope* scope = new Scope( true );
@@ -3802,30 +3824,46 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "\t" << " ";
 		break;
 	case op_def_function:
-		// 2 args: constant index of name, fcn address
-		arg = *((dword*)p);
-		// look-up the constant
+		{
+		// 3 args: constant index of name, const idx of module name, fcn address
+		// look-up the module name constant
+		arg = *((dword*)(p + sizeof( dword )));
 		o = GetConstant( arg );
-		cout << arg << " (" << o << ")";
+
+		// look-up the module name constant
+		arg2= *((dword*)p);
+		Object o2 = GetConstant( arg2 );
+
 		// address
-		arg = *((dword*)( p + sizeof( dword ) ) );
-		cout << ", " << arg;
-		ret = sizeof( dword ) * 2;
+		dword arg3= *((dword*)(p + (2 * sizeof( dword ))));
+
+		cout << arg << " " << arg2 << " (" << o << " # " << o2 << "), " << arg3;
+
+		ret = sizeof( dword ) * 3;
+		}
 		break;
 	case op_def_method:
-		// 3 args: constant index of function name, constant index of class name, fcn address
-		arg = *((dword*)p);
+		{
+		// 4 args: constant index of function name, constant index of class name, const idx of module name, fcn address
+		// look-up the module name constant
+		arg = *((dword*)( p + (2 * sizeof( dword ))));
+		o = GetConstant( arg );
+
 		// look-up the function name constant
-		o = GetConstant( arg );
-		cout << arg << " (" << o;
+		arg2 = *((dword*)p);
+		Object o2 = GetConstant( arg2 );
+
 		// look-up the class name constant
-		arg = *((dword*)( p + sizeof( dword ) ) );
-		o = GetConstant( arg );
-		cout << "@" << o << ")";
+		dword arg3 = *((dword*)( p + sizeof( dword ) ) );
+		Object o3 = GetConstant( arg3 );
+
 		// address
-		arg = *((dword*)( p + sizeof( dword ) ) );
-		cout << ", " << arg;
-		ret = sizeof( dword ) * 2;
+		dword arg4 = *((dword*)( p + (3 * sizeof( dword ))));
+
+		cout << arg << " " << arg2 << " " << arg3 << " (" << o << " # " << o2 << " @ " << o3 << "), " << arg4;
+
+		ret = sizeof( dword ) * 4;
+		}
 		break;
 	case op_new_map:
 		// 1 arg: size

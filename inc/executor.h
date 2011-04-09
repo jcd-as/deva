@@ -161,7 +161,7 @@ public:
 	inline void AddFunction( Function* f ) { functions.insert( pair<string, Object*>( f->name, new Object( f ) ) ); }
 	inline void AddFunction( const char* name, Function* f ) { functions.insert( pair<string, Object*>( string( name ), new Object( f ) ) ); }
 private:
-	Object* FindFunction( string name, size_t offset );
+	Object* FindFunction( string name, string modulename, size_t offset );
 
 	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
 	Object ResolveSymbol( Object sym );

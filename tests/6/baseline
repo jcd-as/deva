@@ -27,6 +27,7 @@ Constant data pool:
 <boolean-true>
 <boolean-false>
 <null-value>
+
 __name__
 __class__
 __bases__
@@ -128,110 +129,110 @@ code address: 0
 function: foo, from file: input.dv, line: 1
 2 arg(s), default value indices: 
 2 local(s): a b 
-code address: 14
+code address: 18
 Instructions:
-   0: def_function	89 (foo), 14
-   9: jmp		70
-  14: enter		 
-  15: pushlocal0		 
-  16: jmpf		34
-  21: enter		 
-  22: pushlocal1		 
-  23: return		2
-  28: leave		 
-  29: jmp		63
-  34: enter		 
-  35: pushlocal1		 
-  36: jmpf		54
-  41: enter		 
-  42: pushlocal0		 
-  43: return		3
-  48: leave		 
-  49: jmp		62
-  54: enter		 
-  55: push_zero		 
-  56: return		3
-  61: leave		 
-  62: leave		 
-  63: leave		 
-  64: push_null		 
-  65: return		0
-  70: new_vec		0
-  75: def_local0		 
-  76: push		5
-  81: pushlocal0		 
-  82: pushconst		87 (append)
-  87: method_load	
-  88: call_method		1
-  93: pop		 
-  94: new_map		0
-  99: def_local1		 
- 100: pushlocal1		 
- 101: push_zero		 
- 102: pushconst		86 (foo)
- 107: tbl_store	
- 108: pushlocal1		 
- 109: pushconst		86 (foo)
- 114: pushconst		89 (foo)
- 119: tbl_store	
- 120: push_zero		 
- 121: push_one		 
- 122: pushlocal1		 
- 123: pushconst		86 (foo)
- 128: tbl_load	
- 129: call		2
- 134: pop		 
- 135: pushlocal1		 
- 136: pushconst		86 (foo)
- 141: tbl_load	
- 142: def_local2		 
- 143: push_zero		 
- 144: push_one		 
- 145: pushlocal2		 
- 146: call		2
- 151: pop		 
- 152: pushlocal1		 
- 153: dup1		 
- 154: pushconst		10 (rewind)
- 159: method_load	
- 160: call_method		0
- 165: pop		 
- 166: for_iter_pair		220
- 171: def_local4		 
- 172: def_local3		 
- 173: enter		 
- 174: pushlocal3		 
- 175: pushconst		13 (str)
- 180: call		1
- 185: pushlocal4		 
- 186: pushconst		13 (str)
- 191: call		1
- 196: add		 
- 197: pushconst		92 (io)
- 202: pushconst		88 (print)
- 207: method_load	
- 208: call_method		1
- 213: pop		 
- 214: leave		 
- 215: jmp		166
- 220: pop		 
- 221: pushlocal0		 
- 222: push		10
- 227: lt		 
- 228: jmpf		272
- 233: enter		 
- 234: pushlocal0		 
- 235: push_one		 
- 236: add		 
- 237: storelocal0		 
+   0: def_function	3 90 ( # foo), 18
+  13: jmp		74
+  18: enter		 
+  19: pushlocal0		 
+  20: jmpf		38
+  25: enter		 
+  26: pushlocal1		 
+  27: return		2
+  32: leave		 
+  33: jmp		67
+  38: enter		 
+  39: pushlocal1		 
+  40: jmpf		58
+  45: enter		 
+  46: pushlocal0		 
+  47: return		3
+  52: leave		 
+  53: jmp		66
+  58: enter		 
+  59: push_zero		 
+  60: return		3
+  65: leave		 
+  66: leave		 
+  67: leave		 
+  68: push_null		 
+  69: return		0
+  74: new_vec		0
+  79: def_local0		 
+  80: push		5
+  85: pushlocal0		 
+  86: pushconst		88 (append)
+  91: method_load	
+  92: call_method		1
+  97: pop		 
+  98: new_map		0
+ 103: def_local1		 
+ 104: pushlocal1		 
+ 105: push_zero		 
+ 106: pushconst		87 (foo)
+ 111: tbl_store	
+ 112: pushlocal1		 
+ 113: pushconst		87 (foo)
+ 118: pushconst		90 (foo)
+ 123: tbl_store	
+ 124: push_zero		 
+ 125: push_one		 
+ 126: pushlocal1		 
+ 127: pushconst		87 (foo)
+ 132: tbl_load	
+ 133: call		2
+ 138: pop		 
+ 139: pushlocal1		 
+ 140: pushconst		87 (foo)
+ 145: tbl_load	
+ 146: def_local2		 
+ 147: push_zero		 
+ 148: push_one		 
+ 149: pushlocal2		 
+ 150: call		2
+ 155: pop		 
+ 156: pushlocal1		 
+ 157: dup1		 
+ 158: pushconst		11 (rewind)
+ 163: method_load	
+ 164: call_method		0
+ 169: pop		 
+ 170: for_iter_pair		224
+ 175: def_local4		 
+ 176: def_local3		 
+ 177: enter		 
+ 178: pushlocal3		 
+ 179: pushconst		14 (str)
+ 184: call		1
+ 189: pushlocal4		 
+ 190: pushconst		14 (str)
+ 195: call		1
+ 200: add		 
+ 201: pushconst		93 (io)
+ 206: pushconst		89 (print)
+ 211: method_load	
+ 212: call_method		1
+ 217: pop		 
+ 218: leave		 
+ 219: jmp		170
+ 224: pop		 
+ 225: pushlocal0		 
+ 226: push		10
+ 231: lt		 
+ 232: jmpf		276
+ 237: enter		 
  238: pushlocal0		 
- 239: pushconst		13 (str)
- 244: call		1
- 249: pushconst		92 (io)
- 254: pushconst		88 (print)
- 259: method_load	
- 260: call_method		1
- 265: pop		 
- 266: leave		 
- 267: jmp		221
- 272: halt		 
+ 239: push_one		 
+ 240: add		 
+ 241: storelocal0		 
+ 242: pushlocal0		 
+ 243: pushconst		14 (str)
+ 248: call		1
+ 253: pushconst		93 (io)
+ 258: pushconst		89 (print)
+ 263: method_load	
+ 264: call_method		1
+ 269: pop		 
+ 270: leave		 
+ 271: jmp		225
+ 276: halt		 

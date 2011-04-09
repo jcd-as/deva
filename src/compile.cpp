@@ -126,18 +126,8 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	}
 	// compiling a module?
 	f->module = NULL;
-	f->in_module = false;
-	f->in_eval = false;
-	if( module_name && strlen( module_name ) != 0 )
-	{
-		if( strncmp( module_name, "[TEXT", 5 ) == 0 )
-			f->in_eval = true;
-		else
-			f->in_module = true;
-	}
-	string fcnname = module_name;
-	fcnname += "@main";
-	ex->AddFunction( fcnname.c_str(), f );
+	f->modulename = module_name;
+	ex->AddFunction( "@main", f );
 
 	// with its loop-tracking variables
 	in_for_loop.push_back( 0 );
@@ -204,6 +194,12 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	if( i == -1 )
 		throw ICE( boost::format( "Cannot find constant '%1%' for function name." ) % name );
 
+	string mod;
+	if( module_name )
+		mod = module_name;
+	else
+		mod = "";
+
 	// methods emit an op_def_method instruction
 	if( classname )
 	{
@@ -212,17 +208,27 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		if( i2 == -1 )
 			throw ICE( boost::format( "Cannot find constant '%1%' for class name." ) % classname );
 
-		// add the size of 'op_def_method <Op0> <Op1> <Op2>' and 'jmp <Op0>'
-		int sz = sizeof( dword ) * 4 + 2;
-		Emit( op_def_method, (dword)i, (dword)i2, (dword)(is->Length() + sz) );
+		// get the constant index of this module
+		int i3 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		if( i3 == -1 )
+			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
+
+		// add the size of 'op_def_method <Op0> <Op1> <Op2> <Op3>' and 'jmp <Op0>'
+		int sz = sizeof( dword ) * 5 + 2;
+		Emit( op_def_method, (dword)i, (dword)i2, (dword)i3, (dword)(is->Length() + sz) );
 	}
 	// non-methods: emit an op_def_function instruction
 	else
 	{
+		// get the constant index of this module
+		int i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		if( i2 == -1 )
+			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
+
 		// get the constant index of this function
-		// add the size of 'op_def_function <Op0> <Op1>' and 'jmp <Op0>'
-		int sz = sizeof( dword ) * 3 + 2;
-		Emit( op_def_function, (dword)i, (dword)(is->Length() + sz) );
+		// add the size of 'op_def_function <Op0> <Op1> <Op2>' and 'jmp <Op0>'
+		int sz = sizeof( dword ) * 4 + 2;
+		Emit( op_def_function, (dword)i, (dword)i2, (dword)(is->Length() + sz) );
 	}
 	
 	// generate jump around fcn so 'main' (or module 'global' as the case
@@ -254,15 +260,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 	// compiling a module?
 	fcn->module = NULL;
-	fcn->in_module = false;
-	fcn->in_eval = false;
-	if( module_name && strlen( module_name ) != 0 )
-	{
-		if( strncmp( module_name, "[TEXT", 5 ) == 0 )
-			fcn->in_eval = true;
-		else
-			fcn->in_module = true;
-	}
+	fcn->modulename = module_name;
 
 	// add the locals
 	for( size_t i = 0; i < scope->GetLocals().size(); i++ )

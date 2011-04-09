@@ -1,7 +1,15 @@
-local n = 0;
-def foo(){ print( "foo called" ); }
-local s = "local m = \"foo\"; foo(); print( m );";
-eval( s );
+local main_a = 32;
+def fcn(){ print( "main.bar: " + str( main_a ) ); }
+
+import foo;
+foo.fcn();
+fcn();
+
+#local n = 0;
+#def foo(){ print( "foo called" ); }
+#local s = "extern foo; local m = \"foo\"; foo(); print( m );";
+##local s = "extern n; print( n );";
+#eval( s );
 
 # BUG: ICE: "Cannot locate local symbol 're'"
 #import re;

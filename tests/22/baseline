@@ -15,6 +15,7 @@ Constant data pool:
 <boolean-true>
 <boolean-false>
 <null-value>
+
 __name__
 __class__
 __bases__
@@ -111,7 +112,7 @@ code address: 0
 function: x, from file: input.dv, line: 9
 0 arg(s), default value indices: 
 0 local(s): 
-code address: 73
+code address: 77
 Instructions:
    0: push_zero		 
    1: def_local0		 
@@ -119,34 +120,34 @@ Instructions:
    3: jmpf		40
    8: enter		 
    9: pushlocal0		 
-  10: pushconst		83 (b)
+  10: pushconst		84 (b)
   15: tbl_load	
-  16: pushconst		84 (c)
+  16: pushconst		85 (c)
   21: tbl_load	
-  22: pushconst		85 (d)
+  22: pushconst		86 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
   34: leave		 
   35: jmp		2
   40: pushlocal0		 
-  41: pushconst		83 (b)
+  41: pushconst		84 (b)
   46: tbl_load	
-  47: pushconst		84 (c)
+  47: pushconst		85 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	90 (x), 73
-  68: jmp		104
-  73: enter		 
-  74: pushconst		86 (a)
-  79: pushconst		83 (b)
-  84: tbl_load	
-  85: pushconst		84 (c)
-  90: method_load	
-  91: call_method		0
-  96: pop		 
-  97: leave		 
-  98: push_null		 
-  99: return		0
- 104: halt		 
+  59: def_function	3 91 ( # x), 77
+  72: jmp		108
+  77: enter		 
+  78: pushconst		87 (a)
+  83: pushconst		84 (b)
+  88: tbl_load	
+  89: pushconst		85 (c)
+  94: method_load	
+  95: call_method		0
+ 100: pop		 
+ 101: leave		 
+ 102: push_null		 
+ 103: return		0
+ 108: halt		 

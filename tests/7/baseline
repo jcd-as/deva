@@ -39,6 +39,7 @@ Constant data pool:
 <boolean-true>
 <boolean-false>
 <null-value>
+
 __name__
 __class__
 __bases__
@@ -145,15 +146,15 @@ code address: 0
 function: fcn, from file: input.dv, line: 102
 0 arg(s), default value indices: 
 0 local(s): 
-code address: 169
+code address: 181
 function: foo, from file: input.dv, line: 34
 3 arg(s), default value indices: 
 3 local(s): a b c 
-code address: 48
+code address: 52
 function: z, from file: input.dv, line: 40
 0 arg(s), default value indices: 
 0 local(s): 
-code address: 74
+code address: 82
 Instructions:
    0: push_zero		 
    1: def_local0		 
@@ -173,122 +174,122 @@ Instructions:
   27: storelocal0		 
   28: leave		 
   29: jmp		19
-  34: def_function	92 (foo), 48
-  43: jmp		56
-  48: enter		 
-  49: leave		 
-  50: push_null		 
-  51: return		0
-  56: push_one		 
-  57: def_local2		 
-  58: push_zero		 
-  59: def_local3		 
-  60: def_function	100 (z), 74
-  69: jmp		82
-  74: enter		 
-  75: leave		 
-  76: push_null		 
-  77: return		0
-  82: pushlocal2		 
-  83: jmpf		109
-  88: enter		 
-  89: pushlocal3		 
-  90: jmpf		108
-  95: enter		 
-  96: pushconst		100 (z)
- 101: call		0
- 106: pop		 
- 107: leave		 
- 108: leave		 
- 109: pushlocal2		 
- 110: jmpf		140
- 115: enter		 
- 116: pushlocal3		 
- 117: jmpf		135
- 122: enter		 
- 123: pushconst		100 (z)
- 128: call		0
- 133: pop		 
- 134: leave		 
- 135: push_one		 
- 136: def_local4		 
- 137: pushlocal4		 
- 138: storelocal0		 
- 139: leave		 
- 140: pushlocal2		 
- 141: jmpf		153
- 146: enter		 
+  34: def_function	3 93 ( # foo), 52
+  47: jmp		60
+  52: enter		 
+  53: leave		 
+  54: push_null		 
+  55: return		0
+  60: push_one		 
+  61: def_local2		 
+  62: push_zero		 
+  63: def_local3		 
+  64: def_function	3 101 ( # z), 82
+  77: jmp		90
+  82: enter		 
+  83: leave		 
+  84: push_null		 
+  85: return		0
+  90: pushlocal2		 
+  91: jmpf		117
+  96: enter		 
+  97: pushlocal3		 
+  98: jmpf		116
+ 103: enter		 
+ 104: pushconst		101 (z)
+ 109: call		0
+ 114: pop		 
+ 115: leave		 
+ 116: leave		 
+ 117: pushlocal2		 
+ 118: jmpf		148
+ 123: enter		 
+ 124: pushlocal3		 
+ 125: jmpf		143
+ 130: enter		 
+ 131: pushconst		101 (z)
+ 136: call		0
+ 141: pop		 
+ 142: leave		 
+ 143: push_one		 
+ 144: def_local4		 
+ 145: pushlocal4		 
+ 146: storelocal0		 
  147: leave		 
- 148: jmp		155
- 153: enter		 
- 154: leave		 
- 155: def_function	96 (fcn), 169
- 164: jmp		193
- 169: enter		 
- 170: pushconst		90 (fcn called)
- 175: pushconst		12 (print)
- 180: call		1
- 185: pop		 
- 186: leave		 
- 187: push_null		 
- 188: return		0
- 193: pushconst		87 (b)
- 198: pushconst		96 (fcn)
- 203: new_map		1
- 208: storelocal0		 
- 209: pushlocal0		 
- 210: pushconst		87 (b)
- 215: method_load	
- 216: call_method		0
- 221: pop		 
- 222: pushlocal0		 
- 223: pushconst		87 (b)
- 228: pushconst		88 (c)
- 233: pushconst		89 (d)
- 238: push_one		 
- 239: new_map		1
- 244: new_map		1
- 249: tbl_store	
- 250: pushlocal0		 
- 251: pushconst		87 (b)
- 256: tbl_load	
- 257: pushconst		88 (c)
- 262: tbl_load	
- 263: pushconst		89 (d)
- 268: push_zero		 
- 269: tbl_store	
- 270: pushlocal0		 
- 271: pushconst		87 (b)
- 276: tbl_load	
- 277: pushconst		88 (c)
- 282: tbl_load	
- 283: pushconst		89 (d)
- 288: new_map		0
- 293: tbl_store	
- 294: pushlocal0		 
- 295: pushconst		87 (b)
- 300: tbl_load	
- 301: pushconst		88 (c)
- 306: tbl_load	
- 307: pushconst		89 (d)
+ 148: pushlocal2		 
+ 149: jmpf		161
+ 154: enter		 
+ 155: leave		 
+ 156: jmp		163
+ 161: enter		 
+ 162: leave		 
+ 163: def_function	3 97 ( # fcn), 181
+ 176: jmp		205
+ 181: enter		 
+ 182: pushconst		91 (fcn called)
+ 187: pushconst		13 (print)
+ 192: call		1
+ 197: pop		 
+ 198: leave		 
+ 199: push_null		 
+ 200: return		0
+ 205: pushconst		88 (b)
+ 210: pushconst		97 (fcn)
+ 215: new_map		1
+ 220: storelocal0		 
+ 221: pushlocal0		 
+ 222: pushconst		88 (b)
+ 227: method_load	
+ 228: call_method		0
+ 233: pop		 
+ 234: pushlocal0		 
+ 235: pushconst		88 (b)
+ 240: pushconst		89 (c)
+ 245: pushconst		90 (d)
+ 250: push_one		 
+ 251: new_map		1
+ 256: new_map		1
+ 261: tbl_store	
+ 262: pushlocal0		 
+ 263: pushconst		88 (b)
+ 268: tbl_load	
+ 269: pushconst		89 (c)
+ 274: tbl_load	
+ 275: pushconst		90 (d)
+ 280: push_zero		 
+ 281: tbl_store	
+ 282: pushlocal0		 
+ 283: pushconst		88 (b)
+ 288: tbl_load	
+ 289: pushconst		89 (c)
+ 294: tbl_load	
+ 295: pushconst		90 (d)
+ 300: new_map		0
+ 305: tbl_store	
+ 306: pushlocal0		 
+ 307: pushconst		88 (b)
  312: tbl_load	
- 313: pushconst		91 (foo)
- 318: push_one		 
- 319: tbl_store	
- 320: push_one		 
- 321: storelocal0		 
- 322: push		5
- 327: push		5
- 332: add		 
- 333: push		2
- 338: div		 
- 339: def_local5		 
- 340: push		2
+ 313: pushconst		89 (c)
+ 318: tbl_load	
+ 319: pushconst		90 (d)
+ 324: tbl_load	
+ 325: pushconst		92 (foo)
+ 330: push_one		 
+ 331: tbl_store	
+ 332: push_one		 
+ 333: storelocal0		 
+ 334: push		5
+ 339: push		5
+ 344: add		 
  345: push		2
- 350: mul		 
- 351: push		3
- 356: mod		 
- 357: push_one		 
- 358: add		 
- 359: storelocal5		 
- 360: halt		 
+ 350: div		 
+ 351: def_local5		 
+ 352: push		2
+ 357: push		2
+ 362: mul		 
+ 363: push		3
+ 368: mod		 
+ 369: push_one		 
+ 370: add		 
+ 371: storelocal5		 
+ 372: halt		 

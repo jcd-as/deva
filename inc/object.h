@@ -261,10 +261,8 @@ struct Function
 	// offset in code section of the code for this function
 	dword addr;
 
-	// does this function reside in a module? (not in 'main')
-	bool in_module;
-	// does this function reside in an eval'd text block? (not in 'main')
-	bool in_eval;
+	// module name, empty if 'main'
+	string modulename;
 	// module the fcn resides in, NULL if 'main' or unset
 	// (pointer is not set at creation time if the function is in a module,
 	// it won't be set until the first call to it)
@@ -273,6 +271,7 @@ struct Function
 	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ), module( NULL ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
+	inline bool InModule() { return !modulename.empty(); }
 	inline size_t NumDefaultArgs() { return default_args.size(); }
 
 	bool operator == ( const Function & rhs ) const

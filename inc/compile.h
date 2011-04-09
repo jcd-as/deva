@@ -181,6 +181,7 @@ public:
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
 	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }
 	inline void Emit( Opcode o, dword op1, dword op2, dword op3 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); }
+	inline void Emit( Opcode o, dword op1, dword op2, dword op3, dword op4 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); is->Append( op4 ); }
 
 	// mostly for debugging purposes
 	void Decode();
