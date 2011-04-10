@@ -3236,6 +3236,16 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		end = bp + f->module->code->len;
 		ip = bp;
 	}
+	// otherwise this is 'main', set the module to 'main'
+	else
+	{
+		orig_end = end;
+		orig_bp = bp;
+		orig_ip = ip;
+		bp = code_blocks[0]->code;
+		end = bp + code_blocks[0]->len;
+		ip = bp;
+	}
 
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
@@ -3307,10 +3317,11 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	{
 		PopScope();
 		PopFrame();
-		end = orig_end;
-		bp = orig_bp;
-		ip = orig_ip;
 	}
+	// restore the ip, bp, end ptrs
+	end = orig_end;
+	bp = orig_bp;
+	ip = orig_ip;
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )

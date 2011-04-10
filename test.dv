@@ -1,9 +1,13 @@
 local main_a = 32;
-def fcn(){ print( "main.bar: " + str( main_a ) ); }
+extern foo;
+def fcn(){ print( "1: main.fcn: " + str( main_a ) ); foo.foo_fcn(); }
+def fcn2(){ print( "2: main.fcn2: " + str( main_a ) ); foo.foo_fcn2(); }
 
+# import foo, which calls fcn(), which calls foo_fcn(), which calls fcn2(),
+# which calls foo_fcn2()
 import foo;
-foo.fcn();
-fcn();
+#foo.fcn();
+#fcn();
 
 #local n = 0;
 #def foo(){ print( "foo called" ); }
