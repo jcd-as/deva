@@ -572,9 +572,9 @@ void do_eval( Frame *frame )
 	Object* s = helper.GetLocalN( 0 );
 	helper.ExpectType( s, obj_string );
 
-	ex->ExecuteText( s->s );
+	Object ret = ex->ExecuteText( s->s );
 
-	helper.ReturnVal( Object( obj_null ) );
+	helper.ReturnVal( ret );
 }
 
 void do_open( Frame *frame )

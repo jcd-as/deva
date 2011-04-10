@@ -1,11 +1,11 @@
 # test eval
 
-#eval( "def foo(){ print( \"foo\" ); }" );
-#foo();
-#eval( "def foo(){ print( \"foo\" ); } foo();" );
+extern foo;
+local code = eval( "def foo(){ print( \"foo\" ); }" );
+code.foo();
 def bar()
 {
 	local s = "bar";
 	print( s );
 }
-eval( "bar();" );
+eval( "extern bar; bar();" );

@@ -1,19 +1,33 @@
-local main_a = 32;
-extern foo;
-def fcn(){ print( "1: main.fcn: " + str( main_a ) ); foo.foo_fcn(); }
-def fcn2(){ print( "2: main.fcn2: " + str( main_a ) ); foo.foo_fcn2(); }
-
-# import foo, which calls fcn(), which calls foo_fcn(), which calls fcn2(),
-# which calls foo_fcn2()
-import foo;
-#foo.fcn();
-#fcn();
-
 #local n = 0;
+## works:
 #def foo(){ print( "foo called" ); }
 #local s = "extern foo; local m = \"foo\"; foo(); print( m );";
+## works:
 ##local s = "extern n; print( n );";
 #eval( s );
+
+# access fcn defined in eval'd block:
+extern foo;
+local s = eval( "def foo(){ print( \"foo\" ); }" );
+s.foo();
+# access fcn defined in 'main' from eval'd block:
+def bar()
+{
+	local s = "bar";
+	print( s );
+}
+eval( "extern bar; bar();" );
+
+# BUG: extern scoping not working with args:
+#def foo( x )
+#{
+#	# call to bar results in error: Undefined symbol 'x'
+#	# (from pushconst op)
+#	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
+#	bar();
+#}
+#for( i in range( 0, 10 ) )
+#	foo( i );
 
 # BUG: ICE: "Cannot locate local symbol 're'"
 #import re;

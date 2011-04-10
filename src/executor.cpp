@@ -195,7 +195,7 @@ Object* Executor::FindSymbol( const char* name, const char* module /*= NULL*/ )
 }
 
 // return a resolved symbol - if sym is a symbol name, find the symbol,
-// otherwise return sym unmodified
+// otherwise return sym unmodified 
 Object Executor::ResolveSymbol( Object sym )
 {
 	if( sym.type != obj_symbol_name )
@@ -229,6 +229,10 @@ Object Executor::ResolveSymbol( Object sym )
 		// map builtin?
 		nf = GetMapBuiltin( sym.s );
 		if( nf.p )
+			return sym;
+
+		// allow module names to pass through
+		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
 		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
@@ -367,12 +371,18 @@ void Executor::ExecuteCode( const Code* const code )
 	}
 }
 
-void Executor::ExecuteText( const char* const text )
+// static used for importing modules and text (via eval())
+static Module* s_currently_importing_module = NULL;
+
+Object Executor::ExecuteText( const char* const text )
 {
 	static dword count = 0;
 	ostringstream s;
 	s << "[TEXT" << count << "]";
+	count++;
 	string name = s.str();
+	// add the 'text module' name to the list of constants 
+	AddConstant( Object( obj_symbol_name, copystr( name ) ) );
 	const Code* code = LoadText( text, name.c_str() );
 
 	byte* orig_ip = ip;
@@ -381,12 +391,22 @@ void Executor::ExecuteText( const char* const text )
 
 	// find our 'module' function, "name@main"
 	Object *eval_main = FindFunction( "@main", name, 0 );
-	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f, true );
 	PushFrame( frame );
-	Scope* scope = new Scope();
+	Scope* scope = new Scope( true );
 	PushScope( scope );
 
+	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
+
+	// currently importing text module, set the flag
+	Module* prev_mod = s_currently_importing_module;
+	s_currently_importing_module = cur_module;
+
+	// execute
 	ExecuteCode( code );
+	
+	// no longer importing this module, reset the flag
+	s_currently_importing_module = prev_mod;
 
 	// pop the scope and frame
 	PopScope();
@@ -395,6 +415,10 @@ void Executor::ExecuteText( const char* const text )
 	ip = orig_ip;
 	bp = orig_bp;
 	end = orig_end;
+
+	int idx = FindConstant( Object( obj_symbol_name, name.c_str() ) );
+	Object ret = GetConstant( idx );
+	return ret;
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -421,9 +445,6 @@ bool if_step_ex( Object )
 	else
 		return true;
 }
-
-// static used for importing modules
-static Module* s_currently_importing_module = NULL;
 
 Opcode Executor::ExecuteInstruction()
 {
@@ -3572,6 +3593,7 @@ Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f
 {
 	// add the module to the collection
 	Module* mod = new Module( c, s, f );
+	module_names.insert( name );
 	modules.insert( pair<string, Module*>(name, mod ) );
 	return mod;
 }

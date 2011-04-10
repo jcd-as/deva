@@ -196,7 +196,7 @@ public:
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
 	void ExecuteCode( const Code* const code );
-	void ExecuteText( const char* const text );
+	Object ExecuteText( const char* const text );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
