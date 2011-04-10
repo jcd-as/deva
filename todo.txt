@@ -3,7 +3,10 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	29 (import .dvc NYI)
 	62 (json module NYI)
 
-TODO 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
+DONE 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
+    CLOSED: 2011-04-10 16:39:55
+    :LOGBOOK:
+        DONE: 2011-04-10 16:39:55
 
 TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
 

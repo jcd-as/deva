@@ -72,6 +72,7 @@ join
 error
 seterror
 geterror
+importmodule
 concat
 insert
 remove
@@ -141,7 +142,7 @@ function: bubble_sort, from file: input.dv, line: 3
 6 local(s): a len swap i j temp 
 code address: 18
 Instructions:
-   0: def_function	3 97 ( # bubble_sort), 18
+   0: def_function	3 98 ( # bubble_sort), 18
   13: jmp		135
   18: enter		 
   19: pushlocal0		 
@@ -272,7 +273,7 @@ Instructions:
  296: pushconst		16 (append)
  301: call		2
  306: pop		 
- 307: pushconst		95 (un-sorted:)
+ 307: pushconst		96 (un-sorted:)
  312: pushconst		13 (print)
  317: call		1
  322: pop		 
@@ -293,10 +294,10 @@ Instructions:
  357: jmp		337
  362: pop		 
  363: pushlocal0		 
- 364: pushconst		97 (bubble_sort)
+ 364: pushconst		98 (bubble_sort)
  369: call		1
  374: def_local2		 
- 375: pushconst		94 (sorted:)
+ 375: pushconst		95 (sorted:)
  380: pushconst		13 (print)
  385: call		1
  390: pop		 

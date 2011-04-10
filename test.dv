@@ -8,8 +8,9 @@
 
 # access fcn defined in eval'd block:
 extern foo;
-local s = eval( "def foo(){ print( \"foo\" ); }" );
+local s = eval( "local x = 24; def foo(){ print( \"foo\" ); }" );
 s.foo();
+print( s.x );
 # access fcn defined in 'main' from eval'd block:
 def bar()
 {

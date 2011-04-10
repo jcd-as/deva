@@ -3634,7 +3634,7 @@ void Executor::FixupConstants()
 	ip = orig_ip;
 }
 
-bool Executor::ImportModule( const char* module_name )
+Object Executor::ImportModule( const char* module_name )
 {
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
@@ -3709,7 +3709,9 @@ bool Executor::ImportModule( const char* module_name )
 	bp = orig_bp;
 	end = orig_end;
 
-	return true;
+	int idx = FindConstant( Object( obj_symbol_name, mod.c_str() ) );
+	Object ret = GetConstant( idx );
+	return ret;
 }
 
 // disassemble the instruction stream to stdout

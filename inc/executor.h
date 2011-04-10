@@ -221,7 +221,9 @@ private:
 	string FindModule( string mod );
 	// helper fcn for parsing and compiling a module
 	const Code* const LoadModule( string module_name, string path );
-	bool ImportModule( const char* module_name );
+
+public:
+	Object ImportModule( const char* module_name );
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream

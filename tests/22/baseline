@@ -58,6 +58,7 @@ join
 error
 seterror
 geterror
+importmodule
 concat
 insert
 remove
@@ -120,30 +121,30 @@ Instructions:
    3: jmpf		40
    8: enter		 
    9: pushlocal0		 
-  10: pushconst		84 (b)
+  10: pushconst		85 (b)
   15: tbl_load	
-  16: pushconst		85 (c)
+  16: pushconst		86 (c)
   21: tbl_load	
-  22: pushconst		86 (d)
+  22: pushconst		87 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
   34: leave		 
   35: jmp		2
   40: pushlocal0		 
-  41: pushconst		84 (b)
+  41: pushconst		85 (b)
   46: tbl_load	
-  47: pushconst		85 (c)
+  47: pushconst		86 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
-  59: def_function	3 91 ( # x), 77
+  59: def_function	3 92 ( # x), 77
   72: jmp		108
   77: enter		 
-  78: pushconst		87 (a)
-  83: pushconst		84 (b)
+  78: pushconst		88 (a)
+  83: pushconst		85 (b)
   88: tbl_load	
-  89: pushconst		85 (c)
+  89: pushconst		86 (c)
   94: method_load	
   95: call_method		0
  100: pop		 

@@ -73,7 +73,7 @@ const string builtin_names[] =
 	string( "error" ),
 	string( "seterror" ),
 	string( "geterror" ),
-//	string( "importmodule" ),
+	string( "importmodule" ),
 };
 // ...and function pointers to the executor functions for them
 NativeFunction builtin_fcns[] = 
@@ -111,7 +111,7 @@ NativeFunction builtin_fcns[] =
 	{do_error, false},
 	{do_seterror, false},
 	{do_geterror, false},
-//	{do_importmodule, false},
+	{do_importmodule, false},
 };
 Object builtin_fcn_objs[] = 
 {
@@ -148,7 +148,7 @@ Object builtin_fcn_objs[] =
 	Object( do_error ),
 	Object( do_seterror ),
 	Object( do_geterror ),
-//	Object( do_importmodule ),
+	Object( do_importmodule ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1107,24 +1107,20 @@ void do_geterror( Frame *frame )
 	helper.ReturnVal( ex->GetError() );
 
 }
-/*
+
 void do_importmodule( Frame *frame )
 {
-	if( Executor::args_on_stack != 1 )
-		throw DevaRuntimeException( "Incorrect number of arguments to built-in function 'importmodule'." );
+	BuiltinHelper helper( NULL, "importmodule", frame );
 
-	// get error data arg from stack
-	DevaObject o = get_arg_of_type( ex, "importmodule", "module_name", sym_string );
+	helper.CheckNumberOfArguments( 1 );
 
-	// import the module
-	bool success = ex->Import( o.str_val );
+	Object* mod = helper.GetLocalN( 0 );
+	helper.ExpectType( mod, obj_string );
+	
+	Object ret = ex->ImportModule( mod->s );
 
-	// pop the return address
-	ex->stack.pop_back();
-
-	// return value
-	ex->stack.push_back( DevaObject( "", success ) );
+	helper.ReturnVal( ret );
 }
-*/
+
 
 } // end namespace deva

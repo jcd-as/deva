@@ -82,7 +82,7 @@ void do_join( Frame *f );
 void do_error( Frame *f );
 void do_seterror( Frame *f );
 void do_geterror( Frame *f );
-//void do_importmodule( Frame *f );
+void do_importmodule( Frame *f );
 
 extern const string builtin_names[];
 // ...and function pointers to the executor functions for them
