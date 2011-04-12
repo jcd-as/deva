@@ -83,10 +83,10 @@ func_decl[char* classname]
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; compiler->in_for_loop.push_back(0); compiler->in_while_loop.push_back(0); } }
 @after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); compiler->in_for_loop.pop_back(); compiler->in_while_loop.pop_back(); } }
 	:	^(Def id=ID 
-		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->DefineFun( (char*)$id.text->chars, classname, $ID->getLine($ID) ); }
 		arg_list_decl block) 
 	|	^(Def id='new' 
-		{ compiler->AddScope(); compiler->in_constructor = true; compiler->DefineFun( const_cast<char*>("new"), classname, $id->getLine($id) ); }
+		{ compiler->AddScope(); compiler->in_constructor = true; compiler->DefineFun( const_cast<char*>("new"), classname, $Def->getLine($Def) ); }
 		arg_list_decl block)
 	;
 	
@@ -100,7 +100,7 @@ class_decl
 	;
 
 base_class
-	:	id=ID { compiler->Identifier( (char*)$id.text->chars, false ); }
+	:	id=ID { compiler->Identifier( (char*)$id.text->chars, false, $id->getLine($id) ); }
 	;
 
 while_statement 
@@ -129,7 +129,7 @@ else_statement
 	;
 
 import_statement 
-	:	^(Import (ID '/')* ID) { compiler->ImportOp( $Import ); }
+	:	^(Import (ID '/')* ID) { compiler->ImportOp( $Import, $Import->getLine($Import) ); }
 	;
 	
 jump_statement 
@@ -139,43 +139,43 @@ jump_statement
 	;
 
 break_statement 
-	:	brk=Break { compiler->BreakOp(); }
+	:	brk=Break { compiler->BreakOp( $brk->getLine($brk) ); }
 	;
 
 continue_statement 
-	:	con=Continue { compiler->ContinueOp(); }
+	:	con=Continue { compiler->ContinueOp( $con->getLine($con) ); }
 	;
 
 return_statement 
-	:	^(Return exp[false,NULL]) { compiler->ReturnOp(); }
+	:	^(Return exp[false,NULL]) { compiler->ReturnOp( $Return->getLine($Return) ); }
 	|	Return { compiler->ReturnOp( true ); }
 	;
 
 assign_statement[pANTLR3_BASE_TREE parent]
-	: 	^(Const lhs=exp[true,NULL] value) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	(^(Local exp[true,NULL] new_exp))=> ^(Local lhs=exp[true,NULL] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	^(Local lhs=exp[true,NULL] exp[false,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars ); }
-	|	(^(Extern exp[true,NULL] new_exp))=> ^(Extern lhs=exp[true,NULL] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
-	|	(^(Extern lhs=exp[true,NULL] exp[false,NULL]))=> ^(Extern lhs=exp[true,NULL] exp[false,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, true ); }
-	|	^(Extern lhs=exp[true,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, false ); }
-	|	(^('=' exp[true,NULL] new_exp))=> ^('=' lhs=exp[true,NULL] new_exp) { compiler->Assign( $lhs.start, false ); }
-	|	(^('=' lhs=exp[true,NULL] assign_rhs)) => ^('=' lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, false ); }
-	|	^('=' lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, false ); }
-	|	^(ADD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_add ); }
-	|	^(SUB_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_sub ); }
-	|	^(MUL_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mul ); }
-	|	^(DIV_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_div ); }
-	|	^(MOD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mod ); }
+	: 	^(Const lhs=exp[true,NULL] value) { compiler->LocalVar( (char*)$lhs.text->chars, $Const->getLine($Const) ); }
+	|	(^(Local exp[true,NULL] new_exp))=> ^(Local lhs=exp[true,NULL] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local) ); }
+	|	^(Local lhs=exp[true,NULL] exp[false,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local) ); }
+	|	(^(Extern exp[true,NULL] new_exp))=> ^(Extern lhs=exp[true,NULL] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true, $Extern->getLine($Extern) ); }
+	|	(^(Extern lhs=exp[true,NULL] exp[false,NULL]))=> ^(Extern lhs=exp[true,NULL] exp[false,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, true, $Extern->getLine($Extern) ); }
+	|	^(Extern lhs=exp[true,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, false, $Extern->getLine($Extern) ); }
+	|	(^(ASSIGN_OP exp[true,NULL] new_exp))=> ^(ASSIGN_OP lhs=exp[true,NULL] new_exp) { compiler->Assign( $lhs.start, false, $ASSIGN_OP->getLine($ASSIGN_OP) ); }
+	|	(^(ASSIGN_OP lhs=exp[true,NULL] assign_rhs)) => ^(ASSIGN_OP lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, false, $ASSIGN_OP->getLine($ASSIGN_OP) ); }
+	|	^(ASSIGN_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, false, $ASSIGN_OP->getLine($ASSIGN_OP) ); }
+	|	^(ADD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_add, $ADD_EQ_OP->getLine($ADD_EQ_OP) ); }
+	|	^(SUB_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_sub, $SUB_EQ_OP->getLine($SUB_EQ_OP) ); }
+	|	^(MUL_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mul, $MUL_EQ_OP->getLine($MUL_EQ_OP) ); }
+	|	^(DIV_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_div, $DIV_EQ_OP->getLine($DIV_EQ_OP) ); }
+	|	^(MOD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mod, $MOD_EQ_OP->getLine($MOD_EQ_OP) ); }
 	|	exp[false,parent]
 	;
 
 assign_rhs
-	:	(^('=' lhs=exp[true,NULL] assign_rhs)) => ^('=' lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, true ); }
-	|	^('=' lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, true ); }
+	:	(^(ASSIGN_OP lhs=exp[true,NULL] assign_rhs)) => ^(ASSIGN_OP lhs=exp[true,NULL] assign_rhs) { compiler->Assign( $lhs.start, true, $ASSIGN_OP->getLine($ASSIGN_OP) ); }
+	|	^(ASSIGN_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->Assign( $lhs.start, true, $ASSIGN_OP->getLine($ASSIGN_OP) ); }
 	;
 	
 new_exp
-	:	^(New { compiler->NewOp(); }
+	:	^(New { compiler->NewOp( $New->getLine($New) ); }
 			exp[false,NULL]
 		)
 	;
@@ -185,27 +185,27 @@ new_exp
 /////////////////////////////////////////////////////////////////////////////
 
 exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
-	:	^(GT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtEqOp(); }
-	|	^(LT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtEqOp(); }
-	|	^(GT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtOp(); }
-	|	^(LT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtOp(); }
-	|	^(EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->EqOp(); }
-	|	^(NOT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->NotEqOp(); }
-	|	^(AND_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AndOp(); }
-	|	^(OR_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->OrOp(); }
-	|	^(ADD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AddOp(); }
-	|	^(SUB_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->SubOp(); }
-	|	^(MUL_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->MulOp(); }
-	|	^(DIV_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->DivOp(); }
-	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp(); }
-	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start ); }
-	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start ); }
+	:	^(GT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtEqOp( $GT_EQ_OP->getLine($GT_EQ_OP) ); }
+	|	^(LT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtEqOp( $LT_EQ_OP->getLine($LT_EQ_OP) ); }
+	|	^(GT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->GtOp( $GT_OP->getLine($GT_OP) ); }
+	|	^(LT_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->LtOp( $LT_OP->getLine($LT_OP) ); }
+	|	^(EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->EqOp( $EQ_OP->getLine($EQ_OP) ); }
+	|	^(NOT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->NotEqOp( $NOT_EQ_OP->getLine($NOT_EQ_OP) ); }
+	|	^(AND_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AndOp( $AND_OP->getLine($AND_OP) ); }
+	|	^(OR_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->OrOp( $OR_OP->getLine($OR_OP) ); }
+	|	^(ADD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AddOp( $ADD_OP->getLine($ADD_OP) ); }
+	|	^(SUB_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->SubOp( $SUB_OP->getLine($SUB_OP) ); }
+	|	^(MUL_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->MulOp( $MUL_OP->getLine($MUL_OP) ); }
+	|	^(DIV_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->DivOp( $DIV_OP->getLine($DIV_OP) ); }
+	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp( $MOD_OP->getLine($MOD_OP) ); }
+	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start, $Negate->getLine($Negate)  ); }
+	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start, $NOT_OP->getLine($NOT_OP) ); }
 	|	^(Key exp[false,NULL] key=key_exp[is_lhs_of_assign, parent])
 	|	dot_exp[is_lhs_of_assign,$parent]
 	|	call_exp[$parent]
 	|	(map_op | vec_op)
 	|	value
-	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign ); }
+	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign, $ID->getLine($ID) ); }
 	;
 
 dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
@@ -214,12 +214,12 @@ dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 			DOT_OP 
 			exp[false,NULL] {compiler->is_dot_rhs=true;} 
 			rhs=exp[false,$parent]
-		) { compiler->DotOp( is_lhs_of_assign, $rhs.start, parent ); }
+		) { compiler->DotOp( is_lhs_of_assign, $rhs.start, parent, $DOT_OP->getLine($DOT_OP) ); }
 	;
 
 call_exp[pANTLR3_BASE_TREE parent]
 @init { compiler->is_method = false; }
-	:	^(Call args id=exp[false,$call_exp.start]) { compiler->CallOp( $id.start, $args.start, parent ); }
+	:	^(Call args id=exp[false,$call_exp.start]) { compiler->CallOp( $id.start, $args.start, parent, $id.start->getLine($id.start) ); }
 	;
 
 args
@@ -247,12 +247,12 @@ arg
 
 in_exp 
 //	:	^(In key=ID val=ID? exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( $key $ ); }
-	:	(^(In key=ID exp[false,NULL]))=> ^(In key=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, $exp.start ); } }
-	|	^(In key=ID val=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, (char*)$val.text->chars, $exp.start ); } }
+	:	(^(In key=ID exp[false,NULL]))=> ^(In key=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, $exp.start, $key->getLine($key) ); } }
+	|	^(In key=ID val=ID exp[false,NULL]) { if( PSRSTATE->backtracking == 0 ){ compiler->InOp( (char*)$key.text->chars, (char*)$val.text->chars, $exp.start, $key->getLine($key) ); } }
 	;
 
 map_op 
-	:	^(Map_init map_item*) { compiler->MapOp( $Map_init ); }
+	:	^(Map_init map_item*) { compiler->MapOp( $Map_init, $Map_init->getLine($Map_init) ); }
 	;
 
 map_item 
@@ -260,14 +260,14 @@ map_item
 	;
 
 vec_op 
-	:	^(Vec_init exp[false,NULL]*) { compiler->VecOp( $Vec_init ); }
+	:	^(Vec_init exp[false,NULL]*) { compiler->VecOp( $Vec_init, $Vec_init->getLine($Vec_init) ); }
 	;
 
 value
-	:	BOOL { if( strcmp( (char*)$BOOL.text->chars, "true" ) == 0 ) compiler->Emit( op_push_true ); else compiler->Emit( op_push_false ); }
-	|	NULLVAL { compiler->Emit( op_push_null ); }
-	|	NUMBER { compiler->Number( $NUMBER ); }
-	|	STRING { compiler->String( (char*)$STRING.text->chars ); }
+	:	BOOL { if( strcmp( (char*)$BOOL.text->chars, "true" ) == 0 ) compiler->Bool( true, $BOOL->getLine($BOOL) ); else compiler->Bool( false, $BOOL->getLine($BOOL) ); }
+	|	NULLVAL { compiler->Null( $NULLVAL->getLine($NULLVAL) ); }
+	|	NUMBER { compiler->Number( $NUMBER, $NUMBER->getLine($NUMBER) ); }
+	|	STRING { compiler->String( (char*)$STRING.text->chars, $STRING->getLine($STRING) ); }
 	;
 
 default_arg_val

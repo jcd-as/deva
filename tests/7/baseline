@@ -1,5 +1,5 @@
 AST:
-(Local a 0) (While (Condition a) (Block (= a 0) (Local b 1))) (While (Condition a) (Block (= a 0))) (Def foo (Arg_list_decl (Def_arg a) (Def_arg b) (Def_arg c)) Block) (Local x 1) (Local y 0) (Def z Arg_list_decl Block) (If (Condition x) (Block (If (Condition y) (Block (Call ArgList z))))) (If (Condition x) (Block (If (Condition y) (Block (Call ArgList z))) (Local b 1) (= a b))) (If (Condition x) Block (Else Block)) (Def fcn Arg_list_decl (Block (Call (ArgList "fcn called") print))) (= a (Map_init (Pair "b" fcn))) (Call ArgList (DOT_OP a b)) (= (DOT_OP a b) (Map_init (Pair "c" (Map_init (Pair "d" 1))))) (= (DOT_OP (DOT_OP (DOT_OP a b) c) d) 0) (= (DOT_OP (DOT_OP (DOT_OP a b) c) d) Map_init) (= (Key (DOT_OP (DOT_OP (DOT_OP a b) c) d) "foo") 1) (= a 1) (Local n (/ (+ 5 5) 2)) (= n (+ (% (* 2 2) 3) 1)) <EOF>
+(Local a 0) (While (Condition a) (Block (ASSIGN_OP a 0) (Local b 1))) (While (Condition a) (Block (ASSIGN_OP a 0))) (Def foo (Arg_list_decl (Def_arg a) (Def_arg b) (Def_arg c)) Block) (Local x 1) (Local y 0) (Def z Arg_list_decl Block) (If (Condition x) (Block (If (Condition y) (Block (Call ArgList z))))) (If (Condition x) (Block (If (Condition y) (Block (Call ArgList z))) (Local b 1) (ASSIGN_OP a b))) (If (Condition x) Block (Else Block)) (Def fcn Arg_list_decl (Block (Call (ArgList "fcn called") print))) (ASSIGN_OP a (Map_init (Pair "b" fcn))) (Call ArgList (DOT_OP a b)) (ASSIGN_OP (DOT_OP a b) (Map_init (Pair "c" (Map_init (Pair "d" 1))))) (ASSIGN_OP (DOT_OP (DOT_OP (DOT_OP a b) c) d) 0) (ASSIGN_OP (DOT_OP (DOT_OP (DOT_OP a b) c) d) Map_init) (ASSIGN_OP (Key (DOT_OP (DOT_OP (DOT_OP a b) c) d) "foo") 1) (ASSIGN_OP a 1) (Local n (/ (+ 5 5) 2)) (ASSIGN_OP n (+ (% (* 2 2) 3) 1)) <EOF>
 Symbol table:
 Function: @main, 0 arguments, 6 locals
 	all names: local a; undeclared b; local b; local b; function fcn; function foo; local n; local x; local y; function z; 
@@ -157,66 +157,85 @@ function: z, from file: input.dv, line: 40
 0 local(s): 
 code address: 82
 Instructions:
+1
    0: push_zero		 
    1: def_local0		 
+2
    2: pushlocal0		 
    3: jmpf		19
    8: enter		 
+4
    9: push_zero		 
   10: storelocal0		 
+5
   11: push_one		 
   12: def_local1		 
   13: leave		 
   14: jmp		2
+21
   19: pushlocal0		 
   20: jmpf		34
   25: enter		 
+23
   26: push_zero		 
   27: storelocal0		 
   28: leave		 
   29: jmp		19
+34
   34: def_function	3 94 ( # foo), 52
   47: jmp		60
   52: enter		 
   53: leave		 
   54: push_null		 
   55: return		0
+38
   60: push_one		 
   61: def_local2		 
+39
   62: push_zero		 
   63: def_local3		 
+40
   64: def_function	3 102 ( # z), 82
   77: jmp		90
   82: enter		 
   83: leave		 
   84: push_null		 
   85: return		0
+41
   90: pushlocal2		 
   91: jmpf		117
   96: enter		 
+43
   97: pushlocal3		 
   98: jmpf		116
  103: enter		 
+45
  104: pushconst		102 (z)
  109: call		0
  114: pop		 
  115: leave		 
  116: leave		 
+57
  117: pushlocal2		 
  118: jmpf		148
  123: enter		 
+59
  124: pushlocal3		 
  125: jmpf		143
  130: enter		 
+61
  131: pushconst		102 (z)
  136: call		0
  141: pop		 
  142: leave		 
+63
  143: push_one		 
  144: def_local4		 
+64
  145: pushlocal4		 
  146: storelocal0		 
  147: leave		 
+80
  148: pushlocal2		 
  149: jmpf		161
  154: enter		 
@@ -224,6 +243,7 @@ Instructions:
  156: jmp		163
  161: enter		 
  162: leave		 
+102
  163: def_function	3 98 ( # fcn), 181
  176: jmp		205
  181: enter		 
@@ -234,15 +254,18 @@ Instructions:
  198: leave		 
  199: push_null		 
  200: return		0
+103
  205: pushconst		89 (b)
  210: pushconst		98 (fcn)
  215: new_map		1
  220: storelocal0		 
+104
  221: pushlocal0		 
  222: pushconst		89 (b)
  227: method_load	
  228: call_method		0
  233: pop		 
+105
  234: pushlocal0		 
  235: pushconst		89 (b)
  240: pushconst		90 (c)
@@ -251,6 +274,7 @@ Instructions:
  251: new_map		1
  256: new_map		1
  261: tbl_store	
+106
  262: pushlocal0		 
  263: pushconst		89 (b)
  268: tbl_load	
@@ -259,14 +283,17 @@ Instructions:
  275: pushconst		91 (d)
  280: push_zero		 
  281: tbl_store	
+107
  282: pushlocal0		 
  283: pushconst		89 (b)
  288: tbl_load	
  289: pushconst		90 (c)
  294: tbl_load	
  295: pushconst		91 (d)
+0
  300: new_map		0
  305: tbl_store	
+108
  306: pushlocal0		 
  307: pushconst		89 (b)
  312: tbl_load	
@@ -277,14 +304,17 @@ Instructions:
  325: pushconst		93 (foo)
  330: push_one		 
  331: tbl_store	
+116
  332: push_one		 
  333: storelocal0		 
+121
  334: push		5
  339: push		5
  344: add		 
  345: push		2
  350: div		 
  351: def_local5		 
+126
  352: push		2
  357: push		2
  362: mul		 

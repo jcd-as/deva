@@ -136,7 +136,7 @@ PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 	return ret;
 }
 
-void PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags flags )
+Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags flags )
 {
 	pcompile_walker cmpPsr;
 
@@ -156,6 +156,8 @@ void PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fla
 
 	// free items
 	cmpPsr->free( cmpPsr );      
+
+	return compiler->GetCode( p1rv.num_constants );
 }
 
 PassOneReturnValue Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )

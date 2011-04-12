@@ -37,6 +37,7 @@
 #include "error.h"
 #include "opcodes.h"
 #include "object.h"
+#include "linemap.h"
 #include "executor.h"
 
 #include <vector>
@@ -106,6 +107,7 @@ private:
 	}
 };
 
+
 class Compiler
 {
 private:
@@ -125,6 +127,9 @@ private:
 
 	// name of the module we're compiling
 	const char* module_name;
+
+	// line number mapping (address-to-linenum)
+	LineMap* lines;
 
 public:
 	int num_locals;	// number of locals in the current scope
@@ -177,11 +182,19 @@ public:
 	Compiler( const char* mod_name, Semantics* sem );
 	~Compiler() { delete is; }
 
+	// get the Code block object for this compiled module. this is the
+	// end-of-life for the Compiler object, it's raison d'etre. once this is
+	// called, the compiler object should not be used again
+	Code* GetCode( size_t num_constants ) { return new Code( (byte*)is->Bytes(), is->Length(), num_constants, lines ); }
+
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
 	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }
 	inline void Emit( Opcode o, dword op1, dword op2, dword op3 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); }
 	inline void Emit( Opcode o, dword op1, dword op2, dword op3, dword op4 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); is->Append( op4 ); }
+
+	// generate a line number
+	inline void EmitLineNum( int line ) { if( emit_debug_info ) lines->Add( line, (dword)is->Length() ); }
 
 	// mostly for debugging purposes
 	void Decode();
@@ -192,6 +205,7 @@ public:
 	inline Scope* CurrentScope() { return semantics->scopes[scopestack.back()]; }
 	inline Scope* ParentScope() { if( scopestack.size() < 2 ) throw ICE( "Invalid scope stack: No parent scope." ); return semantics->scopes[scopestack[scopestack.size()-2]]; }
 
+	/////////////////////////////////////////////////////////////////////////
 	// node handling functions
 	/////////////////////////////////////////////////////////////////////////
 
@@ -207,41 +221,43 @@ public:
 	void DefineClass( char* name, int line, pANTLR3_BASE_TREE bases );
 
 	// constants
-	void Number( pANTLR3_BASE_TREE node );
-	void String( char* s );
+	void Number( pANTLR3_BASE_TREE node, int line );
+	void String( char* s, int line );
+	void Bool( bool b, int line ) { if( b ) Emit( op_push_true ); else Emit( op_push_false ); EmitLineNum( line ); }
+	void Null( int line ) { Emit( op_push_null ); EmitLineNum( line ); }
 
 	// identifier
-	void Identifier( char* s, bool is_lhs_of_assign );
+	void Identifier( char* s, bool is_lhs_of_assign, int line );
 
 	// binary operators
-	inline void AddOp() { Emit( op_add ); }
-	inline void SubOp() { Emit( op_sub ); }
-	inline void MulOp() { Emit( op_mul ); }
-	inline void DivOp() { Emit( op_div ); }
-	inline void ModOp() { Emit( op_mod ); }
-	inline void GtEqOp() { Emit( op_gte ); }
-	inline void LtEqOp() { Emit( op_lte ); }
-	inline void GtOp() { Emit( op_gt ); }
-	inline void LtOp() { Emit( op_lt ); }
-	inline void EqOp() { Emit( op_eq ); }
-	inline void NotEqOp() { Emit( op_neq ); }
-	inline void AndOp() { Emit( op_and ); }
-	inline void OrOp() { Emit( op_or ); }
+	inline void AddOp( int line ) { Emit( op_add ); EmitLineNum( line ); }
+	inline void SubOp( int line ) { Emit( op_sub ); EmitLineNum( line ); }
+	inline void MulOp( int line ) { Emit( op_mul ); EmitLineNum( line ); }
+	inline void DivOp( int line ) { Emit( op_div ); EmitLineNum( line ); }
+	inline void ModOp( int line ) { Emit( op_mod ); EmitLineNum( line ); }
+	inline void GtEqOp( int line ) { Emit( op_gte ); EmitLineNum( line ); }
+	inline void LtEqOp( int line ) { Emit( op_lte ); EmitLineNum( line ); }
+	inline void GtOp( int line ) { Emit( op_gt ); EmitLineNum( line ); }
+	inline void LtOp( int line ) { Emit( op_lt ); EmitLineNum( line ); }
+	inline void EqOp( int line ) { Emit( op_eq ); EmitLineNum( line ); }
+	inline void NotEqOp( int line ) { Emit( op_neq ); EmitLineNum( line ); }
+	inline void AndOp( int line ) { Emit( op_and ); EmitLineNum( line ); }
+	inline void OrOp( int line ) { Emit( op_or ); EmitLineNum( line ); }
 
 	// unary operators
-	void NegateOp( pANTLR3_BASE_TREE node );
-	void NotOp( pANTLR3_BASE_TREE node );
+	void NegateOp( pANTLR3_BASE_TREE node, int line );
+	void NotOp( pANTLR3_BASE_TREE node, int line );
 
 	// assignments and variable decls
-	void LocalVar( char* n );
-	void ExternVar( char* n, bool is_assign );
-	void Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign );
+	void LocalVar( char* n, int line );
+	void ExternVar( char* n, bool is_assign, int line );
+	void Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign, int line );
 
 	// augmented assignment operators (+=, -=, *=, /=, %=)
-	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op );
+	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int line );
 
 	// function call
-	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent );
+	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent, int line );
 
 	// Key ('[]') op
 	void KeyOp( bool is_lhs_of_assign, int num_children, pANTLR3_BASE_TREE parent );
@@ -249,21 +265,21 @@ public:
 	void EndOp();
 
 	// Dot ('.') op
-	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent );
+	void DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent, int line );
 
 	// return, continue, break ops
-	void ReturnOp( bool no_val = false );
-	void ContinueOp();
-	void BreakOp();
+	void ReturnOp( int line, bool no_val = false );
+	void ContinueOp( int line );
+	void BreakOp( int line );
 
-	void ImportOp( pANTLR3_BASE_TREE node );
+	void ImportOp( pANTLR3_BASE_TREE node, int line );
 
 	// 'new'
-	void NewOp();
+	void NewOp( int line );
 	
 	// vector and map creation ops
-	void VecOp( pANTLR3_BASE_TREE node );
-	void MapOp( pANTLR3_BASE_TREE node );
+	void VecOp( pANTLR3_BASE_TREE node, int line );
+	void MapOp( pANTLR3_BASE_TREE node, int line );
 
 	// if/else statements
 	void IfOpJump();
@@ -283,8 +299,8 @@ public:
 	void WhileOpEnd();
 
 	// for statement
-	void InOp( char* key, char* val, pANTLR3_BASE_TREE container );
-	void InOp( char* key, pANTLR3_BASE_TREE container );
+	void InOp( char* key, char* val, pANTLR3_BASE_TREE container, int line );
+	void InOp( char* key, pANTLR3_BASE_TREE container, int line );
 	void ForOpEnd();
 };
 

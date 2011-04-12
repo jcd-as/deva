@@ -176,13 +176,13 @@ assign_statement
 	| 	(external_decl '=' 'new')=> external_decl '=' new_decl ';'	-> ^(external_decl new_decl)
 	| 	external_decl '=' logical_exp ';'					-> ^(external_decl logical_exp)
 	|	(primary_exp ';')=> primary_exp ';'!
-	|	(primary_exp '=' 'new')=> primary_exp '=' new_decl ';'	-> ^('=' primary_exp new_decl)
-	|	(primary_exp '=')=> primary_exp '='^ assign_rhs ';'!
+	|	(primary_exp '=' 'new')=> primary_exp '=' new_decl ';'	-> ^(ASSIGN_OP primary_exp new_decl)
+	|	(primary_exp '=')=> primary_exp '=' assign_rhs ';'	-> ^(ASSIGN_OP primary_exp assign_rhs)
 	|	primary_exp math_assignment_op logical_exp ';'		-> ^(math_assignment_op primary_exp logical_exp)
 	;
 
 assign_rhs
-	:	exp	('='^ assign_rhs)?
+	:	exp	(ASSIGN_OP^ assign_rhs)?
 	;
 
 /////////////////////////////////////////////////////////////////////////////

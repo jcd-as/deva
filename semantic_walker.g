@@ -146,8 +146,8 @@ assign_statement
 	|	^(Local id=ID exp[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
 	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
 	|	^(Extern id=ID exp[false]?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
-	|	(^('=' exp[false] new_exp))=> ^('=' lhs=exp[false] new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
-	|	^('=' lhs=exp[false] (exp[false]|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	(^(ASSIGN_OP exp[false] new_exp))=> ^(ASSIGN_OP lhs=exp[false] new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }
+	|	^(ASSIGN_OP lhs=exp[false] (exp[false]|assign_rhs)) { semantics->CheckLhsForAssign( $lhs.start ); }
 	|	^(ADD_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
 	|	^(SUB_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
 	|	^(MUL_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
@@ -157,7 +157,7 @@ assign_statement
 	;
 
 assign_rhs 
-	:	^('=' lhs=exp[false] (assign_rhs|exp[false])) { semantics->CheckLhsForAssign( $lhs.start ); }
+	:	^(ASSIGN_OP lhs=exp[false] (assign_rhs|exp[false])) { semantics->CheckLhsForAssign( $lhs.start ); }
 	;
 	
 new_exp

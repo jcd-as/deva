@@ -8,7 +8,12 @@ DONE 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
     :LOGBOOK:
         DONE: 2011-04-10 16:39:55
 
-TODO 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
+DONE 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
+    CLOSED: 2011-04-12 09:46:27
+    :LOGBOOK:
+        DONE: 2011-04-12 09:46:27
+
+TODO 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'
 
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
@@ -19,7 +24,7 @@ TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
 
-TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;' ??
+TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;'
 
 TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
 

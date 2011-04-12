@@ -3269,7 +3269,11 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	}
 
 	// create a frame for the fcn
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, f );
+	// TODO: REVIEW: shouldn't we actually be passing 'orig_ip' in? (if we do we
+	// cause errors in tests that eval or import, complaining that end-of-code
+	// is reached before a fcn returns, but...)
+//	Frame* frame = new Frame( CurrentFrame(), scopes, orig_ip, orig_ip - sizeof(dword) - 1, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, ip, orig_ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope();
 
 	// set the args for the frame
@@ -3529,8 +3533,7 @@ const Code* Executor::LoadText( const char* const text, const char* const name )
 		p1rv = PassOne( prv, p1f );
 
 		// PASS TWO: compile
-		PassTwo( name, p1rv, p2f );
-		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
+		Code* c = PassTwo( name, p1rv, p2f );
 
 		// free parser, compiler memory
 		FreeParseReturnValue( prv );
@@ -3570,8 +3573,7 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 		p1rv = PassOne( prv, p1f );
 
 		// PASS TWO: compile
-		PassTwo( module_name.c_str(), p1rv, p2f );
-		Code* c = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
+		Code* c = PassTwo( module_name.c_str(), p1rv, p2f );
 
 		// free parser, compiler memory
 		FreeParseReturnValue( prv );
@@ -3714,6 +3716,23 @@ Object Executor::ImportModule( const char* module_name )
 	return ret;
 }
 
+Code* Executor::GetCode( byte* address )
+{
+	// walk each code block looking for one with a code ptr equal to our address
+	for( vector<const Code*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
+	{
+		if( (*i)->code == address )
+			return (Code*)*i;
+	}
+	return NULL;
+}
+
+// get the currently executing Code block
+Code* Executor::GetCurrentCode()
+{
+	return GetCode( bp );
+}
+
 // disassemble the instruction stream to stdout
 void Executor::Decode( const Code* code)
 {
@@ -3721,10 +3740,18 @@ void Executor::Decode( const Code* code)
 	byte* p = b;
 	byte* end = code->code + code->len;
 	Opcode op = op_nop;
+	dword line = LineMap::end;
+	dword prev_line = 0;
 
 	cout << "Instructions:" << endl;
 	while( p < end && op < op_halt )
 	{
+		// check line number
+		prev_line = line;
+		line = code->lines->FindLine( p - b );
+		if( line != LineMap::end && prev_line != line )
+			cout << line << endl;
+
 		// decode opcode
 		op = (Opcode)*p;
 		p += PrintOpcode( op, b, p );
@@ -4123,7 +4150,20 @@ void Executor::DumpTrace( ostream & os )
 	string fcn, file;
 	int line = -1;
 	int depth = 1;
+	Code* code = NULL;
 	Frame* f;
+
+	// current (error) location:
+	size_t loc = GetOffsetForCallSite( ip );
+	code = GetCode( bp );
+	line = code->lines->FindLine( loc );
+	f = callstack.back();
+	if( f->IsNative() )
+		os << "file: [Native Module]" << ", at: " << loc << ", in [Native Function]" << endl;
+	else
+		os << "file: " << f->GetFunction()->filename << ", line: " << line << ", at: " << loc << ", in " << f->GetFunction()->name << endl;
+
+	// stack trace:
 	for(vector<Frame*>::reverse_iterator i = callstack.rbegin(); i < callstack.rend() - 1; ++i )
 	{
 		f = *i;
@@ -4139,31 +4179,38 @@ void Executor::DumpTrace( ostream & os )
 		{
 			fcn = f->GetFunction()->name;
 			file = f->GetFunction()->filename;
+			Module* mod = f->GetFunction()->module;
+			if( mod )
+				code = (Code*)mod->code;
+			else
+				code = (Code*)code_blocks[0];
 		}
 
 		// pad for callstack depth
 		for( int c = 0; c < depth; c++ )
 			os << " ";
 
-		// TODO: if there is debug info, include the line number, else don't
-		// TODO: call site: if there is debug info, map the call-site
+		// call site: if there is debug info, map the call-site
 		// (frame->addr) to a line number. otherwise, subtract the bp (for this
 		// module) from it to produce the code offset
-		if( depth == 1 )
+		size_t call_site = GetOffsetForCallSite( f->GetCallSite() );
+		if( code )
+			line = code->lines->FindLine( call_site );
 		{
-			if( line == -1 )
-				os << "file: " << file << ", line: " << "[unknown line]" << ", in " << fcn << endl;
-			else
-				os << "file: " << file << ", line: " << line << ", in " << fcn << endl;
-		}
-		else
-		{
-			size_t call_site = GetOffsetForCallSite( f->GetCallSite() );
 			if( call_site == (size_t)-1 )
-				os << "file: " << file << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
+			{
+				if( line == -1 )
+					os << "file: " << file << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
+				else
+					os << "file: " << file << ", line: " << line << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
+			}
 			else
-				os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
-//		os << "  file: " << i->file << ", line: " << i->call_site << ", call to " << i->function << endl;
+			{
+				if( line == -1 )
+					os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
+				else
+					os << "file: " << file << ", line: " << line << ", at: " << call_site << ", call to " << fcn << endl;
+			}
 		}
 
 		depth++;

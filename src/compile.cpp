@@ -67,6 +67,11 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	// create the instruction stream
 	is = new InstructionStream();
 
+	// and the line map (note that ownership of the line map is passed out when
+	// a Code object is created from this compiler module, so it is not deleted
+	// here, but in the Code destructor)
+	lines = new LineMap();
+
 	// copy the global names and consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
 	// constants
@@ -161,6 +166,7 @@ void Compiler::EnterBlock()
 	// emit an enter instruction
 	Emit( op_enter );
 }
+
 void Compiler::ExitBlock()
 {
 	// track the loop scopes
@@ -200,6 +206,8 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	else
 		mod = "";
 
+	EmitLineNum( line );
+
 	// methods emit an op_def_method instruction
 	if( classname )
 	{
@@ -215,6 +223,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 		// add the size of 'op_def_method <Op0> <Op1> <Op2> <Op3>' and 'jmp <Op0>'
 		int sz = sizeof( dword ) * 5 + 2;
+		EmitLineNum( line );
 		Emit( op_def_method, (dword)i, (dword)i2, (dword)i3, (dword)(is->Length() + sz) );
 	}
 	// non-methods: emit an op_def_function instruction
@@ -228,6 +237,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		// get the constant index of this function
 		// add the size of 'op_def_function <Op0> <Op1> <Op2>' and 'jmp <Op0>'
 		int sz = sizeof( dword ) * 4 + 2;
+		EmitLineNum( line );
 		Emit( op_def_function, (dword)i, (dword)i2, (dword)(is->Length() + sz) );
 	}
 	
@@ -334,11 +344,11 @@ void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 	Emit( op_new_class, num_bases );
 
 	// store the new class into the appropriate local (to 'main')
-	LocalVar( name );
+	LocalVar( name, line );
 }
 
 // constants
-void Compiler::Number( pANTLR3_BASE_TREE node )
+void Compiler::Number( pANTLR3_BASE_TREE node, int line )
 {
 	double d = parse_number( (char*)node->getText(node)->chars );
 	double intpart; // for modf call
@@ -354,6 +364,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	else
 		throw ICE( "Expecting a number type." );
 
+	EmitLineNum( line );
 	if( d == 0.0 )
 	{
 		Emit( op_push_zero );
@@ -378,7 +389,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node )
 	}
 }
 
-void Compiler::String( char* name )
+void Compiler::String( char* name, int line )
 {
 	// string must be un-quoted and unescaped
 	string str( name );
@@ -394,12 +405,13 @@ void Compiler::String( char* name )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 	}
 	// emit op to push it onto the stack
+	EmitLineNum( line );
 	Emit( op_pushconst, (dword)idx );
 	delete [] s;
 }
 
 // identifier
-void Compiler::Identifier( char* s, bool is_lhs_of_assign )
+void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 {
 	// don't do anything for the left-hand sides of assignments, 
 	// the assignment op will generate the appropriate store/tbl_store op
@@ -407,6 +419,8 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 		return;
 
 	// emit op to push it onto the stack
+
+	EmitLineNum( line );
 
 	// are we the rhs of a dot-op? don't try to look for the name as a local, we
 	// need it to remain a symbol
@@ -512,7 +526,7 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign )
 }
 
 // unary operators
-void Compiler::NegateOp( pANTLR3_BASE_TREE node )
+void Compiler::NegateOp( pANTLR3_BASE_TREE node, int line )
 {
 	// test for simple case where node is a number
 	unsigned int type = node->getType( node );
@@ -526,17 +540,21 @@ void Compiler::NegateOp( pANTLR3_BASE_TREE node )
 
 	// don't need to do anything for negative number constants
 	if( !is_negative_number )
+	{
+		EmitLineNum( line );
 		Emit( op_neg );
+	}
 }
 
-void Compiler::NotOp( pANTLR3_BASE_TREE node )
+void Compiler::NotOp( pANTLR3_BASE_TREE node, int line )
 {
 	// TODO: test for simple case where node is a boolean, string or number
+	EmitLineNum( line );
 	Emit( op_not );
 }
 
 // assignments and variable decls
-void Compiler::LocalVar( char* n )
+void Compiler::LocalVar( char* n, int line )
 {
 	// get the index for the name
 	int idx = CurrentScope()->ResolveLocalToIndex( n );
@@ -544,6 +562,8 @@ void Compiler::LocalVar( char* n )
 		throw ICE( boost::format( "Cannot locate local symbol '%1%'." ) % n );
 	// mark the local as having been defined in this scope
 	CurrentScope()->SetLocalGenerated( idx );
+
+	EmitLineNum( line );
 
 	// emit a 'op_def_localN' op
 	if( idx < 10 )
@@ -586,7 +606,7 @@ void Compiler::LocalVar( char* n )
 		Emit( op_def_local, (dword)idx );
 }
 
-void Compiler::ExternVar( char* n, bool is_assign )
+void Compiler::ExternVar( char* n, bool is_assign, int line )
 {
 	// find the name in the constant pool
 	int idx = GetConstant( Object( obj_symbol_name, n ) );
@@ -596,14 +616,19 @@ void Compiler::ExternVar( char* n, bool is_assign )
 
 	// if this is an assignment, generate a store op
 	if( is_assign )
+	{
+		EmitLineNum( line );
 		Emit( op_storeconst, (dword)idx );
+	}
 }
 
-void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign )
+void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign, int line )
 {
 	// the immediate lhs always determines whether this is a simple store (an
 	// ID) or a table store (Key/DOT_OP)
 	unsigned int type = lhs_node->getType( lhs_node );
+
+	EmitLineNum( line );
 
 	if( parent_is_assign )
 		Emit( op_dup1 );
@@ -712,10 +737,13 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign )
 }
 
 // function call
-void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent )
+void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent, int line )
 {
 	// how many args are being pushed?
 	int num_children = args->getChildCount( args );
+
+	EmitLineNum( line );
+
 	// if we generated a method_load to match this call
 	if( is_method )
 	{
@@ -771,11 +799,13 @@ void Compiler::CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BA
 }
 
 // augmented assignment operators
-void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op )
+void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int line )
 {
 	// the immediate lhs always determines whether this is a simple store (an
 	// ID) or a table store (Key/DOT_OP)
 	unsigned int type = lhs_node->getType( lhs_node );
+
+	EmitLineNum( line );
 
 	// is the lhs node an identifier?
 	if( type == ID )
@@ -906,12 +936,14 @@ void Compiler::EndOp()
 }
 
 // Dot ('.') op
-void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent )
+void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE_TREE parent, int line )
 {
 	// do nothing for left-hand side of assign,
 	// assignment op will take care of generating the tbl_store
 	if( is_lhs_of_assign )
 		return;
+
+	EmitLineNum( line );
 
 	// if the parent is a call op to what might be a method, 
 	// generate a method_load op
@@ -934,10 +966,13 @@ void Compiler::DotOp( bool is_lhs_of_assign, pANTLR3_BASE_TREE rhs, pANTLR3_BASE
 	// otherwise a tbl_load op
 	else
 		Emit( op_tbl_load );
+
 }
 
-void Compiler::ReturnOp( bool no_val /*= false*/ )
+void Compiler::ReturnOp( int line, bool no_val /*= false*/ )
 {
+	EmitLineNum( line );
+
 	// no return value in the code? force a 'return null;'
 	if( no_val )
 	{
@@ -966,14 +1001,15 @@ void Compiler::ReturnOp( bool no_val /*= false*/ )
 	Emit( op_return, scopecount );
 }
 
-void Compiler::ContinueOp()
+void Compiler::ContinueOp( int line )
 {
 	dword scopecount = loop_scope_stack.back();
 	dword address = (dword)labelstack.back();
+	EmitLineNum( line );
 	Emit( op_exit_loop, address, scopecount );
 }
 
-void Compiler::BreakOp()
+void Compiler::BreakOp( int line )
 {
 	dword scopecount = loop_scope_stack.back();
 
@@ -982,12 +1018,13 @@ void Compiler::BreakOp()
 	if( loop_break_locations.size() == 0 )
 		throw ICE( "Invalid break statement: Not inside a loop.." );
 
+	EmitLineNum( line );
 	Emit( op_exit_loop, (dword)-1, scopecount );
 	loop_break_locations.back()->push_back( (dword)(is->Length() - (2 * sizeof(dword))) );
 }
 
 
-void Compiler::ImportOp( pANTLR3_BASE_TREE node )
+void Compiler::ImportOp( pANTLR3_BASE_TREE node, int line )
 {
 	string modname;
 
@@ -1005,25 +1042,28 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node )
 	// not found? error
 	if( idx == -1 )
 		throw ICE( boost::format( "Symbol '%1%' not found for 'import' instruction." ) % modname );
+	EmitLineNum( line );
 	Emit( op_import, (dword)idx );
 }
 
 // 'new'
-void Compiler::NewOp()
+void Compiler::NewOp( int line )
 {
 	// no-op
 }
 
 // vector and map creation ops
-void Compiler::VecOp( pANTLR3_BASE_TREE node )
+void Compiler::VecOp( pANTLR3_BASE_TREE node, int line )
 {
 	int num_children = node->getChildCount( node );
+	EmitLineNum( line );
 	Emit( op_new_vec, (dword)num_children );
 }
 
-void Compiler::MapOp( pANTLR3_BASE_TREE node )
+void Compiler::MapOp( pANTLR3_BASE_TREE node, int line )
 {
 	int num_children = node->getChildCount( node );
+	EmitLineNum( line );
 	Emit( op_new_map, (dword)num_children );
 }
 
@@ -1035,7 +1075,7 @@ void Compiler::IfOpJump()
 	AddPatchLoc();
 }
 
-void Compiler::EndIfOpJump()
+void Compiler::EndIfOpJump() 
 {
 	// back-patch the 'if' jmpf to current loc
 	BackpatchToCur();
@@ -1107,7 +1147,7 @@ void Compiler::WhileOpEnd()
 	CleanupEndLoop();
 }
 
-void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
+void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container, int line )
 {
 	// if 'val' is NULL this is a vector/single-loop-var iteration
 
@@ -1130,6 +1170,8 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 	{
 		throw ICE( boost::format( "For loop variable '%1%' not found in the local symbols." ) % key );
 	}
+
+	EmitLineNum( line );
 
 	// the vector to iterate is on top of the stack, dup it for the calls to
 	// 'rewind' and 'next'
@@ -1256,9 +1298,9 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container )
 }
 
 // vectors
-void Compiler::InOp( char* key, pANTLR3_BASE_TREE container )
+void Compiler::InOp( char* key, pANTLR3_BASE_TREE container, int line )
 {
-	InOp( key, NULL, container );
+	InOp( key, NULL, container, line );
 }
 
 void Compiler::ForOpEnd()

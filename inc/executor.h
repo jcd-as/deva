@@ -44,6 +44,7 @@
 #include "string_builtins.h"
 #include "vector_builtins.h"
 #include "map_builtins.h"
+#include "code.h"
 
 #include <vector>
 #include <set>
@@ -57,21 +58,6 @@ namespace deva
 
 // number of 'global' constant symbols (true, false, null, 'delete', 'new' etc)
 extern const int num_of_constant_symbols;
-
-struct Code
-{
-	byte* code;
-	size_t len;
-
-	// number of constants defined/used in this code
-	size_t num_constants;
-
-	// TODO: line number mapping, other debug info?
-//	map<int, int> lines;
-
-	Code( byte* c, size_t l, size_t n ) : code( c ), len( l ), num_constants( n ) { }
-	~Code(){ delete[] code; }
-};
 
 typedef NativeFunction (*module_fcn_finder)(const string&);
 
@@ -224,6 +210,11 @@ private:
 
 public:
 	Object ImportModule( const char* module_name );
+
+	// get the code block corresponding to a particular address
+	Code* GetCode( byte* address );
+	// get the currently executing Code block
+	Code* GetCurrentCode();
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream

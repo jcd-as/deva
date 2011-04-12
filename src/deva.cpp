@@ -233,8 +233,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 
 			// PASS TWO: compile
 			ex = new Executor();
-			PassTwo( "", p1rv, p2f );
-			Code* code = new Code( (byte*)compiler->is->Bytes(), compiler->is->Length(), p1rv.num_constants );
+			Code* code = PassTwo( "", p1rv, p2f );
 
 			// debug dumps
 #ifdef DEBUG

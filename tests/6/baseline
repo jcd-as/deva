@@ -1,5 +1,5 @@
 AST:
-(Def foo (Arg_list_decl (Def_arg a) (Def_arg b)) (Block (If (Condition a) (Block (Return b)) (Else (Block (If (Condition b) (Block (Return a)) (Else (Block (Return 0))))))))) (Local a Vec_init) (Call (ArgList 5) (DOT_OP a append)) (Local b Map_init) (= (Key b 0) "foo") (= (Key b "foo") foo) (Call (ArgList 0 1) (Key b "foo")) (Local x (Key b "foo")) (Call (ArgList 0 1) x) (Extern io) (For (In key value b) (Block (Call (ArgList (+ (Call (ArgList key) str) (Call (ArgList value) str))) (DOT_OP io print)))) (While (Condition (< a 10)) (Block (= a (+ a 1)) (Call (ArgList (Call (ArgList a) str)) (DOT_OP io print)))) <EOF>
+(Def foo (Arg_list_decl (Def_arg a) (Def_arg b)) (Block (If (Condition a) (Block (Return b)) (Else (Block (If (Condition b) (Block (Return a)) (Else (Block (Return 0))))))))) (Local a Vec_init) (Call (ArgList 5) (DOT_OP a append)) (Local b Map_init) (ASSIGN_OP (Key b 0) "foo") (ASSIGN_OP (Key b "foo") foo) (Call (ArgList 0 1) (Key b "foo")) (Local x (Key b "foo")) (Call (ArgList 0 1) x) (Extern io) (For (In key value b) (Block (Call (ArgList (+ (Call (ArgList key) str) (Call (ArgList value) str))) (DOT_OP io print)))) (While (Condition (< a 10)) (Block (ASSIGN_OP a (+ a 1)) (Call (ArgList (Call (ArgList a) str)) (DOT_OP io print)))) <EOF>
 Symbol table:
 Function: @main, 0 arguments, 5 locals
 	all names: local a; local b; function foo; extern io; local key; local value; local x; 
@@ -132,25 +132,31 @@ function: foo, from file: input.dv, line: 1
 2 local(s): a b 
 code address: 18
 Instructions:
+1
    0: def_function	3 91 ( # foo), 18
   13: jmp		74
   18: enter		 
+3
   19: pushlocal0		 
   20: jmpf		38
   25: enter		 
+4
   26: pushlocal1		 
   27: return		2
   32: leave		 
   33: jmp		67
   38: enter		 
+5
   39: pushlocal1		 
   40: jmpf		58
   45: enter		 
+6
   46: pushlocal0		 
   47: return		3
   52: leave		 
   53: jmp		66
   58: enter		 
+9
   59: push_zero		 
   60: return		3
   65: leave		 
@@ -158,8 +164,11 @@ Instructions:
   67: leave		 
   68: push_null		 
   69: return		0
+0
   74: new_vec		0
+14
   79: def_local0		 
+15
   80: push		5
   85: pushlocal0		 
   86: pushconst		89 (append)
@@ -167,15 +176,19 @@ Instructions:
   92: call_method		1
   97: pop		 
   98: new_map		0
+19
  103: def_local1		 
+20
  104: pushlocal1		 
  105: push_zero		 
  106: pushconst		88 (foo)
  111: tbl_store	
+22
  112: pushlocal1		 
  113: pushconst		88 (foo)
  118: pushconst		91 (foo)
  123: tbl_store	
+25
  124: push_zero		 
  125: push_one		 
  126: pushlocal1		 
@@ -183,15 +196,18 @@ Instructions:
  132: tbl_load	
  133: call		2
  138: pop		 
+26
  139: pushlocal1		 
  140: pushconst		88 (foo)
  145: tbl_load	
  146: def_local2		 
+27
  147: push_zero		 
  148: push_one		 
  149: pushlocal2		 
  150: call		2
  155: pop		 
+31
  156: pushlocal1		 
  157: dup1		 
  158: pushconst		11 (rewind)
@@ -202,6 +218,7 @@ Instructions:
  175: def_local4		 
  176: def_local3		 
  177: enter		 
+33
  178: pushlocal3		 
  179: pushconst		14 (str)
  184: call		1
@@ -217,15 +234,18 @@ Instructions:
  218: leave		 
  219: jmp		170
  224: pop		 
+36
  225: pushlocal0		 
  226: push		10
  231: lt		 
  232: jmpf		276
  237: enter		 
+39
  238: pushlocal0		 
  239: push_one		 
  240: add		 
  241: storelocal0		 
+42
  242: pushlocal0		 
  243: pushconst		14 (str)
  248: call		1

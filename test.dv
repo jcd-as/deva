@@ -1,23 +1,15 @@
-#local n = 0;
-## works:
-#def foo(){ print( "foo called" ); }
-#local s = "extern foo; local m = \"foo\"; foo(); print( m );";
-## works:
-##local s = "extern n; print( n );";
-#eval( s );
-
 # access fcn defined in eval'd block:
-extern foo;
-local s = eval( "local x = 24; def foo(){ print( \"foo\" ); }" );
-s.foo();
-print( s.x );
-# access fcn defined in 'main' from eval'd block:
-def bar()
-{
-	local s = "bar";
-	print( s );
-}
-eval( "extern bar; bar();" );
+#extern foo;
+#local s = eval( "local x = 24; def foo(){ print( \"foo\" ); }" );
+#s.foo();
+#print( s.x );
+## access fcn defined in 'main' from eval'd block:
+#def bar()
+#{
+#	local s = "bar";
+#	print( s );
+#}
+#eval( "extern bar; bar();" );
 
 # BUG: extern scoping not working with args:
 #def foo( x )
@@ -45,14 +37,15 @@ eval( "extern bar; bar();" );
 #}
 
 # TEST error stack trace:
-#def Foo()
-#{
-#	# error:
-#	local x = null;
-#	x /= 4;
-#}
-#def Bar(){ Foo(); }
-#Bar();
+def Foo()
+{
+	# error:
+	local x = null;
+	x /= 4;
+}
+def Bar(){ Foo(); }
+def Jam(){ Bar(); }
+Jam();
 
 # BUG: break in nested fcn not working
 # see test 67

@@ -43,6 +43,7 @@
 #include "exceptions.h"
 #include "util.h"
 #include "error.h"
+#include "code.h"
 
 
 namespace deva
@@ -86,7 +87,7 @@ ParseReturnValue Parse( const char* input, size_t length );
 // free parser memory, call after completely finished with parser items, ast etc
 void FreeParseReturnValue( ParseReturnValue & prv );
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags );
-void PassTwo( const char* filename, PassOneReturnValue p1rv, PassTwoFlags flags );
+Code* PassTwo( const char* filename, PassOneReturnValue p1rv, PassTwoFlags flags );
 PassOneReturnValue Compile( const char* filename, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
 // free pass one/compilation memory, call after finished compiling, using ast
 void FreePassOneReturnValue( PassOneReturnValue & p1rv );

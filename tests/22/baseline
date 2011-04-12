@@ -115,11 +115,14 @@ function: x, from file: input.dv, line: 9
 0 local(s): 
 code address: 77
 Instructions:
+1
    0: push_zero		 
    1: def_local0		 
    2: push_true		 
+2
    3: jmpf		40
    8: enter		 
+4
    9: pushlocal0		 
   10: pushconst		85 (b)
   15: tbl_load	
@@ -131,6 +134,7 @@ Instructions:
   33: pop		 
   34: leave		 
   35: jmp		2
+7
   40: pushlocal0		 
   41: pushconst		85 (b)
   46: tbl_load	
@@ -138,9 +142,11 @@ Instructions:
   52: method_load	
   53: call_method		0
   58: pop		 
+9
   59: def_function	3 92 ( # x), 77
   72: jmp		108
   77: enter		 
+11
   78: pushconst		88 (a)
   83: pushconst		85 (b)
   88: tbl_load	
