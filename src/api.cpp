@@ -95,7 +95,7 @@ ParseReturnValue Parse( const char* filename )
 ParseReturnValue Parse( const char* input, size_t length )
 {
 	pANTLR3_INPUT_STREAM input_stream;
-	input_stream = antlr3NewAsciiStringInPlaceStream( (uint8_t*)input, (ANTLR3_UINT32)length, NULL );
+	input_stream = antlr3NewAsciiStringInPlaceStream( (unsigned char*)input, (ANTLR3_UINT32)length, NULL );
 
 	current_file = "[TEXT]";
 
