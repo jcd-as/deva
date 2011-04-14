@@ -66,14 +66,14 @@ if( length( args ) > 1 )
 	{
 		valgrind = true;
 		dotest = "./dotest_valgrind";
-		print( "running tests under valgrind (without compilation phase)..." );
-	}
-	else if( args[1] == "vf" || args[1] == "valgrind-full" )
-	{
-		valgrind_full = true;
-		dotest = "./dotest_valgrind_full";
 		print( "running tests under valgrind..." );
 	}
+#	else if( args[1] == "vf" || args[1] == "valgrind-full" )
+#	{
+#		valgrind_full = true;
+#		dotest = "./dotest_valgrind_full";
+#		print( "running tests under valgrind..." );
+#	}
 }
 
 # run 'dotest input.dv baseline' in each sub-dir

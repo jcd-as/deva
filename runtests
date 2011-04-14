@@ -1,2 +1,2 @@
 #!/bin/sh
-$DEVA/deva $DEVA/runtests.dv
+$DEVA/deva $DEVA/runtests.dv $1
