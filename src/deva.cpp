@@ -280,13 +280,17 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		// display an error
 		emit_error( e );
 
+		// QUICK EXIT on error: 
+		// - let the os reclaim the memory
+		// - do not destruct user's deva objects
+
 		// free parser, compiler memory
-		FreeParseReturnValue( prv );
-		FreePassOneReturnValue( p1rv );
-		// free the semantics objects (symbol table et al), compiler, executor
-		delete ex;
-		delete compiler;
-		delete semantics;
+//		FreeParseReturnValue( prv );
+//		FreePassOneReturnValue( p1rv );
+//		// free the semantics objects (symbol table et al), compiler, executor
+//		delete ex;
+//		delete compiler;
+//		delete semantics;
 
 		exit( -1 );
 	}
@@ -295,13 +299,17 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		// display an error
 		emit_error( e );
 
+		// QUICK EXIT on error: 
+		// - let the os reclaim the memory
+		// - do not destruct user's deva objects
+
 		// free parser, compile memory
-		FreeParseReturnValue( prv );
-		FreePassOneReturnValue( p1rv );
-		// free the semantics objects (symbol table et al), compiler, executor
-		delete ex;
-		delete compiler;
-		delete semantics;
+//		FreeParseReturnValue( prv );
+//		FreePassOneReturnValue( p1rv );
+//		// free the semantics objects (symbol table et al), compiler, executor
+//		delete ex;
+//		delete compiler;
+//		delete semantics;
 
 		exit( -1 );
 	}
@@ -314,13 +322,17 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		if( ex )
 			ex->DumpTrace( cerr );
 
+		// QUICK EXIT on error: 
+		// - let the os reclaim the memory
+		// - do not destruct user's deva objects
+
 		// free parser, compile memory
-		FreeParseReturnValue( prv );
-		FreePassOneReturnValue( p1rv );
-		// free the semantics objects (symbol table et al), compiler, executor
-		delete ex;
-		delete compiler;
-		delete semantics;
+//		FreeParseReturnValue( prv );
+//		FreePassOneReturnValue( p1rv );
+//		// free the semantics objects (symbol table et al), compiler, executor
+//		delete ex;
+//		delete compiler;
+//		delete semantics;
 
 		exit( -1 );
 	}

@@ -3,15 +3,9 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	29 (import .dvc NYI)
 	62 (json module NYI)
 
-DONE 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
-    CLOSED: 2011-04-10 16:39:55
-    :LOGBOOK:
-        DONE: 2011-04-10 16:39:55
+TODO 2011-04-14 @deva +veryhigh migrate 'runtests' to runtests.dv
 
-DONE 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
-    CLOSED: 2011-04-12 09:46:27
-    :LOGBOOK:
-        DONE: 2011-04-12 09:46:27
+TODO 2011-04-13 @deva +veryhigh classes need separate storage so they can be destroyed *after* all the instances of them are destroyed (and child classes destroyed before base classes). ??
 
 TODO 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'
 
@@ -41,6 +35,16 @@ TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-mem
 TODO 2011-03-09 @deva +medium fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
+
+DONE 2011-02-01 @deva +veryhigh remaining builtins (eval and importmodule)
+    CLOSED: 2011-04-10 16:39:55
+    :LOGBOOK:
+        DONE: 2011-04-10 16:39:55
+
+DONE 2011-02-01 @deva +veryhigh debug info/line number instructions and Tracebacks on error
+    CLOSED: 2011-04-12 09:46:27
+    :LOGBOOK:
+        DONE: 2011-04-12 09:46:27
 
 DONE 2011-02-26 @deva +veryhigh octal and binary numbers not handled (parsed) correctly
     CLOSED: 2011-02-27 16:15:44

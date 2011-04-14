@@ -153,10 +153,7 @@ void do_os_exec( Frame* f )
 void do_os_getcwd( Frame* f )
 {
 	BuiltinHelper helper( "os", "getcwd", f, true );
-	helper.CheckNumberOfArguments( 1 );
-
-	Object* o = helper.GetLocalN( 0 );
-	helper.ExpectType( o, obj_string );
+	helper.CheckNumberOfArguments( 0 );
 
 	string retstr = get_cwd();
 
@@ -348,10 +345,7 @@ void do_os_getenv( Frame* f )
 void do_os_argv( Frame* f )
 {
 	BuiltinHelper helper( "os", "argv", f, true );
-	helper.CheckNumberOfArguments( 1 );
-
-	Object* o = helper.GetLocalN( 0 );
-	helper.ExpectType( o, obj_string );
+	helper.CheckNumberOfArguments( 0 );
 
 	extern int _argc; 
 	extern char** _argv;

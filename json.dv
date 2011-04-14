@@ -415,7 +415,7 @@ def encode_object( obj )
 	{
 		return "null";
 	}
-	else if( type( obj ) == "bool" )
+	else if( type( obj ) == "boolean" )
 	{
 		if( obj )
 			return "true";
@@ -449,7 +449,7 @@ def encode_object( obj )
 	}
 	else if( type( obj ) == "map"
 		|| type( obj ) == "class"
-		|| type( obj ) == "instance" )
+		|| type( obj ) == "object" )
 	{
 		local s = "{";
 		for( key, val in obj )
@@ -480,11 +480,12 @@ def encode_object( obj )
 		return s;
 	}
 	# end-user shouldn't get with one of these
-	else if( type( obj ) == "address" 
-		|| type( obj ) == "call" 
-		|| type( obj ) == "variable"
-		|| type( obj ) == "size"
-		|| type( obj ) == "native object" )
+	else if( type( obj ) == "size/address" 
+		|| type( obj ) == "function" 
+		|| type( obj ) == "native function" 
+		|| type( obj ) == "symbol name"
+		|| type( obj ) == "native object"
+		|| type( obj ) == "<invalid>" )
 	{
 		seterror( "Invalid type for user data" );
 		return;

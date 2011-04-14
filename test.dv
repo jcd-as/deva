@@ -1,3 +1,9 @@
+#import foo;
+
+# BUG: ICE: Cannot locate local symbol 'argv'
+#import os;
+#local argv = os.argv();
+
 # access fcn defined in eval'd block:
 #extern foo;
 #local s = eval( "local x = 24; def foo(){ print( \"foo\" ); }" );
@@ -37,15 +43,15 @@
 #}
 
 # TEST error stack trace:
-def Foo()
-{
-	# error:
-	local x = null;
-	x /= 4;
-}
-def Bar(){ Foo(); }
-def Jam(){ Bar(); }
-Jam();
+#def Foo()
+#{
+#	# error:
+#	local x = null;
+#	x /= 4;
+#}
+#def Bar(){ Foo(); }
+#def Jam(){ Bar(); }
+#Jam();
 
 # BUG: break in nested fcn not working
 # see test 67

@@ -40,6 +40,16 @@ namespace deva
 
 Scope::~Scope()
 {
+	if( !is_module )
+		DeleteData();
+}
+
+// for module scopes only, delete the data without deleting the scope:
+// (necessary because modules need to call destructors for objects, which
+// will call *back* to the scope looking for methods etc. if we did this in
+// the destructor the 'this' pointer would already be in a bad state)
+void Scope::DeleteData()
+{
 	// release-ref and 'zero' out the locals, to error out in case they get 
 	// accidentally used after they should be gone, and to ensure they aren't 
 	// DecRef'd again if/when a new value is assigned to them (e.g. in a loop)

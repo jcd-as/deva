@@ -102,6 +102,9 @@ class Executor
 	// modules that have been imported
 	map<string, Module*> modules;
 
+	// load-ordered list (stack) of modules
+	vector<Module*> module_stack;
+
 	// set of function objects
 	multimap<string, Object*> functions;
 

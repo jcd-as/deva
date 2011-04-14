@@ -127,19 +127,10 @@ Executor::Executor() :
 	}
 }
 
+// WARNING! do not delete anything here which might DecRef Objects and thus execute deva code!
+// all code must be finished executing and all Objects gone by the time Execute() completes!
 Executor::~Executor()
 {
-	// free the constants' string data
-	for( size_t i = 0; i < constants.size(); i++ )
-	{
-		ObjectType type = constants.at( i ).type;
-		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
-	}
-	// free the module objects
-	for( map<string, Module*>::iterator i = modules.begin(); i != modules.end(); ++i )
-	{
-		delete i->second;
-	}
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
@@ -147,6 +138,12 @@ Executor::~Executor()
 		if( i->second->type == obj_function )
 			delete i->second->f;
 		delete i->second;
+	}
+	// free the constants' string data
+	for( size_t i = 0; i < constants.size(); i++ )
+	{
+		ObjectType type = constants.at( i ).type;
+		if( type == obj_string || type == obj_symbol_name ) delete [] constants.at( i ).s;
 	}
 	// free the code blocks
 	for( vector<const Code*>::iterator i = code_blocks.begin(); i != code_blocks.end(); ++i )
@@ -346,6 +343,19 @@ void Executor::Execute( const Code* const code )
 
 	// pop the 'global' scope
 	PopScope();
+
+	// free the module objects
+	for( vector<Module*>::reverse_iterator i = module_stack.rbegin(); i != module_stack.rend(); ++i )
+	{
+		(*i)->DeleteScopeData();
+		(*i)->DeleteScope();
+	}
+	for( vector<Module*>::reverse_iterator i = module_stack.rbegin(); i != module_stack.rend(); ++i )
+	{
+		(*i)->DeleteFrame();
+		delete *i;
+	}
+
 	// free the scope table
 	delete scopes;
 	PopFrame();
@@ -407,6 +417,9 @@ Object Executor::ExecuteText( const char* const text )
 	
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
+
+	// add the module to load-ordered stack (for deletion in depth first order)
+	module_stack.push_back( cur_module );
 
 	// pop the scope and frame
 	PopScope();
@@ -3696,9 +3709,12 @@ Object Executor::ImportModule( const char* module_name )
 
 	// execute it
 	ExecuteCode( code );
-	
+
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
+
+	// add the module to load-ordered stack (for deletion in depth first order)
+	module_stack.push_back( cur_module );
 
 	// pop the scope and frame (because these are _module_-level scopes and
 	// frames they will not be deleted - the Module object has a ptr to them

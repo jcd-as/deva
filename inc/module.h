@@ -46,7 +46,9 @@ struct Module
 	Frame* frame;
 
 	Module( const Code* c, Scope* s, Frame* f ) : code( c ), scope( s ), frame( f ) {}
-	~Module() { delete scope; delete frame; }
+	inline void DeleteScopeData() {  scope->DeleteData(); }
+	inline void DeleteScope() { delete scope; }
+	inline void DeleteFrame() { delete frame; }
 };
 
 

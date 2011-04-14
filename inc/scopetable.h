@@ -57,6 +57,11 @@ class Scope
 public:
 	Scope( bool is_mod = false ) : is_module( is_mod ) {}
 	~Scope();
+	// for module scopes only, delete the data without deleting the scope:
+	// (necessary because modules need to call destructors for objects, which
+	// will call *back* to the scope looking for methods etc. if we did this in
+	// the destructor the 'this' pointer would already be in a bad state)
+	void DeleteData();
 	inline bool IsModule() { return is_module; }
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
 	// THE EXECUTOR!)
