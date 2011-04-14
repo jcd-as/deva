@@ -1,0 +1,14 @@
+# test importmodule() builtin
+
+local foo = importmodule( "foo" );
+
+def bar()
+{
+	print( "test returned to and code executing here" );
+	# second and subsequent imports of the same module have no effect
+	importmodule( "foo" );
+}
+# we can call functions from imported modules with the module name as the
+# namespace:
+foo.foofcn();
+bar();
