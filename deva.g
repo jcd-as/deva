@@ -321,7 +321,7 @@ relational_op
 	;
 
 logical_op 
-	:	AND_OP | OR_OP 
+	:	AND_OP | OR_OP | ANDF_OP | ORF_OP
 	;
 
 mul_op 
@@ -448,10 +448,18 @@ SUB_OP
 	;
 
 AND_OP
-	:	'&&'
+	:	'&'
 	;
 
 OR_OP
+	:	'|'
+	;
+
+ANDF_OP
+	:	'&&'
+	;
+
+ORF_OP
 	:	'||'
 	;
 

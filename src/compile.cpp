@@ -206,8 +206,6 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	else
 		mod = "";
 
-	EmitLineNum( line );
-
 	// methods emit an op_def_method instruction
 	if( classname )
 	{
@@ -1321,5 +1319,62 @@ void Compiler::ForOpEnd()
 	Emit( op_pop );
 }
 
+void Compiler::AndFOpConditionJump()
+{
+	// emit a jmpf to jump to the 'false' condition
+	Emit( op_jmpf, (dword)-1 );
+	AddPatchLoc();
+}
+
+void Compiler::AndFOp( int line )
+{
+	EmitLineNum( line );
+
+	// emit push_true for 'true' condition
+	Emit( op_push_true );
+	// emit jmp to [current ip + sizeof( op_jmpf ) + sizeof( offset) + sizeof( op_push_false )]
+	Emit( op_jmp, is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte ) );
+	// back-patch the 'and' jmpfs to jump to here [current ip == the 'push_false' we're about to emit)
+	BackpatchToCur();
+	BackpatchToCur();
+	// emit push_false for 'false' condition
+	Emit( op_push_false );
+}
+
+void Compiler::OrFOpConditionJump( bool first )
+{
+	// first is jmpt
+	if( first )
+	{
+		// emit a jmpt to jump to the 'false' condition
+		Emit( op_jmpt, (dword)-1 );
+	}
+	// second is jmpf
+	else
+	{
+		// emit a jmpf to jump to the 'false' condition
+		Emit( op_jmpf, (dword)-1 );
+	}
+	AddPatchLoc();
+}
+
+void Compiler::OrFOp( int line )
+{
+	EmitLineNum( line );
+
+	// set a label for in order to back-patch the 'or' jmpt to jump to here 
+	// [current ip == the 'push_true' we're about to emit)
+	AddLabel();
+	// emit push_true for 'true' condition
+	Emit( op_push_true );
+	// emit jmp to [current ip + sizeof( op_jmpf ) + sizeof( offset) + sizeof( op_push_false )]
+	Emit( op_jmp, is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte ) );
+	// back-patch the 'or' jmpf to jump to here [current ip == the 'push_false' we're about to emit)
+	BackpatchToCur();
+	// back-patch the 'or' jmpt to jump to here [current ip == the 'push_true' we're about to emit)
+	BackpatchToLastLabel();
+	// emit push_false for 'false' condition
+	Emit( op_push_false );
+}
 
 } // namespace deva_compile

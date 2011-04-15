@@ -309,13 +309,7 @@ void Semantics::CheckEqualityOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 // validate logical expression
 void Semantics::CheckLogicalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 {
-	// no-op: parser should have rejected all disallowed expressions except
-	// strings
-	unsigned int lhs_type = lhs->getType( lhs );
-	unsigned int rhs_type = rhs->getType( rhs );
-
-	if( lhs_type == STRING || rhs_type == STRING )
-		throw SemanticException( "Cannot use a string in a logical expression.", lhs->getLine(lhs) );
+	// no-op: parser should have rejected all disallowed expressions
 }
 
 // validate mathematical expression
@@ -430,6 +424,8 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 		&& type != NOT_EQ_OP
 		&& type != AND_OP
 		&& type != OR_OP
+		&& type != ANDF_OP
+		&& type != ORF_OP
 		&& type != ADD_OP
 		&& type != SUB_OP
 		&& type != MUL_OP
@@ -463,6 +459,8 @@ void Semantics::CheckConditional( pANTLR3_BASE_TREE condition )
 		&& type != NOT_EQ_OP
 		&& type != AND_OP
 		&& type != OR_OP
+		&& type != ANDF_OP
+		&& type != ORF_OP
 		&& type != ADD_OP
 		&& type != SUB_OP
 		&& type != MUL_OP

@@ -151,15 +151,15 @@ Instructions:
   20: pushconst		17 (length)
   25: call		1
   30: def_local1		 
-  31: push_true		 
 6
+  31: push_true		 
   32: def_local2		 
 7
   33: pushlocal2		 
   34: jmpf		128
   39: enter		 
-  40: push_false		 
 9
+  40: push_false		 
   41: storelocal2		 
 10
   42: pushlocal1		 
@@ -214,8 +214,8 @@ Instructions:
   96: pushlocal4		 
   97: pushlocal5		 
   98: tbl_store	
-  99: push_true		 
 21
+  99: push_true		 
  100: storelocal2		 
  101: leave		 
 23

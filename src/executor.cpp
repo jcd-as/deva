@@ -1037,6 +1037,18 @@ Opcode Executor::ExecuteInstruction()
 		arg = *((dword*)ip);
 		ip = (byte*)(bp + arg);
 		break;
+	case op_jmpt:
+		// 1 arg: size
+		arg = *((dword*)ip);
+		o = stack.back();
+		o = ResolveSymbol( o );
+		stack.pop_back();
+		if( o.CoerceToBool() )
+			ip = (byte*)(bp + arg);
+		else
+			ip += sizeof( dword );
+		DecRef( o );
+		break;
 	case op_jmpf:
 		// 1 arg: size
 		arg = *((dword*)ip);
@@ -3189,6 +3201,7 @@ Opcode Executor::SkipInstruction()
 	case op_new_vec:
 	case op_new_class:
 	case op_jmp:
+	case op_jmpt:
 	case op_jmpf:
 	case op_add_assign:
 	case op_sub_assign:
@@ -3967,6 +3980,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		cout << "\t" << arg;
 		ret = sizeof( dword );
 		break;
+	case op_jmpt:
 	case op_jmpf:
 		// 1 arg: size
 		arg = *((dword*)p);

@@ -91,6 +91,7 @@ const char* opcodeNames[] =
 	"new_vec",
 	"new_class",
 	"jmp",
+	"jmpt",
 	"jmpf",
 	"eq",
 	"neq",

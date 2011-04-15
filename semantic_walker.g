@@ -177,6 +177,8 @@ exp[bool invert]
 	|	^(NOT_EQ_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckEqualityOp( $lhs.start, $rhs.start ); }
 	|	^(AND_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
 	|	^(OR_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(ANDF_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
+	|	^(ORF_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckLogicalOp( $lhs.start, $rhs.start ); }
 	|	^(ADD_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckAddOp( $lhs.start, $rhs.start ); }
 	|	^(SUB_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
 	|	^(MUL_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }

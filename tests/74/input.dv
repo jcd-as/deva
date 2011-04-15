@@ -1,0 +1,90 @@
+# test logical operators, 
+# both short-circuiting ('&&' and '||') and eager ('&' and '|')
+
+def TRUE(){ print( "TRUE called" ); return true; }
+def FALSE(){ print( "FALSE called" ); return false; }
+
+# eager:
+# true
+if( 1 | 0 ) print( "true" );
+else print( "false" );
+# false
+if( 1 & 0 ) print( "true" );
+else print( "false" );
+# TRUE called
+# FALSE called
+# true
+if( TRUE() | FALSE() ) print( "true" );
+else print( "false" );
+# TRUE called
+# FALSE called
+# false
+if( TRUE() & FALSE() ) print( "true" );
+else print( "false" );
+
+# short-circuiting:
+# true
+if( 1 || 0 ) print( "true" );
+else print( "false" );
+# false
+if( 1 && 0 ) print( "true" );
+else print( "false" );
+# TRUE called
+# true
+if( TRUE() || FALSE() ) print( "true" );
+else print( "false" );
+# TRUE called
+# FALSE called
+# false
+if( TRUE() && FALSE() ) print( "true" );
+else print( "false" );
+# FALSE called
+# false
+if( FALSE() && TRUE() ) print( "true" );
+else print( "false" );
+
+# combinations:
+def A(){ print( "A called" ); return true; }
+# A called
+# false
+if( 1 | A() && false )
+	print( "true" );
+else
+	print( "false" );
+
+def A() { print( "A called" ); return 2 + 4; }	# true
+def B() { print( "B called" ); return 1; }  	# true
+def C() { print( "C called" ); return ""; }		# false
+
+# A called
+# B called
+# C called
+# something false
+if( A() && B() && C() && "FOO" ) print( "all true" );
+else print( "something false" );
+
+# A called
+# B called
+# C called
+# A called
+# something false
+if( A() && B() && C() & "FOO" & A() ) print( "all true" );
+else print( "something false" );
+
+# A called
+# something true
+if( A() || B() || C() ) print( "something true" );
+else print( "all false" );
+
+# C called
+# B called
+# something true
+if( C() || B() || A() ) print( "something true" );
+else print( "all false" );
+
+# C called
+# B called
+# A called
+# something true
+if( C() || B() | A() ) print( "something true" );
+else print( "all false" );

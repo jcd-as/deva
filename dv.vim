@@ -110,7 +110,7 @@ syn match   devaExpression	"==\|>=\|=>\|<=\|=<\|\!="
 syn match   devaExpression	"\!"
 
 " Boolean Logic (OR, AND, NOT)
-syn match  devaBoolLogic	"||\|&&\|\!"
+syn match  devaBoolLogic	"||\|&&\|\!\||\|&"
 
 " Expression separators: ';' and ','
 syn match  devaSemicolon	";"

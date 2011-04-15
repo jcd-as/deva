@@ -192,6 +192,16 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	^(EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->EqOp( $EQ_OP->getLine($EQ_OP) ); }
 	|	^(NOT_EQ_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->NotEqOp( $NOT_EQ_OP->getLine($NOT_EQ_OP) ); }
 	|	^(AND_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AndOp( $AND_OP->getLine($AND_OP) ); }
+	|	^(
+			ANDF_OP
+			lhs=exp[true,parent]	{ compiler->AndFOpConditionJump(); }
+			rhs=exp[true,parent]	{ compiler->AndFOpConditionJump(); }
+		) 							{ compiler->AndFOp( $ANDF_OP->getLine($ANDF_OP) ); }
+	|	^(
+			ORF_OP
+			lhs=exp[true,parent]	{ compiler->OrFOpConditionJump(true); }
+			rhs=exp[true,parent]	{ compiler->OrFOpConditionJump(false); }
+		) 							{ compiler->OrFOp( $ORF_OP->getLine($ORF_OP) ); }
 	|	^(OR_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->OrOp( $OR_OP->getLine($OR_OP) ); }
 	|	^(ADD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->AddOp( $ADD_OP->getLine($ADD_OP) ); }
 	|	^(SUB_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->SubOp( $SUB_OP->getLine($SUB_OP) ); }

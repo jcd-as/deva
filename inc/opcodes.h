@@ -143,6 +143,7 @@ enum Opcode
 	op_new_vec,		// create a new vector object and push onto tos. <Op0> has count of items on stack
 	op_new_class,	// create a new class object and push onto the tos. <Op0> has count of items on stack
 	op_jmp,			// unconditional jump to the address on the tos
+	op_jmpt,		// jump on tos evaluating to true
 	op_jmpf,		// jump on tos evaluating to false 
 	op_eq,			// == compare tos and tos1
 	op_neq,			// != compare tos and tos1
@@ -206,7 +207,7 @@ enum Opcode
 
 	op_import,
 
-	// 118 (update as opcodes are added above)
+	// 119 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault
 };

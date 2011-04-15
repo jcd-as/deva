@@ -118,8 +118,8 @@ Instructions:
 1
    0: push_zero		 
    1: def_local0		 
-   2: push_true		 
 2
+   2: push_true		 
    3: jmpf		40
    8: enter		 
 4

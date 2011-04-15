@@ -223,26 +223,32 @@ public:
 	// constants
 	void Number( pANTLR3_BASE_TREE node, int line );
 	void String( char* s, int line );
-	void Bool( bool b, int line ) { if( b ) Emit( op_push_true ); else Emit( op_push_false ); EmitLineNum( line ); }
-	void Null( int line ) { Emit( op_push_null ); EmitLineNum( line ); }
+	void Bool( bool b, int line ) { EmitLineNum( line ); if( b ) Emit( op_push_true ); else Emit( op_push_false ); }
+	void Null( int line ) { EmitLineNum( line ); Emit( op_push_null ); }
 
 	// identifier
 	void Identifier( char* s, bool is_lhs_of_assign, int line );
 
 	// binary operators
-	inline void AddOp( int line ) { Emit( op_add ); EmitLineNum( line ); }
-	inline void SubOp( int line ) { Emit( op_sub ); EmitLineNum( line ); }
-	inline void MulOp( int line ) { Emit( op_mul ); EmitLineNum( line ); }
-	inline void DivOp( int line ) { Emit( op_div ); EmitLineNum( line ); }
-	inline void ModOp( int line ) { Emit( op_mod ); EmitLineNum( line ); }
-	inline void GtEqOp( int line ) { Emit( op_gte ); EmitLineNum( line ); }
-	inline void LtEqOp( int line ) { Emit( op_lte ); EmitLineNum( line ); }
-	inline void GtOp( int line ) { Emit( op_gt ); EmitLineNum( line ); }
-	inline void LtOp( int line ) { Emit( op_lt ); EmitLineNum( line ); }
-	inline void EqOp( int line ) { Emit( op_eq ); EmitLineNum( line ); }
-	inline void NotEqOp( int line ) { Emit( op_neq ); EmitLineNum( line ); }
-	inline void AndOp( int line ) { Emit( op_and ); EmitLineNum( line ); }
-	inline void OrOp( int line ) { Emit( op_or ); EmitLineNum( line ); }
+	inline void AddOp( int line ) { EmitLineNum( line ); Emit( op_add ); }
+	inline void SubOp( int line ) { EmitLineNum( line ); Emit( op_sub ); }
+	inline void MulOp( int line ) { EmitLineNum( line ); Emit( op_mul ); }
+	inline void DivOp( int line ) { EmitLineNum( line ); Emit( op_div ); }
+	inline void ModOp( int line ) { EmitLineNum( line ); Emit( op_mod ); }
+	inline void GtEqOp( int line ) { EmitLineNum( line ); Emit( op_gte ); }
+	inline void LtEqOp( int line ) { EmitLineNum( line ); Emit( op_lte ); }
+	inline void GtOp( int line ) { EmitLineNum( line ); Emit( op_gt ); }
+	inline void LtOp( int line ) { EmitLineNum( line ); Emit( op_lt ); }
+	inline void EqOp( int line ) { EmitLineNum( line ); Emit( op_eq ); }
+	inline void NotEqOp( int line ) { EmitLineNum( line ); Emit( op_neq ); }
+
+	inline void AndOp( int line ) { EmitLineNum( line ); Emit( op_and ); }
+	inline void OrOp( int line ) { EmitLineNum( line ); Emit( op_or ); }
+
+	void AndFOpConditionJump();
+	void AndFOp( int line );
+	void OrFOpConditionJump( bool first );
+	void OrFOp( int line );
 
 	// unary operators
 	void NegateOp( pANTLR3_BASE_TREE node, int line );

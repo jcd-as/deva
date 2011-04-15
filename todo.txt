@@ -2,7 +2,7 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import .dvc NYI)
 
-TODO 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'
+TODO 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'. (test stack trace across modules and errors in imported modules)
 
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
@@ -17,8 +17,6 @@ TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = nu
 
 TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
 
-TODO 2011-02-01 @deva +high short-circuiting && and || ops ??
-
 TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
 
 TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
@@ -30,6 +28,11 @@ TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-mem
 TODO 2011-03-09 @deva +medium fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
+
+DONE 2011-02-01 @deva +high short-circuiting && and || ops ??
+    CLOSED: 2011-04-15 15:31:28
+    :LOGBOOK:
+        DONE: 2011-04-15 15:31:28
 
 DONE 2011-04-14 @deva +veryhigh migrate 'runtests' to runtests.dv
     CLOSED: 2011-04-14 17:14:22
