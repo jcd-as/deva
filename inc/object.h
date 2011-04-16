@@ -198,6 +198,9 @@ public:
 	// create with 'n' empty items
 	VectorBase( size_t n ) : vector<Object>( n ), index( 0 ) {}
 
+	// create with 'n' items of 'o'
+	VectorBase( size_t n, Object & o ) : vector<Object>( n, o ), index( 0 ) {}
+
 	// 'slice constructor'
 	VectorBase( const VectorBase & v, size_t start, size_t end ) : vector<Object>( v.begin() + start, v.begin() + end ), index( 0 ) {}
 };
@@ -206,6 +209,7 @@ public:
 inline Vector* CreateVector() { return Vector::Create(); }
 inline Vector* CreateVector( Vector & v ) { return Vector::Create( v ); }
 inline Vector* CreateVector( size_t n ) { return Vector::Create( n ); }
+inline Vector* CreateVector( size_t n, Object & o ) { return Vector::Create( n, o ); }
 inline Vector* CreateVector( Vector & v, size_t start, size_t end ) { return Vector::Create( v, start, end ); }
 
 // TODO: make this a boost::unordered_map (hash map)

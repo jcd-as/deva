@@ -9,6 +9,10 @@ TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever acc
 TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
 	so that executor can read .dvc files and execute them without needing to compile the .dv file
 
+TODO 2011-04-16 @deva +high list comprehensions ??
+
+TODO 2011-04-16 @deva +high lambdas / anonymous functions ??
+
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
 
 TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;'

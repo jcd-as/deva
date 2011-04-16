@@ -32,6 +32,9 @@ cmake_minimum_required( VERSION 2.6 FATAL_ERROR )
 project( deva )
 include( FindANTLR )
 
+# enable profiling?
+option( PROFILE OFF )
+
 # set flag if this is being generated for Visual Studio (msvc)
 ##############################################################
 if( CMAKE_GENERATOR MATCHES "Visual Studio" )
@@ -59,12 +62,19 @@ if( ANTLR_FOUND )
 	include_directories( ${ANTLR_INCLUDE_DIR} )
 endif()
 
-# configure defines
-###################
+# configure defines and options
+###############################
 if( ${UNIX} )
 	set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
-	set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE" )
-	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+	if( PROFILE )
+		set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE -pg" )
+		#set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+		set( CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -pg" )
+	else()
+		set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE" )
+		#set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
+		set( CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math" )
+	endif()
 endif()
 if( MSVC )
 	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -DDEVA_VERSION=\\\"2.0.0-alpha\\\" -MD -EHsc" )

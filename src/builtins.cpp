@@ -623,12 +623,15 @@ void do_vector_of( Frame *frame )
 	if( n < 0 )
 		throw RuntimeException( "Argument 'n' to 'vector_of' must be a positive integral number." );
 
+	bool obj_is_ref_type = IsRefType( obj->type );
+
 	// generate the vector
-	Vector* vec = CreateVector( (size_t)n );
-	for( int c = 0; c <= n; c++ )
-	{
-		vec->assign( c, Object( *obj ) );
-	}
+	Vector* vec = CreateVector( (size_t)n, *obj );
+	// if we're inserting multiple copies of a reference object,
+	// we need to add the appropriate number of refs to it
+	if( obj_is_ref_type )
+		for( int c = 0; c <= n; c++ )
+			IncRef( *obj );
 
 	helper.ReturnVal( Object( vec ) );
 }

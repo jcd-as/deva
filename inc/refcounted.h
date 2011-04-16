@@ -39,6 +39,7 @@ using namespace std;
 namespace deva
 {
 
+class Object;
 
 // reference counting template class for reference types (vectors and maps)
 template<typename T> class RefCounted : public T
@@ -50,6 +51,8 @@ template<typename T> class RefCounted : public T
 	RefCounted( T & v ) : T( v ), refcount( 0 ) {}
 	// create with 'n' empty items
 	RefCounted( size_t n ) : T( n ), refcount( 0 ) {}
+	// create with 'n' items of 'o'
+	RefCounted( size_t n, Object & o ) : T( n, o ), refcount( 0 ) {}
 	// 'slice' copy constructor
 	RefCounted( T & v, size_t start, size_t end ) : T( v, start, end ), refcount( 0 ) {}
 
@@ -63,6 +66,8 @@ public:
 	static RefCounted<T>* Create( T & v ) { return new RefCounted<T>( v ); }
 	// create with 'n' empty items
 	static RefCounted<T>* Create( size_t n ) { return new RefCounted<T>( n ); }
+	// create with 'n' items of 'o'
+	static RefCounted<T>* Create( size_t n, Object & o ) { return new RefCounted<T>( n, o ); }
 	// 'slice' creation fcn
 	// TODO: inc ref the copied items!
 	static RefCounted<T>* Create( T & v, size_t start, size_t end ) { return new RefCounted<T>( v, start, end ); }
