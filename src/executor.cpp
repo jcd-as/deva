@@ -4170,6 +4170,19 @@ void Executor::DumpStackTop()
 	cout << endl;
 }
 
+size_t Executor::GetOffsetForCallSite( Frame* f, byte* addr ) const
+{
+	if( f->IsNative() )
+		return addr - bp;
+	Module* mod = f->GetFunction()->module;
+	if( !mod )
+	{
+		Code* c = (Code*)code_blocks[0];
+		return addr - c->code;
+	}
+	return addr - mod->code->code;
+}
+
 void Executor::DumpTrace( ostream & os )
 {
 	// nothing to do?
@@ -4184,7 +4197,8 @@ void Executor::DumpTrace( ostream & os )
 	Frame* f;
 
 	// current (error) location:
-	size_t loc = GetOffsetForCallSite( ip );
+//	size_t loc = GetOffsetForCallSite( ip );
+	size_t loc = GetOffsetForCallSite( callstack.back(), ip );
 	code = GetCode( bp );
 	line = code->lines->FindLine( loc );
 	f = callstack.back();
@@ -4194,55 +4208,67 @@ void Executor::DumpTrace( ostream & os )
 		os << "file: " << f->GetFunction()->filename << ", line: " << line << ", at: " << loc << ", in " << f->GetFunction()->name << endl;
 
 	// stack trace:
-	for(vector<Frame*>::reverse_iterator i = callstack.rbegin(); i < callstack.rend() - 1; ++i )
+	for( int i = callstack.size() - 1; i > 0; i-- )
 	{
-		f = *i;
+		line = -1;
+		code = NULL;
+		Module* mod = NULL;
+
+		f = callstack[i];
+		// ignore module frames, they aren't real 'calls'
+		if( f->IsModule() )
+			continue;
+		Frame* prev;
+		prev = callstack[i-1];
+		// if previous frame was a module frame, try the one prior to that
+		if( prev->IsModule() )
+		{
+			if( i < 2 )
+				return;
+			prev = callstack[i-2];
+		}
+
+		// this frame determines the fcn name
 		if( f->IsNative() )
 		{
-			ostringstream s;
-			s << hex << f->GetNativeFunction().p;
-			fcn = "[Native Function at " + s.str() + "]";
-
-			file = "[Native Module]";
+			fcn = "[Native Function]";
 		}
 		else
 		{
 			fcn = f->GetFunction()->name;
-			file = f->GetFunction()->filename;
-			Module* mod = f->GetFunction()->module;
-			if( mod )
-				code = (Code*)mod->code;
-			else
-				code = (Code*)code_blocks[0];
 		}
+		// the frame calling this frame determines the file, module, call site
+		// address
+		if( prev->IsNative() )
+		{
+			file = "[Native Module]";
+		}
+		else
+		{
+			file = prev->GetFunction()->filename;
+			mod = prev->GetFunction()->module;
+		}
+
+		// a NULL module indicates the 'main' module/file
+		if( mod )
+			code = (Code*)mod->code;
+		else
+			code = (Code*)code_blocks[0];
+
+		size_t call_site = GetOffsetForCallSite( prev, f->GetCallSite() );
+		if( code )
+			line = code->lines->FindLine( call_site );
+
 
 		// pad for callstack depth
 		for( int c = 0; c < depth; c++ )
 			os << " ";
 
-		// call site: if there is debug info, map the call-site
-		// (frame->addr) to a line number. otherwise, subtract the bp (for this
-		// module) from it to produce the code offset
-		size_t call_site = GetOffsetForCallSite( f->GetCallSite() );
-		if( code )
-			line = code->lines->FindLine( call_site );
-		{
-			if( call_site == (size_t)-1 )
-			{
-				if( line == -1 )
-					os << "file: " << file << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
-				else
-					os << "file: " << file << ", line: " << line << ", at: " << "[unknown offset]" << ", call to " << fcn << endl;
-			}
-			else
-			{
-				if( line == -1 )
-					os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
-				else
-					os << "file: " << file << ", line: " << line << ", at: " << call_site << ", call to " << fcn << endl;
-			}
-		}
-
+		// display the stack frame info
+		if( line == -1 )
+			os << "file: " << file << ", at: " << call_site << ", call to " << fcn << endl;
+		else
+			os << "file: " << file << ", line: " << line << ", at: " << call_site << ", call to " << fcn << endl;
 		depth++;
 	}
 }

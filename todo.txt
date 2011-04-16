@@ -2,8 +2,6 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import .dvc NYI)
 
-TODO 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'. (test stack trace across modules and errors in imported modules)
-
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
@@ -25,9 +23,14 @@ TODO 2011-02-04 @deva +high fix parser error messages - prevent things like "Mis
 
 TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
 
-TODO 2011-03-09 @deva +medium fix minor issues with tests:
+TODO 2011-03-09 @deva +low fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
+
+DONE 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'. (test stack trace across modules and errors in imported modules)
+    CLOSED: 2011-04-15 19:27:36
+    :LOGBOOK:
+        DONE: 2011-04-15 19:27:36
 
 DONE 2011-02-01 @deva +high short-circuiting && and || ops ??
     CLOSED: 2011-04-15 15:31:28

@@ -1,4 +1,17 @@
+# test stack trace with native code
+def err( n )
+{
+	if( 100 / n > 10 )
+		return true;
+	else
+		return false;
+}
+local v = [ 10, 9, 8, 0, 7, 6];
+local v2 = v.filter( err );
+print( v2 );
+
 #import foo;
+#foo.fcn();
 
 # BUG: ICE: Cannot locate local symbol 'argv'
 #import os;

@@ -126,8 +126,7 @@ public:
 	Executor();
 	~Executor();
 
-	// TODO: calculate using module bp!!!
-	inline size_t GetOffsetForCallSite( byte* addr ) const { return addr - bp; }
+	size_t GetOffsetForCallSite( Frame* f, byte* addr ) const;
 
 	inline Scope* CurrentScope() { return scopes->CurrentScope(); }
 	inline Scope* GlobalScope() { return scopes->At( 0 ); }
