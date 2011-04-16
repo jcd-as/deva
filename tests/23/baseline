@@ -86,6 +86,7 @@ is_instance
 is_native_obj
 is_size
 is_symbol_name
+vector_of
 concat
 insert
 remove
@@ -156,7 +157,7 @@ function: bubble_sort, from file: input.dv, line: 3
 code address: 18
 Instructions:
 3
-   0: def_function	3 111 ( # bubble_sort), 18
+   0: def_function	3 112 ( # bubble_sort), 18
   13: jmp		135
   18: enter		 
 5
@@ -316,7 +317,7 @@ Instructions:
  301: call		2
  306: pop		 
 44
- 307: pushconst		109 (un-sorted:)
+ 307: pushconst		110 (un-sorted:)
  312: pushconst		13 (print)
  317: call		1
  322: pop		 
@@ -340,11 +341,11 @@ Instructions:
  362: pop		 
 53
  363: pushlocal0		 
- 364: pushconst		111 (bubble_sort)
+ 364: pushconst		112 (bubble_sort)
  369: call		1
  374: def_local2		 
 56
- 375: pushconst		108 (sorted:)
+ 375: pushconst		109 (sorted:)
  380: pushconst		13 (print)
  385: call		1
  390: pop		 

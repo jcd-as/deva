@@ -1,0 +1,53 @@
+import math;
+
+def non_null( n ) { return !!n; }
+
+def sieve( m )
+{
+    # Create a candidate list within which non-primes will be
+    # marked as None; only candidates below sqrt(m) need be checked. 
+    local candidates = range( m + 1 );
+    #fin = int(m**0.5);
+    local fin = math.floor( math.pow( m, 0.5 ) );
+ 
+    # Loop over the candidates, marking out each multiple.
+#    for( i in range( 2, fin+1 ) )
+	local i = 2;
+	while( i <= fin )
+	{
+        if( !candidates[i] )
+		{
+			i += 1;
+            continue;
+		}
+ 
+#        candidates[2*i::i] = [null] * (m // i - 1);
+        candidates[2*i : $ : i] = vector_of( null, ( math.floor(m / i) - 1) );
+
+		i += 1;
+	}
+ 
+    # Filter out non-primes and return the list.
+#    return [i for i in candidates[2:] if i]
+	local result = candidates[2:$].filter( non_null );
+	return result;
+}
+
+print( sieve( 10000 ) );
+
+# java:
+#private static void findPrimes()
+#{
+#	for( int position = 2; position <= Math.sqrt(upperLimit); position++)
+#	{
+#		if (!flags[position])
+#		{
+#			int multiple = position * 2;
+#			while (multiple <= upperLimit)
+#			{
+#				flags[multiple] = true;
+#				multiple += position;
+#			}                
+#		}
+#	}
+#}

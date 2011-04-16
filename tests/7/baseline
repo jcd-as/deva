@@ -96,6 +96,7 @@ is_instance
 is_native_obj
 is_size
 is_symbol_name
+vector_of
 concat
 insert
 remove
@@ -195,7 +196,7 @@ Instructions:
   28: leave		 
   29: jmp		19
 34
-  34: def_function	3 107 ( # foo), 52
+  34: def_function	3 108 ( # foo), 52
   47: jmp		60
   52: enter		 
   53: leave		 
@@ -208,7 +209,7 @@ Instructions:
   62: push_zero		 
   63: def_local3		 
 40
-  64: def_function	3 115 ( # z), 82
+  64: def_function	3 116 ( # z), 82
   77: jmp		90
   82: enter		 
   83: leave		 
@@ -223,7 +224,7 @@ Instructions:
   98: jmpf		116
  103: enter		 
 45
- 104: pushconst		115 (z)
+ 104: pushconst		116 (z)
  109: call		0
  114: pop		 
  115: leave		 
@@ -237,7 +238,7 @@ Instructions:
  125: jmpf		143
  130: enter		 
 61
- 131: pushconst		115 (z)
+ 131: pushconst		116 (z)
  136: call		0
  141: pop		 
  142: leave		 
@@ -257,10 +258,10 @@ Instructions:
  161: enter		 
  162: leave		 
 102
- 163: def_function	3 111 ( # fcn), 181
+ 163: def_function	3 112 ( # fcn), 181
  176: jmp		205
  181: enter		 
- 182: pushconst		105 (fcn called)
+ 182: pushconst		106 (fcn called)
  187: pushconst		13 (print)
  192: call		1
  197: pop		 
@@ -268,53 +269,53 @@ Instructions:
  199: push_null		 
  200: return		0
 103
- 205: pushconst		102 (b)
- 210: pushconst		111 (fcn)
+ 205: pushconst		103 (b)
+ 210: pushconst		112 (fcn)
  215: new_map		1
  220: storelocal0		 
 104
  221: pushlocal0		 
- 222: pushconst		102 (b)
+ 222: pushconst		103 (b)
  227: method_load	
  228: call_method		0
  233: pop		 
 105
  234: pushlocal0		 
- 235: pushconst		102 (b)
- 240: pushconst		103 (c)
- 245: pushconst		104 (d)
+ 235: pushconst		103 (b)
+ 240: pushconst		104 (c)
+ 245: pushconst		105 (d)
  250: push_one		 
  251: new_map		1
  256: new_map		1
  261: tbl_store	
 106
  262: pushlocal0		 
- 263: pushconst		102 (b)
+ 263: pushconst		103 (b)
  268: tbl_load	
- 269: pushconst		103 (c)
+ 269: pushconst		104 (c)
  274: tbl_load	
- 275: pushconst		104 (d)
+ 275: pushconst		105 (d)
  280: push_zero		 
  281: tbl_store	
 107
  282: pushlocal0		 
- 283: pushconst		102 (b)
+ 283: pushconst		103 (b)
  288: tbl_load	
- 289: pushconst		103 (c)
+ 289: pushconst		104 (c)
  294: tbl_load	
- 295: pushconst		104 (d)
+ 295: pushconst		105 (d)
 0
  300: new_map		0
  305: tbl_store	
 108
  306: pushlocal0		 
- 307: pushconst		102 (b)
+ 307: pushconst		103 (b)
  312: tbl_load	
- 313: pushconst		103 (c)
+ 313: pushconst		104 (c)
  318: tbl_load	
- 319: pushconst		104 (d)
+ 319: pushconst		105 (d)
  324: tbl_load	
- 325: pushconst		106 (foo)
+ 325: pushconst		107 (foo)
  330: push_one		 
  331: tbl_store	
 116

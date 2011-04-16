@@ -87,6 +87,7 @@ const string builtin_names[] =
 	string( "is_native_obj" ),
 	string( "is_size" ),
 	string( "is_symbol_name" ),
+	string( "vector_of" ),
 };
 // ...and function pointers to the executor functions for them
 NativeFunction builtin_fcns[] = 
@@ -138,6 +139,7 @@ NativeFunction builtin_fcns[] =
 	{do_is_native_obj, false},
 	{do_is_size, false},
 	{do_is_symbol_name, false},
+	{do_vector_of, false},
 };
 Object builtin_fcn_objs[] = 
 {
@@ -188,6 +190,7 @@ Object builtin_fcn_objs[] =
 	Object( do_is_native_obj ),
 	Object( do_is_size ),
 	Object( do_is_symbol_name ),
+	Object( do_vector_of ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -597,6 +600,34 @@ void do_range( Frame *frame )
 	for( double c = start; c < end; c += step )
 	{
 		vec->push_back( Object( c ) );
+	}
+
+	helper.ReturnVal( Object( vec ) );
+}
+
+void do_vector_of( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "vector_of", frame );
+	helper.CheckNumberOfArguments( 2 );
+
+	int n = 0;
+
+	Object *obj, *nobj;
+
+	obj = helper.GetLocalN( 0 );
+
+	nobj = helper.GetLocalN( 1 );
+	helper.ExpectPositiveIntegralNumber( nobj );
+	n = (int)nobj->d;
+
+	if( n < 0 )
+		throw RuntimeException( "Argument 'n' to 'vector_of' must be a positive integral number." );
+
+	// generate the vector
+	Vector* vec = CreateVector( (size_t)n );
+	for( int c = 0; c <= n; c++ )
+	{
+		vec->assign( c, Object( *obj ) );
 	}
 
 	helper.ReturnVal( Object( vec ) );

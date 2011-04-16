@@ -104,6 +104,7 @@ syn match  devaIdentifier	"\<[a-zA-Z_][a-zA-Z0-9_]*\>"
 " Arithmetic operators: +, and - take care of ++, and --
 syn match   devaOperator	"+\|-\|\*\|/\|%\|="
 syn match   devaOperator	"+=\|-=\|\*=\|/=\|%="
+syn match   devaOperator	"\$"
 
 " Comparison expressions.
 syn match   devaExpression	"==\|>=\|=>\|<=\|=<\|\!="

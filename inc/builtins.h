@@ -96,6 +96,7 @@ void do_is_instance( Frame* f );
 void do_is_native_obj( Frame* f );
 void do_is_size( Frame* f );
 void do_is_symbol_name( Frame* f );
+void do_vector_of( Frame* f );
 
 extern const string builtin_names[];
 // ...and function pointers to the executor functions for them
