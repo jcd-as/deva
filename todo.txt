@@ -15,8 +15,6 @@ TODO 2011-04-16 @deva +high lambdas / anonymous functions ??
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
 
-TODO 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;'
-
 TODO 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
 
 TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
@@ -30,6 +28,11 @@ TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-mem
 TODO 2011-03-09 @deva +low fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
+
+DONE 2011-02-01 @deva +high allow syntax: 'local n;' equivalent of 'local n = null;'
+    CLOSED: 2011-04-16 15:15:51
+    :LOGBOOK:
+        DONE: 2011-04-16 15:15:51
 
 DONE 2011-04-12 @deva +veryhigh Executor::GetOffsetForCallsite() needs to use the correct module's bp, not 'bp', in order for call sites & line numbers to work in modules outside of 'main'. (test stack trace across modules and errors in imported modules)
     CLOSED: 2011-04-15 19:27:36

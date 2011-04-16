@@ -171,7 +171,8 @@ return_statement
 assign_statement
 	: 	const_decl '=' value ';'							-> ^(const_decl value)
 	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
-	| 	local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	| 	(local_decl '=' logical_exp)=> local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
+	|	local_decl ';'!
 	| 	(external_decl ';')=> external_decl ';'!
 	| 	(external_decl '=' 'new')=> external_decl '=' new_decl ';'	-> ^(external_decl new_decl)
 	| 	external_decl '=' logical_exp ';'					-> ^(external_decl logical_exp)

@@ -154,7 +154,8 @@ return_statement
 assign_statement[pANTLR3_BASE_TREE parent]
 	: 	^(Const lhs=exp[true,NULL] value) { compiler->LocalVar( (char*)$lhs.text->chars, $Const->getLine($Const) ); }
 	|	(^(Local exp[true,NULL] new_exp))=> ^(Local lhs=exp[true,NULL] new_exp) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local) ); }
-	|	^(Local lhs=exp[true,NULL] exp[false,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local) ); }
+	|	(^(Local lhs=exp[true,NULL] exp[false,NULL]))=>^(Local lhs=exp[true,NULL] exp[false,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local) ); }
+	|	^(Local lhs=exp[true,NULL]) { compiler->LocalVar( (char*)$lhs.text->chars, $Local->getLine($Local), true ); }
 	|	(^(Extern exp[true,NULL] new_exp))=> ^(Extern lhs=exp[true,NULL] new_exp) { compiler->ExternVar( (char*)$lhs.text->chars, true, $Extern->getLine($Extern) ); }
 	|	(^(Extern lhs=exp[true,NULL] exp[false,NULL]))=> ^(Extern lhs=exp[true,NULL] exp[false,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, true, $Extern->getLine($Extern) ); }
 	|	^(Extern lhs=exp[true,NULL]) { compiler->ExternVar( (char*)$lhs.text->chars, false, $Extern->getLine($Extern) ); }

@@ -552,7 +552,7 @@ void Compiler::NotOp( pANTLR3_BASE_TREE node, int line )
 }
 
 // assignments and variable decls
-void Compiler::LocalVar( char* n, int line )
+void Compiler::LocalVar( char* n, int line, bool lacks_initializer /*= false*/ )
 {
 	// get the index for the name
 	int idx = CurrentScope()->ResolveLocalToIndex( n );
@@ -562,6 +562,10 @@ void Compiler::LocalVar( char* n, int line )
 	CurrentScope()->SetLocalGenerated( idx );
 
 	EmitLineNum( line );
+
+	// if there is no initializer then we'll init it to null
+	if( lacks_initializer )
+		Emit( op_push_null );
 
 	// emit a 'op_def_localN' op
 	if( idx < 10 )

@@ -255,7 +255,7 @@ public:
 	void NotOp( pANTLR3_BASE_TREE node, int line );
 
 	// assignments and variable decls
-	void LocalVar( char* n, int line );
+	void LocalVar( char* n, int line, bool lacks_initializer = false );
 	void ExternVar( char* n, bool is_assign, int line );
 	void Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign, int line );
 

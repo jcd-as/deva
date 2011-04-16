@@ -143,7 +143,8 @@ return_statement
 assign_statement
 	: 	^(Const id=ID value[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_constant ); }
 	|	(^(Local ID new_exp))=> ^(Local id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
-	|	^(Local id=ID exp[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
+	|	(^(Local id=ID exp[false]))=>^(Local id=ID exp[false]) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
+	|	^(Local id=ID) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local ); }
 	|	(^(Extern ID new_exp))=> ^(Extern id=ID new_exp) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
 	|	^(Extern id=ID exp[false]?) { semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_external ); }
 	|	(^(ASSIGN_OP exp[false] new_exp))=> ^(ASSIGN_OP lhs=exp[false] new_exp) { semantics->CheckLhsForAssign( $lhs.start ); }

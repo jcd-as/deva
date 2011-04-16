@@ -18,14 +18,14 @@ local re_num = new re.re( "-?(0|\\d+)(\\.\\d+([eE]?[-+]?\\d+)?)?" );
 #############################################################################
 # pre-declarations for compiler
 #############################################################################
-local check_nesting = null;
-local decode_object = null;
-local encode_object = null;
-local get_items = null;
-local decode_pair = null;
-local decode_array = null;
-local decode_value = null;
-local get_next_item = null;
+local check_nesting;
+local decode_object;
+local encode_object;
+local get_items;
+local decode_pair;
+local decode_array;
+local decode_value;
+local get_next_item;
 
 #############################################################################
 # "public" functions:
