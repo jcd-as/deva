@@ -86,6 +86,7 @@ public:
 	Symbol( SymbolType t, VariableModifier m ) : SymbolBase( t ), modifier( m ) {}
 	Symbol( const char* const n, SymbolType t, VariableModifier m = mod_none ) : SymbolBase( n, t ), modifier( m ) {}
 
+	VariableModifier Modifier() const { return modifier; }
 	bool IsConst() const { return modifier == mod_constant; }
 	bool IsExtern() const { return modifier == mod_external; }
 	bool IsLocal() const { return modifier == mod_local; }

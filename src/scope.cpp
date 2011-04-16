@@ -65,20 +65,17 @@ bool LocalScope::Define( const Symbol* const s )
 		if( i != local_map.end() )
 			return false;
 	}
-	// disallow re-def of consts
-	else if( s->IsConst() )
+
+	// reject duplicates
+	pair<multimap<const string, Symbol*>::iterator, multimap<const string, Symbol*>::iterator> p = data.equal_range( s->Name() );
+	for( multimap<const string, Symbol*>::iterator i = p.first; i != p.second; ++i )
 	{
-		if( data.count( s->Name() ) != 0 )
+		if( i->second->Modifier() == s->Modifier() )
 			return false;
 	}
 
-	// data is a map, repeated items won't be added
-	// and will leak if 'false' isn't returned
-	if( data.count( s->Name() ) != 0 )
-		return false;
-
 	// ensure it's added to the list of names for this scope
-	data[s->Name()] = const_cast<Symbol*>( s );
+	data.insert( make_pair( s->Name(), const_cast<Symbol*>( s ) ) );
 
 	// add this name to the parent function's list of names
 	AddName( const_cast<Symbol*>(s) );
@@ -106,6 +103,7 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 	// check this scope
 	if( data.count( n ) != 0 )
 		return data.find( n )->second;
+
 	// check parent scopes
 	if( parent )
 		return parent->Resolve( n, type );
@@ -140,7 +138,7 @@ int LocalScope::ResolveLocalToIndex( const string & name )
 void LocalScope::Print()
 {
 	cout << "Scope: " << name << endl << "\tvars: ";
-	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( multimap<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		const char* mod;
 		if( i->second->IsConst() ) mod = "const";
@@ -157,7 +155,7 @@ void LocalScope::Print()
 LocalScope::~LocalScope()
 {
 	// delete the symbol ptrs in the map
-	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( multimap<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		delete i->second;
 	}
@@ -203,6 +201,7 @@ const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) 
 	// check this scope
 	if( data.count( n ) != 0 )
 		return data.find( n )->second;
+
 	// function scope, only look for functions and classes in parent scopes
 	if( type == sym_function || type == sym_class || type == sym_end )
 	{
@@ -258,7 +257,7 @@ void FunctionScope::Print()
 		cout << mod << " " << s->Name() << "; ";
 	}
 	cout << endl << "\targument scope vars: ";
-	for( map<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( multimap<const string, Symbol*>::iterator i = data.begin(); i != data.end(); ++i )
 	{
 		const char* mod;
 		if( i->second->IsConst() ) mod = "const";

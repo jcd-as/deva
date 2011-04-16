@@ -1,21 +1,17 @@
 # test stack trace with native code
-def err( n )
-{
-	if( 100 / n > 10 )
-		return true;
-	else
-		return false;
-}
-local v = [ 10, 9, 8, 0, 7, 6];
-local v2 = v.filter( err );
-print( v2 );
+#def err( n )
+#{
+#	if( 100 / n > 10 )
+#		return true;
+#	else
+#		return false;
+#}
+#local v = [ 10, 9, 8, 0, 7, 6];
+#local v2 = v.filter( err );
+#print( v2 );
 
 #import foo;
 #foo.fcn();
-
-# BUG: ICE: Cannot locate local symbol 'argv'
-#import os;
-#local argv = os.argv();
 
 # access fcn defined in eval'd block:
 #extern foo;
@@ -41,10 +37,6 @@ print( v2 );
 #for( i in range( 0, 10 ) )
 #	foo( i );
 
-# BUG: ICE: "Cannot locate local symbol 're'"
-#import re;
-#local re = 0;
-
 # test builtin os module
 #import os;
 #
@@ -65,36 +57,6 @@ print( v2 );
 #def Bar(){ Foo(); }
 #def Jam(){ Bar(); }
 #Jam();
-
-# BUG: break in nested fcn not working
-# see test 67
-#for( i in range( 0, 10 ) )
-#{
-#	def brk(){ if( i > 3 ) break; }
-#	brk();
-#	print( i );
-#}
-
-# BUG: ICE: "Cannot locate local symbol 'b'"
-#local a = 0;
-## this line, in trying to define fcn 'b' which it doesn't know about (but could
-## be valid, depending on what 'a' turns out to be at exec time) defines 'b' as a
-## non-local symbol (mod_none)...
-#a.b();
-## which makes this error at compile time because a local var 'b' cannot be found
-#local b = 1;
-## POSSIBLE FIX: LocalScope::Define() should check if the var it finds in
-## the locals_map has the same mods (local etc) as what was found? locals_map
-## needs to map more than just names?
-
-# BUG: ICE: "Cannot locate local symbol 'foo'"
-# no refcount leaks
-#def foo( n ){ print( n ); }
-#foo( 25 );
-#local foo = 34;
-## error: can't call '34'
-##foo( 25 );
-#print( foo );
 
 # BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
 #local n = 0;

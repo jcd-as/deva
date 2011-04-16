@@ -77,7 +77,7 @@ class LocalScope : public Scope
 protected:
 	string name;
 	// all names in this scope
-	map<const string, Symbol*> data;
+	multimap<const string, Symbol*> data;
 	// locals only, int is the index into the parent function scope's locals array
 	map<const string, int> local_map;
 	Scope *parent;
