@@ -74,6 +74,19 @@ const string builtin_names[] =
 	string( "seterror" ),
 	string( "geterror" ),
 	string( "importmodule" ),
+	string( "is_null" ),
+	string( "is_boolean" ),
+	string( "is_number" ),
+	string( "is_string" ),
+	string( "is_vector" ),
+	string( "is_map" ),
+	string( "is_function" ),
+	string( "is_native_function" ),
+	string( "is_class" ),
+	string( "is_instance" ),
+	string( "is_native_obj" ),
+	string( "is_size" ),
+	string( "is_symbol_name" ),
 };
 // ...and function pointers to the executor functions for them
 NativeFunction builtin_fcns[] = 
@@ -112,6 +125,19 @@ NativeFunction builtin_fcns[] =
 	{do_seterror, false},
 	{do_geterror, false},
 	{do_importmodule, false},
+	{do_is_null, false},
+	{do_is_boolean, false},
+	{do_is_number, false},
+	{do_is_string, false},
+	{do_is_vector, false},
+	{do_is_map, false},
+	{do_is_function, false},
+	{do_is_native_function, false},
+	{do_is_class, false},
+	{do_is_instance, false},
+	{do_is_native_obj, false},
+	{do_is_size, false},
+	{do_is_symbol_name, false},
 };
 Object builtin_fcn_objs[] = 
 {
@@ -149,6 +175,19 @@ Object builtin_fcn_objs[] =
 	Object( do_seterror ),
 	Object( do_geterror ),
 	Object( do_importmodule ),
+	Object( do_is_null ),
+	Object( do_is_boolean ),
+	Object( do_is_number ),
+	Object( do_is_string ),
+	Object( do_is_vector ),
+	Object( do_is_map ),
+	Object( do_is_function ),
+	Object( do_is_native_function ),
+	Object( do_is_class ),
+	Object( do_is_instance ),
+	Object( do_is_native_obj ),
+	Object( do_is_size ),
+	Object( do_is_symbol_name ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1122,5 +1161,173 @@ void do_importmodule( Frame *frame )
 	helper.ReturnVal( ret );
 }
 
+void do_is_null( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_null", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_null )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_boolean( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_boolean", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_boolean )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_number( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_number", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_number )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_string( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_string", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_string )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_vector( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_vector", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_vector )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_map( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_map", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_map )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_function( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_function", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_function )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_native_function( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_native_function", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_native_function )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_class( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_class", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_class )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_instance( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_instance", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_instance )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_native_obj( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_native_obj", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_native_obj )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_size( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_size", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_size )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
+void do_is_symbol_name( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_symbol_name", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_symbol_name )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
 
 } // end namespace deva

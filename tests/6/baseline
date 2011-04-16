@@ -71,6 +71,19 @@ error
 seterror
 geterror
 importmodule
+is_null
+is_boolean
+is_number
+is_string
+is_vector
+is_map
+is_function
+is_native_function
+is_class
+is_instance
+is_native_obj
+is_size
+is_symbol_name
 concat
 insert
 remove
@@ -133,7 +146,7 @@ function: foo, from file: input.dv, line: 1
 code address: 18
 Instructions:
 1
-   0: def_function	3 91 ( # foo), 18
+   0: def_function	3 104 ( # foo), 18
   13: jmp		74
   18: enter		 
 3
@@ -171,7 +184,7 @@ Instructions:
 15
   80: push		5
   85: pushlocal0		 
-  86: pushconst		89 (append)
+  86: pushconst		102 (append)
   91: method_load	
   92: call_method		1
   97: pop		 
@@ -181,24 +194,24 @@ Instructions:
 20
  104: pushlocal1		 
  105: push_zero		 
- 106: pushconst		88 (foo)
+ 106: pushconst		101 (foo)
  111: tbl_store	
 22
  112: pushlocal1		 
- 113: pushconst		88 (foo)
- 118: pushconst		91 (foo)
+ 113: pushconst		101 (foo)
+ 118: pushconst		104 (foo)
  123: tbl_store	
 25
  124: push_zero		 
  125: push_one		 
  126: pushlocal1		 
- 127: pushconst		88 (foo)
+ 127: pushconst		101 (foo)
  132: tbl_load	
  133: call		2
  138: pop		 
 26
  139: pushlocal1		 
- 140: pushconst		88 (foo)
+ 140: pushconst		101 (foo)
  145: tbl_load	
  146: def_local2		 
 27
@@ -226,8 +239,8 @@ Instructions:
  190: pushconst		14 (str)
  195: call		1
  200: add		 
- 201: pushconst		94 (io)
- 206: pushconst		90 (print)
+ 201: pushconst		107 (io)
+ 206: pushconst		103 (print)
  211: method_load	
  212: call_method		1
  217: pop		 
@@ -249,8 +262,8 @@ Instructions:
  242: pushlocal0		 
  243: pushconst		14 (str)
  248: call		1
- 253: pushconst		94 (io)
- 258: pushconst		90 (print)
+ 253: pushconst		107 (io)
+ 258: pushconst		103 (print)
  263: method_load	
  264: call_method		1
  269: pop		 

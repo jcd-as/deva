@@ -83,6 +83,19 @@ void do_error( Frame *f );
 void do_seterror( Frame *f );
 void do_geterror( Frame *f );
 void do_importmodule( Frame *f );
+void do_is_null( Frame* f );
+void do_is_boolean( Frame* f );
+void do_is_number( Frame* f );
+void do_is_string( Frame* f );
+void do_is_vector( Frame* f );
+void do_is_map( Frame* f );
+void do_is_function( Frame* f );
+void do_is_native_function( Frame* f );
+void do_is_class( Frame* f );
+void do_is_instance( Frame* f );
+void do_is_native_obj( Frame* f );
+void do_is_size( Frame* f );
+void do_is_symbol_name( Frame* f );
 
 extern const string builtin_names[];
 // ...and function pointers to the executor functions for them

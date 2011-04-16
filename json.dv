@@ -411,26 +411,26 @@ def check_nesting( input )
 
 def encode_object( obj )
 {
-	if( type( obj ) == "null" )
+	if( is_null( obj ) )
 	{
 		return "null";
 	}
-	else if( type( obj ) == "boolean" )
+	else if( is_boolean( obj ) )
 	{
 		if( obj )
 			return "true";
 		else
 			return "false";
 	}
-	else if( type( obj ) == "number" )
+	else if( is_number( obj ) )
 	{
 		return str( obj );
 	}
-	else if( type( obj ) == "string" )
+	else if( is_string( obj ) )
 	{
 		return '"' + obj + '"';
 	}
-	else if( type( obj ) == "vector" )
+	else if( is_vector( obj ) )
 	{
 		local s = "[";
 		for( i in obj )
@@ -447,9 +447,9 @@ def encode_object( obj )
 #		s += "]";
 		return s;
 	}
-	else if( type( obj ) == "map"
-		|| type( obj ) == "class"
-		|| type( obj ) == "object" )
+	else if( is_map( obj ) 
+		|| is_class( obj ) 
+		|| is_instance( obj ) )
 	{
 		local s = "{";
 		for( key, val in obj )
@@ -479,13 +479,14 @@ def encode_object( obj )
 #		s += "}";
 		return s;
 	}
-	# end-user shouldn't get with one of these
-	else if( type( obj ) == "size/address" 
-		|| type( obj ) == "function" 
-		|| type( obj ) == "native function" 
-		|| type( obj ) == "symbol name"
-		|| type( obj ) == "native object"
-		|| type( obj ) == "<invalid>" )
+	# end-user shouldn't get with one of these:
+	# is_size( obj )
+	# is_function( obj )
+	# is_native_function( obj )
+	# is_symbol_name( obj )
+	# is_native_obj( obj )
+	# type( obj ) == "<invalid>"
+	else 
 	{
 		seterror( "Invalid type for user data" );
 		return;
