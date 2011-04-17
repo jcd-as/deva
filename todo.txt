@@ -9,13 +9,7 @@ TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
-TODO 2011-04-16 @deva +high list comprehensions ??
-
-TODO 2011-04-16 @deva +high lambdas / anonymous functions ??
-
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
-
-TODO 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
 
 TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
 
@@ -26,6 +20,17 @@ TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-mem
 TODO 2011-03-09 @deva +low fix minor issues with tests:
 	= tests working but needing test fixes:
 	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
+
+TODO 2011-04-16 @deva +future list comprehensions ?
+
+TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
+
+TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-02-01 @deva +high vector.sort() builtin should take less-than predicate
+    CLOSED: 2011-04-17 12:56:07
+    :LOGBOOK:
+        DONE: 2011-04-17 12:56:07
 
 DONE 2011-02-01 @deva +high increment/decrement ops (++ and --) ??
     CLOSED: 2011-04-16 17:59:24

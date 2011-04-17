@@ -1,3 +1,27 @@
+#local v = [0,1,2];
+#
+## equivalent of list comprehension:
+## [i++ in v if i < 2]
+#
+## with for loop:
+##local ret = [];
+##for( i in v )
+##{
+##	if( i < 2 )
+##		ret.append( i++ );
+##}
+#
+## with functional builtins:
+#def inc( n ){ return n + 1; }
+#def less_than_2( n ){ return n < 2; }
+#local ret = v.filter( less_than_2 ).map( inc );
+#
+## with lambdas:
+##local ret = v.filter( lambda(n){n<2;} ).map( lambda(n){n+1;} );
+#
+#print( ret );
+##############
+
 #local v = vector_of( null, 10 );
 #print( v );
 

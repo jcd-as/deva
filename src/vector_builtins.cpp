@@ -581,18 +581,62 @@ void do_vector_reverse( Frame *frame )
 	helper.ReturnVal( Object( obj_null ) );
 }
 
+// helper class for sorting with user-defined predicate 
+class sort_predicate
+{
+	Object* o;
+	Object* method_self;
+public:
+	sort_predicate( Object* ob ) : o( ob ), method_self( NULL ) {}
+	sort_predicate( Object* ob, Object* ms ) : o( ob ), method_self( ms ) {}
+	bool operator() ( Object i, Object j )
+	{
+		// push the items
+		IncRef( i );
+		ex->PushStack( i );
+		IncRef( j );
+		ex->PushStack( j );
+		bool is_method = method_self != NULL;
+		// push 'self', for methods
+		if( is_method )
+		{
+			IncRef( *method_self );
+			ex->PushStack( *method_self );
+		}
+		// call the function given
+		// (*must* be a two-arg fcn to be used as sort predicate)
+		if( o->type == obj_function )
+			ex->ExecuteFunction( o->f, 2, is_method ? true : false );
+		else if( o->type == obj_native_function )
+			ex->ExecuteFunction( o->nf, 2, is_method ? true : false );
+		// return the return value of the predicate fcn
+		Object retval = ex->PopStack();
+		if( retval.CoerceToBool() )
+		{
+			DecRef( retval );
+			return true;
+		}
+		else
+		{
+			DecRef( retval );
+			return false;
+		}
+	}
+};
 
 void do_vector_sort( Frame *frame )
 {
 	BuiltinHelper helper( "vector", "sort", frame );
 
-	helper.CheckNumberOfArguments( 1, 3 );
+	helper.CheckNumberOfArguments( 1, 5 );
 	int num_args = frame->NumArgsPassed();
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_vector );
 
 	int start = 0;
 	int end = -1;
+	Object* o = NULL;
+	Object* method_self = NULL;
 	if( num_args > 1 )
 	{
 		Object* startobj = helper.GetLocalN( 1 );
@@ -604,6 +648,16 @@ void do_vector_sort( Frame *frame )
 		Object* endobj = helper.GetLocalN( 2 );
 		helper.ExpectIntegralNumber( endobj );
 		end = (int)endobj->d;
+	}
+	if( num_args > 3 )
+	{
+		o = helper.GetLocalN( 3 );
+		helper.ExpectTypes( o, obj_function, obj_native_function );
+	}
+	if( num_args > 4 )
+	{
+		method_self = helper.GetLocalN( 4 );
+		helper.ExpectTypes( method_self, obj_class, obj_instance );
 	}
 
 	size_t sz = self->v->size();
@@ -618,7 +672,40 @@ void do_vector_sort( Frame *frame )
 	if( end < start )
 		throw RuntimeException( "Invalid arguments in vector built-in method 'sort': start is greater than end." );
 
-	sort( self->v->begin() + start, self->v->begin() + end );
+	// if we didn't get a 'less-than' predicate function, do a 'normal' sort
+	if( !o )
+		sort( self->v->begin() + start, self->v->begin() + end );
+	else
+	{
+		bool is_method = false;
+		int num_args = frame->NumArgsPassed();
+
+		if( o->type == obj_function )
+			is_method = o->f->IsMethod();
+		else if( o->type == obj_native_function )
+			is_method = o->nf.is_method;
+
+		// a non-method can't have an object passed as argument #4
+		if( !is_method && num_args == 5 )
+			throw RuntimeException( "Too many arguments passed to vector built-in method 'sort' for a predicate argument which is not a method." );
+
+		// method predicate
+		if( is_method )
+		{
+			// create our sort predicate object
+			sort_predicate pred( o, method_self );
+			// do the sort
+			sort( self->v->begin() + start, self->v->begin() + end, pred );
+		}
+		// non-method predicate
+		else
+		{
+			// create our sort predicate object
+			sort_predicate pred( o );
+			// do the sort
+			sort( self->v->begin() + start, self->v->begin() + end, pred );
+		}
+	}
 
 	helper.ReturnVal( Object( obj_null ) );
 }
@@ -720,7 +807,7 @@ void do_vector_filter( Frame *frame )
 	if( !is_method && num_args == 3 )
 		throw RuntimeException( "Too many arguments passed to vector built-in method 'filter' for a first argument which is not a method." );
 
-	// TODO: allow methods
+	// allow methods
 	Object* method_self;
 	if( num_args == 3 )
 	{
@@ -741,17 +828,11 @@ void do_vector_filter( Frame *frame )
 		// push 'self', for methods
 		if( has_self )
 		{
-			// TODO:
-			// if this is a method, 'self' for the method is on the stack
-			// the item and 'self' are now in reverse order and need to be swapped
-			// 'self' also needs to be pushed and inc ref'd for each additional time through the
-			// loop... (beyond the first, when 'self' is already there)
-
 			// push the object ("self") first
 			IncRef( *method_self );
 			ex->PushStack( *method_self );
 		}
-		// call the function given (*must* be a single arg fcn to be used with map
+		// call the function given (*must* be a single arg fcn to be used with filter
 		// builtin)
 		if( o->type == obj_function )
 			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
@@ -803,7 +884,7 @@ void do_vector_reduce( Frame *frame )
 
 	// a non-method can't have an object passed as argument #2
 	if( !is_method && num_args == 3 )
-		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'reduce' for a first argument which is not a method." );
 
 	Object* method_self;
 	if( num_args == 3 )
@@ -894,7 +975,7 @@ void do_vector_any( Frame *frame )
 
 	// a non-method can't have an object passed as argument #2
 	if( !is_method && num_args == 3 )
-		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'any' for a first argument which is not a method." );
 
 	Object* method_self;
 	if( num_args == 3 )
@@ -917,8 +998,8 @@ void do_vector_any( Frame *frame )
 			IncRef( *method_self );
 			ex->PushStack( *method_self );
 		}
-		// call the function given (*must* be a single arg fcn to be used with map
-		// builtin)
+		// call the function given (*must* be a single arg fcn to be used with
+		// 'any' builtin)
 		if( o->type == obj_function )
 			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
@@ -961,7 +1042,7 @@ void do_vector_all( Frame *frame )
 
 	// a non-method can't have an object passed as argument #2
 	if( !is_method && num_args == 3 )
-		throw RuntimeException( "Too many arguments passed to vector built-in method 'map' for a first argument which is not a method." );
+		throw RuntimeException( "Too many arguments passed to vector built-in method 'all' for a first argument which is not a method." );
 
 	Object* method_self;
 	if( num_args == 3 )
@@ -984,7 +1065,7 @@ void do_vector_all( Frame *frame )
 			IncRef( *method_self );
 			ex->PushStack( *method_self );
 		}
-		// call the function given (*must* be a single arg fcn to be used with map
+		// call the function given (*must* be a single arg fcn to be used with 'all'
 		// builtin)
 		if( o->type == obj_function )
 			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
