@@ -167,6 +167,8 @@ assign_statement[pANTLR3_BASE_TREE parent]
 	|	^(MUL_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mul, $MUL_EQ_OP->getLine($MUL_EQ_OP) ); }
 	|	^(DIV_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_div, $DIV_EQ_OP->getLine($DIV_EQ_OP) ); }
 	|	^(MOD_EQ_OP lhs=exp[true,NULL] exp[false,NULL]) { compiler->AugmentedAssignOp( $lhs.start, op_mod, $MOD_EQ_OP->getLine($MOD_EQ_OP) ); }
+	|	^(IncStat ID) { compiler->IncOp( $ID, false, $IncStat->getLine($IncStat) ); }
+	|	^(DecStat ID) { compiler->DecOp( $ID, false, $DecStat->getLine($DecStat) ); }
 	|	exp[false,parent]
 	;
 
@@ -211,6 +213,8 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	^(MOD_OP lhs=exp[false,parent] rhs=exp[false,parent]) { compiler->ModOp( $MOD_OP->getLine($MOD_OP) ); }
 	|	^(Negate in=exp[false,parent]) { compiler->NegateOp( $in.start, $Negate->getLine($Negate)  ); }
 	|	^(NOT_OP in=exp[false,parent]) { compiler->NotOp( $in.start, $NOT_OP->getLine($NOT_OP) ); }
+	|	^(IncExp ID) { compiler->IncOp( $ID, true, $IncExp->getLine($IncExp) ); }
+	|	^(DecExp ID) { compiler->DecOp( $ID, true, $DecExp->getLine($DecExp) ); }
 	|	^(Key exp[false,NULL] key=key_exp[is_lhs_of_assign, parent])
 	|	dot_exp[is_lhs_of_assign,$parent]
 	|	call_exp[$parent]

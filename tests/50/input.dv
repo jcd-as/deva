@@ -15,7 +15,7 @@ if( matches )
 		print( "match " + str( i ) + ": ", "" );
 		print( s[m.start:m.end] );
 		print( m.str );
-		i += 1;
+		i ++;
 	}
 
 _re.delete( regexp );
@@ -48,7 +48,7 @@ import re;
             print( "match " + str( i ) + ": ", "" );
             print( s[m.start:m.end] );
             print( m.str );
-            i += 1;
+            i	++;
         }
 }
 

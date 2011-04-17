@@ -570,6 +570,8 @@ void Semantics::CheckForNoEffect( pANTLR3_BASE_TREE node )
 		&& type != MUL_EQ_OP
 		&& type != DIV_EQ_OP
 		&& type != MOD_EQ_OP
+		&& type != IncStat
+		&& type != DecStat
 		&& type != Call
 		&& type != Const
 		&& type != Local

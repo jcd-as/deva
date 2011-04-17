@@ -904,6 +904,238 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int li
 	}
 }
 
+void Compiler::IncOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
+{
+	EmitLineNum( line );
+
+	// get the text
+	char* lhs = (char*)lhs_node->getText( lhs_node )->chars;
+	// is it a local?
+	int idx = CurrentScope()->ResolveLocalToIndex( lhs );
+	// has the local been generated yet?
+	if( idx != -1 && !CurrentScope()->HasLocalBeenGenerated( idx ) )
+		idx = -1;
+
+	// no? look it up as a non-local
+	if( idx == -1 )
+	{
+		idx = GetConstant( Object( obj_symbol_name, lhs ) );
+		// not found? error
+		if( idx == -1 )
+			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+
+		Emit( op_pushconst, (dword)idx );
+		Emit( op_inc );
+		Emit( op_storeconst, (dword)idx );
+		if( is_expression )
+			Emit( op_pushconst, (dword)idx );
+	}
+	else
+	{
+		// index under 10: use the short instructions
+		if( idx < 10 )
+		{
+			switch( idx )
+			{
+			case 0:
+				Emit( op_pushlocal0 );
+				Emit( op_inc );
+				Emit( op_storelocal0 );
+				if( is_expression )
+					Emit( op_pushlocal0 );
+				break;
+			case 1:
+				Emit( op_pushlocal1 );
+				Emit( op_inc );
+				Emit( op_storelocal1 );
+				if( is_expression )
+					Emit( op_pushlocal1 );
+				break;
+			case 2:
+				Emit( op_pushlocal2 );
+				Emit( op_inc );
+				Emit( op_storelocal2 );
+				if( is_expression )
+					Emit( op_pushlocal2 );
+				break;
+			case 3:
+				Emit( op_pushlocal3 );
+				Emit( op_inc );
+				Emit( op_storelocal3 );
+				if( is_expression )
+					Emit( op_pushlocal3 );
+				break;
+			case 4:
+				Emit( op_pushlocal4 );
+				Emit( op_inc );
+				Emit( op_storelocal4 );
+				if( is_expression )
+					Emit( op_pushlocal4 );
+				break;
+			case 5:
+				Emit( op_pushlocal5 );
+				Emit( op_inc );
+				Emit( op_storelocal5 );
+				if( is_expression )
+					Emit( op_pushlocal5 );
+				break;
+			case 6:
+				Emit( op_pushlocal6 );
+				Emit( op_inc );
+				Emit( op_storelocal6 );
+				if( is_expression )
+					Emit( op_pushlocal6 );
+				break;
+			case 7:
+				Emit( op_pushlocal7 );
+				Emit( op_inc );
+				Emit( op_storelocal7 );
+				if( is_expression )
+					Emit( op_pushlocal7 );
+				break;
+			case 8:
+				Emit( op_pushlocal8 );
+				Emit( op_inc );
+				Emit( op_storelocal8 );
+				if( is_expression )
+					Emit( op_pushlocal8 );
+				break;
+			case 9:
+				Emit( op_pushlocal9 );
+				Emit( op_inc );
+				Emit( op_storelocal9 );
+				if( is_expression )
+					Emit( op_pushlocal9 );
+				break;
+			}
+		}
+		else
+		{
+			Emit( op_pushlocal, (dword)idx );
+			Emit( op_inc );
+			Emit( op_storelocal, (dword)idx );
+			if( is_expression )
+				Emit( op_pushlocal, (dword)idx );
+		}
+	}
+}
+
+void Compiler::DecOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
+{
+	EmitLineNum( line );
+
+	// get the text
+	char* lhs = (char*)lhs_node->getText( lhs_node )->chars;
+	// is it a local?
+	int idx = CurrentScope()->ResolveLocalToIndex( lhs );
+	// has the local been generated yet?
+	if( idx != -1 && !CurrentScope()->HasLocalBeenGenerated( idx ) )
+		idx = -1;
+
+	// no? look it up as a non-local
+	if( idx == -1 )
+	{
+		idx = GetConstant( Object( obj_symbol_name, lhs ) );
+		// not found? error
+		if( idx == -1 )
+			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+
+		Emit( op_pushconst, (dword)idx );
+		Emit( op_dec );
+		Emit( op_storeconst, (dword)idx );
+		if( is_expression )
+			Emit( op_pushconst, (dword)idx );
+	}
+	else
+	{
+		// index under 10: use the short instructions
+		if( idx < 10 )
+		{
+			switch( idx )
+			{
+			case 0:
+				Emit( op_pushlocal0 );
+				Emit( op_dec );
+				Emit( op_storelocal0 );
+				if( is_expression )
+					Emit( op_pushlocal0 );
+				break;
+			case 1:
+				Emit( op_pushlocal1 );
+				Emit( op_dec );
+				Emit( op_storelocal1 );
+				if( is_expression )
+					Emit( op_pushlocal1 );
+				break;
+			case 2:
+				Emit( op_pushlocal2 );
+				Emit( op_dec );
+				Emit( op_storelocal2 );
+				if( is_expression )
+					Emit( op_pushlocal2 );
+				break;
+			case 3:
+				Emit( op_pushlocal3 );
+				Emit( op_dec );
+				Emit( op_storelocal3 );
+				if( is_expression )
+					Emit( op_pushlocal3 );
+				break;
+			case 4:
+				Emit( op_pushlocal4 );
+				Emit( op_dec );
+				Emit( op_storelocal4 );
+				if( is_expression )
+					Emit( op_pushlocal4 );
+				break;
+			case 5:
+				Emit( op_pushlocal5 );
+				Emit( op_dec );
+				Emit( op_storelocal5 );
+				if( is_expression )
+					Emit( op_pushlocal5 );
+				break;
+			case 6:
+				Emit( op_pushlocal6 );
+				Emit( op_dec );
+				Emit( op_storelocal6 );
+				if( is_expression )
+					Emit( op_pushlocal6 );
+				break;
+			case 7:
+				Emit( op_pushlocal7 );
+				Emit( op_dec );
+				Emit( op_storelocal7 );
+				if( is_expression )
+					Emit( op_pushlocal7 );
+				break;
+			case 8:
+				Emit( op_pushlocal8 );
+				Emit( op_dec );
+				Emit( op_storelocal8 );
+				if( is_expression )
+					Emit( op_pushlocal8 );
+				break;
+			case 9:
+				Emit( op_pushlocal9 );
+				Emit( op_dec );
+				Emit( op_storelocal9 );
+				if( is_expression )
+					Emit( op_pushlocal9 );
+				break;
+			}
+		}
+		else
+		{
+			Emit( op_pushlocal, (dword)idx );
+			Emit( op_dec );
+			Emit( op_storelocal, (dword)idx );
+			if( is_expression )
+				Emit( op_pushlocal, (dword)idx );
+		}
+	}
+}
+
 // Key ('[]') op
 void Compiler::KeyOp( bool is_lhs_of_assign, int num_children, pANTLR3_BASE_TREE parent )
 {

@@ -170,6 +170,8 @@ enum Opcode
 	op_mul_assign_local,// multiply local #<Op0> and tos and store back into local #<Op0>
 	op_div_assign_local,// divide local #<Op0> and tos and store back into local #<Op0>
 	op_mod_assign_local,// modulus local #<Op0> and tos and store back into local #<Op0>
+	op_inc,			// increment tos
+	op_dec,			// decrement tos
 	op_call,		// call function with <Op0> args on stack, fcn on stack after args
 	op_call_method,		// call function with <Op0> args on stack, fcn on stack after args
 	op_return,		// execute <Op0> leave ops, pop the return address from the frame stack and jump to it, tos holds return value

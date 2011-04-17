@@ -154,6 +154,8 @@ assign_statement
 	|	^(MUL_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
 	|	^(DIV_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
 	|	^(MOD_EQ_OP lhs=exp[false] exp[false]) { semantics->CheckLhsForAugmentedAssign( $lhs.start ); }
+	|	^(IncStat ID) { semantics->CheckLhsForAugmentedAssign( $ID ); }
+	|	^(DecStat ID) { semantics->CheckLhsForAugmentedAssign( $ID ); }
 	|	exp[false]
 	;
 
@@ -187,6 +189,8 @@ exp[bool invert]
 	|	^(MOD_OP lhs=exp[false] rhs=exp[false]) { semantics->CheckMathOp( $lhs.start, $rhs.start ); }
 	|	^(Negate in=exp[true]) { semantics->CheckNegateOp( $in.start ); }
 	|	^(NOT_OP in=exp[false]) { semantics->CheckNotOp( $in.start ); }
+	|	^(IncExp ID) { semantics->CheckLhsForAugmentedAssign( $ID ); }
+	|	^(DecExp ID) { semantics->CheckLhsForAugmentedAssign( $ID ); }
 	|	^(Key exp[false] key_exp)
 	|	^(DOT_OP lhs=exp[false] 
 			{ semantics->rhs_of_dot = true; }

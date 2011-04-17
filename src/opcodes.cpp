@@ -118,6 +118,8 @@ const char* opcodeNames[] =
 	"mul_assign_local",
 	"div_assign_local",
 	"mod_assign_local",
+	"inc",
+	"dec",
 	"call",
 	"call_method",
 	"return",

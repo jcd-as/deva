@@ -1,0 +1,40 @@
+# basic test for ++ and -- operators, both as statements and expressions
+local n = 32;
+# 32
+print( n );
+# 33
+print( n++ );
+n++;
+# 34
+print( n );
+
+local v = [0, n++];
+# [0, 35]
+print( v );
+def foo( x ){ print( x++ ); }
+#foo++;
+# 37
+foo( n++ );
+print( n );
+#++n;
+local zero = 0;
+# 36
+local m = v[zero++];
+# 35
+print( m );
+
+# 35
+n--;
+print( n );
+# 34
+print( n-- );
+def bar( n ){ print( n-- ); }
+# 32
+bar( n-- );
+# 33
+print( n );
+local two = 2;
+m = v[two--];
+# 35
+print( m );
+

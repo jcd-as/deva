@@ -38,6 +38,10 @@ tokens
 	In;					// 'in'
 	Import;				// 'import'
 	New;				// 'new'
+	IncStat;			// increment _statement_
+	IncExp;				// increment _expression_
+	DecStat;			// decrement _statement_
+	DecExp;				// decrement _expression_
 	
 	NULLVAL = 'null';
 }
@@ -169,7 +173,9 @@ return_statement
 	;
 		
 assign_statement
-	: 	const_decl '=' value ';'							-> ^(const_decl value)
+	:	(ID '++' ';')=> ID '++' ';'							-> ^(IncStat ID)
+	|	(ID '--' ';')=> ID '--' ';'							-> ^(DecStat ID)
+	| 	const_decl '=' value ';'							-> ^(const_decl value)
 	| 	(local_decl '=' 'new')=> local_decl '=' new_decl ';'	-> ^(local_decl new_decl)
 	| 	(local_decl '=' logical_exp)=> local_decl '=' logical_exp ';'						-> ^(local_decl logical_exp)
 	|	local_decl ';'!
@@ -301,7 +307,9 @@ default_arg_val
 		;
 	
 atom
-	:	ID
+	:	ID '++' 											-> ^(IncExp ID)
+	|	ID '--' 											-> ^(DecExp ID)
+	|	ID
 	| 	'('! exp ')'!
 	;
 
@@ -514,3 +522,12 @@ EQ_OP
 NOT_EQ_OP
 	:	'!='
 	;
+
+INC_OP
+	:	'++'
+	;
+
+DEC_OP
+	:	'--'
+	;
+

@@ -262,6 +262,9 @@ public:
 	// augmented assignment operators (+=, -=, *=, /=, %=)
 	void AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int line );
 
+	void IncOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line );
+	void DecOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line );
+
 	// function call
 	void CallOp( pANTLR3_BASE_TREE fcn, pANTLR3_BASE_TREE args, pANTLR3_BASE_TREE parent, int line );
 

@@ -1,5 +1,5 @@
-local v = vector_of( null, 10 );
-print( v );
+#local v = vector_of( null, 10 );
+#print( v );
 
 # test stack trace with native code
 #def err( n )

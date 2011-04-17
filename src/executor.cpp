@@ -1530,6 +1530,32 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( arg, Object( (double)((int)lhs.d % (int)rhs.d) ) );
 		ip += sizeof( dword );
 		break;
+	case op_inc:
+		{
+		// get the tos
+		o = stack.back();
+		o = ResolveSymbol( o );
+		stack.pop_back();
+		// has to be numeric
+		if( o.type != obj_number )
+			throw RuntimeException( "Operand to increment operator must be numeric." );
+		Object o2( o.d + 1 );
+		stack.push_back( o2 );
+		}
+		break;
+	case op_dec:
+		{
+		// get the tos
+		o = stack.back();
+		o = ResolveSymbol( o );
+		stack.pop_back();
+		// has to be numeric
+		if( o.type != obj_number )
+			throw RuntimeException( "Operand to decrement operator must be numeric." );
+		Object o2( o.d - 1 );
+		stack.push_back( o2 );
+		}
+		break;
 	case op_call: // call function with <Op0> args on on stack, fcn after args
 	case op_call_method: // call function with <Op0> args on on stack, fcn after args
 		{
@@ -3185,6 +3211,8 @@ Opcode Executor::SkipInstruction()
 	case op_rot3:
 	case op_rot4:
 	case op_halt:
+	case op_inc:
+	case op_dec:
 		break;
 
 	// 1 arg
@@ -4002,6 +4030,8 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 	case op_mul:
 	case op_div:
 	case op_mod:
+	case op_inc:
+	case op_dec:
 		cout << "\t" << " ";
 		break;
 	case op_add_assign:
