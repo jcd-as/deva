@@ -274,6 +274,8 @@ void Semantics::CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs 
 		&& lhs_type != MUL_OP
 		&& lhs_type != DIV_OP
 		&& lhs_type != MOD_OP
+		&& lhs_type != IncExp
+		&& lhs_type != DecExp
 		&& lhs_type != Key 
 		&& lhs_type != DOT_OP 
 		&& lhs_type != Call
@@ -289,6 +291,8 @@ void Semantics::CheckRelationalOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs 
 		&& rhs_type != MUL_OP
 		&& rhs_type != DIV_OP
 		&& rhs_type != MOD_OP
+		&& rhs_type != IncExp
+		&& rhs_type != DecExp
 		&& rhs_type != Key 
 		&& rhs_type != DOT_OP 
 		&& rhs_type != Call
@@ -326,6 +330,8 @@ void Semantics::CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& lhs_type != MUL_OP
 		&& lhs_type != DIV_OP
 		&& lhs_type != MOD_OP
+		&& lhs_type != IncExp
+		&& lhs_type != DecExp
 		&& lhs_type != ID 
 		&& lhs_type != Negate 
 		&& lhs_type != Key 
@@ -339,6 +345,8 @@ void Semantics::CheckMathOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != MUL_OP
 		&& rhs_type != DIV_OP
 		&& rhs_type != MOD_OP
+		&& rhs_type != IncExp
+		&& rhs_type != DecExp
 		&& rhs_type != ID 
 		&& rhs_type != Negate 
 		&& rhs_type != Key 
@@ -362,6 +370,8 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& lhs_type != MUL_OP
 		&& lhs_type != DIV_OP
 		&& lhs_type != MOD_OP
+		&& lhs_type != IncExp
+		&& lhs_type != DecExp
 		&& lhs_type != ID 
 		&& lhs_type != Negate 
 		&& lhs_type != Key 
@@ -376,6 +386,8 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 		&& rhs_type != MUL_OP
 		&& rhs_type != DIV_OP
 		&& rhs_type != MOD_OP
+		&& rhs_type != IncExp
+		&& rhs_type != DecExp
 		&& rhs_type != ID 
 		&& rhs_type != Negate 
 		&& rhs_type != Key 
@@ -389,11 +401,13 @@ void Semantics::CheckAddOp( pANTLR3_BASE_TREE lhs, pANTLR3_BASE_TREE rhs )
 // validate negate expression
 void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 {
-	// input must be ID, number, negate op, Key, DOT_OP or Call
+	// input must be ID, number, inc/dec, negate op, Key, DOT_OP or Call
 	unsigned int type = in->getType( in );
 
 	if( type != Negate
 		&& type != ID 
+		&& type != IncExp
+		&& type != DecExp
 		&& type != Negate 
 		&& type != Key 
 		&& type != DOT_OP 
@@ -411,7 +425,8 @@ void Semantics::CheckNegateOp( pANTLR3_BASE_TREE in )
 // validate not expression
 void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 {
-	// input must be a relational/equality exp, logical exp, ID, bool, number, not op, Key, DOT_OP or Call
+	// input must be a relational/equality exp, logical exp, ID, bool, number, inc/dec, 
+	// not op, Key, DOT_OP or Call 
 	// (coercible to a boolean)
 	unsigned int type = in->getType( in );
 
@@ -431,6 +446,8 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 		&& type != MUL_OP
 		&& type != DIV_OP
 		&& type != MOD_OP
+		&& type != IncExp
+		&& type != DecExp
 		&& type != ID 
 		&& type != Negate 
 		&& type != Key 
@@ -446,7 +463,8 @@ void Semantics::CheckNotOp( pANTLR3_BASE_TREE in )
 // validate if or while conditional
 void Semantics::CheckConditional( pANTLR3_BASE_TREE condition )
 {
-	// input must be a relational/equality/math exp, logical exp, ID, bool, number, not op, Key, DOT_OP or Call
+	// input must be a relational/equality/math exp, logical exp, ID, bool, number, 
+	// inc/dec, not op, Key, DOT_OP or Call
 	// (coercible to a boolean)
 	unsigned int type = condition->getType( condition );
 
@@ -466,6 +484,8 @@ void Semantics::CheckConditional( pANTLR3_BASE_TREE condition )
 		&& type != MUL_OP
 		&& type != DIV_OP
 		&& type != MOD_OP
+		&& type != IncExp
+		&& type != DecExp
 		&& type != ID 
 		&& type != Negate 
 		&& type != Key 
@@ -498,6 +518,8 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 		&& idx1_type != MUL_OP
 		&& idx1_type != DIV_OP
 		&& idx1_type != MOD_OP
+		&& idx1_type != IncExp
+		&& idx1_type != DecExp
 		&& idx1_type != ID 
 		&& idx1_type != Negate 
 		&& idx1_type != Key 
@@ -514,6 +536,8 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 		&& idx2_type != MUL_OP
 		&& idx2_type != DIV_OP
 		&& idx2_type != MOD_OP
+		&& idx2_type != IncExp
+		&& idx2_type != DecExp
 		&& idx2_type != ID 
 		&& idx2_type != Negate 
 		&& idx2_type != Key 
@@ -532,6 +556,8 @@ void Semantics::CheckKeyExp( pANTLR3_BASE_TREE idx1, pANTLR3_BASE_TREE idx2 /*= 
 			&& idx3_type != MUL_OP
 			&& idx3_type != DIV_OP
 			&& idx3_type != MOD_OP
+			&& idx3_type != IncExp
+			&& idx3_type != DecExp
 			&& idx3_type != ID 
 			&& idx3_type != Negate 
 			&& idx3_type != Key 

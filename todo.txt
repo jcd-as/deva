@@ -4,10 +4,10 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
-TODO 2011-03-02 @deva +veryhigh need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
-
 TODO 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
 	so that executor can read .dvc files and execute them without needing to compile the .dv file
+
+TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 TODO 2011-04-16 @deva +high list comprehensions ??
 

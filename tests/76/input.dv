@@ -38,3 +38,15 @@ m = v[two--];
 # 35
 print( m );
 
+
+local n = 0;
+if( n++ )
+	print( "true" );
+else
+	print( "false" );
+if( n
+		-- )
+	print( "true" );
+else
+	print( "false" );
+
