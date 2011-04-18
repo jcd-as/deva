@@ -121,7 +121,6 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	f->filename = string( current_file );
 	f->first_line = 0;
 	f->num_args = 0;
-	f->num_locals = scope->NumLocals();
 	f->classname = string( "" );
 	f->addr = 0;
 	// add the locals
@@ -262,7 +261,6 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	fcn->filename = string( current_file );
 	fcn->first_line = line;
 	fcn->num_args = classname ? scope->NumArgs() + 1 : scope->NumArgs();
-	fcn->num_locals = scope->NumLocals();
 	// set the code address for this function
 	fcn->addr = (dword)is->Length();
 

@@ -199,48 +199,96 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		}
 	}
 
-//	bool use_dvc = false;
-//	unsigned char* code;
-//	if( ext != ".dvc" )
-//	{
-//		// TODO: compile?
-//	}
+	bool use_dvc = false;
+	Code* code = NULL;
+
+	ex = new Executor();
 
 	ParseReturnValue prv;
 	PassOneReturnValue p1rv;
 	try
 	{
-		// parse the file
-		prv = Parse( fname.c_str() );
-
-		if( prv.successful )
+		// if we weren't passed a .dvc file as input, see if we need to compile
+		if( ext != ".dvc" )
 		{
-			PassOneFlags p1f; // currently no pass one flags
-			PassTwoFlags p2f;
-			p2f.trace = trace;
+			string out_fname = fname + "c";
 
-			// PASS ONE: build the symbol table and check semantics
-			p1rv = PassOne( prv, p1f );
+			// check for a .dvc file
+			struct stat in_statbuf;
+			struct stat out_statbuf;
 
-			// diagnostic information output:
-			// print the text repr of the tree?
-			if( show_ast )
+			// if we can't open the .dvc file, continue on
+			if( stat( out_fname.c_str(), &out_statbuf ) != -1 )
 			{
-				cout << "AST:" << endl;
-				pANTLR3_STRING s = p1rv.nodes->root->toStringTree( p1rv.nodes->root );
-				ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
+				if( stat( fname.c_str(), &in_statbuf ) != -1 ) 
+				{
+					// if the output is newer than the input, nothing to do
+					if( out_statbuf.st_mtime > in_statbuf.st_mtime )
+						use_dvc = true;
+				}
+				// .dvc file exists, but no .dv file
+				else
+					use_dvc = true;
+			}
+			if( !use_dvc )
+			{
+				// parse the file
+				prv = Parse( fname.c_str() );
+
+				if( prv.successful )
+				{
+					PassOneFlags p1f; // currently no pass one flags
+					PassTwoFlags p2f;
+					p2f.trace = trace;
+
+					// PASS ONE: build the symbol table and check semantics
+					p1rv = PassOne( prv, p1f );
+
+					// diagnostic information output:
+					// print the text repr of the tree?
+					if( show_ast )
+					{
+						cout << "AST:" << endl;
+						pANTLR3_STRING s = p1rv.nodes->root->toStringTree( p1rv.nodes->root );
+						ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
+					}
+
+					// PASS TWO: compile
+					code = PassTwo( "", p1rv, p2f );
+
+					// debug dumps
+	#ifdef DEBUG
+					if( debug_dump )
+					{
+						// dump the symbol tables...
+						semantics->DumpSymbolTable();
+					}
+	#endif
+
+					// free compile-time objects before executing code
+					// free parser, compile memory
+					FreeParseReturnValue( prv );
+					FreePassOneReturnValue( p1rv );
+					delete compiler;
+					compiler = NULL;
+					delete semantics;
+					semantics = NULL;
+
+					// by default, write the .dvc file
+					if( !no_dvc )
+						ex->WriteCode( out_fname, code );
+				}
+			}
+			// otherwise, load the .dvc
+			else
+			{
+				code = ex->ReadCode( out_fname );
 			}
 
-			// PASS TWO: compile
-			ex = new Executor();
-			Code* code = PassTwo( "", p1rv, p2f );
-
-			// debug dumps
+			// done compiling
 #ifdef DEBUG
-			if( debug_dump /*&& verbosity == 3*/ )
+			if( debug_dump )
 			{
-				// dump the symbol tables...
-				semantics->DumpSymbolTable();
 				// dump the constant data pool
 				ex->DumpConstantPool();
 				// dump the function objects
@@ -252,15 +300,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			{
 				ex->Decode( code );
 			}
-
-			// free compile-time objects before executing code
-			// free parser, compile memory
-			FreeParseReturnValue( prv );
-			FreePassOneReturnValue( p1rv );
-			delete compiler;
-			compiler = NULL;
-			delete semantics;
-			semantics = NULL;
 
 			// execute the code
 			if( !compile_only )

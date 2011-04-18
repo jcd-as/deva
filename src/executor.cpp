@@ -33,8 +33,11 @@
 #include "vector_builtins.h"
 #include "map_builtins.h"
 #include "api.h"
+#include "fileformat.h"
 
 #include <algorithm>
+#include <sstream>
+#include <fstream>
 #include <sstream>
 
 using namespace std;
@@ -62,7 +65,7 @@ const Object constant_symbols[] =
 	Object( obj_symbol_name, copystr( "next" ) )
 };
 const int num_of_constant_symbols = sizeof( constant_symbols ) / sizeof( Object );
-
+static dword total_global_constants = num_of_constant_symbols;
 
 /////////////////////////////////////////////////////////////////////////////
 // executive/VM functions and globals
@@ -103,6 +106,8 @@ Executor::Executor() :
 		char* s = copystr( builtin_names[i].c_str() );
 		if( !AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
+		else
+			total_global_constants++;
 	}
 	// string builtins
 	for( int i = 0; i < num_of_string_builtins; i++ )
@@ -110,6 +115,8 @@ Executor::Executor() :
 		char* s = copystr( string_builtin_names[i].c_str() );
 		if( !AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
+		else
+			total_global_constants++;
 	}
 	// vector builtins
 	for( int i = 0; i < num_of_vector_builtins; i++ )
@@ -117,6 +124,8 @@ Executor::Executor() :
 		char* s = copystr( vector_builtin_names[i].c_str() );
 		if( !AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
+		else
+			total_global_constants++;
 	}
 	// map builtins
 	for( int i = 0; i < num_of_map_builtins; i++ )
@@ -124,6 +133,8 @@ Executor::Executor() :
 		char* s = copystr( map_builtin_names[i].c_str() );
 		if( !AddConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
+		else
+			total_global_constants++;
 	}
 }
 
@@ -208,7 +219,8 @@ Object Executor::ResolveSymbol( Object sym )
 		NativeFunction nf = GetBuiltin( sym.s );
 		if( nf.p )
 			return Object( nf );
-		// module name?
+
+		// allow module names to pass through
 		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
@@ -226,10 +238,6 @@ Object Executor::ResolveSymbol( Object sym )
 		// map builtin?
 		nf = GetMapBuiltin( sym.s );
 		if( nf.p )
-			return sym;
-
-		// allow module names to pass through
-		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
 		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
@@ -361,7 +369,6 @@ void Executor::Execute( const Code* const code )
 	PopFrame();
 }
 
-// TODO: implement
 void Executor::ExecuteCode( const Code* const code )
 {
 	// add this code block to our collection
@@ -3695,11 +3702,11 @@ Object Executor::ImportModule( const char* module_name )
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
 	if( modules.count( string( module_name ) ) != 0 )
-		return true;
+		return Object( obj_null );
 
 	// check the list of builtin modules first
 	if( ImportBuiltinModule( module_name ) )
-		return true;
+		return Object( obj_null );
 
 	// otherwise look for the .dv/.dvc file to import
 	string path = FindModule( module_name );
@@ -3788,6 +3795,371 @@ Code* Executor::GetCode( byte* address )
 Code* Executor::GetCurrentCode()
 {
 	return GetCode( bp );
+}
+
+// .dv file writing
+void Executor::WriteCode( string filename, const Code* const code )
+{
+	// open the file for writing
+	ofstream file;
+	file.open( filename.c_str(), ios::binary );
+	if( file.fail() )
+		throw RuntimeException( boost::format( "Unable to open file '%1%'" ) % filename );
+
+	// write the header
+	// "deva"
+	file << file_hdr_deva;
+	file << '\0';
+	// "2.0.0"
+	file << file_hdr_ver;
+	file << '\0';
+	// 5 bytes of padding to bring header to 16 bytes
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+
+	// write constants
+	// (do NOT write the 'global' constants, they always exist)
+	file << constants_hdr;
+	file << '\0';
+	// padding to byte boundary
+	file << '\0';
+	// section header is followed by dword containing the number of const objects
+//	dword num_consts = (dword)(constants.size() - num_of_constant_symbols - num_of_builtins - num_of_string_builtins - num_of_vector_builtins - num_of_map_builtins);
+	dword num_consts = (dword)(constants.size() - total_global_constants);
+	file.write( (char*)&num_consts, sizeof( dword ) );
+	// constant data itself is an array of DevaObject structs:
+	// byte : object type. only number and string are allowed
+	// qword (number) OR 'len+1' bytes (string) : number or null-terminated string
+	for( size_t i = total_global_constants; i < constants.size(); i++ )
+	{
+		Object o( constants[i] );
+		qword qw = 0;
+		file << (byte)(o.type);
+		switch( o.type )
+		{
+		case obj_number:
+			qw = (qword)o.d;
+			file.write( (char*)&qw, sizeof( qword ) );
+			break;
+		case obj_string:
+			file << o.s;
+			file << '\0';
+			break;
+		case obj_size:
+			qw = (qword)o.sz;
+			file.write( (char*)&qw, sizeof( qword ) );
+			break;
+		case obj_symbol_name:
+			file << o.s;
+			file << '\0';
+			break;
+		default:
+			// null shouldn't ever happen, null is 'global'
+			// boolean shouldn't ever happen, true and false are 'global'
+			throw ICE( "Trying to write Object of invalid type for Constant Pool." );
+			break;
+		}
+	}
+
+	// write functions
+	file << functions_hdr;
+	file << '\0';
+	// padding to byte boundary
+	file << '\0';
+	file << '\0';
+	// section header is followed by a dword containing the number of function objects
+	dword dw = (dword)functions.size();
+	file.write( (char*)&dw, sizeof( dword ) );
+	// function object data itself is an array of DevaFunction objects:
+	// len+1 bytes : 	name, null-terminated string
+	// len+1 bytes : 	filename
+	// dword :			starting line
+	// len+1 bytes :	classname (zero-length string if non-method)
+	// dword : 			number of arguments
+	// dword : 			'n' number of default arguments
+	// 'n' dwords :		default args (constant pool indices)
+	// dword :			number of locals
+	// dword :			number of names (externals, undeclared vars, functions)
+	// byte[] :			names, len+1 bytes null-terminated string each
+	// dword :			offset in code section of the code for this function
+	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
+	{
+		Function* f = i->second->f;
+		// name
+		file << i->first;
+		file << '\0';
+
+		// filename (module)
+		file << f->filename;
+		file << '\0';
+
+		// starting line
+		dw = f->first_line;
+		file.write( (char*)&dw, sizeof( dword ) );
+
+		// classname, empty if not method
+		file << f->classname;
+		file << '\0';
+
+		// number of arguments
+		dw = f->num_args;
+		file.write( (char*)&dw, sizeof( dword ) );
+	
+		// default args
+		dw = (dword)(f->default_args.size());
+		file.write( (char*)&dw, sizeof( dword ) );
+		for( size_t j = 0; j < f->default_args.size(); j++ )
+		{
+			dw = (dword)(f->default_args[j]);
+			file.write( (char*)&dw, sizeof( dword ) );
+		}
+
+		// local names (for debugging & reflection)
+		dw = (dword)(f->local_names.size());
+		file.write( (char*)&dw, sizeof( dword ) );
+		for( size_t j = 0; j < f->local_names.size(); j++ )
+		{
+			file << f->local_names[j];
+			file << '\0';
+		}
+	
+		// offset in code section of the code for this function
+		dw = f->addr;
+		file.write( (char*)&dw, sizeof( dword ) );
+	}
+
+	// write line mapping
+	file << linemap_hdr;
+	file << '\0';
+	// padding to byte boundary
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	file << '\0';
+	// section header is followed by a dword containing the number of line map entries
+	dword num_linemaps = (dword)(code->lines->L2ASize());
+	file.write( (char*)&num_linemaps, sizeof( dword ) );
+	// line map data is an array of line map entries:
+	// dword : 			line number
+	// dword :			address of instruction
+	for( map<dword, dword>::iterator i = code->lines->L2ABegin(); i != code->lines->L2AEnd(); ++i )
+	{
+		dw = i->first;
+		file.write( (char*)&dw, sizeof( dword ) );
+		dw = i->second;
+		file.write( (char*)&dw, sizeof( dword ) );
+	}
+
+	// write bytecode
+	file.write( (const char*)code->code, code->len );
+	
+	// close the file
+	file.close();
+}
+
+// .dv file reading
+Code* Executor::ReadCode( string filename )
+{
+	Code* code = new Code();
+	code->lines = new LineMap();
+
+	// open the file for reading
+	ifstream file;
+	file.open( filename.c_str(), ios::binary );
+	if( file.fail() )
+		throw RuntimeException( boost::format( "Unable to open input file '%1%' for read." ) % filename );
+
+	// read the header
+	char deva[5] = {0};
+	char ver[6] = {0};
+	file.read( deva, 5 );
+	if( strcmp( deva, "deva") != 0 )
+		throw RuntimeException( "Invalid .dvc file: header missing 'deva' tag." );
+	file.read( ver, 6 );
+	if( strcmp( ver, "2.0.0" ) != 0 )
+		 throw RuntimeException( boost::format( "Invalid .dvc version number: %1%." ) % ver );
+	char pad[6] = {0};
+	file.read( pad, 5 );
+	if( pad[0] != 0 || pad[1] != 0 || pad[2] != 0 || pad[3] != 0 || pad[4] != 0 )
+		throw RuntimeException( "Invalid .dvc file: malformed header after version number." );
+
+	// read the constants
+	char consts_hdr[7];
+	char consts_hdr_pad[1];
+	file.read( consts_hdr, 7 );
+	if( strcmp( consts_hdr, ".const" ) != 0 )
+		throw RuntimeException( "Invalid .dvc file: constant section header missing or malformed." );
+	file.read( consts_hdr_pad, 1 );
+	if( consts_hdr_pad[0] != 0 )
+		throw RuntimeException( "Invalid .dvc file: constant section header missing or malformed." );
+	// section header is followed by dword containing the number of const objects
+	dword num_consts = 0;
+	file.read( (char*)&num_consts, sizeof( dword ) );
+	// constant data itself is an array of DevaObject structs:
+	// byte : object type. only number and string are allowed
+	// qword (number) OR 'len+1' bytes (string) : number or null-terminated string
+	for( dword i = 0; i < num_consts; i++ )
+	{
+		Object o;
+		byte type;
+		file.read( (char*)&type, sizeof( byte ) );
+		o.type = (ObjectType)type;
+		switch( type )
+		{
+		case obj_number:
+			file.read( (char*)&o.d, sizeof( qword ) );
+			break;
+		case obj_string:
+			{
+			string s;
+			getline( file, s, '\0' );
+			o.s = copystr( s );
+			}
+			break;
+		case obj_size:
+			file.read( (char*)&o.sz, sizeof( dword ) );
+			break;
+		case obj_symbol_name:
+			{
+			string s;
+			getline( file, s, '\0' );
+			o.s = copystr( s );
+			}
+			break;
+		default:
+			throw ICE( "Invalid .dvc file: read Object of invalid type for Constant Pool." );
+			break;
+		}
+		constants.push_back( o );
+	}
+
+	// read the function table
+	char funcs_hdr[6];
+	file.read( funcs_hdr, 6 );
+	if( strcmp( funcs_hdr, ".func" ) != 0 )
+		throw RuntimeException( "Invalid .dvc file: function section header missing or malformed." );
+	char funcs_hdr_pad[2];
+	file.read( funcs_hdr_pad, 2 );
+	if( funcs_hdr_pad[0] != 0 || funcs_hdr_pad[1] != 0 )
+		throw RuntimeException( "Invalid .dvc file: function section header missing or malformed." );
+	// section header is followed by a dword containing the number of function objects
+	dword num_funcs = 0;
+	file.read( (char*)&num_funcs, sizeof( dword ) );
+	// function object data itself is an array of DevaFunction objects:
+	// len+1 bytes : 	name, null-terminated string
+	// len+1 bytes : 	filename
+	// dword :			starting line
+	// len+1 bytes :	classname (zero-length string if non-method)
+	// dword : 			number of arguments
+	// dword : 			'n' number of default arguments
+	// 'n' dwords :		default args (constant pool indices)
+	// dword :			number of locals
+	// dword :			number of names (externals, undeclared vars, functions)
+	// byte[] :			names, len+1 bytes null-terminated string each
+	// dword :			offset in code section of the code for this function
+	for( dword i = 0; i < num_funcs; i++ )
+	{
+		Function* f = new Function();
+		string s;
+		getline( file, s, '\0' );
+		// name
+		f->name = s;
+	
+		// filename
+		getline( file, s, '\0' );
+		f->filename = s;
+	
+		// first line
+		file.read( (char*)&f->first_line, sizeof( dword ) );
+	
+		// classname
+		getline( file, s, '\0' );
+		f->classname = s;
+	
+		// num args
+		file.read( (char*)&f->num_args, sizeof( dword ) );
+	
+		// default args
+		dword num_def_args = 0;
+		file.read( (char*)&num_def_args, sizeof( dword ) );
+		for( size_t j = 0; j < num_def_args; j++ )
+		{
+			dword idx = 0;
+			file.read( (char*)&idx, sizeof( dword ) );
+			f->default_args.push_back( idx );
+		}
+
+		// local names (for debugging & reflection)
+		dword num_locals = 0;
+		file.read( (char*)&num_locals, sizeof( dword ) );
+		for( size_t i = 0; i < num_locals; i++ )
+		{
+			getline( file, s, '\0' );
+			f->local_names.push_back( s );
+		}
+	
+		// address
+		file.read( (char*)&f->addr, sizeof( dword ) );
+	
+		f->module = NULL;
+		// TODO: module name?? need to set through a member or static...
+//		f->modulename = module_name;
+	
+		AddFunction( f );
+	}
+
+	// read the line mapping
+	char lm_hdr[9];
+	char lm_hdr_pad[7];
+	file.read( lm_hdr, 9 );
+	if( strcmp( lm_hdr, ".linemap" ) != 0 )
+		throw RuntimeException( "Invalid .dvc file: line map section header missing or malformed." );
+	file.read( lm_hdr_pad, 7 );
+	if( lm_hdr_pad[0] != 0 || lm_hdr_pad[1] != 0 || lm_hdr_pad[2] != 0 || lm_hdr_pad[3] != 0 ||
+		lm_hdr_pad[4] != 0 || lm_hdr_pad[5] != 0 || lm_hdr_pad[6] != 0 )
+		throw RuntimeException( "Invalid .dvc file: line map section header missing or malformed." );
+	// section header is followed by a dword containing the number of line map entries
+	dword num_linemaps = 0;
+//	file >> num_linemaps;
+	file.read( (char*)&num_linemaps, sizeof( dword ) );
+	// line map data is an array of line map entries:
+	// dword : 			line number
+	// dword :			address of instruction
+	for( dword i = 0; i < num_linemaps; i++ )
+	{
+		dword line = 0;
+		dword addr = 0;
+		file.read( (char*)&line, sizeof( dword ) );
+		file.read( (char*)&addr, sizeof( dword ) );
+		code->lines->Add( line, addr );
+	}
+
+	// get the size of the byte code
+	file.seekg( 0, ios::cur );
+	int beg = file.tellg();
+	file.seekg( 0, ios::end );
+	int end = file.tellg();
+	dword bc_length = end - beg;
+	file.seekg( beg );
+
+	// allocate memory for the byte code array
+	code->code = new byte[bc_length];
+	code->len = bc_length;
+	code->num_constants = num_consts;
+
+	// read the file into the byte code array
+	file.read( (char*)(code->code), bc_length );
+
+	// close the file
+	file.close();
+
+	return code;
 }
 
 // disassemble the instruction stream to stdout
@@ -4157,12 +4529,13 @@ void Executor::DumpFunctions()
 		cout << f->num_args << " arg(s), default value indices: ";
 		for( size_t j = 0; j < f->NumDefaultArgs(); j++ )
 			cout << f->default_args.at( j ) << " ";
-		cout << endl << f->num_locals << " local(s): ";
+		cout << endl << f->local_names.size() << " local(s): ";
 		for( size_t j = 0; j < f->local_names.size(); j++ )
 			cout << f->local_names.operator[]( j ) << " ";
 		cout << endl << "code address: " << f->addr << endl;
 	}
 }
+
 void Executor::DumpConstantPool()
 {
 	cout << "Constant data pool:" << endl;
@@ -4216,7 +4589,7 @@ size_t Executor::GetOffsetForCallSite( Frame* f, byte* addr ) const
 void Executor::DumpTrace( ostream & os )
 {
 	// nothing to do?
-	if( callstack.begin() == callstack.end() - 1 )
+	if( callstack.size() == 0 )
 		return;
 
 	os << "Traceback (most recent first):" << endl;
@@ -4227,7 +4600,6 @@ void Executor::DumpTrace( ostream & os )
 	Frame* f;
 
 	// current (error) location:
-//	size_t loc = GetOffsetForCallSite( ip );
 	size_t loc = GetOffsetForCallSite( callstack.back(), ip );
 	code = GetCode( bp );
 	line = code->lines->FindLine( loc );

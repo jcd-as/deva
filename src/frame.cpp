@@ -51,7 +51,7 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, F
 	call_site( site ),
 	scopes( s )
 {
-	num_locals = f->IsMethod() ? f->num_locals+1 : f->num_locals;
+	num_locals = f->IsMethod() ? f->local_names.size()+1 : f->local_names.size();
 	if( num_locals ) locals = new Object[num_locals];
 }
 

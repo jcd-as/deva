@@ -110,22 +110,22 @@ struct Object
 	};
 
 	Object() : type( obj_end ), d( 0.0 ) {} // invalid object
-	Object( ObjectType t ) : type( t ), d( 0.0 ) // uninitialized object
+	explicit Object( ObjectType t ) : type( t ), d( 0.0 ) // uninitialized object
 	{ /*assert( t == obj_null );*/ }
-	Object( double n ) : type( obj_number ), d( n ) {}
-	Object( char* n ) : type( obj_string ), s( n ) {}
-	Object( const char* n ) : type( obj_string ), s( const_cast<char*>(n) ) {}
-	Object( bool n ) : type( obj_boolean ), b( n ) {}
-	Object( Vector* n ) : type( obj_vector ), v( n ) {}
-	Object( Map* n ) : type( obj_map ), m( n ) {}
-	Object( Function* n ) : type( obj_function ), f( n ) {}
-	Object( NativeFunction n ) : type( obj_native_function ), nf( n ) {}
-	Object( NativeFunctionPtr n, bool method = false ) : type( obj_native_function ) { nf.p = n; nf.is_method = method; }
-	Object( void* n ) : type( obj_native_obj ), no( n ) {}
-	Object( size_t n ) : type( obj_size ), sz( n ) {}
-	Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
+	explicit Object( double n ) : type( obj_number ), d( n ) {}
+	explicit Object( char* n ) : type( obj_string ), s( n ) {}
+	explicit Object( const char* n ) : type( obj_string ), s( const_cast<char*>(n) ) {}
+	explicit Object( bool n ) : type( obj_boolean ), b( n ) {}
+	explicit Object( Vector* n ) : type( obj_vector ), v( n ) {}
+	explicit Object( Map* n ) : type( obj_map ), m( n ) {}
+	explicit Object( Function* n ) : type( obj_function ), f( n ) {}
+	explicit Object( NativeFunction n ) : type( obj_native_function ), nf( n ) {}
+	explicit Object( NativeFunctionPtr n, bool method = false ) : type( obj_native_function ) { nf.p = n; nf.is_method = method; }
+	explicit Object( void* n ) : type( obj_native_obj ), no( n ) {}
+	explicit Object( size_t n ) : type( obj_size ), sz( n ) {}
+	explicit Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
 	{ /*assert( t == obj_symbol_name );*/ }
-	Object( ObjectType t, const char* n ) : type( obj_symbol_name ), s( const_cast<char*>(n) )
+	explicit Object( ObjectType t, const char* n ) : type( obj_symbol_name ), s( const_cast<char*>(n) )
 	{ /*assert( t == obj_symbol_name );*/ }
 
 	// creation functions for classes & instances
@@ -258,8 +258,6 @@ struct Function
 	dword num_args;
 	// default args
 	vector<int> default_args;
-	// number of locals
-	dword num_locals;
 	// local names (for debugging & reflection)
 	vector<string> local_names;
 	// offset in code section of the code for this function
@@ -272,7 +270,7 @@ struct Function
 	// it won't be set until the first call to it)
 	Module* module;
 
-	Function() : first_line( 0 ), num_args( 0 ), num_locals( 0 ), addr( 0 ), module( NULL ) {}
+	Function() : first_line( 0 ), num_args( 0 ), addr( 0 ), module( NULL ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
 	inline bool InModule() { return !modulename.empty(); }

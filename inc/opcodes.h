@@ -1,103 +1,71 @@
-// copyright (c) 2010 joshua c. shepard
+// Copyright (c) 2010 Joshua C. Shepard
 // 
-// permission is hereby granted, free of charge, to any person
+// Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
-// files (the "software"), to deal in the software without
+// files (the "Software"), to deal in the Software without
 // restriction, including without limitation the rights to use,
 // copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the software, and to permit persons to whom the
-// software is furnished to do so, subject to the following
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
 // conditions:
 // 
-// the above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the software.
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
 // 
-// the software is provided "as is", without warranty of any kind,
-// express or implied, including but not limited to the warranties
-// of merchantability, fitness for a particular purpose and
-// noninfringement. in no event shall the authors or copyright
-// holders be liable for any claim, damages or other liability,
-// whether in an action of contract, tort or otherwise, arising
-// from, out of or in connection with the software or the use or
-// other dealings in the software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
 
 // opcodes.h
 // virtual machine opcodes for the deva language, v2
 // created by jcs, december 14, 2010 
 
-// todo:
+// TODO:
 // * 
 
-#ifndef __opcodes_h__
-#define __opcodes_h__
+#ifndef __OPCODES_H__
+#define __OPCODES_H__
+
+// MS VC++ prior to 2010 doesn't have stdint.h
+#ifndef _MSC_VER
+#include <stdint.h>
+#else
+#if _MSV_VER < 1600
+#include <stdint.h>
+#endif 
+#endif // not _MSC_VER
+
+//typedef unsigned char byte;
+//typedef unsigned short word;
+//typedef unsigned int dword;
+
+// visual c++ / ms-windows equivalents for versions prior to VC 2010
+#ifdef _MSC_VER
+#if _MSV_VER < 1600
+typedef signed __int8     int8_t;
+typedef signed __int16    int16_t;
+typedef signed __int32    int32_t;
+typedef unsigned __int8   uint8_t;
+typedef unsigned __int16  uint16_t;
+typedef unsigned __int32  uint32_t;
+typedef signed __int64       int64_t;
+typedef unsigned __int64     uint64_t;
+#endif
+#endif // _MSC_VER
+
+typedef uint8_t byte;
+typedef uint16_t word;
+typedef uint32_t dword;
+typedef uint64_t qword;
+
 
 namespace deva
 {
-
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned int dword;
-
-// a compiled deva file (.dvc file) consists of:
-// - a header
-// - a constant data area
-// - a 'global' data area
-// - a list of function objects (including a "@main" global 'function')
-// - and a stream of instructions and their operands
-
-
-// header
-/////////////////////////////////////////////////////////////////////////////
-// the header is a 16-byte section that looks like this:
-//struct FileHeader
-//{
-//	static const byte deva[5];	// "deva"
-//	static const byte ver[6];	// "2.0.0"
-//	static const byte pad[5];	// "\0\0\0\0\0"
-//	static unsigned long size(){ return sizeof( deva ) + sizeof( ver ) + sizeof( pad ); }
-//};
-// define the static members of the FileHeader struct
-const char file_hdr_deva[5] = "deva";
-const char file_hdr_ver[6] = "1.0.0";
-const char file_hdr_pad[5] = "\0\0\0\0";
-const dword sizeofFileHdr = sizeof( file_hdr_deva ) + sizeof( file_hdr_ver ) + sizeof( file_hdr_pad ); // 16
-
-
-// constant data area
-/////////////////////////////////////////////////////////////////////////////
-const char constants_hdr[7] = ".const";
-const char constants_hdr_pad[1] = "";
-const dword sizeofConstantsHdr = sizeof( constants_hdr ) + sizeof( constants_hdr_pad ); // 8
-// header is followed by dword containing the number of const objects
-// constant data itself is an array of DevaObject structs:
-// byte : object type. only number and string are allowed
-// qword (number) OR 'len+1' bytes (string) : number or null-terminated string
-
-
-// 'global names' data area
-/////////////////////////////////////////////////////////////////////////////
-const char global_hdr[8] = ".global";
-const dword sizeofGlobalHdr = sizeof( global_hdr ); // 8
-// header is followed by a dword containing the number of global names
-// global names data itself is an array of null-terminated strings
-
-
-// function object area
-/////////////////////////////////////////////////////////////////////////////
-const char functions_hdr[6] = ".func";
-const char functions_hdr_pad[2] = "\0";
-const dword sizeofFunctionsHdr = sizeof( functions_hdr ) + sizeof( functions_hdr_pad ); // 8
-// header is followed by a dword containing the number of function objects
-// function object data itself is an array of DevaFunction objects:
-// len+1 bytes : 	name, null-terminated string
-// len+1 bytes : 	filename
-// dword :			starting line
-// dword : 			number of arguments
-// TODO: need to store default values for args too
-// dword :			number of locals
-// dword :			number of names (externals, undeclared vars, functions)
-// bytes :			names, len+1 bytes null-terminated string each
-// dword :			offset in code section of the code for this function
 
 
 // instruction opcodes

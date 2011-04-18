@@ -817,7 +817,7 @@ void do_vector_filter( Frame *frame )
 
 	// return vector
 	Vector* ret = CreateVector();
-	ret->reserve( self->v->size() );
+	ret->reserve( self->v->size() / 2 );
 
 	// walk each item in the vector
 	for( Vector::iterator i = self->v->begin(); i != self->v->end(); ++i )
@@ -855,6 +855,7 @@ void do_vector_filter( Frame *frame )
 		}
 		DecRef( retval );
 	}
+	ret->resize( ret->size() );
 
 	helper.ReturnVal( Object( ret ) );
 }

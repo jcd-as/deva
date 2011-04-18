@@ -191,6 +191,10 @@ public:
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
 
+	// .dv file reading/writing
+	void WriteCode( string filename, const Code* const code );
+	Code* ReadCode( string filename );
+
 	void SetError( Object* err );
 	bool Error();
 	Object GetError();

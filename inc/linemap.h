@@ -51,6 +51,10 @@ public:
 
 	LineMap() {}
 
+	inline map<dword, dword>::iterator L2ABegin() { return l2a.begin(); }
+	inline map<dword, dword>::iterator L2AEnd() { return l2a.end(); }
+	inline size_t L2ASize() { return l2a.size(); }
+
 	void Add( dword line, dword addr )
 	{
 		map<dword, dword>::iterator i = l2a.find( line );
