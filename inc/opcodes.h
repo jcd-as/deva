@@ -35,7 +35,7 @@
 #ifndef _MSC_VER
 #include <stdint.h>
 #else
-#if _MSV_VER < 1600
+#if _MSV_VER > 1500
 #include <stdint.h>
 #endif 
 #endif // not _MSC_VER
