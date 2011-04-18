@@ -206,12 +206,18 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 
 	ParseReturnValue prv;
 	PassOneReturnValue p1rv;
+	string out_fname;
 	try
 	{
 		// if we weren't passed a .dvc file as input, see if we need to compile
-		if( ext != ".dvc" )
+		if( ext == ".dvc" )
 		{
-			string out_fname = fname + "c";
+			out_fname = fname;
+			use_dvc = true;
+		}
+		else
+		{
+			out_fname = fname + "c";
 
 			// check for a .dvc file
 			struct stat in_statbuf;
@@ -230,89 +236,89 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				else
 					use_dvc = true;
 			}
-			if( !use_dvc )
-			{
-				// parse the file
-				prv = Parse( fname.c_str() );
+		}
+		if( !use_dvc )
+		{
+			// parse the file
+			prv = Parse( fname.c_str() );
 
-				if( prv.successful )
+			if( prv.successful )
+			{
+				PassOneFlags p1f; // currently no pass one flags
+				PassTwoFlags p2f;
+				p2f.trace = trace;
+
+				// PASS ONE: build the symbol table and check semantics
+				p1rv = PassOne( prv, p1f );
+
+				// diagnostic information output:
+				// print the text repr of the tree?
+				if( show_ast )
 				{
-					PassOneFlags p1f; // currently no pass one flags
-					PassTwoFlags p2f;
-					p2f.trace = trace;
-
-					// PASS ONE: build the symbol table and check semantics
-					p1rv = PassOne( prv, p1f );
-
-					// diagnostic information output:
-					// print the text repr of the tree?
-					if( show_ast )
-					{
-						cout << "AST:" << endl;
-						pANTLR3_STRING s = p1rv.nodes->root->toStringTree( p1rv.nodes->root );
-						ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
-					}
-
-					// PASS TWO: compile
-					code = PassTwo( "", p1rv, p2f );
-
-					// debug dumps
-	#ifdef DEBUG
-					if( debug_dump )
-					{
-						// dump the symbol tables...
-						semantics->DumpSymbolTable();
-					}
-	#endif
-
-					// free compile-time objects before executing code
-					// free parser, compile memory
-					FreeParseReturnValue( prv );
-					FreePassOneReturnValue( p1rv );
-					delete compiler;
-					compiler = NULL;
-					delete semantics;
-					semantics = NULL;
-
-					// by default, write the .dvc file
-					if( !no_dvc )
-						ex->WriteCode( out_fname, code );
+					cout << "AST:" << endl;
+					pANTLR3_STRING s = p1rv.nodes->root->toStringTree( p1rv.nodes->root );
+					ANTLR3_FPRINTF( stdout, "%s\n", (char*)s->chars );
 				}
-			}
-			// otherwise, load the .dvc
-			else
-			{
-				code = ex->ReadCode( out_fname );
-			}
 
-			// done compiling
+				// PASS TWO: compile
+				code = PassTwo( "", p1rv, p2f );
+
+				// debug dumps
 #ifdef DEBUG
-			if( debug_dump )
-			{
-				// dump the constant data pool
-				ex->DumpConstantPool();
-				// dump the function objects
-				ex->DumpFunctions();
-			}
+				if( debug_dump )
+				{
+					// dump the symbol tables...
+					semantics->DumpSymbolTable();
+				}
 #endif
 
-			if( disasm )
-			{
-				ex->Decode( code );
-			}
+				// free compile-time objects before executing code
+				// free parser, compile memory
+				FreeParseReturnValue( prv );
+				FreePassOneReturnValue( p1rv );
+				delete compiler;
+				compiler = NULL;
+				delete semantics;
+				semantics = NULL;
 
-			// execute the code
-			if( !compile_only )
-			{
-				ex->AddNativeModule( "os", GetModuleOsFunction );
-				ex->AddNativeModule( "bit", GetModuleBitFunction );
-				ex->AddNativeModule( "math", GetModuleMathFunction );
-				ex->AddNativeModule( "_re", GetModuleReFunction );
-				ex->Execute( code );
+				// by default, write the .dvc file
+				if( !no_dvc )
+					ex->WriteCode( out_fname, code );
 			}
-			else
-				delete code;
 		}
+		// otherwise, load the .dvc
+		else
+		{
+			code = ex->ReadCode( out_fname );
+		}
+
+		// done compiling
+#ifdef DEBUG
+		if( debug_dump )
+		{
+			// dump the constant data pool
+			ex->DumpConstantPool();
+			// dump the function objects
+			ex->DumpFunctions();
+		}
+#endif
+
+		if( disasm )
+		{
+			ex->Decode( code );
+		}
+
+		// execute the code
+		if( !compile_only )
+		{
+			ex->AddNativeModule( "os", GetModuleOsFunction );
+			ex->AddNativeModule( "bit", GetModuleBitFunction );
+			ex->AddNativeModule( "math", GetModuleMathFunction );
+			ex->AddNativeModule( "_re", GetModuleReFunction );
+			ex->Execute( code );
+		}
+		else
+			delete code;
 	}
 	catch( SemanticException & e )
 	{

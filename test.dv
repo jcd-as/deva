@@ -1,4 +1,5 @@
-print( "foobar!" );
+import math;
+print( math.sin( 90 ) );
 
 #local v = [0,1,2];
 #local v = range( 0, 100 );

@@ -158,7 +158,7 @@ private:
 
 public:
 
-	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( make_pair( string( name ), fcn ) ); }
+	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( make_pair( string( name ), fcn ) ); module_names.insert( string(name) ); }
 
 
 	// constant pool handling methods
