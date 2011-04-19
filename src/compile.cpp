@@ -200,7 +200,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 {
 	// generate def_function/def_method op
 	
-	int32_t i = GetConstant( Object( obj_symbol_name, name ) );
+	int i = GetConstant( Object( obj_symbol_name, name ) );
 	if( i == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%' for function name." ) % name );
 
@@ -214,12 +214,12 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	if( classname )
 	{
 		// get the constant index of this class
-		int32_t i2 = GetConstant( Object( obj_symbol_name, classname ) );
+		int i2 = GetConstant( Object( obj_symbol_name, classname ) );
 		if( i2 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for class name." ) % classname );
 
 		// get the constant index of this module
-		int32_t i3 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		int i3 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
 		if( i3 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
 
@@ -232,7 +232,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	else
 	{
 		// get the constant index of this module
-		int32_t i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		int i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
 		if( i2 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
 
@@ -281,7 +281,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	// add the default arg indices for this (function) scope
 	for( size_t i = 0; i < scope->GetDefaultArgVals().size(); i++ )
 	{
-		int32_t idx = INT_MIN;
+		int idx = INT_MIN;
 		// find the index for this constant
 		Object obj = scope->GetDefaultArgVals().at( i );
 		if( obj.type == obj_string )
@@ -336,7 +336,7 @@ void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 	int num_bases = bases->getChildCount( bases );
 
 	// get the name of the class on the stack
-	int32_t idx = GetConstant( Object( name ) );
+	int idx = GetConstant( Object( name ) );
 	if( idx == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 
@@ -382,7 +382,7 @@ void Compiler::Number( pANTLR3_BASE_TREE node, int line )
 	else
 	{
 		// get the constant pool index for this number
-		int32_t idx = GetConstant( Object( d ) );
+		int idx = GetConstant( Object( d ) );
 		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % d );
 		// emit op to push it onto the stack
@@ -399,7 +399,7 @@ void Compiler::String( char* name, int line )
 	strcpy( s, str.c_str() );
 
 	// get the constant pool index for this string
-	int32_t idx = GetConstant( Object( s ) );
+	int idx = GetConstant( Object( s ) );
 	if( idx == INT_MIN )
 	{
 		delete s;
@@ -428,7 +428,7 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 	if( is_dot_rhs )
 	{
 		// get the constant pool index for this identifier
-		int32_t idx = INT_MIN;
+		int idx = INT_MIN;
 		// try as a string first
 		// ('a.b' is just short-hand for 'a["b"]')
 		idx = GetConstant( Object( s ) );
@@ -474,7 +474,7 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 		if( idx == -1 )
 		{
 			// get the constant pool index for this identifier
-			int32_t i = GetConstant( Object( obj_symbol_name, s ) );
+			int i = GetConstant( Object( obj_symbol_name, s ) );
 			if( i == INT_MIN )
 				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
@@ -614,7 +614,7 @@ void Compiler::LocalVar( char* n, int line, bool lacks_initializer /*= false*/ )
 void Compiler::ExternVar( char* n, bool is_assign, int line )
 {
 	// find the name in the constant pool
-	int32_t idx = GetConstant( Object( obj_symbol_name, n ) );
+	int idx = GetConstant( Object( obj_symbol_name, n ) );
 	// not found? error
 	if( idx == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % n );
@@ -828,7 +828,7 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int li
 		if( idx == -1 )
 		{
 			// look it up in the constant pool
-			int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
+			int i = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
 			if( i == INT_MIN )
 				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
@@ -922,7 +922,7 @@ void Compiler::IncOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 	// no? look it up as a non-local
 	if( idx == -1 )
 	{
-		int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
+		int i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
 		if( i == INT_MIN )
 			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
@@ -1038,7 +1038,7 @@ void Compiler::DecOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 	// no? look it up as a non-local
 	if( idx == -1 )
 	{
-		int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
+		int i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
 		if( i == INT_MIN )
 			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
@@ -1275,7 +1275,7 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node, int line )
 	}
 
 	// find the name in the constant pool
-	int32_t idx = GetConstant( Object( obj_symbol_name, (char*)modname.c_str() ) );
+	int idx = GetConstant( Object( obj_symbol_name, (char*)modname.c_str() ) );
 	// not found? error
 	if( idx == INT_MIN )
 		throw ICE( boost::format( "Symbol '%1%' not found for 'import' instruction." ) % modname );
@@ -1415,7 +1415,7 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container, int line
 	Emit( op_dup1 );
 	
 	// generate the call to 'rewind'
-	int32_t rewind_idx = GetConstant( Object( obj_symbol_name, const_cast<char*>("rewind") ) );
+	int rewind_idx = GetConstant( Object( obj_symbol_name, const_cast<char*>("rewind") ) );
 	// not found? error
 	if( rewind_idx == INT_MIN )
 		throw ICE( "Non-local symbol 'rewind' not found in Compiler::InOp()." );

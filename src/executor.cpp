@@ -3329,6 +3329,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		bp = f->module->code->code;
 		end = bp + f->module->code->len;
 		ip = bp;
+		cur_code = (Code*)f->module->code;
 	}
 	// otherwise this is 'main', set the module to 'main'
 	else
@@ -3340,6 +3341,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		bp = code_blocks[0]->code;
 		end = bp + code_blocks[0]->len;
 		ip = bp;
+		cur_code = (Code*)code_blocks[0];
 	}
 
 	// create a frame for the fcn
@@ -4204,7 +4206,7 @@ void Executor::Decode( const Code* code)
 
 int Executor::PrintOpcode( const Code* code, Opcode op, const byte* b, byte* p )
 {
-	int32_t arg, arg2;
+	int arg, arg2;
 	Object o;
 	int ret = 0;
 

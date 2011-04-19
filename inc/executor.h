@@ -167,19 +167,19 @@ public:
 	// constant pool handling methods
 	inline bool AddGlobalConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
 //	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
-	inline int32_t FindGlobalConstant( const Object & o )
+	inline int FindGlobalConstant( const Object & o )
 	{
 		if( constants_set.count( o ) == 0 ) return INT_MIN;
 		for( size_t i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
-				return -(int32_t)i;
+				return -(int)i;
 		return INT_MIN;
 	}
 	inline Object GetGlobalConstant( int idx ) { int i = idx < 0 ? -idx : idx; return constants.at( i ); }
 	inline Object GetGlobalConstant( Object o ) { return GetGlobalConstant( FindGlobalConstant( o ) ); }
 
 	// TODO: this needs to look up in the current module and globals:
-	inline int32_t FindConstant( const Code* code, const Object & o )
+	inline int FindConstant( const Code* code, const Object & o )
 	{
 		if( constants_set.count( o ) == 0 ) return -1;
 		for( size_t i = 0; i < constants.size(); i++ )
@@ -188,9 +188,9 @@ public:
 		return code->FindConstant( o );
 //		return -1;
 	}
-	inline int32_t FindConstant( const Object & o ) { return FindConstant( cur_code, o ); }
+	inline int FindConstant( const Object & o ) { return FindConstant( cur_code, o ); }
 	// look up a constant in the current module and/or globals:
-	inline Object GetConstant( const Code* code, int32_t idx )
+	inline Object GetConstant( const Code* code, int idx )
 	{
 		if( idx < 0 )
 			return constants.at( -idx );
@@ -198,7 +198,7 @@ public:
 			return code->GetConstant( idx );
 //		return constants.at( idx );
 	}
-	inline Object GetConstant( int32_t idx ) { return GetConstant( cur_code, idx ); }
+	inline Object GetConstant( int idx ) { return GetConstant( cur_code, idx ); }
 	inline Object GetConstant( const Code* code, Object o ) { return GetConstant( FindConstant( code, o ) ); }
 	inline Object GetConstant( Object o ) { return GetConstant( cur_code, o ); }
 	inline size_t NumConstants() { return constants.size(); }

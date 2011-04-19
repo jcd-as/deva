@@ -162,7 +162,7 @@ private:
 	bool InWhileLoop() { return in_while_loop.back() > 0; }
 
 	// find index of constant
-	inline int32_t GetConstant( const Object & o ){ int32_t i = code->FindConstant( o ); if( i == -1 ) return ex->FindGlobalConstant( o ); else return i; }
+	inline int GetConstant( const Object & o ){ int i = code->FindConstant( o ); if( i == -1 ) return ex->FindGlobalConstant( o ); else return i; }
 
 	// label and back-patching helpers
 	inline void AddLabel() { labelstack.push_back( is->Length() ); }

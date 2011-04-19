@@ -76,13 +76,13 @@ public:
 	}
 
 	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
-	inline Object GetConstant( int32_t idx ) const { return constants.at( idx ); }
-	inline int32_t FindConstant( const Object & o ) const
+	inline Object GetConstant( int idx ) const { return constants.at( idx ); }
+	inline int FindConstant( const Object & o ) const
 	{
 		if( constants_set.count( o ) == 0 ) return -1;
 		for( size_t i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
-				return (int32_t)i;
+				return (int)i;
 		return -1;
 	}
 	inline int NumConstants() const { return (int)constants.size(); }

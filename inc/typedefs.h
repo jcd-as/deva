@@ -72,10 +72,10 @@
 
 #include <boost/cstdint.hpp>
 
-typedef uint8_t byte;
-typedef uint16_t word;
-typedef uint32_t dword;
-typedef uint64_t qword;
+typedef boost::uint8_t byte;
+typedef boost::uint16_t word;
+typedef boost::uint32_t dword;
+typedef boost::uint64_t qword;
 
 
 #endif // __TYPEDEFS_H__

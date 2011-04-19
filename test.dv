@@ -1,6 +1,6 @@
 print( "foobar'd!" );
-#import foo;
-#foo.fcn();
+import foo;
+foo.fcn();
 
 #local v = [0,1,2];
 #local v = range( 0, 100 );
