@@ -34,8 +34,17 @@
 namespace deva
 {
 
+
+// global object to track current filename
+//const char* deva::current_file = NULL;
+const char* current_file = NULL;
+
+
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM input_stream )
 {
+	if( !current_file )
+		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
+
 	ParseReturnValue ret;
 	ret.input_stream = input_stream;
 
@@ -109,6 +118,8 @@ ParseReturnValue Parse( const char* input, size_t length )
 
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 {
+	if( !current_file )
+		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
 	pANTLR3_COMMON_TREE_NODE_STREAM nodes;
 	psemantic_walker treePsr;
 
@@ -138,6 +149,8 @@ PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 
 Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags flags )
 {
+	if( !current_file )
+		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
 	pcompile_walker cmpPsr;
 
 	// PASS TWO: compile
@@ -162,6 +175,8 @@ Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fl
 
 PassOneReturnValue Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )
 {
+	if( !current_file )
+		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
 	PassOneReturnValue p1rv = PassOne( prv, p1flags );
 	PassTwo( module_name, p1rv, p2flags );
 	return p1rv;

@@ -57,8 +57,6 @@ using namespace deva_compile;
 /////////////////////////////////////////////////////////////////////////////
 // globals
 /////////////////////////////////////////////////////////////////////////////
-// global object to track current filename
-const char* deva::current_file;
 
 namespace deva
 {
@@ -209,6 +207,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	string out_fname;
 	try
 	{
+		// set the file we're compiling
+		SetCurrentFile( fname.c_str() );
+
 		// if we weren't passed a .dvc file as input, see if we need to compile
 		if( ext == ".dvc" )
 		{

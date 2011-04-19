@@ -19,12 +19,12 @@ valgrind --leak-check=yes $DEVA/deva $1 2> '$$$RESULTS$$$' > /dev/null
 if grep -q "ERROR SUMMARY: 0 errors from 0 contexts" '$$$RESULTS$$$'; then
     echo "test succeeded"
     rm -f '$$$RESULTS$$$'
-	#rm -f *.dvc
+	rm -f *.dvc
     exit
 else
     echo "test failed"
     rm -f '$$$RESULTS$$$'
-	#rm -f *.dvc
+	rm -f *.dvc
     exit -1
 fi
 

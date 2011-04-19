@@ -4036,7 +4036,7 @@ Code* Executor::ReadCode( string filename )
 			throw ICE( "Invalid .dvc file: read Object of invalid type for Constant Pool." );
 			break;
 		}
-		constants.push_back( o );
+		AddConstant( o );
 	}
 
 	// read the function table

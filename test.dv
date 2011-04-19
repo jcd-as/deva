@@ -1,5 +1,7 @@
-import math;
-print( math.sin( 90 ) );
+import foo;
+foo.fcn();
+#import math;
+#print( math.sin( 90 ) );
 
 #local v = [0,1,2];
 #local v = range( 0, 100 );

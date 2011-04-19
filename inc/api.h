@@ -49,6 +49,9 @@
 namespace deva
 {
 
+// global object to track current filename
+extern const char* current_file;
+
 struct ParseReturnValue
 {
 	bool successful;
@@ -81,6 +84,8 @@ struct PassOneReturnValue
 	PassOneReturnValue() : nodes( NULL ), num_constants( 0 ) {}
 };
 
+inline void SetCurrentFile( const char* filename ) { current_file = filename; }
+inline const char* GetCurrentFile() { return current_file; }
 ParseReturnValue Parse( pANTLR3_INPUT_STREAM in );
 ParseReturnValue Parse( const char* module );
 ParseReturnValue Parse( const char* input, size_t length );
