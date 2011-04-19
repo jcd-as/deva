@@ -12,104 +12,6 @@ Function: x, 0 arguments, 0 locals
 Scope: 3
 	vars: undeclared b; undeclared c; 
 Constant data pool:
-<boolean-true>
-<boolean-false>
-<null-value>
-
-__name__
-__class__
-__bases__
-__module__
-new
-delete
-self
-rewind
-next
-print
-str
-chr
-append
-length
-copy
-name
-type
-exit
-num
-range
-eval
-open
-close
-flush
-read
-readstring
-readline
-readlines
-write
-writestring
-writeline
-writelines
-seek
-tell
-stdin
-stdout
-stderr
-format
-join
-error
-seterror
-geterror
-importmodule
-is_null
-is_boolean
-is_number
-is_string
-is_vector
-is_map
-is_function
-is_native_function
-is_class
-is_instance
-is_native_obj
-is_size
-is_symbol_name
-vector_of
-concat
-insert
-remove
-find
-rfind
-reverse
-sort
-slice
-strip
-lstrip
-rstrip
-split
-replace
-upper
-lower
-isalphanum
-isalpha
-isdigit
-islower
-isupper
-isspace
-ispunct
-iscntrl
-isprint
-isxdigit
-min
-max
-pop
-count
-map
-filter
-reduce
-any
-all
-keys
-values
-merge
 0
 b
 c
@@ -138,11 +40,11 @@ Instructions:
    8: enter		 
 4
    9: pushlocal0		 
-  10: pushconst		99 (b)
+  10: pushconst		1 (b)
   15: tbl_load	
-  16: pushconst		100 (c)
+  16: pushconst		2 (c)
   21: tbl_load	
-  22: pushconst		101 (d)
+  22: pushconst		3 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
@@ -150,21 +52,21 @@ Instructions:
   35: jmp		2
 7
   40: pushlocal0		 
-  41: pushconst		99 (b)
+  41: pushconst		1 (b)
   46: tbl_load	
-  47: pushconst		100 (c)
+  47: pushconst		2 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
 9
-  59: def_function	3 106 ( # x), 77
+  59: def_function	-3 8 ( # x), 77
   72: jmp		108
   77: enter		 
 11
-  78: pushconst		102 (a)
-  83: pushconst		99 (b)
+  78: pushconst		4 (a)
+  83: pushconst		1 (b)
   88: tbl_load	
-  89: pushconst		100 (c)
+  89: pushconst		2 (c)
   94: method_load	
   95: call_method		0
  100: pop		 

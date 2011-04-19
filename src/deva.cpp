@@ -298,7 +298,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		if( debug_dump )
 		{
 			// dump the constant data pool
-			ex->DumpConstantPool();
+			ex->DumpConstantPool( code );
 			// dump the function objects
 			ex->DumpFunctions();
 		}

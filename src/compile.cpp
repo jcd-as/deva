@@ -67,12 +67,14 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	// create the instruction stream
 	is = new InstructionStream();
 
-	// and the line map (note that ownership of the line map is passed out when
+	// and the Code object, including
+	// the line map (note that ownership of the line map is passed out when
 	// a Code object is created from this compiler module, so it is not deleted
 	// here, but in the Code destructor)
-	lines = new LineMap();
+	code = new Code();
+	code->lines = new LineMap();
 
-	// copy the global names and consts from the Semantics pass/object to the executor
+	// copy the consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
 	// constants
 	for( set<Object>::iterator i = sem->constants.begin(); i != sem->constants.end(); ++i )
@@ -87,7 +89,8 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 			strcpy( s, str.c_str() );
 			// try to add the string constant, if we aren't allowed to (because
 			// it's a duplicate), free the string
-			if( !ex->AddConstant( Object( s ) ) )
+//			if( !ex->AddConstant( Object( s ) ) )
+			if( !code->AddConstant( Object( s ) ) )
 				delete [] s;
 		}
 		else if( i->type == obj_symbol_name )
@@ -99,11 +102,13 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 			strcpy( s, str.c_str() );
 			// try to add the symbol name, if we aren't allowed to (because
 			// it's a duplicate), free the string
-			if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
+//			if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
+			if( !code->AddConstant( Object( obj_symbol_name, s ) ) )
 				delete [] s;
 		}
 		else
-			ex->AddConstant( *i );
+//			ex->AddConstant( *i );
+			code->AddConstant( *i );
 	}
 
 	// copy the module names to the executor
@@ -195,8 +200,8 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 {
 	// generate def_function/def_method op
 	
-	int i = GetConstant( Object( obj_symbol_name, name ) );
-	if( i == -1 )
+	int32_t i = GetConstant( Object( obj_symbol_name, name ) );
+	if( i == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%' for function name." ) % name );
 
 	string mod;
@@ -209,13 +214,13 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	if( classname )
 	{
 		// get the constant index of this class
-		int i2 = GetConstant( Object( obj_symbol_name, classname ) );
-		if( i2 == -1 )
+		int32_t i2 = GetConstant( Object( obj_symbol_name, classname ) );
+		if( i2 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for class name." ) % classname );
 
 		// get the constant index of this module
-		int i3 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
-		if( i3 == -1 )
+		int32_t i3 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		if( i3 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
 
 		// add the size of 'op_def_method <Op0> <Op1> <Op2> <Op3>' and 'jmp <Op0>'
@@ -227,8 +232,8 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	else
 	{
 		// get the constant index of this module
-		int i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
-		if( i2 == -1 )
+		int32_t i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+		if( i2 == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
 
 		// get the constant index of this function
@@ -276,7 +281,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	// add the default arg indices for this (function) scope
 	for( size_t i = 0; i < scope->GetDefaultArgVals().size(); i++ )
 	{
-		int idx = -1;
+		int32_t idx = INT_MIN;
 		// find the index for this constant
 		Object obj = scope->GetDefaultArgVals().at( i );
 		if( obj.type == obj_string )
@@ -291,7 +296,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 		}
 		else
 			idx = GetConstant( obj );
-		if( idx == -1 )
+		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % obj );
 		fcn->default_args.push_back( idx );
 	}
@@ -331,8 +336,8 @@ void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
 	int num_bases = bases->getChildCount( bases );
 
 	// get the name of the class on the stack
-	int idx = GetConstant( Object( name ) );
-	if( idx < 0 )
+	int32_t idx = GetConstant( Object( name ) );
+	if( idx == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
 
 	// emit the new_class op
@@ -377,8 +382,8 @@ void Compiler::Number( pANTLR3_BASE_TREE node, int line )
 	else
 	{
 		// get the constant pool index for this number
-		int idx = GetConstant( Object( d ) );
-		if( idx < 0 )
+		int32_t idx = GetConstant( Object( d ) );
+		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % d );
 		// emit op to push it onto the stack
 		Emit( op_pushconst, (dword)idx );
@@ -394,8 +399,8 @@ void Compiler::String( char* name, int line )
 	strcpy( s, str.c_str() );
 
 	// get the constant pool index for this string
-	int idx = GetConstant( Object( s ) );
-	if( idx < 0 )
+	int32_t idx = GetConstant( Object( s ) );
+	if( idx == INT_MIN )
 	{
 		delete s;
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
@@ -423,14 +428,14 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 	if( is_dot_rhs )
 	{
 		// get the constant pool index for this identifier
-		int idx = -1;
+		int32_t idx = INT_MIN;
 		// try as a string first
 		// ('a.b' is just short-hand for 'a["b"]')
 		idx = GetConstant( Object( s ) );
 		// then try as a symbol name (for builtins)
-		if( idx == -1 )
+		if( idx == INT_MIN )
 			idx = GetConstant( Object( obj_symbol_name, s ) );
-		if( idx == -1 )
+		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
 		Emit( op_pushconst, (dword)idx );
@@ -469,11 +474,11 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 		if( idx == -1 )
 		{
 			// get the constant pool index for this identifier
-			idx = GetConstant( Object( obj_symbol_name, s ) );
-			if( idx < 0 )
+			int32_t i = GetConstant( Object( obj_symbol_name, s ) );
+			if( i == INT_MIN )
 				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
-			Emit( op_pushconst, (dword)idx );
+			Emit( op_pushconst, (dword)i );
 		}
 		// local
 		else
@@ -609,9 +614,9 @@ void Compiler::LocalVar( char* n, int line, bool lacks_initializer /*= false*/ )
 void Compiler::ExternVar( char* n, bool is_assign, int line )
 {
 	// find the name in the constant pool
-	int idx = GetConstant( Object( obj_symbol_name, n ) );
+	int32_t idx = GetConstant( Object( obj_symbol_name, n ) );
 	// not found? error
-	if( idx == -1 )
+	if( idx == INT_MIN )
 		throw ICE( boost::format( "Cannot find constant '%1%'." ) % n );
 
 	// if this is an assignment, generate a store op
@@ -647,12 +652,12 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign, int li
 		// no? look it up as a non-local
 		if( idx == -1 )
 		{
-			idx = GetConstant( Object( obj_symbol_name, lhs ) );
+			int i = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
-			if( idx == -1 )
+			if( i == INT_MIN )
 				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
-			Emit( op_storeconst, (dword)idx );
+			Emit( op_storeconst, (dword)i );
 		}
 		else
 		{
@@ -823,27 +828,27 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int li
 		if( idx == -1 )
 		{
 			// look it up in the constant pool
-			int idx = GetConstant( Object( obj_symbol_name, lhs ) );
+			int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
-			if( idx == -1 )
+			if( i == INT_MIN )
 				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
 			switch( op )
 			{
 			case op_add:
-				Emit( op_add_assign, (dword)idx );
+				Emit( op_add_assign, (dword)i );
 				break;
 			case op_sub:
-				Emit( op_sub_assign, (dword)idx );
+				Emit( op_sub_assign, (dword)i );
 				break;
 			case op_mul:
-				Emit( op_mul_assign, (dword)idx );
+				Emit( op_mul_assign, (dword)i );
 				break;
 			case op_div:
-				Emit( op_div_assign, (dword)idx );
+				Emit( op_div_assign, (dword)i );
 				break;
 			case op_mod:
-				Emit( op_mod_assign, (dword)idx );
+				Emit( op_mod_assign, (dword)i );
 				break;
 			default:
 				throw ICE( "Unknown augmented assign operator." );
@@ -917,16 +922,16 @@ void Compiler::IncOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 	// no? look it up as a non-local
 	if( idx == -1 )
 	{
-		idx = GetConstant( Object( obj_symbol_name, lhs ) );
+		int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
-		if( idx == -1 )
+		if( i == INT_MIN )
 			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
-		Emit( op_pushconst, (dword)idx );
+		Emit( op_pushconst, (dword)i );
 		Emit( op_inc );
-		Emit( op_storeconst, (dword)idx );
+		Emit( op_storeconst, (dword)i );
 		if( is_expression )
-			Emit( op_pushconst, (dword)idx );
+			Emit( op_pushconst, (dword)i );
 	}
 	else
 	{
@@ -1033,16 +1038,16 @@ void Compiler::DecOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 	// no? look it up as a non-local
 	if( idx == -1 )
 	{
-		idx = GetConstant( Object( obj_symbol_name, lhs ) );
+		int32_t i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
-		if( idx == -1 )
+		if( i == INT_MIN )
 			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
 
-		Emit( op_pushconst, (dword)idx );
+		Emit( op_pushconst, (dword)i );
 		Emit( op_dec );
-		Emit( op_storeconst, (dword)idx );
+		Emit( op_storeconst, (dword)i );
 		if( is_expression )
-			Emit( op_pushconst, (dword)idx );
+			Emit( op_pushconst, (dword)i );
 	}
 	else
 	{
@@ -1270,9 +1275,9 @@ void Compiler::ImportOp( pANTLR3_BASE_TREE node, int line )
 	}
 
 	// find the name in the constant pool
-	int idx = GetConstant( Object( obj_symbol_name, (char*)modname.c_str() ) );
+	int32_t idx = GetConstant( Object( obj_symbol_name, (char*)modname.c_str() ) );
 	// not found? error
-	if( idx == -1 )
+	if( idx == INT_MIN )
 		throw ICE( boost::format( "Symbol '%1%' not found for 'import' instruction." ) % modname );
 	EmitLineNum( line );
 	Emit( op_import, (dword)idx );
@@ -1410,9 +1415,9 @@ void Compiler::InOp( char* key, char* val, pANTLR3_BASE_TREE container, int line
 	Emit( op_dup1 );
 	
 	// generate the call to 'rewind'
-	int rewind_idx = GetConstant( Object( obj_symbol_name, const_cast<char*>("rewind") ) );
+	int32_t rewind_idx = GetConstant( Object( obj_symbol_name, const_cast<char*>("rewind") ) );
 	// not found? error
-	if( rewind_idx == -1 )
+	if( rewind_idx == INT_MIN )
 		throw ICE( "Non-local symbol 'rewind' not found in Compiler::InOp()." );
 	Emit( op_pushconst, (dword)rewind_idx );
 	Emit( op_method_load );

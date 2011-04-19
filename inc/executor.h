@@ -48,6 +48,7 @@
 
 #include <vector>
 #include <set>
+#include <climits>
 
 using namespace std;
 
@@ -69,6 +70,8 @@ class Executor
 	// static bool for singleton functionality
 	static bool instantiated;
 
+	// current code block
+	Code* cur_code;
 	// current instruction pointer (current code)
 	byte* ip;
 	// current base pointer (module base)
@@ -162,16 +165,42 @@ public:
 
 
 	// constant pool handling methods
-	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
-	inline int FindConstant( const Object & o )
+	inline bool AddGlobalConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
+//	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
+	inline int32_t FindGlobalConstant( const Object & o )
+	{
+		if( constants_set.count( o ) == 0 ) return INT_MIN;
+		for( size_t i = 0; i < constants.size(); i++ )
+			if( o == constants.at( i ) )
+				return -(int32_t)i;
+		return INT_MIN;
+	}
+	inline Object GetGlobalConstant( int idx ) { int i = idx < 0 ? -idx : idx; return constants.at( i ); }
+	inline Object GetGlobalConstant( Object o ) { return GetGlobalConstant( FindGlobalConstant( o ) ); }
+
+	// TODO: this needs to look up in the current module and globals:
+	inline int32_t FindConstant( const Code* code, const Object & o )
 	{
 		if( constants_set.count( o ) == 0 ) return -1;
 		for( size_t i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
 				return (int)i;
-		return -1;
+		return code->FindConstant( o );
+//		return -1;
 	}
-	inline Object GetConstant( int idx ) { return constants.at( idx ); }
+	inline int32_t FindConstant( const Object & o ) { return FindConstant( cur_code, o ); }
+	// look up a constant in the current module and/or globals:
+	inline Object GetConstant( const Code* code, int32_t idx )
+	{
+		if( idx < 0 )
+			return constants.at( -idx );
+		else
+			return code->GetConstant( idx );
+//		return constants.at( idx );
+	}
+	inline Object GetConstant( int32_t idx ) { return GetConstant( cur_code, idx ); }
+	inline Object GetConstant( const Code* code, Object o ) { return GetConstant( FindConstant( code, o ) ); }
+	inline Object GetConstant( Object o ) { return GetConstant( cur_code, o ); }
 	inline size_t NumConstants() { return constants.size(); }
 
 	// module/namespace handling methods
@@ -206,7 +235,7 @@ private:
 
 	bool ImportBuiltinModule( const char* module_name );
 	// helper to fixup the constants in compiled code (imported dvc file)
-	void FixupConstants();
+//	void FixupConstants();
 	// helper fcn to find a loaded module (namespace)
 	vector< pair<string, ScopeTable*> >::iterator FindNamespace( string mod );
 	// helper fcn for ImportModule:
@@ -219,18 +248,17 @@ public:
 
 	// get the code block corresponding to a particular address
 	Code* GetCode( byte* address );
-	// get the currently executing Code block
-	Code* GetCurrentCode();
 
 	// debug and output methods:
 	// decode and print an opcode/instruction stream
 protected:
-	int PrintOpcode( Opcode op, const byte* base, byte* ip );
+	int PrintOpcode( const Code*, Opcode op, const byte* base, byte* ip );
+	inline int PrintOpcode( Opcode op, const byte* base, byte* ip ) { return PrintOpcode( cur_code, op, base, ip ); }
 public:
 	void Decode( const Code* code );
 
 	void DumpFunctions();
-	void DumpConstantPool();
+	void DumpConstantPool( const Code* code );
 	void DumpStackTop();
 	void DumpTrace( ostream & os );
 

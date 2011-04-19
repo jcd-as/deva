@@ -31,37 +31,7 @@
 #ifndef __OPCODES_H__
 #define __OPCODES_H__
 
-// MS VC++ prior to 2010 doesn't have stdint.h
-#ifndef _MSC_VER
-#include <stdint.h>
-#else
-#if _MSV_VER > 1500
-#include <stdint.h>
-#endif 
-#endif // not _MSC_VER
-
-//typedef unsigned char byte;
-//typedef unsigned short word;
-//typedef unsigned int dword;
-
-// visual c++ / ms-windows equivalents for versions prior to VC 2010
-#ifdef _MSC_VER
-#if _MSV_VER < 1600
-typedef signed __int8     int8_t;
-typedef signed __int16    int16_t;
-typedef signed __int32    int32_t;
-typedef unsigned __int8   uint8_t;
-typedef unsigned __int16  uint16_t;
-typedef unsigned __int32  uint32_t;
-typedef signed __int64       int64_t;
-typedef unsigned __int64     uint64_t;
-#endif
-#endif // _MSC_VER
-
-typedef uint8_t byte;
-typedef uint16_t word;
-typedef uint32_t dword;
-typedef uint64_t qword;
+#include "typedefs.h"
 
 
 namespace deva

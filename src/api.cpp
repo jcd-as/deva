@@ -170,7 +170,8 @@ Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fl
 	// free items
 	cmpPsr->free( cmpPsr );      
 
-	return compiler->GetCode( p1rv.num_constants );
+//	return compiler->GetCode( p1rv.num_constants );
+	return compiler->GetCode();
 }
 
 PassOneReturnValue Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )

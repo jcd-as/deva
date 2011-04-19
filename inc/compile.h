@@ -111,6 +111,9 @@ private:
 class Compiler
 {
 private:
+	// code module object for this compile session
+	Code* code;
+
 	// compile with debug (line number) statements?
 	bool emit_debug_info;
 
@@ -128,9 +131,6 @@ private:
 	// name of the module we're compiling
 	const char* module_name;
 
-	// line number mapping (address-to-linenum)
-	LineMap* lines;
-
 public:
 	int num_locals;	// number of locals in the current scope
 
@@ -146,9 +146,6 @@ public:
 	// dot op
 	bool is_dot_rhs;
 
-	// in a 'for' loop?
-	//int in_for_loop;
-	
 	// are we in a loop? 
 	// vector of 'in-loop' counters, one for each function scope
 	// if the back item is non-zero then we are inside a loop construct
@@ -165,7 +162,7 @@ private:
 	bool InWhileLoop() { return in_while_loop.back() > 0; }
 
 	// find index of constant
-	int GetConstant( const Object & o ) { return ex->FindConstant( o ); }
+	inline int32_t GetConstant( const Object & o ){ int32_t i = code->FindConstant( o ); if( i == -1 ) return ex->FindGlobalConstant( o ); else return i; }
 
 	// label and back-patching helpers
 	inline void AddLabel() { labelstack.push_back( is->Length() ); }
@@ -177,7 +174,8 @@ private:
 	void CleanupEndLoop();
 
 public:
-	// public functions
+	/////////////////////////////////////////////////////////////////////////
+	// functions for public consumption
 	/////////////////////////////////////////////////////////////////////////
 	Compiler( const char* mod_name, Semantics* sem );
 	~Compiler() { delete is; }
@@ -185,8 +183,13 @@ public:
 	// get the Code block object for this compiled module. this is the
 	// end-of-life for the Compiler object, it's raison d'etre. once this is
 	// called, the compiler object should not be used again
-	Code* GetCode( size_t num_constants ) { return new Code( (byte*)is->Bytes(), is->Length(), num_constants, lines ); }
+//	Code* GetCode() { return new Code( (byte*)is->Bytes(), is->Length(), num_constants, lines ); }
+	Code* GetCode() { code->code = (byte*)is->Bytes(); code->len = is->Length(); return code; }
 
+
+	/////////////////////////////////////////////////////////////////////////
+	// functions for consumption by the ANTLR compile-walker tree parser only
+	/////////////////////////////////////////////////////////////////////////
 	inline void Emit( Opcode o ){ is->Append( (byte)o ); }
 	inline void Emit( Opcode o, dword op ){ is->Append( (byte)o ); is->Append( op ); }
 	inline void Emit( Opcode o, dword op1, dword op2 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); }
@@ -194,7 +197,7 @@ public:
 	inline void Emit( Opcode o, dword op1, dword op2, dword op3, dword op4 ){ is->Append( (byte)o ); is->Append( op1 ); is->Append( op2 ); is->Append( op3 ); is->Append( op4 ); }
 
 	// generate a line number
-	inline void EmitLineNum( int line ) { if( emit_debug_info ) lines->Add( line, (dword)is->Length() ); }
+	inline void EmitLineNum( int line ) { if( emit_debug_info ) code->lines->Add( line, (dword)is->Length() ); }
 
 	// mostly for debugging purposes
 	void Decode();

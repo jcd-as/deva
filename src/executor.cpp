@@ -65,7 +65,7 @@ const Object constant_symbols[] =
 	Object( obj_symbol_name, copystr( "next" ) )
 };
 const int num_of_constant_symbols = sizeof( constant_symbols ) / sizeof( Object );
-static dword total_global_constants = num_of_constant_symbols;
+//static dword total_global_constants = num_of_constant_symbols;
 
 /////////////////////////////////////////////////////////////////////////////
 // executive/VM functions and globals
@@ -78,6 +78,7 @@ Executor* ex = NULL;
 bool Executor::instantiated = false;
 
 Executor::Executor() : 
+	cur_code( NULL ),
 	ip( NULL ), 
 	bp( NULL ), 
 	end( NULL ), 
@@ -97,44 +98,44 @@ Executor::Executor() :
 	// add names that always exist
 	for( int i = 0; i < num_of_constant_symbols; i++ )
 	{
-		AddConstant( constant_symbols[i] );
+		AddGlobalConstant( constant_symbols[i] );
 	}
 	// add the builtins, string builtins, vector builtins and map builtins to the constant pool
 	// builtins
 	for( int i = 0; i < num_of_builtins; i++ )
 	{
 		char* s = copystr( builtin_names[i].c_str() );
-		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-		else
-			total_global_constants++;
+//		else
+//			total_global_constants++;
 	}
 	// string builtins
 	for( int i = 0; i < num_of_string_builtins; i++ )
 	{
 		char* s = copystr( string_builtin_names[i].c_str() );
-		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-		else
-			total_global_constants++;
+//		else
+//			total_global_constants++;
 	}
 	// vector builtins
 	for( int i = 0; i < num_of_vector_builtins; i++ )
 	{
 		char* s = copystr( vector_builtin_names[i].c_str() );
-		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-		else
-			total_global_constants++;
+//		else
+//			total_global_constants++;
 	}
 	// map builtins
 	for( int i = 0; i < num_of_map_builtins; i++ )
 	{
 		char* s = copystr( map_builtin_names[i].c_str() );
-		if( !AddConstant( Object( obj_symbol_name, s ) ) )
+		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-		else
-			total_global_constants++;
+//		else
+//			total_global_constants++;
 	}
 }
 
@@ -377,6 +378,7 @@ void Executor::ExecuteCode( const Code* const code )
 	Opcode op = op_nop;
 
 	// set the ip, bp and end 
+	cur_code = (Code*)code;
 	end = code->code + code->len;
 	bp = code->code;
 	ip = bp;
@@ -399,9 +401,10 @@ Object Executor::ExecuteText( const char* const text )
 	count++;
 	string name = s.str();
 	// add the 'text module' name to the list of constants 
-	AddConstant( Object( obj_symbol_name, copystr( name ) ) );
+	cur_code->AddConstant( Object( obj_symbol_name, copystr( name ) ) );
 	const Code* code = LoadText( text, name.c_str() );
 
+	Code* orig_code = cur_code;
 	byte* orig_ip = ip;
 	byte* orig_bp = bp;
 	byte* orig_end = end;
@@ -432,12 +435,14 @@ Object Executor::ExecuteText( const char* const text )
 	PopScope();
 	PopFrame();
 
+	cur_code = orig_code;
 	ip = orig_ip;
 	bp = orig_bp;
 	end = orig_end;
 
-	int idx = FindConstant( Object( obj_symbol_name, name.c_str() ) );
-	Object ret = GetConstant( idx );
+//	int idx = FindConstant( Object( obj_symbol_name, name.c_str() ) );
+//	Object ret = GetConstant( idx );
+	Object ret = GetConstant( Object( obj_symbol_name, name.c_str() ) );
 	return ret;
 }
 
@@ -515,6 +520,7 @@ Opcode Executor::ExecuteInstruction()
 	case op_push_one:
 		stack.push_back( Object( 1.0 ) );
 		break;
+	// TODO: push0, 1, 2, 3 ops are pretty useless. remove them?
 	case op_push0:
 		stack.push_back( GetConstant( 0 ) );
 		break;
@@ -974,7 +980,8 @@ Opcode Executor::ExecuteInstruction()
 		// set its name
 		Object name = stack.back();
 		stack.pop_back();
-		Object _name = GetConstant( FindConstant( Object( obj_symbol_name, "__name__" ) ) );
+//		Object _name = GetConstant( FindConstant( Object( obj_symbol_name, "__name__" ) ) );
+		Object _name = GetConstant( Object( obj_symbol_name, "__name__" ) );
 		m.m->insert( pair<Object, Object>( _name, name ) );
 		// build the bases list
 		Vector* v = CreateVector();
@@ -1017,7 +1024,8 @@ Opcode Executor::ExecuteInstruction()
 		}
 		Object basesObj( v );
 		IncRef( basesObj );
-		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
+//		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
+		Object _bases = GetConstant( Object( obj_symbol_name, "__bases__" ) );
 		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
 
 		// add all of the methods for this class
@@ -1026,10 +1034,11 @@ Opcode Executor::ExecuteInstruction()
 			Function* f = i->second->f;
 			if( f->classname == name.s )
 			{
-				int idx = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
-				if( idx == -1 )
-					throw ICE( "Function name not found in constants pool." );
-				Object fcnname = GetConstant( idx );
+//				int idx = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
+//				if( idx == -1 )
+//					throw ICE( "Function name not found in constants pool." );
+//				Object fcnname = GetConstant( idx );
+				Object fcnname = GetConstant( Object( obj_symbol_name, f->name.c_str() ) );
 				m.m->insert( pair<Object, Object>( fcnname, Object( f ) ) );
 			}
 		}
@@ -1635,7 +1644,8 @@ Opcode Executor::ExecuteInstruction()
 			Map* inst = CreateMap( *callable.m );
 
 			// - add the __class__ member to it
-			Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
+//			Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
+			Object _class = GetConstant( Object( obj_symbol_name, "__class__" ) );
 			Map::iterator i = callable.m->find( Object( obj_symbol_name, "__name__" ) );
 			if( i == callable.m->end() )
 				throw ICE( "Unable to find '__name__' member in class object." );
@@ -3304,6 +3314,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 
 	// if this is a module, push the module scope and frame
 	// and set the ip, bp, end ptrs
+	Code* orig_code;
 	byte *orig_ip, *orig_bp, *orig_end;
 	if( f->InModule() )
 	{
@@ -3311,6 +3322,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		// assert( f->module != NULL );
 		PushFrame( f->module->frame );
 		PushScope( f->module->scope );
+		orig_code = cur_code;
 		orig_end = end;
 		orig_bp = bp;
 		orig_ip = ip;
@@ -3321,6 +3333,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	// otherwise this is 'main', set the module to 'main'
 	else
 	{
+		orig_code = cur_code;
 		orig_end = end;
 		orig_bp = bp;
 		orig_ip = ip;
@@ -3405,6 +3418,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		PopFrame();
 	}
 	// restore the ip, bp, end ptrs
+	cur_code = orig_code;
 	end = orig_end;
 	bp = orig_bp;
 	ip = orig_ip;
@@ -3618,6 +3632,11 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 	ParseReturnValue prv;
 	PassOneReturnValue p1rv;
 
+	// add the constant for this module name
+	char* str = copystr( module_name );
+	if( !AddGlobalConstant( Object( obj_symbol_name, str ) ) )
+		delete[] str;
+
 	// NOTE: compiler and semantics global objects should be free'd and NULL at
 	// this point!
 
@@ -3661,41 +3680,41 @@ Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f
 	return mod;
 }
 
-void Executor::FixupConstants()
-{
-	// delta to adjust constant indices is the number of constants defined in
-	// the main module
-	size_t delta = (ex->constants.size() - num_of_constant_symbols);
-
-	// find each 'pushconst' or 'storeconst' instruction and fixup its argument
-	Opcode op = op_nop;
-
-	dword arg;
-
-	// save the ip
-	byte* orig_ip = ip;
-
-	// execute until end
-	while( ip < end && op < op_halt )
-	{
-		//op = ExecuteInstruction();
-		// decode opcode
-		Opcode op = (Opcode)*ip;
-
-		if( op == op_pushconst || op == op_storeconst )
-		{
-			// fixup the arg
-			arg = *((dword*)ip);
-			arg += delta;
-			*((dword*)ip) = arg;
-		}
-		// next instruction
-		SkipInstruction();
-	}
-
-	// reset the ip
-	ip = orig_ip;
-}
+//void Executor::FixupConstants()
+//{
+//	// delta to adjust constant indices is the number of constants defined in
+//	// the main module
+//	size_t delta = (ex->constants.size() - num_of_constant_symbols);
+//
+//	// find each 'pushconst' or 'storeconst' instruction and fixup its argument
+//	Opcode op = op_nop;
+//
+//	dword arg;
+//
+//	// save the ip
+//	byte* orig_ip = ip;
+//
+//	// execute until end
+//	while( ip < end && op < op_halt )
+//	{
+//		//op = ExecuteInstruction();
+//		// decode opcode
+//		Opcode op = (Opcode)*ip;
+//
+//		if( op == op_pushconst || op == op_storeconst )
+//		{
+//			// fixup the arg
+//			arg = *((dword*)ip);
+//			arg += delta;
+//			*((dword*)ip) = arg;
+//		}
+//		// next instruction
+//		SkipInstruction();
+//	}
+//
+//	// reset the ip
+//	ip = orig_ip;
+//}
 
 Object Executor::ImportModule( const char* module_name )
 {
@@ -3716,6 +3735,7 @@ Object Executor::ImportModule( const char* module_name )
 	string dvfile( path + ".dv" );
 	string dvcfile( path + ".dvc" );
 	// save the ip, bp and end ptrs
+	Code* orig_code = cur_code;
 	byte* orig_ip = ip;
 	byte* orig_bp = bp;
 	byte* orig_end = end;
@@ -3731,11 +3751,6 @@ Object Executor::ImportModule( const char* module_name )
 	if( !code )
 		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
 
-	// TODO: fixup the indices of constants in the code stream of imported .dvc
-	// files
-//	if( dvc )
-//		FixupConstants( code );
-
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"
 //	Object *mod_main = FindFunction( mod + "@main", 0 );
@@ -3748,8 +3763,6 @@ Object Executor::ImportModule( const char* module_name )
 
 //	// compile the file, if needed
 //	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
-//	// and then run the file
-//	RunFile( dvcfile.c_str() );
 
 	// currently importing 'mod', set the flag
 	Module* prev_mod = s_currently_importing_module;
@@ -3771,12 +3784,16 @@ Object Executor::ImportModule( const char* module_name )
 	PopFrame();
 	
 	// restore the ip, bp and end ptrs
+	cur_code = orig_code;
 	ip = orig_ip;
 	bp = orig_bp;
 	end = orig_end;
 
-	int idx = FindConstant( Object( obj_symbol_name, mod.c_str() ) );
-	Object ret = GetConstant( idx );
+//	int idx = FindConstant( Object( obj_symbol_name, mod.c_str() ) );
+//	Object ret = GetConstant( idx );
+//	Object ret = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+	// module names are entered into the global constants
+	Object ret = GetGlobalConstant( Object( obj_symbol_name, mod.c_str() ) );
 	return ret;
 }
 
@@ -3789,12 +3806,6 @@ Code* Executor::GetCode( byte* address )
 			return (Code*)*i;
 	}
 	return NULL;
-}
-
-// get the currently executing Code block
-Code* Executor::GetCurrentCode()
-{
-	return GetCode( bp );
 }
 
 // .dv file writing
@@ -3827,15 +3838,14 @@ void Executor::WriteCode( string filename, const Code* const code )
 	// padding to byte boundary
 	file << '\0';
 	// section header is followed by dword containing the number of const objects
-//	dword num_consts = (dword)(constants.size() - num_of_constant_symbols - num_of_builtins - num_of_string_builtins - num_of_vector_builtins - num_of_map_builtins);
-	dword num_consts = (dword)(constants.size() - total_global_constants);
+	dword num_consts = code->NumConstants();
 	file.write( (char*)&num_consts, sizeof( dword ) );
 	// constant data itself is an array of DevaObject structs:
 	// byte : object type. only number and string are allowed
 	// qword (number) OR 'len+1' bytes (string) : number or null-terminated string
-	for( size_t i = total_global_constants; i < constants.size(); i++ )
+	for( int i = 0; i < code->NumConstants(); i++ )
 	{
-		Object o( constants[i] );
+		Object o = code->GetConstant( i );
 		qword qw = 0;
 		file << (byte)(o.type);
 		switch( o.type )
@@ -4013,7 +4023,11 @@ Code* Executor::ReadCode( string filename )
 		switch( type )
 		{
 		case obj_number:
-			file.read( (char*)&o.d, sizeof( qword ) );
+			{
+			qword qw = 0;
+			file.read( (char*)&qw, sizeof( qword ) );
+			o.d = (double)qw;
+			}
 			break;
 		case obj_string:
 			{
@@ -4036,7 +4050,7 @@ Code* Executor::ReadCode( string filename )
 			throw ICE( "Invalid .dvc file: read Object of invalid type for Constant Pool." );
 			break;
 		}
-		AddConstant( o );
+		code->AddConstant( o );
 	}
 
 	// read the function table
@@ -4151,7 +4165,7 @@ Code* Executor::ReadCode( string filename )
 	// allocate memory for the byte code array
 	code->code = new byte[bc_length];
 	code->len = bc_length;
-	code->num_constants = num_consts;
+//	code->num_constants = num_consts;
 
 	// read the file into the byte code array
 	file.read( (char*)(code->code), bc_length );
@@ -4183,14 +4197,14 @@ void Executor::Decode( const Code* code)
 
 		// decode opcode
 		op = (Opcode)*p;
-		p += PrintOpcode( op, b, p );
+		p += PrintOpcode( code, op, b, p );
 		cout << endl;
 	}
 }
 
-int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
+int Executor::PrintOpcode( const Code* code, Opcode op, const byte* b, byte* p )
 {
-	dword arg, arg2;
+	int32_t arg, arg2;
 	Object o;
 	int ret = 0;
 
@@ -4242,7 +4256,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg: index to constant
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4250,7 +4264,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4258,7 +4272,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4266,7 +4280,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4274,7 +4288,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4319,11 +4333,11 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 3 args: constant index of name, const idx of module name, fcn address
 		// look-up the module name constant
 		arg = *((dword*)(p + sizeof( dword )));
-		o = GetConstant( arg );
+		o = GetConstant( code, arg );
 
 		// look-up the module name constant
 		arg2= *((dword*)p);
-		Object o2 = GetConstant( arg2 );
+		Object o2 = GetConstant( code, arg2 );
 
 		// address
 		dword arg3= *((dword*)(p + (2 * sizeof( dword ))));
@@ -4338,15 +4352,15 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 4 args: constant index of function name, constant index of class name, const idx of module name, fcn address
 		// look-up the module name constant
 		arg = *((dword*)( p + (2 * sizeof( dword ))));
-		o = GetConstant( arg );
+		o = GetConstant( code, arg );
 
 		// look-up the function name constant
 		arg2 = *((dword*)p);
-		Object o2 = GetConstant( arg2 );
+		Object o2 = GetConstant( code, arg2 );
 
 		// look-up the class name constant
 		dword arg3 = *((dword*)( p + sizeof( dword ) ) );
-		Object o3 = GetConstant( arg3 );
+		Object o3 = GetConstant( code, arg3 );
 
 		// address
 		dword arg4 = *((dword*)( p + (3 * sizeof( dword ))));
@@ -4414,7 +4428,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg: lhs
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4503,7 +4517,7 @@ int Executor::PrintOpcode( Opcode op, const byte* b, byte* p )
 		// 1 arg:
 		arg = *((dword*)p);
 		// look-up the constant
-		o = GetConstant(arg);
+		o = GetConstant( code, arg );
 		cout << "\t" << arg << " (" << o << ")";
 		ret = sizeof( dword );
 		break;
@@ -4536,12 +4550,12 @@ void Executor::DumpFunctions()
 	}
 }
 
-void Executor::DumpConstantPool()
+void Executor::DumpConstantPool( const Code* code )
 {
 	cout << "Constant data pool:" << endl;
-	for( size_t i = 0; i < NumConstants(); i++ )
+	for( int i = 0; i < code->NumConstants(); i++ )
 	{
-		Object o = GetConstant( (int)i );
+		Object o = code->GetConstant( (int)i );
 		if( o.type == obj_string || o.type == obj_symbol_name )
 			cout << o.s << endl;
 		else if( o.type == obj_number )
