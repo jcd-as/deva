@@ -183,7 +183,6 @@ public:
 	// get the Code block object for this compiled module. this is the
 	// end-of-life for the Compiler object, it's raison d'etre. once this is
 	// called, the compiler object should not be used again
-//	Code* GetCode() { return new Code( (byte*)is->Bytes(), is->Length(), num_constants, lines ); }
 	Code* GetCode() { code->code = (byte*)is->Bytes(); code->len = is->Length(); return code; }
 
 

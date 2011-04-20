@@ -65,7 +65,6 @@ const Object constant_symbols[] =
 	Object( obj_symbol_name, copystr( "next" ) )
 };
 const int num_of_constant_symbols = sizeof( constant_symbols ) / sizeof( Object );
-//static dword total_global_constants = num_of_constant_symbols;
 
 /////////////////////////////////////////////////////////////////////////////
 // executive/VM functions and globals
@@ -107,8 +106,6 @@ Executor::Executor() :
 		char* s = copystr( builtin_names[i].c_str() );
 		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-//		else
-//			total_global_constants++;
 	}
 	// string builtins
 	for( int i = 0; i < num_of_string_builtins; i++ )
@@ -116,8 +113,6 @@ Executor::Executor() :
 		char* s = copystr( string_builtin_names[i].c_str() );
 		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-//		else
-//			total_global_constants++;
 	}
 	// vector builtins
 	for( int i = 0; i < num_of_vector_builtins; i++ )
@@ -125,8 +120,6 @@ Executor::Executor() :
 		char* s = copystr( vector_builtin_names[i].c_str() );
 		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-//		else
-//			total_global_constants++;
 	}
 	// map builtins
 	for( int i = 0; i < num_of_map_builtins; i++ )
@@ -134,8 +127,6 @@ Executor::Executor() :
 		char* s = copystr( map_builtin_names[i].c_str() );
 		if( !AddGlobalConstant( Object( obj_symbol_name, s ) ) )
 			delete [] s;
-//		else
-//			total_global_constants++;
 	}
 }
 
@@ -400,8 +391,8 @@ Object Executor::ExecuteText( const char* const text )
 	s << "[TEXT" << count << "]";
 	count++;
 	string name = s.str();
-	// add the 'text module' name to the list of constants 
-	cur_code->AddConstant( Object( obj_symbol_name, copystr( name ) ) );
+	// add the 'text module' name to the list of global constants 
+	AddGlobalConstant( Object( obj_symbol_name, copystr( name ) ) );
 	const Code* code = LoadText( text, name.c_str() );
 
 	Code* orig_code = cur_code;
@@ -440,8 +431,6 @@ Object Executor::ExecuteText( const char* const text )
 	bp = orig_bp;
 	end = orig_end;
 
-//	int idx = FindConstant( Object( obj_symbol_name, name.c_str() ) );
-//	Object ret = GetConstant( idx );
 	Object ret = GetConstant( Object( obj_symbol_name, name.c_str() ) );
 	return ret;
 }
@@ -980,7 +969,6 @@ Opcode Executor::ExecuteInstruction()
 		// set its name
 		Object name = stack.back();
 		stack.pop_back();
-//		Object _name = GetConstant( FindConstant( Object( obj_symbol_name, "__name__" ) ) );
 		Object _name = GetConstant( Object( obj_symbol_name, "__name__" ) );
 		m.m->insert( pair<Object, Object>( _name, name ) );
 		// build the bases list
@@ -1024,7 +1012,6 @@ Opcode Executor::ExecuteInstruction()
 		}
 		Object basesObj( v );
 		IncRef( basesObj );
-//		Object _bases = GetConstant( FindConstant( Object( obj_symbol_name, "__bases__" ) ) );
 		Object _bases = GetConstant( Object( obj_symbol_name, "__bases__" ) );
 		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
 
@@ -1034,10 +1021,6 @@ Opcode Executor::ExecuteInstruction()
 			Function* f = i->second->f;
 			if( f->classname == name.s )
 			{
-//				int idx = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
-//				if( idx == -1 )
-//					throw ICE( "Function name not found in constants pool." );
-//				Object fcnname = GetConstant( idx );
 				Object fcnname = GetConstant( Object( obj_symbol_name, f->name.c_str() ) );
 				m.m->insert( pair<Object, Object>( fcnname, Object( f ) ) );
 			}
@@ -1583,8 +1566,6 @@ Opcode Executor::ExecuteInstruction()
 		o = ResolveSymbol( o );
 		DecRef( o );
 		stack.pop_back();
-		// TODO: if addr relative to another code block (module)??
-		//
 		Object callable;
 		// is it a symbol name that we need to look-up?
 		if( o.type == obj_symbol_name )
@@ -1644,7 +1625,6 @@ Opcode Executor::ExecuteInstruction()
 			Map* inst = CreateMap( *callable.m );
 
 			// - add the __class__ member to it
-//			Object _class = GetConstant( FindConstant( Object( obj_symbol_name, "__class__" ) ) );
 			Object _class = GetConstant( Object( obj_symbol_name, "__class__" ) );
 			Map::iterator i = callable.m->find( Object( obj_symbol_name, "__name__" ) );
 			if( i == callable.m->end() )
@@ -1850,7 +1830,7 @@ Opcode Executor::ExecuteInstruction()
 		// string:
 		else if( lhs.type == obj_string )
 		{
-			// TODO: handle string built-in methods
+			// handle string built-in methods
 			//
 			// validate the indexer type
 			if( rhs.type != obj_number || !is_integral( rhs.d ) )
@@ -2079,7 +2059,6 @@ Opcode Executor::ExecuteInstruction()
 								stack.push_back( lhs );
 							}
 						}
-						// TODO: IncRef the object??
 						IncRef( obj );
 						// push the object
 						stack.push_back( obj );
@@ -2366,9 +2345,10 @@ Opcode Executor::ExecuteInstruction()
 			{
 				// first get the substring from start to end positions
 				string r = s.substr( start, end - start );
-				// TODO: call 'reserve' on the string to reduce allocations?
-				// then walk it grabbing every 'nth' character
+				// call 'reserve' on the string to reduce allocations?
 				string slice;
+				slice.reserve( r.length() / step );
+				// then walk it grabbing every 'nth' character
 				for( size_t i = 0; i < r.length(); i += step )
 				{
 					slice += r[i];
@@ -2459,8 +2439,6 @@ Opcode Executor::ExecuteInstruction()
 		// string:
 		if( lhs.type == obj_string )
 		{
-			// TODO: handle string built-in methods
-			//
 			// validate the indexer type
 			if( rhs.type != obj_number || !is_integral( rhs.d ) )
 				throw RuntimeException( "Argument to string indexer must be an integral number." );
@@ -2498,8 +2476,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			// dec ref the current tos2[tos1], as we're assigning into it
 			DecRef( lhs.m->operator[]( rhs ) );
 			// set the new value
@@ -2728,8 +2704,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			Map::iterator it = lhs.m->find( rhs );
 			if( it == lhs.m->end() )
 			{
@@ -2805,8 +2779,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			Map::iterator it = lhs.m->find( rhs );
 			if( it == lhs.m->end() )
 			{
@@ -2868,8 +2840,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			Map::iterator it = lhs.m->find( rhs );
 			if( it == lhs.m->end() )
 			{
@@ -2931,8 +2901,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			Map::iterator it = lhs.m->find( rhs );
 			if( it == lhs.m->end() )
 			{
@@ -2998,8 +2966,6 @@ Opcode Executor::ExecuteInstruction()
 		// map/class/instance:
 		else
 		{
-			// TODO: deva1 seemed to allow only numbers, strings and UDTs as
-			// keys... ???
 			Map::iterator it = lhs.m->find( rhs );
 			if( it == lhs.m->end() )
 			{
@@ -3755,7 +3721,6 @@ Object Executor::ImportModule( const char* module_name )
 
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"
-//	Object *mod_main = FindFunction( mod + "@main", 0 );
 	Object *mod_main = FindFunction( "@main", mod, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, mod_main->f, true );
 	PushFrame( frame );
@@ -3791,9 +3756,6 @@ Object Executor::ImportModule( const char* module_name )
 	bp = orig_bp;
 	end = orig_end;
 
-//	int idx = FindConstant( Object( obj_symbol_name, mod.c_str() ) );
-//	Object ret = GetConstant( idx );
-//	Object ret = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
 	// module names are entered into the global constants
 	Object ret = GetGlobalConstant( Object( obj_symbol_name, mod.c_str() ) );
 	return ret;
@@ -4142,7 +4104,6 @@ Code* Executor::ReadCode( string filename )
 		throw RuntimeException( "Invalid .dvc file: line map section header missing or malformed." );
 	// section header is followed by a dword containing the number of line map entries
 	dword num_linemaps = 0;
-//	file >> num_linemaps;
 	file.read( (char*)&num_linemaps, sizeof( dword ) );
 	// line map data is an array of line map entries:
 	// dword : 			line number
@@ -4167,7 +4128,6 @@ Code* Executor::ReadCode( string filename )
 	// allocate memory for the byte code array
 	code->code = new byte[bc_length];
 	code->len = bc_length;
-//	code->num_constants = num_consts;
 
 	// read the file into the byte code array
 	file.read( (char*)(code->code), bc_length );

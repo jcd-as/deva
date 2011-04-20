@@ -48,9 +48,6 @@ public:
 	byte* code;
 	size_t len;
 
-	// number of constants defined/used in this code
-//	size_t num_constants;
-
 private:
 	// set of constants (including all names)
 	vector<Object> constants;
@@ -59,8 +56,6 @@ private:
 public:
 	LineMap* lines;
 
-//	Code() : code( NULL ), len( 0 ), num_constants( 0 ), lines( NULL ) {}
-//	Code( byte* c, size_t l, size_t n, LineMap* ln ) : code( c ), len( l ), num_constants( n ), lines( ln ) {}
 	Code() : code( NULL ), len( 0 ), lines( NULL ) {}
 	Code( byte* c, size_t l, size_t n, LineMap* ln ) : code( c ), len( l ), lines( ln ) {}
 	~Code()

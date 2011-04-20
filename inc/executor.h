@@ -166,7 +166,6 @@ public:
 
 	// constant pool handling methods
 	inline bool AddGlobalConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
-//	inline bool AddConstant( Object o ) { if( constants_set.count( o ) != 0 ) return false; else { constants_set.insert( o ); constants.push_back( o ); return true; } }
 	inline int FindGlobalConstant( const Object & o )
 	{
 		if( constants_set.count( o ) == 0 ) return INT_MIN;
@@ -178,15 +177,14 @@ public:
 	inline Object GetGlobalConstant( int idx ) { int i = idx < 0 ? -idx : idx; return constants.at( i ); }
 	inline Object GetGlobalConstant( Object o ) { return GetGlobalConstant( FindGlobalConstant( o ) ); }
 
-	// TODO: this needs to look up in the current module and globals:
+	// look up in the current module and globals:
 	inline int FindConstant( const Code* code, const Object & o )
 	{
-		if( constants_set.count( o ) == 0 ) return -1;
-		for( size_t i = 0; i < constants.size(); i++ )
-			if( o == constants.at( i ) )
-				return (int)i;
-		return code->FindConstant( o );
-//		return -1;
+		int i = FindGlobalConstant( o );
+		if( i != INT_MIN )
+			return i;
+		else
+			return code->FindConstant( o );
 	}
 	inline int FindConstant( const Object & o ) { return FindConstant( cur_code, o ); }
 	// look up a constant in the current module and/or globals:
@@ -196,7 +194,6 @@ public:
 			return constants.at( -idx );
 		else
 			return code->GetConstant( idx );
-//		return constants.at( idx );
 	}
 	inline Object GetConstant( int idx ) { return GetConstant( cur_code, idx ); }
 	inline Object GetConstant( const Code* code, Object o ) { return GetConstant( FindConstant( code, o ) ); }

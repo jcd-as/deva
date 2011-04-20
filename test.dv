@@ -1,6 +1,10 @@
-print( "foobar'd!" );
-import foo;
-foo.fcn();
+#print( "foobar'd!" );
+#import foo;
+#foo.fcn();
+class C
+{
+}
+local c = new C();
 
 #local v = [0,1,2];
 #local v = range( 0, 100 );

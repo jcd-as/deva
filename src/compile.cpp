@@ -89,7 +89,6 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 			strcpy( s, str.c_str() );
 			// try to add the string constant, if we aren't allowed to (because
 			// it's a duplicate), free the string
-//			if( !ex->AddConstant( Object( s ) ) )
 			if( !code->AddConstant( Object( s ) ) )
 				delete [] s;
 		}
@@ -102,12 +101,10 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 			strcpy( s, str.c_str() );
 			// try to add the symbol name, if we aren't allowed to (because
 			// it's a duplicate), free the string
-//			if( !ex->AddConstant( Object( obj_symbol_name, s ) ) )
 			if( !code->AddConstant( Object( obj_symbol_name, s ) ) )
 				delete [] s;
 		}
 		else
-//			ex->AddConstant( *i );
 			code->AddConstant( *i );
 	}
 
