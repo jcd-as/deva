@@ -26,6 +26,7 @@ Scope: 9
 Scope: 10
 	vars: 
 Constant data pool:
+input
 0
 1
 2
@@ -59,7 +60,7 @@ function: bubble_sort, from file: input.dv, line: 3
 code address: 18
 Instructions:
 3
-   0: def_function	-3 14 ( # bubble_sort), 18
+   0: def_function	0 15 (input # bubble_sort), 18
   13: jmp		135
   18: enter		 
 5
@@ -219,7 +220,7 @@ Instructions:
  301: call		2
  306: pop		 
 44
- 307: pushconst		12 (un-sorted:)
+ 307: pushconst		13 (un-sorted:)
  312: pushconst		-13 (print)
  317: call		1
  322: pop		 
@@ -243,11 +244,11 @@ Instructions:
  362: pop		 
 53
  363: pushlocal0		 
- 364: pushconst		14 (bubble_sort)
+ 364: pushconst		15 (bubble_sort)
  369: call		1
  374: def_local2		 
 56
- 375: pushconst		11 (sorted:)
+ 375: pushconst		12 (sorted:)
  380: pushconst		-13 (print)
  385: call		1
  390: pop		 

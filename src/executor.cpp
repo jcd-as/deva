@@ -162,7 +162,10 @@ Object* Executor::FindFunction( string name, string modulename, size_t offset )
 	{
 		if( i->second->type == obj_function )
 		{
-			if( i->second->f->modulename == modulename && (size_t)i->second->f->addr == offset )
+//			if( i->second->f->modulename == modulename && (size_t)i->second->f->addr == offset )
+			string m = i->second->f->modulename;
+			size_t a = (size_t)i->second->f->addr;
+			if(  m == modulename &&  a == offset )
 				return i->second;
 		}
 		else if( i->second->type == obj_native_function )
@@ -328,7 +331,11 @@ void Executor::Execute( const Code* const code )
 	scopes = new ScopeTable();
 
 	// a starting ('global') frame
-	Object *main = FindFunction( string( "@main" ), string( "" ), 0 );
+//	Object *main = FindFunction( string( "@main" ), string( "" ), 0 );
+	string cf = current_file;
+	string fp = get_file_part( cf );
+	string modname = get_stem( fp );
+	Object *main = FindFunction( string( "@main" ), modname, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
@@ -1797,7 +1804,8 @@ Opcode Executor::ExecuteInstruction()
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
-			if( rhs.type != obj_string )
+//			if( rhs.type != obj_string )
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
 				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
 			// see if there is a module with this name
 			if( module_names.count( string( lhs.s ) ) == 0 )
@@ -1952,7 +1960,8 @@ Opcode Executor::ExecuteInstruction()
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
-			if( rhs.type != obj_string )
+//			if( rhs.type != obj_string )
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
 				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
 			// see if there is a module with this name
 			if( module_names.count( string( lhs.s ) ) == 0 )
@@ -3602,7 +3611,8 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 
 	// add the constant for this module name
 	char* str = copystr( module_name );
-	if( !AddGlobalConstant( Object( obj_symbol_name, str ) ) )
+//	if( !AddGlobalConstant( Object( obj_symbol_name, str ) ) )
+	if( !cur_code->AddConstant( Object( obj_symbol_name, str ) ) )
 		delete[] str;
 
 	// NOTE: compiler and semantics global objects should be free'd and NULL at
@@ -3714,10 +3724,43 @@ Object Executor::ImportModule( const char* module_name )
 	string mod( module_name );
 	mod = get_file_part( mod );
 
-	// load (compile) the module
-	const Code* code = LoadModule( mod, dvfile );
-	if( !code )
-		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
+	//////////////////////////////////////////////////////////
+	// check to see if the .dvc (output) file exists, and is newer than the .dv (input ) file
+	bool use_dvc = false;
+
+	struct stat in_statbuf;
+	struct stat out_statbuf;
+
+	// if we can't open the .dvc file, can't load it
+	if( stat( dvcfile.c_str(), &out_statbuf ) != -1 )
+	{
+		if( stat( dvfile.c_str(), &in_statbuf ) != -1 ) 
+		{
+			// if the output (dvc) is newer than the input (dv), use the dvc
+			if( out_statbuf.st_mtime > in_statbuf.st_mtime )
+				use_dvc = true;
+		}
+		// .dvc file exists, but no .dv file
+		else
+			use_dvc = true;
+	}
+
+	const Code* code = NULL;
+
+	// if we're not using the dvc file, 
+	// load and compile the code and write the dvc file
+	if( !use_dvc )
+	{
+		code = LoadModule( mod, dvfile );
+		if( !code )
+			throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % mod );
+		WriteCode( dvcfile, code );
+	}
+	else
+	{
+		// otherwise we can just read the existing .dvc file
+		code = ReadCode( dvcfile );
+	}
 
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"
@@ -3727,9 +3770,6 @@ Object Executor::ImportModule( const char* module_name )
 	Scope* scope = new Scope( true );
 	PushScope( scope );
 	Module* cur_module = AddModule( mod.c_str(), code, scope, frame );
-
-//	// compile the file, if needed
-//	CompileAndWriteFile( dvfile.c_str(), mod.c_str() );
 
 	// currently importing 'mod', set the flag
 	Module* prev_mod = s_currently_importing_module;
@@ -3757,7 +3797,8 @@ Object Executor::ImportModule( const char* module_name )
 	end = orig_end;
 
 	// module names are entered into the global constants
-	Object ret = GetGlobalConstant( Object( obj_symbol_name, mod.c_str() ) );
+//	Object ret = GetGlobalConstant( Object( obj_symbol_name, mod.c_str() ) );
+	Object ret = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
 	return ret;
 }
 
@@ -3847,7 +3888,7 @@ void Executor::WriteCode( string filename, const Code* const code )
 	// section header is followed by a dword containing the number of function objects
 	dword dw = (dword)functions.size();
 	file.write( (char*)&dw, sizeof( dword ) );
-	// function object data itself is an array of DevaFunction objects:
+	// function object data itself is an array of Function objects:
 	// len+1 bytes : 	name, null-terminated string
 	// len+1 bytes : 	filename
 	// dword :			starting line
@@ -3861,6 +3902,10 @@ void Executor::WriteCode( string filename, const Code* const code )
 	// dword :			offset in code section of the code for this function
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
+		//////////////////////////////////////////////////////
+		// TODO: only write functions from this file/module!!!
+		//////////////////////////////////////////////////////
+
 		Function* f = i->second->f;
 		// name
 		file << i->first;
@@ -4029,7 +4074,7 @@ Code* Executor::ReadCode( string filename )
 	// section header is followed by a dword containing the number of function objects
 	dword num_funcs = 0;
 	file.read( (char*)&num_funcs, sizeof( dword ) );
-	// function object data itself is an array of DevaFunction objects:
+	// function object data itself is an array of Function objects:
 	// len+1 bytes : 	name, null-terminated string
 	// len+1 bytes : 	filename
 	// dword :			starting line
@@ -4085,9 +4130,12 @@ Code* Executor::ReadCode( string filename )
 		// address
 		file.read( (char*)&f->addr, sizeof( dword ) );
 	
+		// module ptr will be set later
 		f->module = NULL;
-		// TODO: module name?? need to set through a member or static...
-//		f->modulename = module_name;
+		// module name
+		string filepart = get_file_part( f->filename );
+		string mod = get_stem( filepart );
+		f->modulename = mod;
 	
 		AddFunction( f );
 	}

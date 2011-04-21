@@ -262,7 +262,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				}
 
 				// PASS TWO: compile
-				code = PassTwo( "", p1rv, p2f );
+//				code = PassTwo( "", p1rv, p2f );
+				string fp = get_file_part( fname );
+				string module_name = get_stem( fp );
+				code = PassTwo( module_name.c_str(), p1rv, p2f );
 
 				// debug dumps
 #ifdef DEBUG

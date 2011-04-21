@@ -11,11 +11,13 @@ import sys
 baseline = "baseline"
 
 # TODO: to this (machine int-size detection) correctly ??
-hosttype = os.getenv( "HOSTTYPE" )
-if hosttype == "x86_64":
-    baseline_sized = "baseline.64"
-else:
-    baseline_sized = "baseline"
+#hosttype = os.getenv( "HOSTTYPE" )
+#if hosttype == "x86_64":
+#    baseline_sized = "baseline.64"
+#else:
+#    baseline_sized = "baseline"
+
+baseline_sized = "baseline"
 
 #print( baseline )
 #print( baseline_sized )

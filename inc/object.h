@@ -273,7 +273,7 @@ struct Function
 	Function() : first_line( 0 ), num_args( 0 ), addr( 0 ), module( NULL ) {}
 
 	inline bool IsMethod() { return !classname.empty(); }
-	inline bool InModule() { return !modulename.empty(); }
+	inline bool InModule() { return !modulename.empty() && module; }
 	inline size_t NumDefaultArgs() { return default_args.size(); }
 
 	bool operator == ( const Function & rhs ) const

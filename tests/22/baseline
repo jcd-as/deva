@@ -12,6 +12,7 @@ Function: x, 0 arguments, 0 locals
 Scope: 3
 	vars: undeclared b; undeclared c; 
 Constant data pool:
+input
 0
 b
 c
@@ -40,11 +41,11 @@ Instructions:
    8: enter		 
 4
    9: pushlocal0		 
-  10: pushconst		1 (b)
+  10: pushconst		2 (b)
   15: tbl_load	
-  16: pushconst		2 (c)
+  16: pushconst		3 (c)
   21: tbl_load	
-  22: pushconst		3 (d)
+  22: pushconst		4 (d)
   27: method_load	
   28: call_method		0
   33: pop		 
@@ -52,21 +53,21 @@ Instructions:
   35: jmp		2
 7
   40: pushlocal0		 
-  41: pushconst		1 (b)
+  41: pushconst		2 (b)
   46: tbl_load	
-  47: pushconst		2 (c)
+  47: pushconst		3 (c)
   52: method_load	
   53: call_method		0
   58: pop		 
 9
-  59: def_function	-3 8 ( # x), 77
+  59: def_function	0 9 (input # x), 77
   72: jmp		108
   77: enter		 
 11
-  78: pushconst		4 (a)
-  83: pushconst		1 (b)
+  78: pushconst		5 (a)
+  83: pushconst		2 (b)
   88: tbl_load	
-  89: pushconst		2 (c)
+  89: pushconst		3 (c)
   94: method_load	
   95: call_method		0
  100: pop		 

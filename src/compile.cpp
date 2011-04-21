@@ -74,6 +74,9 @@ Compiler::Compiler( const char* mod_name, Semantics* sem ) :
 	code = new Code();
 	code->lines = new LineMap();
 
+	// add a constant for the name of this module
+	code->AddConstant( Object( obj_symbol_name, copystr( module_name ) ) );
+
 	// copy the consts from the Semantics pass/object to the executor
 	// (locals will be added as the compiler gets to each fcn declaration, see DefineFun)
 	// constants
@@ -428,10 +431,18 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 		int idx = INT_MIN;
 		// try as a string first
 		// ('a.b' is just short-hand for 'a["b"]')
-		idx = GetConstant( Object( s ) );
-		// then try as a symbol name (for builtins)
+//		idx = GetConstant( Object( s ) );
+//		// then try as a symbol name (for builtins)
+//		if( idx == INT_MIN )
+//			idx = GetConstant( Object( obj_symbol_name, s ) );
+//		if( idx == INT_MIN )
+//			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+
+		// try as a symbol name first
+		idx = GetConstant( Object( obj_symbol_name, s ) );
+		// then try as string
 		if( idx == INT_MIN )
-			idx = GetConstant( Object( obj_symbol_name, s ) );
+			idx = GetConstant( Object( s ) );
 		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
