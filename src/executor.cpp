@@ -906,8 +906,8 @@ Opcode Executor::ExecuteInstruction()
 			if( clsname.type != obj_string && clsname.type != obj_symbol_name )
 				throw ICE( "def_method instruction called with an object that is not a class name." );
 			string class_name( clsname.s );
-			function_name += "@";
-			function_name += class_name;
+//			function_name += "@";
+//			function_name += class_name;
 
 			// find the constant for the module name
 			Object modname = GetConstant( arg4 );
@@ -1028,7 +1028,10 @@ Opcode Executor::ExecuteInstruction()
 			Function* f = i->second->f;
 			if( f->classname == name.s )
 			{
-				Object fcnname = GetConstant( Object( obj_symbol_name, f->name.c_str() ) );
+				int i = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
+				if( i == INT_MIN )
+					throw ICE( boost::format( "Cannot find function name '%1%' for class construction." ) % f->name.c_str() );
+				Object fcnname = GetConstant( i );
 				m.m->insert( pair<Object, Object>( fcnname, Object( f ) ) );
 			}
 		}
@@ -2045,7 +2048,7 @@ Opcode Executor::ExecuteInstruction()
 				// since 'a.b;' is syntactic sugar for 'a["b"];'
 				// conversely, if it is a string, try looking for it as a symbol
 				// name 
-				if( rhs.type == obj_symbol_name )
+				if( rhs.type == obj_symbol_name || rhs.type == obj_string )
 				{
 					// look for it in the map first...
 					Map::iterator it = lhs.m->find( Object( rhs.s ) );
@@ -2088,54 +2091,6 @@ Opcode Executor::ExecuteInstruction()
 						else
 							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
 
-					}
-					DecRef( lhs );
-					break;
-				}
-				else if( rhs.type == obj_string )
-				{
-					// check for class/instance method
-					if( lhs.type == obj_class || lhs.type == obj_instance )
-					{
-						// find the object by name in the map
-						Map::iterator i = lhs.m->find( Object( rhs.s ) );
-						// not found as a string, try as a symbol name 
-						// (for methods, which won't be entered as strings)
-						if( i == lhs.m->end() )
-							i = lhs.m->find( Object( obj_symbol_name, rhs.s ) );
-						if( i != lhs.m->end() )
-						{
-							Object obj = i->second;
-							if( obj.type != obj_function )
-								throw RuntimeException( boost::format( "Invalid method: '%1%'." ) % rhs.s );
-							// push the class/instance ('this')
-							if( lhs.type == obj_instance || lhs.type == obj_class )
-							{
-								IncRef( lhs );
-								stack.push_back( lhs );
-							}
-							// push the function
-							stack.push_back( obj );
-							DecRef( lhs );
-							break;
-						}
-						else
-							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
-					}
-					else
-					{
-						// check for map built-in method
-						NativeFunction nf = GetMapBuiltin( string( rhs.s ) );
-						if( nf.p )
-						{
-							if( !nf.is_method )
-								throw ICE( "Map builtin not marked as a method." );
-							stack.push_back( lhs );
-							IncRef( lhs );
-							stack.push_back( Object( nf ) );
-						}
-						else
-							throw RuntimeException( boost::format( "Invalid map key or method: '%1%'." ) % rhs.s );
 					}
 					DecRef( lhs );
 					break;
@@ -3579,7 +3534,6 @@ const Code* Executor::LoadText( const char* const text, const char* const name )
 	{
 		PassOneFlags p1f; // currently no pass one flags
 		PassTwoFlags p2f;
-		p2f.trace = trace;
 
 		// PASS ONE: build the symbol table and check semantics
 		p1rv = PassOne( prv, p1f );
@@ -3625,7 +3579,6 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 	{
 		PassOneFlags p1f; // currently no pass one flags
 		PassTwoFlags p2f;
-		p2f.trace = trace;
 
 		// PASS ONE: build the symbol table and check semantics
 		p1rv = PassOne( prv, p1f );
@@ -3908,7 +3861,7 @@ void Executor::WriteCode( string filename, const Code* const code )
 
 		Function* f = i->second->f;
 		// name
-		file << i->first;
+		file << f->name;
 		file << '\0';
 
 		// filename (module)
@@ -4566,8 +4519,10 @@ void Executor::DumpConstantPool( const Code* code )
 	for( int i = 0; i < code->NumConstants(); i++ )
 	{
 		Object o = code->GetConstant( (int)i );
-		if( o.type == obj_string || o.type == obj_symbol_name )
-			cout << o.s << endl;
+		if( o.type == obj_string )
+			cout << "string: " << o.s << endl;
+		else if( o.type == obj_symbol_name )
+			cout << "symbol name: " << o.s << endl;
 		else if( o.type == obj_number )
 			cout << o.d << endl;
 		else if( o.type == obj_boolean )

@@ -71,6 +71,7 @@
 //#endif // _MSC_VER
 
 #include <boost/cstdint.hpp>
+#include <climits>
 
 typedef boost::uint8_t byte;
 typedef boost::uint16_t word;

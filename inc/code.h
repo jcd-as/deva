@@ -74,11 +74,11 @@ public:
 	inline Object GetConstant( int idx ) const { return constants.at( idx ); }
 	inline int FindConstant( const Object & o ) const
 	{
-		if( constants_set.count( o ) == 0 ) return -1;
+		if( constants_set.count( o ) == 0 ) return INT_MIN;
 		for( size_t i = 0; i < constants.size(); i++ )
 			if( o == constants.at( i ) )
 				return (int)i;
-		return -1;
+		return INT_MIN;
 	}
 	inline int NumConstants() const { return (int)constants.size(); }
 };

@@ -247,7 +247,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			{
 				PassOneFlags p1f; // currently no pass one flags
 				PassTwoFlags p2f;
-				p2f.trace = trace;
 
 				// PASS ONE: build the symbol table and check semantics
 				p1rv = PassOne( prv, p1f );
@@ -315,10 +314,14 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		// execute the code
 		if( !compile_only )
 		{
+			// set execution flags
+			ex->trace = trace;
+			// add built-in (native) modules
 			ex->AddNativeModule( "os", GetModuleOsFunction );
 			ex->AddNativeModule( "bit", GetModuleBitFunction );
 			ex->AddNativeModule( "math", GetModuleMathFunction );
 			ex->AddNativeModule( "_re", GetModuleReFunction );
+			// execute the code
 			ex->Execute( code );
 		}
 		else

@@ -159,9 +159,6 @@ Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fl
 	if( !ex )
 		throw ICE( "Executor object must exist before calling PassTwo()." );
 
-	// TODO: other flags (debug et al)
-	ex->trace = flags.trace;
-
 	compiler = new Compiler( module_name, semantics );
 
 	cmpPsr = compile_walkerNew( p1rv.nodes );

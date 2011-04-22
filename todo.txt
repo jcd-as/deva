@@ -4,8 +4,6 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 
 TODO 2011-04-19 @deva +veryhigh read/write modules to/from dvc bytecode files
 
-TODO 2011-04-20 @deva +veryhigh BUG: --trace doesn't work when running a .dvc file
-
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
@@ -27,6 +25,11 @@ TODO 2011-04-16 @deva +future list comprehensions ?
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-04-20 @deva +veryhigh BUG: --trace doesn't work when a .dvc file exists (even if not running it?)
+    CLOSED: 2011-04-21 17:51:21
+    :LOGBOOK:
+        DONE: 2011-04-21 17:51:21
 
 DONE 2011-02-01 @deva +veryhigh un-entangle compiler and execution engine
     CLOSED: 2011-04-19 18:46:01

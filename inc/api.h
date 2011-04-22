@@ -70,11 +70,9 @@ struct PassOneFlags
 	PassOneFlags() /*: show_warnings( false )*/ {}
 };
 
+// TODO: currently no flags. do we need this?
 struct PassTwoFlags
 {
-	bool debug;
-	bool trace;
-	PassTwoFlags() : debug( false ), trace( false ) {}
 };
 
 struct PassOneReturnValue

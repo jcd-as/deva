@@ -302,13 +302,7 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 	}
 
 	// add to the list of fcn objects
-	string n = name;
-	if( classname )
-	{
-		n += "@";
-		n += classname;
-	}
-	ex->AddFunction( n.c_str(), fcn );
+	ex->AddFunction( name, fcn );
 }
 
 void Compiler::EndFun()
@@ -431,20 +425,20 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 		int idx = INT_MIN;
 		// try as a string first
 		// ('a.b' is just short-hand for 'a["b"]')
-//		idx = GetConstant( Object( s ) );
-//		// then try as a symbol name (for builtins)
-//		if( idx == INT_MIN )
-//			idx = GetConstant( Object( obj_symbol_name, s ) );
-//		if( idx == INT_MIN )
-//			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
-
-		// try as a symbol name first
-		idx = GetConstant( Object( obj_symbol_name, s ) );
-		// then try as string
+		idx = GetConstant( Object( s ) );
+		// then try as a symbol name (for builtins)
 		if( idx == INT_MIN )
-			idx = GetConstant( Object( s ) );
+			idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx == INT_MIN )
 			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+
+		// try as a symbol name first
+//		idx = GetConstant( Object( obj_symbol_name, s ) );
+//		// then try as string
+//		if( idx == INT_MIN )
+//			idx = GetConstant( Object( s ) );
+//		if( idx == INT_MIN )
+//			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
 
 		Emit( op_pushconst, (dword)idx );
 	}
