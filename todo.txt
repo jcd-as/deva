@@ -4,6 +4,10 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 
 TODO 2011-04-19 @deva +veryhigh read/write modules to/from dvc bytecode files
 
+TODO 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling across module boundaries
+
+TODO 2011-04-22 @deva +veryhigh BUG: naming locals the same as builtins will interfere with calling the builtins (e.g. 'str')
+
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error

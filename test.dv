@@ -1,3 +1,8 @@
+import foo;
+print( foo.j );
+#foo.fcn();
+#local j = json.decode( str );
+
 # test the module regex and class regex it contains
 #import re;
 #
@@ -25,11 +30,11 @@
 #local c = foo.C();
 #c.fcn();
 
-import re;
-print( "foobar'd!" );
-local regexp = new re.re( "(\w+)\W+(\w+)" );
-local s = "@abc def--";
-local matches = regexp.search( s );
+#import re;
+#print( "foobar'd!" );
+#local regexp = new re.re( "(\w+)\W+(\w+)" );
+#local s = "@abc def--";
+#local matches = regexp.search( s );
 
 #import foo;
 #foo.fcn();
