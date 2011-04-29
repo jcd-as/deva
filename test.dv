@@ -1,39 +1,5 @@
-import os;
-
-# BUG: should be error 
-#for( i in range( 0, 10 ) )
-#{
-#	print( i );
-#	# semantic analysis should complain that i is undefined:
-#	def brk(){ if( i > 4 ) return true; }
-#	if( brk() )
-#		break;
-#	continue;
-#}
-
-# BUG: should be an error
-#local x = 0;
-#def foo()
-#{
-#	# this should generate an error:
-#	print( x );
-#	if( true )
-#	{
-#		def bar()
-#		{
-#			# this should generate an error:
-#			print( x );
-#		}
-#		bar();
-#	}
-#}
-#foo();
-
-#import foo;
-#print( foo.j );
-
-#foo.fcn();
-#local j = json.decode( str );
+import foo;
+print( foo.j );
 
 # test the module regex and class regex it contains
 #import re;
@@ -55,50 +21,6 @@ import os;
 #            i	++;
 #        }
 #}
-
-#import foo;
-#print( "foobar'd!" );
-##foo.fcn();
-#local c = foo.C();
-#c.fcn();
-
-#import re;
-#print( "foobar'd!" );
-#local regexp = new re.re( "(\w+)\W+(\w+)" );
-#local s = "@abc def--";
-#local matches = regexp.search( s );
-
-#import foo;
-#foo.fcn();
-
-#local v = [0,1,2];
-#local v = range( 0, 100 );
-#local v = range( 0, 1000000 );
-
-## equivalent of list comprehension:
-## [i++ in v if i < 2]
-
-# ~6.5 secs for 1000000 (w/out print)
-# with for loop:
-#local ret = [];
-#for( i in v )
-#{
-#	if( i % 2 != 0 )
-#		ret.append( i++ );
-#}
-#print( ret );
-
-# ~2.9 secs for 1000000 (w/out print)
-# with functional builtins:
-#def inc( n ){ return n + 1; }
-#def odd( n ){ return n % 2 != 0; }
-#local ret = v.filter( odd ).map( inc );
-
-# with lambdas:
-#local ret = v.filter( lambda(n){n<2;} ).map( lambda(n){n+1;} );
-
-#print( ret );
-##############
 
 #local v = vector_of( null, 10 );
 #print( v );

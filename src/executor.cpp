@@ -3997,7 +3997,7 @@ Code* Executor::ReadCode( string filename )
 		{
 		case obj_number:
 			{
-			qword qw = 0;
+			int64_t qw = 0;
 			file.read( (char*)&qw, sizeof( qword ) );
 			o.d = (double)qw;
 			}

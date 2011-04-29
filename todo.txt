@@ -4,7 +4,11 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 
 TODO 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling across module boundaries when code is loaded from .dvc
 
+TODO 2011-04-28 @deva +veryhigh add 'def foo;' syntactic sugar to declare a fcn to the compiler (semantic analyzer) for function pre-decls
+
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
+
+TODO 2011-04-28 @deva +veryhigh implement devash (shell)
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
@@ -15,10 +19,6 @@ TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
 TODO 2011-02-04 @deva +high fix parser error messages - prevent things like "Missing <invalid>"
 
 TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
-
-TODO 2011-03-09 @deva +low fix minor issues with tests:
-	= tests working but needing test fixes:
-	55 - relies on ordering of items in maps (baseline contains output of 'print( some_map );' )
 
 TODO 2011-04-16 @deva +future list comprehensions ?
 

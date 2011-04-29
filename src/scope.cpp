@@ -227,7 +227,7 @@ const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) 
 		if( parent )
 		{
 			const Symbol* s = parent->Resolve( n, sym_end );
-			if( s->IsFunction() || s->IsModuleName() || s->IsClass() )
+			if( s && (s->IsFunction() || s->IsModuleName() || s->IsClass() ) )
 				return s;
 		}
 	}
