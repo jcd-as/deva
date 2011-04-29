@@ -1,5 +1,5 @@
 AST:
-(Local a 0) (While (Condition true) (Block (Call ArgList (DOT_OP (DOT_OP (DOT_OP a b) c) d)))) (Call ArgList (DOT_OP (DOT_OP a b) c)) (Def x Arg_list_decl (Block (Call ArgList (DOT_OP (DOT_OP a b) c)))) <EOF>
+(Local a 0) (While (Condition true) (Block (Call ArgList (DOT_OP (DOT_OP (DOT_OP a b) c) d)))) (Call ArgList (DOT_OP (DOT_OP a b) c)) (Def x Arg_list_decl (Block (Extern a) (Call ArgList (DOT_OP (DOT_OP a b) c)))) <EOF>
 Symbol table:
 Function: @main, 0 arguments, 1 locals
 	all names: local a; undeclared b; undeclared b; undeclared c; undeclared c; undeclared d; function x; 
@@ -7,21 +7,21 @@ Function: @main, 0 arguments, 1 locals
 Scope: 1
 	vars: undeclared b; undeclared c; undeclared d; 
 Function: x, 0 arguments, 0 locals
-	all names: undeclared b; undeclared c; 
+	all names: extern a; undeclared b; undeclared c; 
 	argument scope vars: 
 Scope: 3
-	vars: undeclared b; undeclared c; 
+	vars: extern a; undeclared b; undeclared c; 
 Constant data pool:
-input
+symbol name: input
 0
-b
-c
-d
-a
-b
-c
-d
-x
+string: b
+string: c
+string: d
+symbol name: a
+symbol name: b
+symbol name: c
+symbol name: d
+symbol name: x
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
@@ -63,7 +63,7 @@ Instructions:
   59: def_function	0 9 (input # x), 77
   72: jmp		108
   77: enter		 
-11
+12
   78: pushconst		5 (a)
   83: pushconst		2 (b)
   88: tbl_load	

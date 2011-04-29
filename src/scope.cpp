@@ -200,18 +200,34 @@ const Symbol* const FunctionScope::Resolve( const string & n, SymbolType type ) 
 
 	// check this scope
 	if( data.count( n ) != 0 )
-		return data.find( n )->second;
+	{
+		Symbol* s =  data.find( n )->second;
+		// if we were passed sym_end then we're trying to match any type...
+		if( s && (type == sym_end || s->Type() == type ) )
+			return s;
+	}
 
-	// function scope, only look for functions and classes in parent scopes
-	if( type == sym_function || type == sym_class || type == sym_end )
+	// function scope, only look for functions, classes and externs in parent scopes
+	if( type == sym_function || type == sym_class )
 	{
 		// check parent scopes
 		if( parent )
 		{
+			// look for a function
 			const Symbol* s = parent->Resolve( n, sym_function );
+			// if we got a symbol back, and we were looking for a variable (sym_end), 
+			// _AND_ we got a function or class, return it
 			if( (s && type == sym_end) && (s->Type() == sym_function || s->Type() == sym_class) )
 				return s;
-			else
+		}
+	}
+	else
+	{
+		// look only for modules, functions and classes in parent scopes
+		if( parent )
+		{
+			const Symbol* s = parent->Resolve( n, sym_end );
+			if( s->IsFunction() || s->IsModuleName() || s->IsClass() )
 				return s;
 		}
 	}

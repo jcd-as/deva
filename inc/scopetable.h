@@ -46,6 +46,7 @@ namespace deva
 
 class Scope
 {
+	bool is_function;
 	bool is_module;
 	// pointers to:
 	// - locals (actual objects stored in the frame, but the scope
@@ -55,13 +56,14 @@ class Scope
 	map<string, Object*> data;
 
 public:
-	Scope( bool is_mod = false ) : is_module( is_mod ) {}
+	Scope( bool is_func = false, bool is_mod = false ) : is_function( is_func ), is_module( is_mod ) {}
 	~Scope();
 	// for module scopes only, delete the data without deleting the scope:
 	// (necessary because modules need to call destructors for objects, which
 	// will call *back* to the scope looking for methods etc. if we did this in
 	// the destructor the 'this' pointer would already be in a bad state)
 	void DeleteData();
+	inline bool IsFunction() { return is_function; }
 	inline bool IsModule() { return is_module; }
 	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
 	// THE EXECUTOR!)
@@ -93,8 +95,9 @@ public:
 	inline Scope* CurrentScope() const { return data.back(); }
 	inline Scope* At( size_t idx ) const { return data[idx]; }
 	Object* FindSymbol( const char* name, bool local_only = false ) const;
+	Object* FindExternSymbol( const char* name ) const;
 	const char* FindSymbolName( Object* o, bool local_only = false );
-	Object* FindFunction( const char* name ) const { return FindSymbol( name, false ); }
+	Object* FindFunction( const char* name, bool local_only = false ) const;
 };
 
 

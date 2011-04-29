@@ -136,7 +136,7 @@ struct Semantics
 	void PopScope();
 
 	// define a variable in the current scope
-	void DefineVar( char* name, int line, VariableModifier mod = mod_none );
+	void DefineVar( char* name, int line, VariableModifier mod = mod_none, SymbolType type = sym_variable );
 
 	// resolve a variable, in the current scope
 	void ResolveVar( char* name, int line );

@@ -95,7 +95,7 @@ void Semantics::PopScope()
 }
 
 // define a variable in the current scope
-void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/ )
+void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_none*/, SymbolType type /*= sym_variable*/ )
 {
 	// disallow non-keyword "keywords":
 
@@ -110,7 +110,7 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 			return;
 	}
 
-	Symbol *sym = new Symbol( name, sym_variable, mod );
+	Symbol *sym = new Symbol( name, type, mod );
 	if( !current_scope->Define( sym ) )
 	{
 		delete sym;
@@ -136,6 +136,7 @@ void Semantics::ResolveVar( char* name, int line )
 		AddString( name );
 	}
 	// look up the variable in the current scope
+	// TODO: passing 'sym_end' results in all scopes being searched...
 	else if( !current_scope->Resolve( name, sym_end ) )
 	{
 		// accept builtins

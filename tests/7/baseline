@@ -36,26 +36,26 @@ Function: fcn, 0 arguments, 0 locals
 Scope: 14
 	vars: 
 Constant data pool:
-input
+symbol name: input
 0
 1
 2
 3
 5
-b
-c
-d
-fcn called
-foo
-foo
-a
-b
-c
-fcn
-n
-x
-y
-z
+string: b
+string: c
+string: d
+string: fcn called
+string: foo
+symbol name: foo
+symbol name: a
+symbol name: b
+symbol name: c
+symbol name: fcn
+symbol name: n
+symbol name: x
+symbol name: y
+symbol name: z
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 

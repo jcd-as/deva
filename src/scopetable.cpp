@@ -153,10 +153,6 @@ void ScopeTable::PopScope()
 
 Object* ScopeTable::FindSymbol( const char* name, bool local_only /*= false*/ ) const
 {
-	if( local_only )
-	{
-		return CurrentScope()->FindSymbol( name );
-	}
 	// look in each scope
 	for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
 	{
@@ -164,16 +160,35 @@ Object* ScopeTable::FindSymbol( const char* name, bool local_only /*= false*/ ) 
 		Object* o = (*i)->FindSymbol( name );
 		if( o )
 			return o;
+		if( local_only && (*i)->IsFunction() )
+			break;
+	}
+	return NULL;
+}
+
+Object* ScopeTable::FindExternSymbol( const char* name ) const
+{
+	// find the first scope out of the current function
+	// look in each scope thereafter
+	bool external = false;
+	for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+	{
+		if( external )
+		{
+			// check for the symbol
+			Object* o = (*i)->FindSymbol( name );
+			if( o )
+				return o;
+		}
+		// if this was a fcn, start looking in the scopes after this
+		if( !external && (*i)->IsFunction() )
+			external = true;
 	}
 	return NULL;
 }
 
 const char* ScopeTable::FindSymbolName( Object* o, bool local_only /*= false*/ )
 {
-	if( local_only )
-	{
-		return CurrentScope()->FindSymbolName( o );
-	}
 	// look in each scope
 	for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
 	{
@@ -181,6 +196,23 @@ const char* ScopeTable::FindSymbolName( Object* o, bool local_only /*= false*/ )
 		const char* n = (*i)->FindSymbolName( o );
 		if( n )
 			return n;
+		if( local_only && (*i)->IsFunction() )
+			break;
+	}
+	return NULL;
+}
+
+Object* ScopeTable::FindFunction( const char* name, bool local_only /*= false*/ ) const
+{
+	// look in each scope
+	for( vector<Scope*>::const_reverse_iterator i = data.rbegin(); i != data.rend(); ++i )
+	{
+		// check for the symbol
+		Object* o = (*i)->FindSymbol( name );
+		if( o && (o->type == obj_function || o->type == obj_native_function || o->type == obj_class) )
+			return o;
+		if( local_only && (*i)->IsFunction() )
+			break;
 	}
 	return NULL;
 }

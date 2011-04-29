@@ -1,5 +1,37 @@
-import foo;
-print( foo.j );
+import os;
+
+# BUG: should be error 
+#for( i in range( 0, 10 ) )
+#{
+#	print( i );
+#	# semantic analysis should complain that i is undefined:
+#	def brk(){ if( i > 4 ) return true; }
+#	if( brk() )
+#		break;
+#	continue;
+#}
+
+# BUG: should be an error
+#local x = 0;
+#def foo()
+#{
+#	# this should generate an error:
+#	print( x );
+#	if( true )
+#	{
+#		def bar()
+#		{
+#			# this should generate an error:
+#			print( x );
+#		}
+#		bar();
+#	}
+#}
+#foo();
+
+#import foo;
+#print( foo.j );
+
 #foo.fcn();
 #local j = json.decode( str );
 

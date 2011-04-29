@@ -8,7 +8,7 @@ a.b.c.fcn();
 
 # 0, 1
 local m = {"e" : 0, "g" : 1};
-def fcn(){ return m; }
+def fcn(){ extern m; return m; }
 local f = fcn;
 a = { "b" : { "c" : [{"d":f}] } };
 print( a.b.c[0].d().e );
@@ -17,7 +17,7 @@ print( a.b.c[0].d().e );
 
 ## 0, 2
 m = {"e" : 0, "g" : 2};
-def fcn(){ return m; }
+def fcn(){ extern m; return m; }
 f = fcn;
 a = { "b" : { "c" : [{"d":f}] } };
 print( a.b.c[0].d().e );
@@ -26,7 +26,7 @@ print( a.b.c[0].d().e );
 
 # 0, 3
 m = {"e" : 0, "g" : 3};
-def fcn(){ return m; }
+def fcn(){ extern m; return m; }
 f = fcn;
 a = { "b" : { "c" : [{"d":f}] } };
 print( a.b.c[0].d().e );
@@ -35,7 +35,7 @@ print( a.b.c[0].d().e );
 
 # 0, 4 
 m = {"e" : 0};
-def fcn(){ return m; }
+def fcn(){ extern m; return m; }
 f = fcn;
 a = { "b" : { "c" : [{"d":f}] } };
 print( a.b.c[0].d().e );
@@ -44,7 +44,7 @@ print( a.b.c[0].d().e );
 
 # 0, 5
 m = {"e" : 0};
-def fcn(){ return {"d" : [m] }; }
+def fcn(){ extern m; return {"d" : [m] }; }
 f = fcn;
 a = { "b" : { "c" : f } };
 print( a.b.c().d[0].e );

@@ -8,5 +8,6 @@ a.b.c();
 
 def x()
 {
+	extern a;
 	a.b.c();
 }

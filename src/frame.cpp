@@ -99,23 +99,32 @@ Frame::~Frame()
 // resolve symbols through the scope table
 Object* Frame::FindSymbol( const char* name ) const
 {
-	// TODO: full look-up logic: ???
-	// module names, functions(???)
-	Object* o = scopes->FindSymbol( name );
+	// search the locals for this frame
+	Object* o = scopes->FindSymbol( name, true );
 	if( o )
 		return o;
+
+	// function?
+	o = scopes->FindFunction( name );
+	if( o )
+		return o;
+
 	// check builtins
 	if( IsBuiltin( string( name ) ) )
 		return GetBuiltinObjectRef( string( name ) );
-	else if( IsVectorBuiltin( string( name ) ) )
-		return GetVectorBuiltinObjectRef( string( name ) );
-	else if( IsMapBuiltin( string( name ) ) )
-		return GetMapBuiltinObjectRef( string( name ) );
 	else
 	{
-		o = scopes->FindFunction( name );
+		// extern symbol?
+		o = scopes->FindExternSymbol( name );
 		if( o )
 			return o;
+		// type builtins? (string, vector, map)
+		else if( IsStringBuiltin( string( name ) ) )
+			return GetStringBuiltinObjectRef( string( name ) );
+		else if( IsVectorBuiltin( string( name ) ) )
+			return GetVectorBuiltinObjectRef( string( name ) );
+		else if( IsMapBuiltin( string( name ) ) )
+			return GetMapBuiltinObjectRef( string( name ) );
 	}
 	return NULL;
 }

@@ -1,7 +1,6 @@
 local n = null;
 local foo_a = 16;
-extern fcn2;
-def foo_fcn(){ print( "1: foo.fcn: " + str( foo_a ) ); fcn2(); }
-def foo_fcn2(){ print( "2: foo.fcn2: " + str( foo_a ) ); }
+def foo_fcn(){ extern fcn2; extern foo_a; print( "1: foo.fcn: " + str( foo_a ) ); fcn2(); }
+def foo_fcn2(){ extern fcn2; extern foo_a; print( "2: foo.fcn2: " + str( foo_a ) ); }
 extern fcn;
 fcn();

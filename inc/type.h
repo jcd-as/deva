@@ -40,7 +40,6 @@ enum SymbolType
 	sym_variable,			// a variable
 	sym_function,			// a function
 	sym_class,				// a class
-	sym_method,				// a method (member function)
 	sym_end = 255			// end of enum marker
 };
 

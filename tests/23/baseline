@@ -26,7 +26,7 @@ Scope: 9
 Scope: 10
 	vars: 
 Constant data pool:
-input
+symbol name: input
 0
 1
 2
@@ -38,17 +38,17 @@ input
 8
 9
 10
-sorted:
-un-sorted:
-a
-bubble_sort
-i
-j
-l
-len
-n
-swap
-temp
+string: sorted:
+string: un-sorted:
+symbol name: a
+symbol name: bubble_sort
+symbol name: i
+symbol name: j
+symbol name: l
+symbol name: len
+symbol name: n
+symbol name: swap
+symbol name: temp
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 

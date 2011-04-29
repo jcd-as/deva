@@ -204,21 +204,32 @@ Object Executor::ResolveSymbol( Object sym )
 	if( sym.type != obj_symbol_name )
 		return sym;
 
-	// TODO: symbols in loaded modules???
+	// TODO: this function is virtually the same as Frame::FindSymbol.
+	// consolidate them???
 
-	Object* obj = scopes->FindSymbol( sym.s );
+	Object* obj = scopes->FindSymbol( sym.s, true );
 
 	if( !obj )
 	{
-		// builtin?
-		NativeFunction nf = GetBuiltin( sym.s );
-		if( nf.p )
-			return Object( nf );
+		// try functions
+		obj = scopes->FindFunction( sym.s );
+		if( obj )
+			return *obj;
 
 		// allow module names to pass through
 		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
+		// builtin?
+		NativeFunction nf = GetBuiltin( sym.s );
+		if( nf.p )
+			return Object( nf );
+
+		// try extern symbol
+		obj = scopes->FindExternSymbol( sym.s );
+		if( obj )
+			return *obj;
+		
 		// type built-ins will conflict with each other,
 		// just put the symbol name back on the stack
 		//
@@ -411,7 +422,7 @@ Object Executor::ExecuteText( const char* const text )
 	Object *eval_main = FindFunction( "@main", name, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f, true );
 	PushFrame( frame );
-	Scope* scope = new Scope( true );
+	Scope* scope = new Scope( false, true );
 	PushScope( scope );
 
 	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
@@ -3280,7 +3291,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	// is reached before a fcn returns, but...)
 //	Frame* frame = new Frame( CurrentFrame(), scopes, orig_ip, orig_ip - sizeof(dword) - 1, num_args, f );
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, orig_ip - sizeof(dword) - 1, num_args, f );
-	Scope* scope = new Scope();
+	Scope* scope = new Scope( true );
 
 	// set the args for the frame
 
@@ -3374,7 +3385,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
-	Scope* scope = new Scope();
+	Scope* scope = new Scope( true );
 	// set the args for the frame
 
 	// for op_call_method, 'self' is on top of stack
@@ -3720,7 +3731,7 @@ Object Executor::ImportModule( const char* module_name )
 	Object *mod_main = FindFunction( "@main", mod, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, mod_main->f, true );
 	PushFrame( frame );
-	Scope* scope = new Scope( true );
+	Scope* scope = new Scope( false, true );
 	PushScope( scope );
 	Module* cur_module = AddModule( mod.c_str(), code, scope, frame );
 

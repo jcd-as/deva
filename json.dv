@@ -18,14 +18,14 @@ local re_num = new re.re( "-?(0|\\d+)(\\.\\d+([eE]?[-+]?\\d+)?)?" );
 #############################################################################
 # pre-declarations for compiler
 #############################################################################
-local check_nesting;
-local decode_object;
-local encode_object;
-local get_items;
-local decode_pair;
-local decode_array;
-local decode_value;
-local get_next_item;
+def check_nesting(){}
+def decode_object(){}
+def encode_object(){}
+def get_items(){}
+def decode_pair(){}
+def decode_array(){}
+def decode_value(){}
+def get_next_item(){}
 
 #############################################################################
 # "public" functions:
@@ -313,6 +313,10 @@ def decode_pair( input )
 # string, number, boolean, null, array or object
 def decode_value( input )
 {
+	extern re_str;
+	extern re_num;
+	extern re_bool;
+
 	input = input.strip();
 
 	# try each type

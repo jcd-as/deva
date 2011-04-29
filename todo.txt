@@ -2,11 +2,7 @@ TODO 2011-03-09 @deva +veryhigh tests not yet running:
 	= execute tests needing fixes:
 	29 (import .dvc NYI)
 
-TODO 2011-04-19 @deva +veryhigh read/write modules to/from dvc bytecode files
-
-TODO 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling across module boundaries
-
-TODO 2011-04-22 @deva +veryhigh BUG: naming locals the same as builtins will interfere with calling the builtins (e.g. 'str')
+TODO 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling across module boundaries when code is loaded from .dvc
 
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
@@ -29,6 +25,33 @@ TODO 2011-04-16 @deva +future list comprehensions ?
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-04-27 @deva +veryhigh Semantic analysis/checking does not catch references to external variables with no 'extern' statement. (e.g. 'local x = 0;' at global scope, 'def foo(){ print( x ); }' should produce an error, but doesn't
+    CLOSED: 2011-04-28 20:28:52
+    :LOGBOOK:
+        DONE: 2011-04-28 20:28:52
+
+DONE 2011-04-26 @deva +veryhigh symbol resolution logic needs to be fixed Frame::FindSymbol and ScopeTable::FindSymbol with the optional boolean arg need to ONLY look in the current frame's symbols; resolution needs to look in:
+    CLOSED: 2011-04-28 09:19:47
+    :LOGBOOK:
+        DONE: 2011-04-28 09:19:47
+	- local symbols
+	- special global symbols (i.e. builtins)
+	- non-locals in calling frames, all the way up to the 'global' scope/frame ("main")
+
+CANCELLED 2011-04-22 @deva +veryhigh BUG: naming locals the same as builtins will interfere with calling the builtins (e.g. 'str')
+    CLOSED: 2011-04-28 09:20:11
+    :LOGBOOK:
+        CANCELLED: 2011-04-28 09:20:11
+        DONE: 2011-04-28 09:20:10
+        TODO: 2011-04-28 09:20:09
+        CANCELLED: 2011-04-28 09:20:06
+        DONE: 2011-04-28 09:20:05
+
+DONE 2011-04-19 @deva +veryhigh read/write modules to/from dvc bytecode files
+    CLOSED: 2011-04-28 20:28:48
+    :LOGBOOK:
+        DONE: 2011-04-28 20:28:48
 
 DONE 2011-04-20 @deva +veryhigh BUG: --trace doesn't work when a .dvc file exists (even if not running it?)
     CLOSED: 2011-04-21 17:51:21

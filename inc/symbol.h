@@ -92,7 +92,9 @@ public:
 	bool IsLocal() const { return modifier == mod_local; }
 	bool IsArg() const { return modifier == mod_arg; }
 	bool IsUndeclared() const { return modifier == mod_none; }
-	bool IsFunction() const { return (type == sym_function || type == sym_method); }
+	bool IsFunction() const { return type == sym_function; }
+	bool IsModuleName() const { return modifier == mod_module_name; }
+	bool IsClass() const { return type == sym_class; }
 };
 
 

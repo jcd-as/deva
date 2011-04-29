@@ -24,21 +24,21 @@ Scope: 8
 Scope: 9
 	vars: 
 Constant data pool:
-input
+symbol name: input
 0
 1
 5
 10
-foo
-append
-print
-foo
-a
-b
-io
-key
-value
-x
+string: foo
+string: append
+string: print
+symbol name: foo
+symbol name: a
+symbol name: b
+symbol name: io
+symbol name: key
+symbol name: value
+symbol name: x
 Function objects:
 function: @main, from file: input.dv, line: 0
 0 arg(s), default value indices: 
