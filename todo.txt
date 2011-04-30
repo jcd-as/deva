@@ -18,6 +18,11 @@ TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
 
+DONE 2011-04-30 @deva +high implement raise() builtin that halts execution and dumps the traceback 
+    CLOSED: 2011-04-30 15:48:53
+    :LOGBOOK:
+        DONE: 2011-04-30 15:48:53
+
 DONE 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling into a function that creates objects & calls constructors (e.g. 'json.decode_object( s );')
     CLOSED: 2011-04-30 11:07:13
     :LOGBOOK:

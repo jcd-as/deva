@@ -1,13 +1,23 @@
+def foo()
+{
+	raise( "FUBAR'D!" );
+}
+def bar()
+{
+	foo();
+}
+bar();
+
 #import foo;
 #print( foo.j );
 
-import json;
-#local str = '{"a":0}';
-local str = "{'a':0}";
-local j = json.decode_object( str );
-if( error() )
-	print( geterror() );
-print( j );
+#import json;
+##local str = '{"a":0}';
+#local str = "{'a':0}";
+#local j = json.decode_object( str );
+#if( error() )
+#	print( geterror() );
+#print( j );
 
 #class B
 #{

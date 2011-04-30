@@ -88,6 +88,7 @@ const string builtin_names[] =
 	string( "is_size" ),
 	string( "is_symbol_name" ),
 	string( "vector_of" ),
+	string( "raise" ),
 };
 // ...and function pointers to the executor functions for them
 NativeFunction builtin_fcns[] = 
@@ -140,6 +141,7 @@ NativeFunction builtin_fcns[] =
 	{do_is_size, false},
 	{do_is_symbol_name, false},
 	{do_vector_of, false},
+	{do_raise, false},
 };
 Object builtin_fcn_objs[] = 
 {
@@ -191,6 +193,7 @@ Object builtin_fcn_objs[] =
 	Object( do_is_size ),
 	Object( do_is_symbol_name ),
 	Object( do_vector_of ),
+	Object( do_raise ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -1363,5 +1366,19 @@ void do_is_symbol_name( Frame* frame )
 	else
 		helper.ReturnVal( Object( false ) );
 }
+
+void do_raise( Frame *frame )
+{
+	BuiltinHelper helper( NULL, "raise", frame );
+
+	helper.CheckNumberOfArguments( 1 );
+	Object* err = helper.GetLocalN( 0 );
+	helper.ExpectType( err, obj_string );
+
+	throw UserException( err->s );
+
+//	helper.ReturnVal( Object( obj_null ) );
+}
+
 
 } // end namespace deva

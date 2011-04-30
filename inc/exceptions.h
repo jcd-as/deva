@@ -92,6 +92,17 @@ public:
 	{}
 };
 
+// user-raised error
+class UserException : public RuntimeException
+{
+public:
+	UserException( const char* const s ) : RuntimeException( s )
+	{}
+	UserException( boost::format fmt ) : RuntimeException( fmt )
+	{}
+};
+
+
 } // namespace deva
 
 #endif // __EXCEPTIONS_H__

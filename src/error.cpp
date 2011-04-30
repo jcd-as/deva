@@ -45,7 +45,10 @@ void emit_error( SemanticException & e )
 void emit_error( RuntimeException & e )
 {
 	// format = filename:linenum: msg
-	cerr << "error: " << e.what() << endl;
+	if( typeid(e) == typeid(UserException) )
+		cerr << "error raised: " << e.what() << endl;
+	else
+		cerr << "error: " << e.what() << endl;
 }
 
 void emit_error( ICE & e )
