@@ -1,11 +1,3 @@
-TODO 2011-03-09 @deva +veryhigh tests not yet running:
-	= execute tests needing fixes:
-	29 (import .dvc NYI)
-
-TODO 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling across module boundaries when code is loaded from .dvc
-
-TODO 2011-04-28 @deva +veryhigh add 'def foo;' syntactic sugar to declare a fcn to the compiler (semantic analyzer) for function pre-decls
-
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-04-28 @deva +veryhigh implement devash (shell)
@@ -25,6 +17,24 @@ TODO 2011-04-16 @deva +future list comprehensions ?
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-04-22 @deva +veryhigh BUG: optional arguments broken when calling into a function that creates objects & calls constructors (e.g. 'json.decode_object( s );')
+    CLOSED: 2011-04-30 11:07:13
+    :LOGBOOK:
+        DONE: 2011-04-30 11:07:13
+
+DONE 2011-03-09 @deva +veryhigh tests not yet running:
+    CLOSED: 2011-04-29 09:36:11
+    :LOGBOOK:
+        DONE: 2011-04-29 09:36:11
+	= execute tests needing fixes:
+	29 (import .dvc NYI)
+
+CANCELLED 2011-04-28 @deva +veryhigh add 'def foo;' syntactic sugar to declare a fcn to the compiler (semantic analyzer) for function pre-decls. NOT NEEDED - just use an 'extern' decl
+    CLOSED: 2011-04-29 09:35:48
+    :LOGBOOK:
+        CANCELLED: 2011-04-29 09:35:48
+        DONE: 2011-04-29 09:35:47
 
 DONE 2011-04-27 @deva +veryhigh Semantic analysis/checking does not catch references to external variables with no 'extern' statement. (e.g. 'local x = 0;' at global scope, 'def foo(){ print( x ); }' should produce an error, but doesn't
     CLOSED: 2011-04-28 20:28:52

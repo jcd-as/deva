@@ -1614,7 +1614,7 @@ Opcode Executor::ExecuteInstruction()
 			{
 				// if the number of arguments including 'self' is correct,
 				// continue ahead
-				if( callable.f->num_args == arg )
+				if( arg >= callable.f->num_args - callable.f->default_args.size() )
 					ExecuteFunction( callable.f, arg, false );
 				// if there are one too many args, pop 'self', it was pushed
 				// because we couldn't tell if this was a fcn or method at

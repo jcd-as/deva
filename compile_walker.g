@@ -148,7 +148,7 @@ continue_statement
 
 return_statement 
 	:	^(Return exp[false,NULL]) { compiler->ReturnOp( $Return->getLine($Return) ); }
-	|	Return { compiler->ReturnOp( true ); }
+	|	Return { compiler->ReturnOp( $Return->getLine($Return), true ); }
 	;
 
 assign_statement[pANTLR3_BASE_TREE parent]

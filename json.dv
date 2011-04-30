@@ -15,17 +15,6 @@ local re_bool = new re.re( "\\s*true|false\\s*" );
 # num regex, unescaped = -?(0|\d+)(\.\d+([eE]?[-+]?\d+)?)?
 local re_num = new re.re( "-?(0|\\d+)(\\.\\d+([eE]?[-+]?\\d+)?)?" );
 
-#############################################################################
-# pre-declarations for compiler
-#############################################################################
-def check_nesting(){}
-def decode_object(){}
-def encode_object(){}
-def get_items(){}
-def decode_pair(){}
-def decode_array(){}
-def decode_value(){}
-def get_next_item(){}
 
 #############################################################################
 # "public" functions:
@@ -34,6 +23,8 @@ def get_next_item(){}
 # decode a json string into an object
 def decode( json )
 {
+	extern check_nesting;
+	extern decode_object;
 	# ensure there are an equal number of opening and closing braces & brackets
 	if( !check_nesting( json ) )
 	{
@@ -47,6 +38,7 @@ def decode( json )
 # encode an object into a json string
 def encode( obj )
 {
+	extern encode_object;
 	if( type( obj ) != "map" 
 		&& type( obj ) != "class"
 		&& type( obj ) != "instance" )
@@ -66,6 +58,10 @@ def encode( obj )
 # recursive function to pull simple objects out of a json encoded string
 def decode_object( json, start = 0, end = -1 )
 {
+	extern check_nesting;
+	extern get_items;
+	extern decode_pair;
+
 	# ensure there are an equal number of opening and closing braces & brackets
 	if( !check_nesting( json ) )
 	{
@@ -116,6 +112,7 @@ def decode_object( json, start = 0, end = -1 )
 # get a list of all the pairs in an object
 def get_items( input )
 {
+	extern get_next_item;
 	local pairs = [];
 	local idx = 0;
 	while( idx < input.length() )
@@ -281,10 +278,14 @@ def get_next_item( input, start = 0 )
 # colon-separated string/value pair
 def decode_pair( input )
 {
+	extern decode_value;
+
 	input = input.strip();
 
 	# scan for lhs (string)
 	local loc = find_string( input );
+	if( error() )
+		return;
 	local start = loc[0];
 	local end = loc[1];
 
@@ -316,6 +317,7 @@ def decode_value( input )
 	extern re_str;
 	extern re_num;
 	extern re_bool;
+	extern decode_array;
 
 	input = input.strip();
 
@@ -358,6 +360,8 @@ def decode_value( input )
 
 def decode_array( input, start = 0, end = -1 )
 {
+	extern check_nesting;
+
 	# ensure there are an equal number of opening and closing braces & brackets
 	if( !check_nesting( input ) )
 		return null;

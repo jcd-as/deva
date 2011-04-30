@@ -1,5 +1,41 @@
-import foo;
-print( foo.j );
+#import foo;
+#print( foo.j );
+
+import json;
+#local str = '{"a":0}';
+local str = "{'a':0}";
+local j = json.decode_object( str );
+if( error() )
+	print( geterror() );
+print( j );
+
+#class B
+#{
+#	def new()
+#	{
+#		self.a = 0.25;
+#	}
+#}
+#class C : B
+#{
+#	def new( x )
+#	{
+#		self.a = x;
+#	}
+#	def foo()
+#	{
+#		print( self.a );
+#	}
+#}
+##local c = new C();
+##c.foo();
+#def bar( x, y = 0 )
+#{
+#	local n = new C( x );
+#	return n;
+#}
+#bar( 1 ).foo();
+
 
 # test the module regex and class regex it contains
 #import re;
