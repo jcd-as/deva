@@ -389,7 +389,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		exit( -1 );
 	}
 
-	// free the compiler
+	// free the execution engine
 	delete ex;
 
 	return 0;

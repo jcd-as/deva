@@ -499,12 +499,16 @@ void do_type( Frame *frame )
 void do_exit( Frame *frame )
 {
 	BuiltinHelper helper( NULL, "exit", frame );
-	helper.CheckNumberOfArguments( 1 );
+	helper.CheckNumberOfArguments( 0, 1 );
 
-	Object* o = helper.GetLocalN( 0 );
-	helper.ExpectIntegralNumber( o );
-
-	ex->Exit( *o );
+	if( frame->NumArgsPassed() == 1 )
+	{
+		Object* o = helper.GetLocalN( 0 );
+		helper.ExpectIntegralNumber( o );
+		ex->Exit( (int)o->d );
+	}
+	else
+		ex->Exit( 0 );
 
 	helper.ReturnVal( Object( obj_null ) );
 }
