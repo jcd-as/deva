@@ -34,6 +34,7 @@
 
 #include "object.h"
 #include "exceptions.h"
+#include "frame.h"
 #include <vector>
 #include <map>
 
@@ -44,20 +45,48 @@ using namespace std;
 namespace deva
 {
 
+
 class Scope
 {
+	// helper class for storing references to scope vars, 
+	// which can be locals or functions
+	struct LocalRef
+	{
+		bool is_function;
+		union
+		{
+			size_t index;
+			Object* fcn;
+		};
+		LocalRef( size_t i ) : is_function( false ), index( i ) {}
+		LocalRef( Object* f ) : is_function( true ), fcn( f ) {}
+	};
+
+	Frame* frame;
+
 	bool is_function;
 	bool is_module;
-	// pointers to:
+	// references to:
 	// - locals (actual objects stored in the frame, but the scope
 	// controls freeing objects when they go out of scope) and
 	// - functions (actual objects stored in the executor)
 	// TODO: switch to boost unordered map (hash table)??
-	map<string, Object*> data;
+	map<string, LocalRef> data;
 
 public:
-	Scope( bool is_func = false, bool is_mod = false ) : is_function( is_func ), is_module( is_mod ) {}
+	Scope( Frame* f, bool is_func = false, bool is_mod = false ) : frame( f ), is_function( is_func ), is_module( is_mod ) {}
 	~Scope();
+
+	Object* GetLocal( LocalRef r ) const
+	{
+		if( r.is_function )
+			return r.fcn;
+		else
+		{
+			return frame->GetLocalRef( r.index );
+		}
+	}
+
 	// for module scopes only, delete the data without deleting the scope:
 	// (necessary because modules need to call destructors for objects, which
 	// will call *back* to the scope looking for methods etc. if we did this in
@@ -65,17 +94,25 @@ public:
 	void DeleteData();
 	inline bool IsFunction() { return is_function; }
 	inline bool IsModule() { return is_module; }
-	// add ref to a local (MUST BE A PTR TO LOCAL IN THE FRAME OR A FUNCTION IN
-	// THE EXECUTOR!)
-	inline void AddSymbol( string name, Object* ob )
-	{
+	// add ref to a local (the index of a local in this scope's Frame)
+	inline void AddSymbol( string name, size_t idx )
+	{ 
 		// if the symbol exists already, erase it
-		map<string, Object*>::iterator i = data.find( name );
+		map<string, LocalRef>::iterator i = data.find( name );
 		if( i != data.end() )
 			data.erase( i );
-		data.insert( pair<string, Object*>(name, ob ) );
+		data.insert( make_pair( name, LocalRef( idx ) ) );
 	}
-	inline void AddFunction( string name, Object* fcn ) { AddSymbol( name, fcn ); }
+	// add a ref to a function (pointer to the Object in the Executor's function
+	// collection)
+	inline void AddFunction( string name, Object* f )
+	{
+		// if the symbol exists already, erase it
+		map<string, LocalRef>::iterator i = data.find( name );
+		if( i != data.end() )
+			data.erase( i );
+		data.insert( make_pair( name, LocalRef( f ) ) );
+	}
 	Object* FindSymbol( const char* name ) const;
 	int FindSymbolIndex( Object* o, Frame* f ) const;
 	const char* FindSymbolName( Object* o );

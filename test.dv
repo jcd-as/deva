@@ -1,12 +1,26 @@
-def foo()
-{
-	raise( "FUBAR'D!" );
-}
-def bar()
-{
-	foo();
-}
-bar();
+
+#def foo()
+#{
+#	def bar()
+#	{
+#		extern n;
+#		print( n );
+#	}
+#	return bar;
+#}
+#local fcn = foo();
+#local n = "n";
+#fcn();
+
+#def foo()
+#{
+#	raise( "FUBAR'D!" );
+#}
+#def bar()
+#{
+#	foo();
+#}
+#bar();
 
 #import foo;
 #print( foo.j );

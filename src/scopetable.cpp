@@ -53,13 +53,14 @@ void Scope::DeleteData()
 	// release-ref and 'zero' out the locals, to error out in case they get 
 	// accidentally used after they should be gone, and to ensure they aren't 
 	// DecRef'd again if/when a new value is assigned to them (e.g. in a loop)
-	for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<string, LocalRef>::iterator i = data.begin(); i != data.end(); ++i )
 	{
-		DecRef( *(i->second) );
+		Object* o = GetLocal( i->second );
+		DecRef( *o );
 		// functions aren't stored in the frame's locals, but in the executor,
 		// don't try to overwrite them
-		if( i->second->type != obj_function )
-			*(i->second) = Object();
+		if( o->type != obj_function )
+			*(o) = Object();
 	}
 	// clear the map & vector 'dead pools' (items to be deleted)
 	Map::ClearDeadPool();
@@ -69,18 +70,19 @@ void Scope::DeleteData()
 Object* Scope::FindSymbol( const char* name ) const
 {
 	// check locals
-	map<string, Object*>::const_iterator i = data.find( string(name) );
+	map<string, LocalRef>::const_iterator i = data.find( string(name) );
 	if( i != data.end() )
-		return i->second;
+		return GetLocal( i->second );
 	return NULL;
 }
 
 int Scope::FindSymbolIndex( Object* o, Frame* f ) const
 {
 	// check locals
-	for( map<string, Object*>::const_iterator i = data.begin(); i != data.end(); ++i )
+	for( map<string, LocalRef>::const_iterator i = data.begin(); i != data.end(); ++i )
 	{
-		if( *(i->second) == *o )
+		Object* loc = GetLocal( i->second );
+		if( *loc == *o )
 		{
 			// TODO: is there a more efficient way to do this?
 			// On^2 isn't great, even they are just simple compares...
@@ -100,9 +102,9 @@ int Scope::FindSymbolIndex( Object* o, Frame* f ) const
 const char* Scope::FindSymbolName( Object* o )
 {
 	// check locals
-	for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<string, LocalRef>::iterator i = data.begin(); i != data.end(); ++i )
 	{
-		if( *(i->second) == *o )
+		if( *(GetLocal( i->second )) == *o )
 			return i->first.c_str();
 	}
 	return NULL;
@@ -111,10 +113,10 @@ const char* Scope::FindSymbolName( Object* o )
 vector<Function*> Scope::GetFunctions()
 {
 	vector<Function*> fcns;
-	for( map<string, Object*>::iterator i = data.begin(); i != data.end(); ++i )
+	for( map<string, LocalRef>::iterator i = data.begin(); i != data.end(); ++i )
 	{
-		if( i->second->type == obj_function )
-			fcns.push_back( i->second->f );
+		if( i->second.is_function )
+			fcns.push_back( GetLocal( i->second )->f );
 	}
 	return fcns;
 }

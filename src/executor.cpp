@@ -351,7 +351,7 @@ void Executor::Execute( const Code* const code )
 	PushFrame( frame );
 
 	// make sure the global scope is always around
-	PushScope( new Scope() );
+	PushScope( new Scope( frame ) );
 
 	if( trace )
 		cout << "Execution trace:" << endl;
@@ -422,7 +422,7 @@ Object Executor::ExecuteText( const char* const text )
 	Object *eval_main = FindFunction( "@main", name, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f, true );
 	PushFrame( frame );
-	Scope* scope = new Scope( false, true );
+	Scope* scope = new Scope( frame, false, true );
 	PushScope( scope );
 
 	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
@@ -745,7 +745,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( arg, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( arg ), CurrentFrame()->GetLocalRef( arg ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( arg ), arg );
 		ip += sizeof( dword );
 		}
 		break;
@@ -757,7 +757,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 0, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 0 ), CurrentFrame()->GetLocalRef( 0 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 0 ), 0 );
 		break;
 	case op_def_local1:
 		rhs = stack.back();
@@ -767,7 +767,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 1, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 1 ), CurrentFrame()->GetLocalRef( 1 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 1 ), 1 );
 		break;
 	case op_def_local2:
 		rhs = stack.back();
@@ -777,7 +777,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 2, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 2 ), CurrentFrame()->GetLocalRef( 2 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 2 ), 2 );
 		break;
 	case op_def_local3:
 		rhs = stack.back();
@@ -787,7 +787,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 3, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 3 ), CurrentFrame()->GetLocalRef( 3 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 3 ), 3 );
 		break;
 	case op_def_local4:
 		rhs = stack.back();
@@ -797,7 +797,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 4, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 4 ), CurrentFrame()->GetLocalRef( 4 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 4 ), 4 );
 		break;
 	case op_def_local5:
 		rhs = stack.back();
@@ -807,7 +807,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 5, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 5 ), CurrentFrame()->GetLocalRef( 5 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 5 ), 5 );
 		break;
 	case op_def_local6:
 		rhs = stack.back();
@@ -817,7 +817,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 6, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 6 ), CurrentFrame()->GetLocalRef( 6 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 6 ), 6 );
 		break;
 	case op_def_local7:
 		rhs = stack.back();
@@ -827,7 +827,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 7, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 7 ), CurrentFrame()->GetLocalRef( 7 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 7 ), 7 );
 		break;
 	case op_def_local8:
 		rhs = stack.back();
@@ -837,7 +837,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 8, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 8 ), CurrentFrame()->GetLocalRef( 8 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 8 ), 8 );
 		break;
 	case op_def_local9:
 		rhs = stack.back();
@@ -847,7 +847,7 @@ Opcode Executor::ExecuteInstruction()
 		CurrentFrame()->SetLocal( 9, rhs );
 		// define the local in the current scope
 		// (this frame cannot be native fcn, obviously)
-		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 9 ), CurrentFrame()->GetLocalRef( 9 ) );
+		CurrentScope()->AddSymbol( CurrentFrame()->GetFunction()->local_names.operator[]( 9 ), 9 );
 		break;
 	case op_def_function:
 		{
@@ -884,11 +884,8 @@ Opcode Executor::ExecuteInstruction()
 			// set the local in the current frame
 			if( local_idx != -1 )
 				CurrentFrame()->SetLocal( local_idx, *objf );
-			// define the local in the current scope
-			// (this frame cannot be native fcn, obviously)
-			CurrentScope()->AddSymbol( string( fcnname.s ), local_obj );
 		}
-		// add the function to the local scope's fcn collection
+		// add the function to the local scope
 		CurrentScope()->AddFunction( name, objf );
 		}
 		break;
@@ -1706,7 +1703,7 @@ Opcode Executor::ExecuteInstruction()
 		ip = (byte*)(bp + arg);
 		break;
 	case op_enter:
-		PushScope( new Scope() );
+		PushScope( new Scope( callstack.back() ) );
 		break;
 	case op_leave:
 		PopScope();
@@ -3291,7 +3288,7 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	// is reached before a fcn returns, but...)
 //	Frame* frame = new Frame( CurrentFrame(), scopes, orig_ip, orig_ip - sizeof(dword) - 1, num_args, f );
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, orig_ip - sizeof(dword) - 1, num_args, f );
-	Scope* scope = new Scope( true );
+	Scope* scope = new Scope( frame, true );
 
 	// set the args for the frame
 
@@ -3385,7 +3382,7 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 
 	// create a frame for the fcn
 	Frame* frame = new Frame( CurrentFrame(), scopes, ip, ip - sizeof(dword) - 1, num_args, nf );
-	Scope* scope = new Scope( true );
+	Scope* scope = new Scope( frame, true );
 	// set the args for the frame
 
 	// for op_call_method, 'self' is on top of stack
@@ -3731,7 +3728,7 @@ Object Executor::ImportModule( const char* module_name )
 	Object *mod_main = FindFunction( "@main", mod, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, mod_main->f, true );
 	PushFrame( frame );
-	Scope* scope = new Scope( false, true );
+	Scope* scope = new Scope( frame, false, true );
 	PushScope( scope );
 	Module* cur_module = AddModule( mod.c_str(), code, scope, frame );
 

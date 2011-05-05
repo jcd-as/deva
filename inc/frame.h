@@ -33,7 +33,6 @@
 
 
 #include "object.h"
-#include "scopetable.h"
 #include "util.h"
 #include <vector>
 
@@ -44,6 +43,8 @@ using namespace std;
 namespace deva
 {
 
+
+class ScopeTable;
 
 class Frame
 {
@@ -107,9 +108,9 @@ public:
 
 	// resolve symbols through the scope table
 	Object* FindSymbol( const char* name ) const;
-	// TODO: doesn't find names of builtins, modules, fcns etc
+	// TODO: doesn't find names of builtins, modules, fcns etc ?
 	// find a symbol's name
-	inline const char* FindSymbolName( Object* o ) { return scopes->FindSymbolName( o ); }
+	const char* FindSymbolName( Object* o );
 };
 
 

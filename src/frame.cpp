@@ -79,13 +79,6 @@ Frame::~Frame()
 	}
 	// dec ref the args
 	int i = 0;
-//	if( is_native )
-//	{
-//		if( native_function.is_method )
-//			i++;
-//	}
-//	else if( function->IsMethod() )
-//			i++;
 	// TODO: is this right? didn't the child scopes already do this??
 	for( ; i < num_args; i++ )
 	{
@@ -127,6 +120,11 @@ Object* Frame::FindSymbol( const char* name ) const
 			return GetMapBuiltinObjectRef( string( name ) );
 	}
 	return NULL;
+}
+
+const char* Frame::FindSymbolName( Object* o )
+{
+	return scopes->FindSymbolName( o );
 }
 
 // copy all the strings in 'o' from the parent to here

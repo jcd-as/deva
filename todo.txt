@@ -7,13 +7,6 @@ TODO 2011-04-28 @deva +veryhigh implement devash (shell)
 	- var lookups: even locals become external lookups because the compiler doesn't see the other symbols as local in the code it is compiling. all symbols have to be added to the global const tables
 	- function calls don't work because we jump to the fcn offset in the wrong code block (@main's instead of the evaluated code's)
 
-TODO 2011-05-02 @deva +veryhigh builtin for zip: 
-    zip(seq1 [, seq2 [...]]) -> [(seq1[0], seq2[0] ...), (...)]
-    Return a list of tuples, where each tuple contains the i-th element
-    from each of the argument sequences.  The returned list is truncated
-    in length to the length of the shortest argument sequence.
-
-
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
