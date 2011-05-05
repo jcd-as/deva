@@ -45,14 +45,13 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, F
 	parent( p ),
 	function( f ), 
 	is_native( false ), 
-	locals( NULL ),
 	num_args( args_passed ), 
 	addr( loc ),
 	call_site( site ),
 	scopes( s )
 {
 	num_locals = f->IsMethod() ? f->local_names.size()+1 : f->local_names.size();
-	if( num_locals ) locals = new Object[num_locals];
+	if( num_locals ) locals.resize( num_locals );
 }
 
 Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, NativeFunction f ) :
@@ -60,14 +59,13 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, N
 	parent( p ),
 	native_function( f ), 
 	is_native( true ), 
-	locals( NULL ),
 	num_args( args_passed ), 
 	addr( loc ),
 	call_site( site ),
 	scopes( s )
 {
 	num_locals = args_passed;
-	if( num_locals ) locals = new Object[num_locals];
+	if( num_locals ) locals.resize( num_locals );
 }
 
 Frame::~Frame()
@@ -84,9 +82,6 @@ Frame::~Frame()
 	{
 		DecRef( locals[i] );
 	}
-	
-	// free the locals array storage
-	delete [] locals;
 }
 
 // resolve symbols through the scope table
