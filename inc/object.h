@@ -147,7 +147,7 @@ struct Object
 	inline bool IsNativeObj(){ return type == obj_native_obj; }
 	inline bool IsSize(){ return type == obj_size; }
 
-	inline operator const bool (){ return b; }
+	inline operator const bool (){ return (b != 0); }
 	inline operator const double (){ return d; }
 	inline operator const string (){ return s; }
 	inline operator const Vector* (){ return v; }

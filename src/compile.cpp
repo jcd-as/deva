@@ -1574,7 +1574,7 @@ void Compiler::AndFOp( int line )
 	// emit push_true for 'true' condition
 	Emit( op_push_true );
 	// emit jmp to [current ip + sizeof( op_jmpf ) + sizeof( offset) + sizeof( op_push_false )]
-	Emit( op_jmp, is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte ) );
+	Emit( op_jmp, (dword)(is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte )) );
 	// back-patch the 'and' jmpfs to jump to here [current ip == the 'push_false' we're about to emit)
 	BackpatchToCur();
 	BackpatchToCur();
@@ -1609,7 +1609,7 @@ void Compiler::OrFOp( int line )
 	// emit push_true for 'true' condition
 	Emit( op_push_true );
 	// emit jmp to [current ip + sizeof( op_jmpf ) + sizeof( offset) + sizeof( op_push_false )]
-	Emit( op_jmp, is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte ) );
+	Emit( op_jmp, (dword)(is->Length() + sizeof( byte ) + sizeof( dword ) + sizeof( byte )) );
 	// back-patch the 'or' jmpf to jump to here [current ip == the 'push_false' we're about to emit)
 	BackpatchToCur();
 	// back-patch the 'or' jmpt to jump to here [current ip == the 'push_true' we're about to emit)

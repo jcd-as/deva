@@ -50,7 +50,7 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, F
 	call_site( site ),
 	scopes( s )
 {
-	num_locals = f->IsMethod() ? f->local_names.size()+1 : f->local_names.size();
+	size_t num_locals = f->IsMethod() ? f->local_names.size()+1 : f->local_names.size();
 	if( num_locals ) locals.resize( num_locals );
 }
 
@@ -64,7 +64,7 @@ Frame::Frame( Frame* p, ScopeTable* s, byte* loc, byte* site, int args_passed, N
 	call_site( site ),
 	scopes( s )
 {
-	num_locals = args_passed;
+	size_t num_locals = args_passed;
 	if( num_locals ) locals.resize( num_locals );
 }
 

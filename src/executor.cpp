@@ -4597,7 +4597,7 @@ void Executor::DumpTrace( ostream & os )
 		os << "file: " << f->GetFunction()->filename << ", line: " << line << ", at: " << loc << ", in " << f->GetFunction()->name << endl;
 
 	// stack trace:
-	for( int i = callstack.size() - 1; i > 0; i-- )
+	for( size_t i = callstack.size() - 1; i > 0; i-- )
 	{
 		line = -1;
 		code = NULL;
