@@ -77,6 +77,7 @@ typedef boost::uint8_t byte;
 typedef boost::uint16_t word;
 typedef boost::uint32_t dword;
 typedef boost::uint64_t qword;
+typedef boost::int64_t int64_t;
 
 
 #endif // __TYPEDEFS_H__
