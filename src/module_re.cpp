@@ -139,7 +139,7 @@ void do_re_match( Frame* f )
 	{
 		vec = CreateVector();
 		vec->reserve( match.size() );
-		for( int i = 0; i < match.size(); ++i )
+		for( dword i = 0; i < match.size(); ++i )
 		{
 			Map* mp = CreateMap();
 			mp->IncRef();
@@ -177,7 +177,7 @@ void do_re_search( Frame* f )
 	{
 		vec = CreateVector();
 		vec->reserve( match.size() );
-		for( int i = 0; i < match.size(); ++i )
+		for( dword i = 0; i < match.size(); ++i )
 		{
 			Map* mp = CreateMap();
 			mp->IncRef();

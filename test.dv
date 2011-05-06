@@ -7,15 +7,15 @@
 #		print( n );
 #	}
 #	return bar;
-#}
-#local fcn = foo();
-#local n = "n";
-#fcn();
-
 #def foo()
 #{
 #	raise( "FUBAR'D!" );
 #}
+#def bar()
+#{
+#	foo();
+#}
+#bar();
 #def bar()
 #{
 #	foo();
