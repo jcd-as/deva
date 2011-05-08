@@ -1,0 +1,79 @@
+# test class method invokations
+class C
+{
+	def foo( s )
+	{
+		print( s );
+	}
+	def bar( s, n = 0 )
+	{
+		print( s );
+		self.n = n;
+		print( n );
+	}
+	def jam()
+	{
+		print( self.n );
+	}
+}
+
+# instance method invokation
+local c = new C();
+# c foo
+c.foo( "c foo" );
+# c bar
+# 0
+c.bar( "c bar" );
+# 0
+c.jam();
+
+
+# class method invokations through a function object
+local fcn = C.foo;
+# fcn foo
+fcn( C, "fcn foo" );
+# fcn bar
+# 0
+fcn = C.bar;
+fcn( C, "fcn bar" );
+# 0
+fcn = C.jam;
+fcn( C );
+# fcn bar 2
+# 256
+fcn = C.bar;
+fcn( C, "fcn bar 2", 256 );
+# 256
+fcn = C.jam;
+fcn( C );
+
+# direct class method invokations
+# C foo
+C.foo( "C foo" );
+# C bar
+# 0
+C.bar( "C bar" );
+# 0
+C.jam();
+# C bar 2
+# 32
+C.bar( "C bar 2", 32 );
+# 32
+C.jam();
+
+# instance method invokations unaffected by class method 
+# c bar
+# 0
+c.bar( "c bar" );
+# 0
+c.jam();
+# c bar 2
+# 64
+c.bar( "c bar 2", 64 );
+
+# NEW instance of C picks up changes to class by class method invokations
+# (i.e. 'self.n' is valid and set to 32)
+# 32
+local c2 = new C();
+c2.jam();
+
