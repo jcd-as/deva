@@ -1,15 +1,39 @@
+class C
+{
+	def foo( s )
+	{
+		print( s );
+	}
+}
+
+local c = new C();
+c.foo( "c.foo" );
+
+local fcn = C.foo;
+# works:
+fcn( C, "fcn" );
+# should work, but doesn't compile, gives error
+C.foo( "C string" );
+# should work, does compile, but crashes
+C.foo( C );
 
 #def foo()
 #{
+#	local n = 9;
 #	def bar()
 #	{
 #		extern n;
 #		print( n );
 #	}
+#	bar();
 #	return bar;
 #}
 #local fcn = foo();
 #local n = "n";
+#{
+#	local n = 0;
+#	fcn();
+#}
 #fcn();
 
 #def foo()
