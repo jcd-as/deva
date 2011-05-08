@@ -27,19 +27,19 @@ C.foo( C );
 #	}
 #	bar();
 #	return bar;
-#}
-#local fcn = foo();
-#local n = "n";
 #{
 #	local n = 0;
 #	fcn();
 #}
-#fcn();
-
 #def foo()
 #{
 #	raise( "FUBAR'D!" );
 #}
+#def bar()
+#{
+#	foo();
+#}
+#bar();
 #def bar()
 #{
 #	foo();

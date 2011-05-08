@@ -2,7 +2,7 @@
 # currently tested on
 # [x] ubuntu linux 32-bit
 # [x] ubuntu linux 64-bit
-# [ ] darwin 64-bit (Mac OSX 10.6) 
+# [x] darwin 64-bit (Mac OSX 10.6) 
 # [x] cygwin 32-bit (Windows 7)
 # [x] msvc 64-bit (Windows 7)
 
@@ -13,10 +13,13 @@
 #	CTAGS: on/off for ctags file generation
 #	IDUTILS: on/off for id-utils file generation
 #	CSCOPE: on/off for cscope file generation
+# possibly needed vars for the user to set:
+# UNIX/Cygwin:
+#	ANTLR: the antlr3c library (e.g. "antlr3c")
 
 # NOTES: 
 # for all platforms:
-# - the java sdk needs to be installed and on the path if the ANTLR grammars are changed
+# - java needs to be installed and on the path if the ANTLR grammars are changed
 # - ANTLR or ANTLRworks needs to be on the java CLASSPATH
 # - Boost 1.4.0+ needs to be installed
 # - the ANTLR3 C library and headers need to be installed

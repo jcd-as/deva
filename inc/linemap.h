@@ -88,7 +88,7 @@ public:
 	}
 
 	// look *between* the addresses we know about (in the map) to find the correct line
-	dword FindLine( dword addr )
+	dword FindLine( size_t addr )
 	{
 		dword line = 0;
 		for( map<dword, dword>::iterator i = a2l.begin(); i != a2l.end(); ++i )

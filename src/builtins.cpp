@@ -536,7 +536,7 @@ void do_num( Frame *frame )
 			d = 1.0;
 		break;
 	case obj_size:
-		d = (size_t)o->sz;
+		d = (double)(size_t)o->sz;
 		break;
 	case obj_native_obj:
 		d = (double)(size_t)o->no;

@@ -35,7 +35,7 @@
 namespace deva
 {
 
-struct Code;
+class Code;
 class Scope;
 class Frame;
 

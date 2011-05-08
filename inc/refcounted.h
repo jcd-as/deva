@@ -39,7 +39,7 @@ using namespace std;
 namespace deva
 {
 
-class Object;
+struct Object;
 
 // reference counting template class for reference types (vectors and maps)
 template<typename T> class RefCounted : public T

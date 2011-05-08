@@ -59,8 +59,6 @@ class Frame
 	bool is_native;
 	// array of locals (including args, at front of array):
 	vector<Object> locals;
-	// number of slots in the locals array
-	int num_locals;
 
 	// string data that the locals in this frame point to (i.e. non-constant
 	// strings that are created by actions in the executor)
@@ -89,10 +87,10 @@ public:
 	inline bool IsNative() const { return is_native; }
 	inline Function* GetFunction() const { return (is_native ? NULL : function ); }
 	inline const NativeFunction GetNativeFunction() const { NativeFunction nf; nf.p=NULL; nf.is_method=false; return (is_native ? native_function : nf ); }
-	inline int GetNumberOfLocals() const { return num_locals; }
-	inline Object GetLocal( int i ) const { return locals[i]; }
-	inline Object* GetLocalRef( int i ) const { return (Object*)&locals[i]; }
-	inline void SetLocal( int i, Object o ) { DecRef( locals[i] ); locals[i] = o; }
+	inline size_t GetNumberOfLocals() const { return locals.size(); }
+	inline Object GetLocal( size_t i ) const { return locals[i]; }
+	inline Object* GetLocalRef( size_t i ) const { return (Object*)&locals[i]; }
+	inline void SetLocal( size_t i, Object o ) { DecRef( locals[i] ); locals[i] = o; }
 	inline byte* GetReturnAddress() const { return addr; }
 	inline byte* GetCallSite() const { return call_site; }
 	inline int NumArgsPassed() const { return num_args; }
