@@ -2072,8 +2072,8 @@ Opcode Executor::ExecuteInstruction()
 								throw ICE( "class/instance method not marked as a method." );
 							if( obj.type == obj_native_function && !obj.nf.is_method )
 								throw ICE( "class/instance native method not marked as a method." );
-							// push the class/instance ('this') for instances
-							if( lhs.type == obj_instance )
+							// push the class/instance ('this') for instances/classes
+							if( lhs.type == obj_instance || lhs.type == obj_class )
 							{
 								IncRef( lhs );
 								stack.push_back( lhs );
