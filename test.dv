@@ -1,37 +1,41 @@
-#local f = importmodule( "foo" );
-#print( f );
-#print( f.str );
-#print( dir( f ) );
+import foo;
+print( foo );
+print( foo.str );
+print( dir( foo ) );
+local f = importmodule( "foo" );
+print( f );
+print( f.str );
+print( dir( f ) );
 
-class C
-{
-	def foo( s )
-	{
-		self.s = s;
-		def nest()
-		{
-#			print( self.s );
-		}
-		nest();
-	}
-	def bar()
-	{
-		print( self.s );
-	}
-}
-
-#local c = new C();
-#c.foo( "foobar" );
+#class C
+#{
+#	def foo( s )
+#	{
+#		self.s = s;
+#		def nest()
+#		{
+##			print( self.s );
+#		}
+#		nest();
+#	}
+#	def bar()
+#	{
+#		print( self.s );
+#	}
+#}
 #
-print( dir( C ) );
-local m = dir( C );
-m.junk = 54;
-print( m );
-print( C );
-print( dir( C ) );
-local c = new C();
-print( c );
-print( dir( c ) );
+##local c = new C();
+##c.foo( "foobar" );
+##
+#print( dir( C ) );
+#local m = dir( C );
+#m.junk = 54;
+#print( m );
+#print( C );
+#print( dir( C ) );
+#local c = new C();
+#print( c );
+#print( dir( c ) );
 
 
 #def foo()

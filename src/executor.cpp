@@ -3666,7 +3666,7 @@ Object Executor::ImportModule( const char* module_name )
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
 	if( modules.count( string( module_name ) ) != 0 )
-		return Object( obj_null );
+		return Object( modules.at( string( module_name ) ) );
 
 	// check the list of builtin modules first
 	if( ImportBuiltinModule( module_name ) )
