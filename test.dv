@@ -23,12 +23,15 @@ class C
 #local c = new C();
 #c.foo( "foobar" );
 #
-#print( dir( C ) );
+print( dir( C ) );
 local m = dir( C );
 m.junk = 54;
+print( m );
 print( C );
+print( dir( C ) );
 local c = new C();
 print( c );
+print( dir( c ) );
 
 
 #def foo()

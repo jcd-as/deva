@@ -1415,11 +1415,15 @@ void do_dir( Frame* frame )
 	switch( o->type )
 	{
 	case obj_map:
-		helper.ReturnVal( *o );
-		break;
 	case obj_class:
 	case obj_instance:
-		helper.ReturnVal( Object( o->m ) );
+		{
+		// create a new map object that is a copy of the one we received,
+		Map* m = CreateMap( *(o->m) );
+		Object ret = Object( m );
+		IncRefChildren( ret );
+		helper.ReturnVal( ret );
+		}
 		break;
 	case obj_module:
 		{
