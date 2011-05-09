@@ -88,7 +88,7 @@ int Scope::FindSymbolIndex( Object* o, Frame* f ) const
 			// On^2 isn't great, even they are just simple compares...
 
 			// found, now we need to get the index of this local in the frame
-			for( int i = 0; i < f->GetNumberOfLocals(); i++ )
+			for( size_t i = 0; i < f->GetNumberOfLocals(); i++ )
 			{
 				if( o == f->GetLocalRef( i ) )
 					return i;
@@ -119,6 +119,16 @@ vector<Function*> Scope::GetFunctions()
 			fcns.push_back( GetLocal( i->second )->f );
 	}
 	return fcns;
+}
+
+vector<pair<string, Object*> > Scope::GetLocals()
+{
+	vector< pair<string, Object*> > locals;
+	for( map<string, LocalRef>::iterator i = data.begin(); i != data.end(); ++i )
+	{
+		locals.push_back( make_pair( i->first, GetLocal( i->second ) ) );
+	}
+	return locals;
 }
 
 /////////////////////////////////////////////////////////////////////////////

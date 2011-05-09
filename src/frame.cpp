@@ -117,11 +117,6 @@ Object* Frame::FindSymbol( const char* name ) const
 	return NULL;
 }
 
-const char* Frame::FindSymbolName( Object* o )
-{
-	return scopes->FindSymbolName( o );
-}
-
 // copy all the strings in 'o' from the parent to here
 // ('o' can be a string, or a vector/map/class/instance which can then can
 // contain strings - which will be looked for recursively)

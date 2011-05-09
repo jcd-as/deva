@@ -145,7 +145,8 @@ public:
 	inline void PushStack( Object o ) { stack.push_back( o ); }
 	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
 
-	Object* FindSymbol( const char* name, const char* module = NULL );
+	Object* FindSymbol( const char* name, Module* mod = NULL );
+	const char* FindSymbolName( Object* o, bool local_only = false ) { return scopes->FindSymbolName( o, local_only ); }
 	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
 	// helpers

@@ -67,6 +67,7 @@ enum ObjectType
 	obj_native_obj,			// a native (C/C++) object (void*)
 	obj_size,				// an integral sized value (internal use only, for code addresses etc)
 	obj_symbol_name,		// an identifier, same data as a string
+	obj_module,				// an imported module
 	obj_end = 255			// end of enum marker
 };
 
@@ -80,6 +81,7 @@ inline bool IsVecType( ObjectType t ) { return t == obj_vector; }
 // forward decls needed by Object class
 class Frame;
 struct Function;
+struct Module;
 class VectorBase;
 class MapBase;
 
@@ -107,6 +109,7 @@ struct Object
 		NativeFunction nf;	// obj_native_function
 		void* no;			// obj_native_obj
 		size_t sz;			// obj_size
+		Module* mod;		// obj_module
 	};
 
 	Object() : type( obj_end ), d( 0.0 ) {} // invalid object
@@ -123,6 +126,7 @@ struct Object
 	explicit Object( NativeFunctionPtr n, bool method = false ) : type( obj_native_function ) { nf.p = n; nf.is_method = method; }
 	explicit Object( void* n ) : type( obj_native_obj ), no( n ) {}
 	explicit Object( size_t n ) : type( obj_size ), sz( n ) {}
+	explicit Object( Module* m ) : type( obj_module ), mod( m ) {}
 	explicit Object( ObjectType t, char* n ) : type( obj_symbol_name ), s( n )
 	{ /*assert( t == obj_symbol_name );*/ }
 	explicit Object( ObjectType t, const char* n ) : type( obj_symbol_name ), s( const_cast<char*>(n) )
@@ -146,6 +150,7 @@ struct Object
 	inline bool IsNativeFunction(){ return type == obj_native_function; }
 	inline bool IsNativeObj(){ return type == obj_native_obj; }
 	inline bool IsSize(){ return type == obj_size; }
+	inline bool IsModule(){ return type == obj_module; }
 
 	inline operator const bool (){ return (b != 0); }
 	inline operator const double (){ return d; }
@@ -156,6 +161,7 @@ struct Object
 	inline operator const NativeFunction (){ return nf; }
 	inline operator const void* (){ return no; }
 	inline operator const size_t (){ return sz; }
+	inline operator const Module* (){ return mod; }
 
 	// equality operator
 	bool operator == ( const Object& rhs ) const;

@@ -106,9 +106,6 @@ public:
 
 	// resolve symbols through the scope table
 	Object* FindSymbol( const char* name ) const;
-	// TODO: doesn't find names of builtins, modules, fcns etc ?
-	// find a symbol's name
-	const char* FindSymbolName( Object* o );
 };
 
 

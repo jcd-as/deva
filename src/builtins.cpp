@@ -87,8 +87,10 @@ const string builtin_names[] =
 	string( "is_native_obj" ),
 	string( "is_size" ),
 	string( "is_symbol_name" ),
+	string( "is_module" ),
 	string( "vector_of" ),
 	string( "raise" ),
+	string( "dir" ),
 };
 // ...and function pointers to the executor functions for them
 NativeFunction builtin_fcns[] = 
@@ -140,8 +142,10 @@ NativeFunction builtin_fcns[] =
 	{do_is_native_obj, false},
 	{do_is_size, false},
 	{do_is_symbol_name, false},
+	{do_is_module, false},
 	{do_vector_of, false},
 	{do_raise, false},
+	{do_dir, false},
 };
 Object builtin_fcn_objs[] = 
 {
@@ -192,8 +196,10 @@ Object builtin_fcn_objs[] =
 	Object( do_is_native_obj ),
 	Object( do_is_size ),
 	Object( do_is_symbol_name ),
+	Object( do_is_module ),
 	Object( do_vector_of ),
 	Object( do_raise ),
+	Object( do_dir ),
 };
 const int num_of_builtins = sizeof( builtin_names ) / sizeof( builtin_names[0] );
 
@@ -477,7 +483,8 @@ void do_name( Frame *frame )
 	else
 	{
 		// locate the name of this object
-		const char* str = frame->GetParent()->FindSymbolName( o );
+//		const char* str = frame->GetParent()->FindSymbolName( o );
+		const char* str = ex->FindSymbolName( o );
 		name = frame->GetParent()->AddString( str );
 	}
 
@@ -1371,6 +1378,19 @@ void do_is_symbol_name( Frame* frame )
 		helper.ReturnVal( Object( false ) );
 }
 
+void do_is_module( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_module", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_module )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
 void do_raise( Frame *frame )
 {
 	BuiltinHelper helper( NULL, "raise", frame );
@@ -1382,6 +1402,48 @@ void do_raise( Frame *frame )
 	throw UserException( err->s );
 
 //	helper.ReturnVal( Object( obj_null ) );
+}
+
+void do_dir( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "dir", frame );
+
+	helper.CheckNumberOfArguments( 1 );
+	Object* o = helper.GetLocalN( 0 );
+	helper.ExpectTypes( o, obj_module, obj_map, obj_class, obj_instance );
+
+	switch( o->type )
+	{
+	case obj_map:
+		helper.ReturnVal( *o );
+		break;
+	case obj_class:
+	case obj_instance:
+		helper.ReturnVal( Object( o->m ) );
+		break;
+	case obj_module:
+		{
+		// create a map
+		Map* m = CreateMap();
+		if( !o->mod )
+			throw RuntimeException( "Invalid module passed to 'dir' builtin function." );
+		Scope* s = o->mod->scope;
+		vector< pair<string, Object*> > locals = s->GetLocals();
+		for( size_t i = 0; i < locals.size(); i++ )
+		{
+			const char* name = frame->GetParent()->AddString( locals[i].first );
+			Object* ob = locals[i].second;
+			IncRef( *ob );
+			m->insert( make_pair( Object( name ), *ob ) );
+		}
+		// return the map
+		helper.ReturnVal( Object( m ) );
+		}
+		break;
+	default:
+		// can't get here
+		break;
+	}
 }
 
 

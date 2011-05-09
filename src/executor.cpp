@@ -181,16 +181,11 @@ Object* Executor::FindFunction( string name, string modulename, size_t offset )
 }
 
 // locate a symbol, possibly in a given module
-Object* Executor::FindSymbol( const char* name, const char* module /*= NULL*/ )
+Object* Executor::FindSymbol( const char* name, Module* mod /*= NULL*/ )
 {
-	if( module )
+	if( mod )
 	{
-		// find the named module
-		map<string, Module*>::iterator i = modules.find( string( module ) );
-		if( i == modules.end() )
-			return NULL;
-		Scope* scope = i->second->scope;
-		Object* o = scope->FindSymbol( name );
+		Object* o = mod->scope->FindSymbol( name );
 		return o;
 	}
 	else
@@ -216,7 +211,13 @@ Object Executor::ResolveSymbol( Object sym )
 		if( obj )
 			return *obj;
 
+		// module?
+		map<string, Module*>::iterator i = modules.find( string( sym.s ) );
+		if( i != modules.end() )
+			return Object( i->second );
+
 		// allow module names to pass through
+		// (for native modules)
 		if( module_names.count( sym.s ) != 0 )
 			return sym;
 
@@ -449,8 +450,7 @@ Object Executor::ExecuteText( const char* const text )
 	bp = orig_bp;
 	end = orig_end;
 
-	Object ret = GetConstant( Object( obj_symbol_name, name.c_str() ) );
-	return ret;
+	return Object( cur_module );
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -1108,6 +1108,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_function: stack.push_back( Object( lhs.nf.p == rhs.nf.p ) ); break;
 		case obj_native_obj: stack.push_back( Object( lhs.no == rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz == rhs.sz ) ); break;
+		case obj_module: stack.push_back( Object( lhs.mod == rhs.mod ) ); break;
 		case obj_end: throw ICE( "Invalid object in op_eq." ); break;
 		}
 		break;
@@ -1136,6 +1137,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_function: stack.push_back( Object( lhs.nf.p != rhs.nf.p ) ); break;
 		case obj_native_obj: stack.push_back( Object( lhs.no != rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz != rhs.sz ) ); break;
+		case obj_module: stack.push_back( Object( lhs.mod != rhs.mod ) ); break;
 		case obj_end: throw ICE( "Invalid object in op_neq." ); break;
 		}
 		break;
@@ -1810,7 +1812,7 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
 		if( lhs.type == obj_symbol_name )
 		{
@@ -1837,12 +1839,7 @@ Opcode Executor::ExecuteInstruction()
 				// no native module, try as a deva symbol/module
 				else
 				{
-					// look up the rhs as a symbol in the module
-					Object* obj = FindSymbol( rhs.s, lhs.s );
-					if( !obj )
-						throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
-					IncRef( *obj );
-					stack.push_back( *obj );
+					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
 				}
 			}
 		}
@@ -1865,6 +1862,16 @@ Opcode Executor::ExecuteInstruction()
 			CurrentFrame()->AddString( c );
 			// return it on the stack
 			stack.push_back( Object( c ) );
+		}
+		// module:
+		else if( lhs.type == obj_module )
+		{
+			// look up the rhs as a symbol in the module
+			Object* obj = FindSymbol( rhs.s, lhs.mod );
+			if( !obj )
+				throw RuntimeException( boost::format( "Cannot find '%1%' in module." ) % rhs.s );
+			IncRef( *obj );
+			stack.push_back( *obj );
 		}
 		// vector:
 		else if( IsVecType( lhs.type ) )
@@ -1965,7 +1972,7 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_string && lhs.type != obj_symbol_name )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
 		if( lhs.type == obj_symbol_name )
@@ -1993,12 +2000,7 @@ Opcode Executor::ExecuteInstruction()
 				// no native module, try as a deva symbol/module
 				else
 				{
-					// look up the rhs as a symbol in the module
-					Object* obj = FindSymbol( rhs.s, lhs.s );
-					if( !obj )
-						throw RuntimeException( boost::format( "Cannot find '%1%' in module '%2%'." ) % rhs.s % lhs.s );
-					IncRef( *obj );
-					stack.push_back( *obj );
+					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
 				}
 			}
 		}
@@ -2022,6 +2024,16 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Invalid string method." );
 
 			break;
+		}
+		// module:
+		else if( lhs.type == obj_module )
+		{
+			// look up the rhs as a symbol in the module
+			Object* obj = FindSymbol( rhs.s, lhs.mod );
+			if( !obj )
+				throw RuntimeException( boost::format( "Cannot find '%1%' in module." ) % rhs.s );
+			IncRef( *obj );
+			stack.push_back( *obj );
 		}
 		// vector:
 		else if( lhs.type == obj_vector )
@@ -3571,12 +3583,6 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 	ParseReturnValue prv;
 	PassOneReturnValue p1rv;
 
-	// add the constant for this module name
-	char* str = copystr( module_name );
-//	if( !AddGlobalConstant( Object( obj_symbol_name, str ) ) )
-	if( !cur_code->AddConstant( Object( obj_symbol_name, str ) ) )
-		delete[] str;
-
 	// NOTE: compiler and semantics global objects should be free'd and NULL at
 	// this point!
 
@@ -3722,6 +3728,10 @@ Object Executor::ImportModule( const char* module_name )
 		// otherwise we can just read the existing .dvc file
 		code = ReadCode( dvcfile );
 	}
+	// add the constant for this module name
+	char* str = copystr( mod );
+	if( !cur_code->AddConstant( Object( obj_symbol_name, str ) ) )
+		delete[] str;
 
 	// create a new module and add it to the module collection
 	// find our 'module' function, "module@main"
@@ -3757,10 +3767,7 @@ Object Executor::ImportModule( const char* module_name )
 	bp = orig_bp;
 	end = orig_end;
 
-	// module names are entered into the global constants
-//	Object ret = GetGlobalConstant( Object( obj_symbol_name, mod.c_str() ) );
-	Object ret = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
-	return ret;
+	return Object( cur_module );
 }
 
 Code* Executor::GetCode( byte* address )

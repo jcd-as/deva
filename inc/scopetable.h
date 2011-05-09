@@ -73,10 +73,6 @@ class Scope
 	// TODO: switch to boost unordered map (hash table)??
 	map<string, LocalRef> data;
 
-public:
-	Scope( Frame* f, bool is_func = false, bool is_mod = false ) : frame( f ), is_function( is_func ), is_module( is_mod ) {}
-	~Scope();
-
 	Object* GetLocal( LocalRef r ) const
 	{
 		if( r.is_function )
@@ -86,6 +82,10 @@ public:
 			return frame->GetLocalRef( r.index );
 		}
 	}
+
+public:
+	Scope( Frame* f, bool is_func = false, bool is_mod = false ) : frame( f ), is_function( is_func ), is_module( is_mod ) {}
+	~Scope();
 
 	// for module scopes only, delete the data without deleting the scope:
 	// (necessary because modules need to call destructors for objects, which
@@ -118,6 +118,7 @@ public:
 	const char* FindSymbolName( Object* o );
 
 	vector<Function*> GetFunctions();
+	vector<pair<string, Object*> > GetLocals();
 };
 
 class ScopeTable

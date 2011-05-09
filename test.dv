@@ -1,21 +1,35 @@
+#local f = importmodule( "foo" );
+#print( f );
+#print( f.str );
+#print( dir( f ) );
+
 class C
 {
 	def foo( s )
 	{
-		print( s );
+		self.s = s;
+		def nest()
+		{
+#			print( self.s );
+		}
+		nest();
+	}
+	def bar()
+	{
+		print( self.s );
 	}
 }
 
+#local c = new C();
+#c.foo( "foobar" );
+#
+#print( dir( C ) );
+local m = dir( C );
+m.junk = 54;
+print( C );
 local c = new C();
-c.foo( "c.foo" );
+print( c );
 
-local fcn = C.foo;
-# works:
-fcn( C, "fcn" );
-# should work, but doesn't compile, gives error
-C.foo( "C string" );
-# should work, does compile, but crashes
-C.foo( C );
 
 #def foo()
 #{
