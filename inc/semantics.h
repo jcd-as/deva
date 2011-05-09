@@ -51,6 +51,10 @@ namespace deva_compile
 
 struct Semantics
 {
+	// ignore undefined variables (for executing code in an existing
+	// environment, ala eval() or an interactive shell)
+	bool ignore_undefined_vars;
+
 	// warnings on?
 //	bool show_warnings;
 
@@ -90,7 +94,7 @@ struct Semantics
 	vector<int> in_while_loop;
 
 	// constructor
-	Semantics() : //show_warnings( warn ),
+	Semantics( bool ignore_undef = NULL ) : ignore_undefined_vars( ignore_undef ), //show_warnings( warn ),
 	   	global_scope( NULL ), current_scope( NULL ),
 		first_default_arg( -1 ),
 		in_class( false ),

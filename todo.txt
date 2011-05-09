@@ -2,12 +2,12 @@ TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-04-28 @deva +veryhigh implement devash (shell)
 	difficulties at executing code in the context of @main (or any Frame) include:
-	- locals aren't expandable. they are stored in the Frame, but because Scopes have pointers directly to the locals, you can't just re-alloc the collection in the Frame (even if it is a std::vector, a resize() op can/will re-alloc and invalidate the pointers)
-	- semantic checking and compile-time symbol checking has to be relaxed - the current block won't have decls for the vars/fcns used
+	x locals aren't expandable. they are stored in the Frame, but because Scopes have pointers directly to the locals, you can't just re-alloc the collection in the Frame (even if it is a std::vector, a resize() op can/will re-alloc and invalidate the pointers)
+	x semantic checking and compile-time symbol checking has to be relaxed - the current block won't have decls for the vars/fcns used
 	- var lookups: even locals become external lookups because the compiler doesn't see the other symbols as local in the code it is compiling. all symbols have to be added to the global const tables
 	- function calls don't work because we jump to the fcn offset in the wrong code block (@main's instead of the evaluated code's)
 
-TODO 2011-05-08 @deva +high ?? unify native (builtin) modules and deva module Objects ??
+TODO 2011-05-08 @deva +high unify native (builtin) modules and deva module Objects. ISSUE: how can we determine what fcns are in a native module for dir()?
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 

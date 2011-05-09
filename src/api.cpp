@@ -125,7 +125,7 @@ PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags )
 
 	// create and init the deva semantics, compiler and execution engine components
 	// ("current_file" must be set before we can do this)
-	semantics = new Semantics();
+	semantics = new Semantics( flags.ignore_undefined_vars );
 
 	// TODO: other flags?
 
@@ -167,7 +167,6 @@ Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fl
 	// free items
 	cmpPsr->free( cmpPsr );      
 
-//	return compiler->GetCode( p1rv.num_constants );
 	return compiler->GetCode();
 }
 

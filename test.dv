@@ -1,11 +1,15 @@
-import foo;
-print( foo );
-print( foo.str );
-print( dir( foo ) );
-local f = importmodule( "foo" );
-print( f );
-print( f.str );
-print( dir( f ) );
+#import os;
+local mod = importmodule( "os" );
+print( mod );
+
+#import foo;
+#print( foo );
+#print( foo.str );
+#print( dir( foo ) );
+#local f = importmodule( "foo" );
+#print( f );
+#print( f.str );
+#print( dir( f ) );
 
 #class C
 #{

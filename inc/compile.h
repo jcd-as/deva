@@ -181,7 +181,7 @@ public:
 	~Compiler() { delete is; }
 
 	// get the Code block object for this compiled module. this is the
-	// end-of-life for the Compiler object, it's raison d'etre. once this is
+	// end-of-life for the Compiler object, its raison d'etre. once this is
 	// called, the compiler object should not be used again
 	Code* GetCode() { code->code = (byte*)is->Bytes(); code->len = is->Length(); return code; }
 

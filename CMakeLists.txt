@@ -65,6 +65,11 @@ if( ANTLR_FOUND )
 	include_directories( ${ANTLR_INCLUDE_DIR} )
 endif()
 
+# find libedit
+##############
+# TODO: libedit on (non-cygwin) ms-windows??
+find_library( EDIT edit )
+
 # configure defines and options
 ###############################
 if( ${UNIX} )
@@ -123,10 +128,9 @@ add_custom_command(
 # force the antlr-generated .c files to build as c++
 set_source_files_properties( devaLexer.c devaParser.c semantic_walker.c compile_walker.c PROPERTIES LANGUAGE CXX )
 
-# main executable
-#################
-add_executable( deva 
-	src/deva.cpp
+# main library
+##############
+add_library( deva-rt SHARED
 	src/opcodes.cpp
 	src/scope.cpp
 	src/semantics.cpp
@@ -153,17 +157,45 @@ add_executable( deva
 	compile_walker.c
 )
 
+# main executable
+#################
+add_executable( deva 
+	src/deva.cpp
+)
+
+# shell executable
+##################
+if( DEVASH )
+	add_executable( devash
+		src/devash.cpp
+	)
+endif()
+
 # add libraries
 ###############
+target_link_libraries( deva deva-rt )
+if( DEVASH )
+	target_link_libraries( devash deva-rt )
+	target_link_libraries( devash ${EDIT} )
+endif()
 if( ANTLR_FOUND )
 	if( ${UNIX} )
 		target_link_libraries( deva ${ANTLR})
+		if( DEVASH )
+			target_link_libraries( devash ${ANTLR})
+		endif()
 	else()
 		target_link_libraries( deva ${ANTLR_LIBRARIES})
+		if( DEVASH )
+			target_link_libraries( devash ${ANTLR_LIBRARIES})
+		endif()
 	endif()
 endif()
 if( Boost_FOUND )
 	target_link_libraries( deva ${Boost_LIBRARIES} )
+	if( DEVASH )
+		target_link_libraries( devash ${Boost_LIBRARIES} )
+	endif()
 endif()
 
 # custom commands to build ID, tags and cscope databases
@@ -200,6 +232,7 @@ endif()
 # 'install' target
 ##################
 install( TARGETS deva RUNTIME DESTINATION bin )
+install( TARGETS deva-rt LIBRARY DESTINATION lib )
 
 # install man page
 ##################

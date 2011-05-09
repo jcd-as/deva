@@ -63,11 +63,11 @@ struct ParseReturnValue
 	ParseReturnValue() : successful( false ), input_stream( NULL ), lexer( NULL ), tokenstream( NULL ), parser( NULL ) {}
 };
 
-// TODO: currently no flags. do we need this?
 struct PassOneFlags
 {
 //	bool show_warnings;
-	PassOneFlags() /*: show_warnings( false )*/ {}
+	bool ignore_undefined_vars;
+	PassOneFlags() : ignore_undefined_vars( false ) /* show_warnings( false )*/ {}
 };
 
 // TODO: currently no flags. do we need this?

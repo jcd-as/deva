@@ -162,7 +162,6 @@ Object* Executor::FindFunction( string name, string modulename, size_t offset )
 	{
 		if( i->second->type == obj_function )
 		{
-//			if( i->second->f->modulename == modulename && (size_t)i->second->f->addr == offset )
 			string m = i->second->f->modulename;
 			size_t a = (size_t)i->second->f->addr;
 			if(  m == modulename &&  a == offset )
@@ -334,32 +333,74 @@ void Executor::CallDestructors( Object o )
 	}
 }
 
-void Executor::Execute( const Code* const code )
+// initialize for execution, using this code block as 'main'
+void Executor::Begin( const Code* const c /*= NULL*/ )
 {
 	// NOTE: all actions that create a new C string (char*) as a local need to
 	// add it to that frame's strings collection (i.e. call
 	// CurrentFrame()->AddString())
 
+	Code * code = (Code*)c;
+
+	// if we didn't receive a code block,
+	// need to create a 'main' function and code block
+	if( !code )
+	{
+		// create 'main'
+		Function* f = new Function();
+		f->name = string( "@main" );
+		if( current_file )
+			f->filename = string( current_file );
+		else
+			f->filename = string( "" );
+		f->first_line = 0;
+		f->num_args = 0;
+		f->classname = string( "" );
+		f->addr = 0;
+		f->module = NULL;
+		f->modulename = string( "" );
+		ex->AddFunction( "@main", f );
+
+		// add an empty code block
+		code = new Code();
+		code->lines = new LineMap();
+		code->code = new byte[1];
+		code->code[0] = op_halt;
+		//ex->ExecuteCode( code );
+		code_blocks.push_back( code );
+	}
+
 	scopes = new ScopeTable();
 
 	// a starting ('global') frame
 //	Object *main = FindFunction( string( "@main" ), string( "" ), 0 );
-	string cf = current_file;
-	string fp = get_file_part( cf );
-	string modname = get_stem( fp );
+	string modname;
+	if( current_file )
+	{
+		string cf = current_file;
+		string fp = get_file_part( cf );
+		modname = get_stem( fp );
+	}
+	else
+		modname = "";
 	Object *main = FindFunction( string( "@main" ), modname, 0 );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
 	// make sure the global scope is always around
-	PushScope( new Scope( frame ) );
+	Scope* scope = new Scope( frame );
+	PushScope( scope );
+
+	// setup the 'main' module
+	main_module = new Module( code, scope, frame );
 
 	if( trace )
 		cout << "Execution trace:" << endl;
+}
 
-	// execute until end
-	ExecuteCode( code );
-
+// shutdown and free resources
+void Executor::End()
+{
 	// pop the 'global' scope
 	PopScope();
 
@@ -374,10 +415,28 @@ void Executor::Execute( const Code* const code )
 		(*i)->DeleteFrame();
 		delete *i;
 	}
+	// free the main module
+	delete main_module;
 
 	// free the scope table
 	delete scopes;
 	PopFrame();
+}
+
+void Executor::Execute( const Code* const code )
+{
+	// NOTE: all actions that create a new C string (char*) as a local need to
+	// add it to that frame's strings collection (i.e. call
+	// CurrentFrame()->AddString())
+
+	// initialize for execution
+	Begin( code );
+
+	// execute until end
+	ExecuteCode( code );
+
+	// shutdown and free resources
+	End();
 }
 
 void Executor::ExecuteCode( const Code* const code )
@@ -451,6 +510,56 @@ Object Executor::ExecuteText( const char* const text )
 	end = orig_end;
 
 	return Object( cur_module );
+}
+
+void Executor::ExecuteInCurrentScope( const char* const text )
+{
+	static dword count = 0;
+	ostringstream s;
+	s << "[TEXT" << count << "]";
+	count++;
+	string name = s.str();
+	// add the 'text module' name to the list of global constants 
+	AddGlobalConstant( Object( obj_symbol_name, copystr( name ) ) );
+	const Code* code = LoadText( text, name.c_str() );
+
+	Code* orig_code = cur_code;
+	byte* orig_ip = ip;
+	byte* orig_bp = bp;
+	byte* orig_end = end;
+
+	// find our 'module' function, "name@main"
+	Object *eval_main = FindFunction( "@main", name, 0 );
+	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f, true );
+	PushFrame( frame );
+	Scope* scope = new Scope( frame, false, true );
+	PushScope( scope );
+
+	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
+
+	// currently importing text module, set the flag
+	Module* prev_mod = s_currently_importing_module;
+	s_currently_importing_module = cur_module;
+
+	// execute
+	ExecuteCode( code );
+	
+	// no longer importing this module, reset the flag
+	s_currently_importing_module = prev_mod;
+
+	// add the module to load-ordered stack (for deletion in depth first order)
+	module_stack.push_back( cur_module );
+
+	// pop the scope and frame
+	PopScope();
+	PopFrame();
+
+	cur_code = orig_code;
+	ip = orig_ip;
+	bp = orig_bp;
+	end = orig_end;
+
+//	return Object( cur_module );
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -3666,7 +3775,10 @@ Object Executor::ImportModule( const char* module_name )
 	// prevent importing the same module more than once
 	vector< pair<string, ScopeTable*> >::iterator it;
 	if( modules.count( string( module_name ) ) != 0 )
-		return Object( modules.at( string( module_name ) ) );
+	{
+		map<string, Module*>::iterator i = modules.find( string( module_name ) );
+		return Object( i->second );
+	}
 
 	// check the list of builtin modules first
 	if( ImportBuiltinModule( module_name ) )

@@ -93,6 +93,9 @@ class Executor
 	// 'global' scope table (namespace)
 	ScopeTable* scopes;
 
+	// the main module (top-level)
+	Module* main_module;
+
 	// available native modules
 	map<string, module_fcn_finder> native_modules;
 
@@ -206,12 +209,16 @@ public:
 
 	// code execution methods:
 	//
-	// main entry point (must be called on the 'main' code block)
+	// initialize for execution, using this code block as 'main'
+	void Begin( const Code* const code = NULL );
+	void End();
+	// main entry point - shortcut to initialize, execute code block and exit
 	void Execute( const Code* const code );
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
 	void ExecuteCode( const Code* const code );
 	Object ExecuteText( const char* const text );
+	void ExecuteInCurrentScope( const char* const text );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
