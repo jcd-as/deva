@@ -58,8 +58,9 @@ extern const int num_of_module_bit_fcns;
 
 // is a given name a builtin function?
 bool IsModuleBitFunction( const string & name );
-NativeFunction GetModuleBitFunction( const string & name );
 
+struct NativeModule;
+NativeModule* GetModuleBit();
 
 } // namespace deva
 

@@ -73,8 +73,9 @@ extern const int num_of_module_os_fcns;
 
 // is a given name a builtin function?
 bool IsModuleOsFunction( const string & name );
-NativeFunction GetModuleOsFunction( const string & name );
 
+struct NativeModule;
+NativeModule* GetModuleOs();
 
 } // namespace deva
 

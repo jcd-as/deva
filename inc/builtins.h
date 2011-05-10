@@ -97,6 +97,7 @@ void do_is_native_obj( Frame* f );
 void do_is_size( Frame* f );
 void do_is_symbol_name( Frame* f );
 void do_is_module( Frame* f );
+void do_is_native_module( Frame* f );
 void do_vector_of( Frame* f );
 void do_raise( Frame* f );
 void do_dir( Frame* f );

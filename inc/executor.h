@@ -60,7 +60,7 @@ namespace deva
 // number of 'global' constant symbols (true, false, null, 'delete', 'new' etc)
 extern const int num_of_constant_symbols;
 
-typedef NativeFunction (*module_fcn_finder)(const string&);
+//typedef NativeFunction (*module_fcn_finder)(const string&);
 
 // singleton class for deva VM execution engine
 class Executor
@@ -97,16 +97,19 @@ class Executor
 	Module* main_module;
 
 	// available native modules
-	map<string, module_fcn_finder> native_modules;
+//	map<string, module_fcn_finder> native_modules;
+//	map<string, NativeModule> native_modules;
+	map<string, Object> native_modules;
 
 	// native modules that have been imported
-	map<string, module_fcn_finder> imported_native_modules;
+//	map<string, module_fcn_finder> imported_native_modules;
+	map<string, Object> imported_native_modules;
 	
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
 	// modules that have been imported
-	map<string, Module*> modules;
+	map<string, Object> modules;
 
 	// load-ordered list (stack) of modules
 	vector<Module*> module_stack;
@@ -158,14 +161,29 @@ public:
 private:
 	Object* FindFunction( string name, string modulename, size_t offset );
 
+	// find a symbol in all current scopes, fcns, builtins, modules etc
+	Object* FindSymbolInAnyScope( Object sym );
 	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
 	Object ResolveSymbol( Object sym );
 
 	Module* AddModule( const char* name, const Code* c, Scope* s, Frame* f );
+	Object* GetModule( const char* const name );
+	const char* const GetModuleName( const char* const name );
 
 public:
 
-	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( make_pair( string( name ), fcn ) ); module_names.insert( string(name) ); }
+//	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( string( name ) ); /*module_names.insert( string(name) );*/ }
+//	inline void AddNativeModule( const char* name, NativeModule mod ) { native_modules.insert( make_pair( string( name ), mod ) ); }
+	inline void AddNativeModule( NativeModule* mod ) { native_modules.insert( make_pair( mod->name, Object( mod ) ) ); }
+	inline Object* GetNativeModule( const char* name )
+	{
+//		map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( name ) );
+//		map<string, NativeModule>::iterator i = imported_native_modules.find( string( name ) );
+		map<string, Object>::iterator i = imported_native_modules.find( string( name ) );
+		if( i != imported_native_modules.end() )
+			return &(i->second);
+		else return NULL;
+	}
 
 
 	// constant pool handling methods

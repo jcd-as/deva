@@ -84,39 +84,6 @@ Frame::~Frame()
 	}
 }
 
-// resolve symbols through the scope table
-Object* Frame::FindSymbol( const char* name ) const
-{
-	// search the locals for this frame
-	Object* o = scopes->FindSymbol( name, true );
-	if( o )
-		return o;
-
-	// function?
-	o = scopes->FindFunction( name );
-	if( o )
-		return o;
-
-	// check builtins
-	if( IsBuiltin( string( name ) ) )
-		return GetBuiltinObjectRef( string( name ) );
-	else
-	{
-		// extern symbol?
-		o = scopes->FindExternSymbol( name );
-		if( o )
-			return o;
-		// type builtins? (string, vector, map)
-		else if( IsStringBuiltin( string( name ) ) )
-			return GetStringBuiltinObjectRef( string( name ) );
-		else if( IsVectorBuiltin( string( name ) ) )
-			return GetVectorBuiltinObjectRef( string( name ) );
-		else if( IsMapBuiltin( string( name ) ) )
-			return GetMapBuiltinObjectRef( string( name ) );
-	}
-	return NULL;
-}
-
 // copy all the strings in 'o' from the parent to here
 // ('o' can be a string, or a vector/map/class/instance which can then can
 // contain strings - which will be looked for recursively)

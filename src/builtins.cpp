@@ -1391,6 +1391,19 @@ void do_is_module( Frame* frame )
 		helper.ReturnVal( Object( false ) );
 }
 
+void do_is_native_module( Frame* frame )
+{
+	BuiltinHelper helper( NULL, "is_native_module", frame );
+	helper.CheckNumberOfArguments( 1 );
+
+	Object* o = helper.GetLocalN( 0 );
+
+	if( o->type == obj_native_module )
+		helper.ReturnVal( Object( true ) );
+	else
+		helper.ReturnVal( Object( false ) );
+}
+
 void do_raise( Frame *frame )
 {
 	BuiltinHelper helper( NULL, "raise", frame );
@@ -1410,7 +1423,7 @@ void do_dir( Frame* frame )
 
 	helper.CheckNumberOfArguments( 1 );
 	Object* o = helper.GetLocalN( 0 );
-	helper.ExpectTypes( o, obj_module, obj_map, obj_class, obj_instance );
+	helper.ExpectTypes( o, obj_module, obj_native_module, obj_map, obj_class, obj_instance );
 
 	switch( o->type )
 	{
@@ -1430,7 +1443,7 @@ void do_dir( Frame* frame )
 		// create a map
 		Map* m = CreateMap();
 		if( !o->mod )
-			throw RuntimeException( "Invalid module passed to 'dir' builtin function." );
+			throw RuntimeException( "Invalid module passed to builtin function 'dir'." );
 		Scope* s = o->mod->scope;
 		vector< pair<string, Object*> > locals = s->GetLocals();
 		for( size_t i = 0; i < locals.size(); i++ )
@@ -1439,6 +1452,21 @@ void do_dir( Frame* frame )
 			Object* ob = locals[i].second;
 			IncRef( *ob );
 			m->insert( make_pair( Object( name ), *ob ) );
+		}
+		// return the map
+		helper.ReturnVal( Object( m ) );
+		}
+		break;
+	case obj_native_module:
+		{
+		// create a map
+		Map* m = CreateMap();
+		if( !o->nm )
+			throw RuntimeException( "Invalid native module passed to builtin function 'dir'." );
+		for( int i = 0; i < o->nm->num_functions; i++ )
+		{
+			const char* name = frame->GetParent()->AddString( o->nm->function_names[i] );
+			m->insert( make_pair( Object( name ), Object( o->nm->functions[i] ) ) );
 		}
 		// return the map
 		helper.ReturnVal( Object( m ) );

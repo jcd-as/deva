@@ -191,15 +191,83 @@ Object* Executor::FindSymbol( const char* name, Module* mod /*= NULL*/ )
 		return scopes->FindSymbol( name );
 }
 
+Object* Executor::GetModule( const char* const name )
+{
+	map<string, Object>::iterator i = modules.find( string( name ) );
+	if( i != modules.end() )
+		return &(i->second);
+	else
+		return NULL;
+}
+
+const char* const Executor::GetModuleName( const char* const name )
+{
+	if( modules.count( name ) != 0 )
+		return name;
+	else
+		return NULL;
+}
+
+Object* Executor::FindSymbolInAnyScope( Object sym )
+{
+	Object* obj = scopes->FindSymbol( sym.s, true );
+
+	if( !obj )
+	{
+		// try functions
+		obj = scopes->FindFunction( sym.s );
+		if( obj )
+			return obj;
+
+		// module?
+		Object* mod = GetModule( sym.s );
+		if( mod )
+			return mod;
+
+		// native module?
+		Object* nm = GetNativeModule( sym.s );
+		if( nm )
+			return nm;
+
+		// builtin?
+		obj = GetBuiltinObjectRef( sym.s );
+		if( obj )
+			return obj;
+
+		// try extern symbol
+		obj = scopes->FindExternSymbol( sym.s );
+		if( obj )
+			return obj;
+		
+		// type built-ins will conflict with each other,
+		// just put the symbol name back on the stack
+		//
+		// string builtin?
+		obj = GetStringBuiltinObjectRef( sym.s );
+		if( obj )
+			return obj;
+		// vector builtin?
+		obj = GetVectorBuiltinObjectRef( sym.s );
+		if( obj )
+			return obj;
+		// map builtin?
+		obj = GetMapBuiltinObjectRef( sym.s );
+		if( obj )
+			return obj;
+
+		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
+	}
+
+	return NULL;
+}
+
+// TODO: implement this in terms of FindSymbolInAnyScope (above) ??
 // return a resolved symbol - if sym is a symbol name, find the symbol,
 // otherwise return sym unmodified 
 Object Executor::ResolveSymbol( Object sym )
 {
 	if( sym.type != obj_symbol_name )
 		return sym;
-
-	// TODO: this function is virtually the same as Frame::FindSymbol.
-	// consolidate them???
 
 	Object* obj = scopes->FindSymbol( sym.s, true );
 
@@ -211,14 +279,14 @@ Object Executor::ResolveSymbol( Object sym )
 			return *obj;
 
 		// module?
-		map<string, Module*>::iterator i = modules.find( string( sym.s ) );
-		if( i != modules.end() )
-			return Object( i->second );
+		Object* mod = GetModule( sym.s );
+		if( mod )
+			return *mod;
 
-		// allow module names to pass through
-		// (for native modules)
-		if( module_names.count( sym.s ) != 0 )
-			return sym;
+		// native module?
+		Object* nm = GetNativeModule( sym.s );
+		if( nm )
+			return *nm;
 
 		// builtin?
 		NativeFunction nf = GetBuiltin( sym.s );
@@ -417,6 +485,12 @@ void Executor::End()
 	}
 	// free the main module
 	delete main_module;
+
+	// free the native module objects
+	for( map<string, Object>::iterator i = native_modules.begin(); i != native_modules.end(); ++i )
+	{
+		delete i->second.nm;
+	}
 
 	// free the scope table
 	delete scopes;
@@ -1218,6 +1292,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_obj: stack.push_back( Object( lhs.no == rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz == rhs.sz ) ); break;
 		case obj_module: stack.push_back( Object( lhs.mod == rhs.mod ) ); break;
+		case obj_native_module: stack.push_back( Object( lhs.nm == rhs.nm ) ); break;
 		case obj_end: throw ICE( "Invalid object in op_eq." ); break;
 		}
 		break;
@@ -1247,6 +1322,7 @@ Opcode Executor::ExecuteInstruction()
 		case obj_native_obj: stack.push_back( Object( lhs.no != rhs.no ) ); break;
 		case obj_size: stack.push_back( Object( lhs.sz != rhs.sz ) ); break;
 		case obj_module: stack.push_back( Object( lhs.mod != rhs.mod ) ); break;
+		case obj_native_module: stack.push_back( Object( lhs.nm != rhs.nm ) ); break;
 		case obj_end: throw ICE( "Invalid object in op_neq." ); break;
 		}
 		break;
@@ -1921,36 +1997,37 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_native_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
-//			if( rhs.type != obj_string )
-			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
-				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
-			// see if there is a module with this name
-			if( module_names.count( string( lhs.s ) ) == 0 )
-				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-			else
-			{
-				// see if there is a native module with this name
-				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
-				if( i != imported_native_modules.end() )
-				{
-					// get the native function for this function
-					NativeFunction nf = (i->second)( string( rhs.s ) );
-					if( !nf.p )
-						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
-					Object fo( nf );
-					stack.push_back( fo );
-				}
-				// no native module, try as a deva symbol/module
-				else
-				{
-					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-				}
-			}
+//			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+//				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+//			// see if there is a module with this name
+//			if( modules.count( string( lhs.s ) ) == 0 && imported_native_modules.count( string( lhs.s ) ) == 0 )
+//				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+//			else
+//			{
+//				// see if there is a native module with this name
+////				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
+//				map<string, NativeModule>::iterator i = imported_native_modules.find( string( lhs.s ) );
+//				if( i != imported_native_modules.end() )
+//				{
+//					// get the native function for this function
+//					NativeFunction nf = (i->second.fcn)( string( rhs.s ) );
+//					if( !nf.p )
+//						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
+//					Object fo( nf );
+//					stack.push_back( fo );
+//				}
+//				// no native module, try as a deva symbol/module
+//				else
+//				{
+//					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+//				}
+//			}
+			throw ICE( "Symbol name as lhs of tbl_load." );
 		}
 		// string:
 		else if( lhs.type == obj_string )
@@ -1981,6 +2058,19 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( boost::format( "Cannot find '%1%' in module." ) % rhs.s );
 			IncRef( *obj );
 			stack.push_back( *obj );
+		}
+		// native module:
+		else if( lhs.type == obj_native_module )
+		{
+			// TODO: is this runtime error or ICE?
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+
+			NativeFunction nf = lhs.nm->GetFunction( string( rhs.s ) );
+			if( !nf.p )
+				throw RuntimeException( boost::format( "Cannot find function '%1%'." ) % rhs.s );
+			Object fo( nf );
+			stack.push_back( fo );
 		}
 		// vector:
 		else if( IsVecType( lhs.type ) )
@@ -2081,37 +2171,38 @@ Opcode Executor::ExecuteInstruction()
 		lhs = stack.back();
 		lhs = ResolveSymbol( lhs );
 		stack.pop_back();
-		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
+		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_native_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
 		if( lhs.type == obj_symbol_name )
 		{
 			// TODO: is this runtime error or ICE?
-//			if( rhs.type != obj_string )
-			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
-				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
-			// see if there is a module with this name
-			if( module_names.count( string( lhs.s ) ) == 0 )
-				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-			else
-			{
-				// see if there is a native module with this name
-				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
-				if( i != imported_native_modules.end() )
-				{
-					// get the native function for this function
-					NativeFunction nf = (i->second)( string( rhs.s ) );
-					if( !nf.p )
-						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
-					Object fo( nf );
-					stack.push_back( fo );
-				}
-				// no native module, try as a deva symbol/module
-				else
-				{
-					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-				}
-			}
+//			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+//				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+//			// see if there is a module with this name
+//			if( modules.count( string( lhs.s ) ) == 0 && imported_native_modules.count( string( lhs.s ) ) == 0 )
+//				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+//			else
+//			{
+//				// see if there is a native module with this name
+////				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
+//				map<string, NativeModule>::iterator i = imported_native_modules.find( string( lhs.s ) );
+//				if( i != imported_native_modules.end() )
+//				{
+//					// get the native function for this function
+//					NativeFunction nf = (i->second.fcn)( string( rhs.s ) );
+//					if( !nf.p )
+//						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
+//					Object fo( nf );
+//					stack.push_back( fo );
+//				}
+//				// no native module, try as a deva symbol/module
+//				else
+//				{
+//					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
+//				}
+//			}
+			throw ICE( "Symbol name as lhs of method_load" );
 		}
 		// string:
 		else if( lhs.type == obj_string )
@@ -2143,6 +2234,19 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( boost::format( "Cannot find '%1%' in module." ) % rhs.s );
 			IncRef( *obj );
 			stack.push_back( *obj );
+		}
+		// native module:
+		else if( lhs.type == obj_native_module )
+		{
+			// TODO: is this runtime error or ICE?
+			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
+				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
+
+			NativeFunction nf = lhs.nm->GetFunction( string( rhs.s ) );
+			if( !nf.p )
+				throw RuntimeException( boost::format( "Cannot find function '%1%'." ) % rhs.s );
+			Object fo( nf );
+			stack.push_back( fo );
 		}
 		// vector:
 		else if( lhs.type == obj_vector )
@@ -3575,7 +3679,9 @@ Object Executor::GetError()
 
 bool Executor::ImportBuiltinModule( const char* module_name )
 {
-	map<string, module_fcn_finder>::iterator i = native_modules.find( string( module_name ) );
+//	map<string, module_fcn_finder>::iterator i = native_modules.find( string( module_name ) );
+//	map<string, NativeModule>::iterator i = native_modules.find( string( module_name ) );
+	map<string, Object>::iterator i = native_modules.find( string( module_name ) );
 	if( i == native_modules.end() )
 		return false;
 	imported_native_modules.insert( *i );
@@ -3729,7 +3835,6 @@ Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f
 {
 	// add the module to the collection
 	Module* mod = new Module( c, s, f );
-	module_names.insert( name );
 	modules.insert( pair<string, Module*>(name, mod ) );
 	return mod;
 }
@@ -3776,13 +3881,13 @@ Object Executor::ImportModule( const char* module_name )
 	vector< pair<string, ScopeTable*> >::iterator it;
 	if( modules.count( string( module_name ) ) != 0 )
 	{
-		map<string, Module*>::iterator i = modules.find( string( module_name ) );
-		return Object( i->second );
+		map<string, Object>::iterator i = modules.find( string( module_name ) );
+		return i->second;
 	}
 
 	// check the list of builtin modules first
 	if( ImportBuiltinModule( module_name ) )
-		return Object( obj_null );
+		return imported_native_modules[string(module_name)];
 
 	// otherwise look for the .dv/.dvc file to import
 	string path = FindModule( module_name );

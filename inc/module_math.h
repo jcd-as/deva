@@ -75,8 +75,9 @@ extern const int num_of_module_math_fcns;
 
 // is a given name a builtin function?
 bool IsModuleMathFunction( const string & name );
-NativeFunction GetModuleMathFunction( const string & name );
 
+struct NativeModule;
+NativeModule* GetModuleMath();
 
 } // namespace deva
 

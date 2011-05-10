@@ -52,6 +52,7 @@ const char* object_type_names[] =
 	"size/address",
 	"symbol name",
 	"module",
+	"native module",
 	"<invalid>"
 };
 
@@ -244,6 +245,10 @@ bool Object::operator == ( const Object& rhs ) const
 		if( mod == rhs.mod )
 			return true;
 		break;
+	case obj_native_module:
+		if( nm == rhs.nm )
+			return true;
+		break;
 	default:
 		// ???
 		break;
@@ -285,6 +290,8 @@ bool Object::operator < ( const Object & rhs ) const
 			return sz < rhs.sz;
 		case obj_module:
 			return mod < rhs.mod;
+		case obj_native_module:
+			return nm < rhs.nm;
 		case obj_end:
 			throw ICE( "Invalid object type (obj_end) in Object::operator <." );
 		default:
@@ -328,6 +335,7 @@ bool Object::CoerceToBool()
 	case obj_class:
 	case obj_function:
 	case obj_module:
+	case obj_native_module:
 	case obj_symbol_name: // technically, this shouldn't happen
 		return true;
 		break;
@@ -456,6 +464,9 @@ ostream & operator << ( ostream & os, const Object & obj )
 		case obj_module:
 			os << "module = " << (void*)obj.mod;
 			break;
+		case obj_native_module:
+			os << "native module = " << (void*)obj.nm;
+			break;
 		default:
 			os << "ERROR: unknown type";
 	}
@@ -508,6 +519,9 @@ ostream & operator << ( ostream & os, ObjectType t )
 		break;
 	case obj_module:
 		os << "module";
+		break;
+	case obj_native_module:
+		os << "native module";
 		break;
 	case obj_end:
 	default:

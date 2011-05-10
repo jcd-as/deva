@@ -103,9 +103,6 @@ public:
 	// returns an object wrapper of the object passed in that points to the
 	// copied strings
 	Object CopyStringsFromParent( Object & o );
-
-	// resolve symbols through the scope table
-	Object* FindSymbol( const char* name ) const;
 };
 
 

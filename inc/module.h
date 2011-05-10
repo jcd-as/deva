@@ -31,12 +31,12 @@
 #ifndef __MODULE_H__
 #define __MODULE_H__
 
+#include "scopetable.h"
 
 namespace deva
 {
 
 class Code;
-class Scope;
 class Frame;
 
 struct Module
@@ -49,6 +49,47 @@ struct Module
 	inline void DeleteScopeData() {  scope->DeleteData(); }
 	inline void DeleteScope() { delete scope; }
 	inline void DeleteFrame() { delete frame; }
+};
+
+//typedef NativeFunction (*module_fcn_finder)(const string&);
+
+struct NativeModule
+{
+	string name;
+//	module_fcn_finder fcn;
+	// ptr to array of functions
+	NativeFunction* functions;
+	// ptr to array of function names
+	const string* function_names;
+	int num_functions;
+
+	NativeModule( const char* const n, NativeFunction* fcns, const string* fcn_names, int num ) : name( n ), functions( fcns ), function_names( fcn_names ), num_functions( num ) {}
+
+	NativeFunction GetFunction( const string & name )
+	{
+		const string* i = find( function_names, function_names + num_functions, name );
+		if( i == function_names + num_functions )
+		{
+			NativeFunction nf;
+			nf.p = NULL;
+			return nf;
+		}
+		// compute the index of the function in the look-up table(s)
+		long l = (long)i;
+		l -= (long)function_names;
+		int idx = l / sizeof( string );
+		if( idx > num_functions )
+		{
+			NativeFunction nf;
+			nf.p = NULL;
+			return nf;
+		}
+		else
+		{
+			// return the function object
+			return functions[idx];
+		}
+	}
 };
 
 

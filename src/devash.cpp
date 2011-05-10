@@ -206,10 +206,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		ex->trace = trace;
 
 		// add built-in (native) modules
-		ex->AddNativeModule( "os", GetModuleOsFunction );
-		ex->AddNativeModule( "bit", GetModuleBitFunction );
-		ex->AddNativeModule( "math", GetModuleMathFunction );
-		ex->AddNativeModule( "_re", GetModuleReFunction );
+		ex->AddNativeModule( GetModuleOs() );
+		ex->AddNativeModule( GetModuleBit() );
+		ex->AddNativeModule( GetModuleMath() );
+		ex->AddNativeModule( GetModuleRe() );
 
 		// begin execution (initialize)
 		ex->Begin();

@@ -57,8 +57,9 @@ extern const int num_of_module_re_fcns;
 
 // is a given name a builtin function?
 bool IsModuleReFunction( const string & name );
-NativeFunction GetModuleReFunction( const string & name );
 
+struct NativeModule;
+NativeModule* GetModuleRe();
 
 } // namespace deva
 

@@ -30,6 +30,7 @@
 
 #include "module_math.h"
 #include "builtins_helpers.h"
+#include "module.h"
 #include <cmath>
 
 
@@ -102,30 +103,9 @@ bool IsModuleMathFunction( const string & name )
 		else return false;
 }
 
-NativeFunction GetModuleMathFunction( const string & name )
+NativeModule* GetModuleMath()
 {
-	const string* i = find( module_math_names, module_math_names + num_of_module_math_fcns, name );
-	if( i == module_math_names + num_of_module_math_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	// compute the index of the function in the look-up table(s)
-	long l = (long)i;
-	l -= (long)&module_math_names;
-	int idx = l / sizeof( string );
-	if( idx > num_of_module_math_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	else
-	{
-		// return the function object
-		return module_math_fcns[idx];
-	}
+	return new NativeModule( "math", module_math_fcns, module_math_names, num_of_module_math_fcns );
 }
 
 

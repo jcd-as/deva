@@ -53,7 +53,7 @@ public:
 		name( n ), 
 		frame( f ), 
 		is_method( !!t && !module )
-	{ }
+	{ type += " "; }
 
 	// expectations/assertions
 	void CheckNumberOfArguments( int num_args_expected );

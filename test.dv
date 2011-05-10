@@ -1,6 +1,21 @@
+import math;
+print( math );
+local d = dir( math );
+local v = [0,1,2,3,4];
+local v1 = [0,1,2,3,4];
+print( v );
+print( v1 );
+v = v.map( math.sin );
+#v1 = v1.map( d['sin'] );
+v1 = v1.map( d.sin );
+print( v );
+print( v1 );
+
 #import os;
-local mod = importmodule( "os" );
-print( mod );
+#print( os );
+#os.getcwd();
+#local mod = importmodule( "os" );
+#print( mod );
 
 #import foo;
 #print( foo );

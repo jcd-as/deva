@@ -30,6 +30,7 @@
 
 #include "module_re.h"
 #include "builtins_helpers.h"
+#include "module.h"
 #include "util.h"
 #include <boost/regex.hpp>
 
@@ -68,30 +69,9 @@ bool IsModuleReFunction( const string & name )
 		else return false;
 }
 
-NativeFunction GetModuleReFunction( const string & name )
+NativeModule* GetModuleRe()
 {
-	const string* i = find( module_re_names, module_re_names + num_of_module_re_fcns, name );
-	if( i == module_re_names + num_of_module_re_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	// compute the index of the function in the look-up table(s)
-	long l = (long)i;
-	l -= (long)&module_re_names;
-	int idx = l / sizeof( string );
-	if( idx > num_of_module_re_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	else
-	{
-		// return the function object
-		return module_re_fcns[idx];
-	}
+	return new NativeModule( "_re", module_re_fcns, module_re_names, num_of_module_re_fcns );
 }
 
 

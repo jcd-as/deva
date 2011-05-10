@@ -29,6 +29,7 @@
 // * 
 
 #include "module_bit.h"
+#include "module.h"
 #include "builtins_helpers.h"
 
 
@@ -67,30 +68,9 @@ bool IsModuleBitFunction( const string & name )
 		else return false;
 }
 
-NativeFunction GetModuleBitFunction( const string & name )
+NativeModule* GetModuleBit()
 {
-	const string* i = find( module_bit_names, module_bit_names + num_of_module_bit_fcns, name );
-	if( i == module_bit_names + num_of_module_bit_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	// compute the index of the function in the look-up table(s)
-	long l = (long)i;
-	l -= (long)&module_bit_names;
-	int idx = l / sizeof( string );
-	if( idx > num_of_module_bit_fcns )
-	{
-		NativeFunction nf;
-		nf.p = NULL;
-		return nf;
-	}
-	else
-	{
-		// return the function object
-		return module_bit_fcns[idx];
-	}
+	return new NativeModule( "bit", module_bit_fcns, module_bit_names, num_of_module_bit_fcns );
 }
 
 

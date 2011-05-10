@@ -40,96 +40,84 @@ void BuiltinHelper::CheckNumberOfArguments( int num_args_expected )
 {
 	int args_passed = frame->NumArgsPassed();
 	if( args_passed > num_args_expected )
-		throw RuntimeException( boost::format( "Too many arguments passed to %1% %2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
+		throw RuntimeException( boost::format( "Too many arguments passed to %1%%2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
 	else if( args_passed < num_args_expected )
-		throw RuntimeException( boost::format( "Too few arguments passed to %1% %2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
+		throw RuntimeException( boost::format( "Too few arguments passed to %1%%2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
 }
 
 void BuiltinHelper::CheckNumberOfArguments( int min_num_args, int max_num_args )
 {
 	int args_passed = frame->NumArgsPassed();
 	if( args_passed > max_num_args )
-		throw RuntimeException( boost::format( "Too many arguments passed to %1% %2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
+		throw RuntimeException( boost::format( "Too many arguments passed to %1%%2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
 	else if( args_passed < min_num_args )
-		throw RuntimeException( boost::format( "Too few arguments passed to %1% %2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
+		throw RuntimeException( boost::format( "Too few arguments passed to %1%%2% %3%." ) % type % name % (is_method ? "method" : "builtin") );
 }
 
 void BuiltinHelper::ExpectType( Object* obj, ObjectType t )
 {
 	if( obj->type != t )
-		throw RuntimeException( boost::format( "%1% expected in %2% %3% %4%." ) % object_type_names[t] % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "%1% expected in %2%%3% %4%." ) % object_type_names[t] % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectMapType( Object* obj )
 {
 	if( !IsMapType( obj->type ) )
-		throw RuntimeException( boost::format( "map type expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "map type expected in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectRefType( Object* obj )
 {
 	if( !IsRefType( obj->type ) )
-		throw RuntimeException( boost::format( "vector or map/class/instance type expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "vector or map/class/instance type expected in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectNonRefType( Object* obj )
 {
 	if( IsRefType( obj->type ) )
-		throw RuntimeException( boost::format( "vector or map/class/instance type not allowed in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "vector or map/class/instance type not allowed in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectTypes( Object* obj, ObjectType t1, ObjectType t2 )
 {
 	if( obj->type != t1 && obj->type != t2 )
-		throw RuntimeException( boost::format( "Unexpected type in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "Unexpected type in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3 )
 {
 	if( obj->type != t1 && obj->type != t2 && obj->type != t3 )
-		throw RuntimeException( boost::format( "Unexpected type in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "Unexpected type in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4 )
 {
 	if( obj->type != t1 && obj->type != t2 && obj->type != t3 && obj->type != t4 )
-		throw RuntimeException( boost::format( "Unexpected type in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "Unexpected type in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectTypes( Object* obj, ObjectType t1, ObjectType t2, ObjectType t3, ObjectType t4, ObjectType t5 )
 {
 	if( obj->type != t1 && obj->type != t2 && obj->type != t3 && obj->type != t4 && obj->type != t5 )
-		throw RuntimeException( boost::format( "Unexpected type in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "Unexpected type in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectIntegralNumber( Object* obj )
 {
 	if( obj->type != obj_number || !is_integral( obj->d ) )
-		throw RuntimeException( boost::format( "integral number expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "integral number expected in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 void BuiltinHelper::ExpectPositiveIntegralNumber( Object* obj )
 {
 	if( obj->type != obj_number || !is_integral( obj->d ) || obj->d < 0.0 )
-		throw RuntimeException( boost::format( "positive integral number expected in %1% %2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
+		throw RuntimeException( boost::format( "positive integral number expected in %1%%2% %3%." ) % type % (is_method ? "method" : "builtin") % name );
 }
 
 Object* BuiltinHelper::GetLocalN( int local_num )
 {
 	// get the arg from the frame
-	Object* o = frame->GetLocalRef( local_num );
-	Object* po = NULL;
-
-	// if it's a symbol name, look up the symbol
-	if( o->type == obj_symbol_name )
-	{
-		po = frame->FindSymbol( o->s );
-		if( !po )
-			throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % o->s );
-	}
-	else
-		po = o;
-	return po;
+	return frame->GetLocalRef( local_num );
 }
 
 
