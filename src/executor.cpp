@@ -220,14 +220,14 @@ Object* Executor::FindSymbolInAnyScope( Object sym )
 			return obj;
 
 		// module?
-		Object* mod = GetModule( sym.s );
-		if( mod )
-			return mod;
+		obj = GetModule( sym.s );
+		if( obj )
+			return obj;
 
 		// native module?
-		Object* nm = GetNativeModule( sym.s );
-		if( nm )
-			return nm;
+		obj = GetNativeModule( sym.s );
+		if( obj )
+			return obj;
 
 		// builtin?
 		obj = GetBuiltinObjectRef( sym.s );
@@ -239,29 +239,25 @@ Object* Executor::FindSymbolInAnyScope( Object sym )
 		if( obj )
 			return obj;
 		
-		// type built-ins will conflict with each other,
-		// just put the symbol name back on the stack
-		//
 		// string builtin?
 		obj = GetStringBuiltinObjectRef( sym.s );
 		if( obj )
 			return obj;
+
 		// vector builtin?
 		obj = GetVectorBuiltinObjectRef( sym.s );
 		if( obj )
 			return obj;
+
 		// map builtin?
 		obj = GetMapBuiltinObjectRef( sym.s );
 		if( obj )
 			return obj;
-
-		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
 	}
 
-	return NULL;
+	return obj;
 }
 
-// TODO: implement this in terms of FindSymbolInAnyScope (above) ??
 // return a resolved symbol - if sym is a symbol name, find the symbol,
 // otherwise return sym unmodified 
 Object Executor::ResolveSymbol( Object sym )
@@ -269,55 +265,34 @@ Object Executor::ResolveSymbol( Object sym )
 	if( sym.type != obj_symbol_name )
 		return sym;
 
-	Object* obj = scopes->FindSymbol( sym.s, true );
-
-	if( !obj )
+	Object* obj = FindSymbolInAnyScope( sym );
+	if( obj )
 	{
-		// try functions
-		obj = scopes->FindFunction( sym.s );
-		if( obj )
-			return *obj;
-
-		// module?
-		Object* mod = GetModule( sym.s );
-		if( mod )
-			return *mod;
-
-		// native module?
-		Object* nm = GetNativeModule( sym.s );
-		if( nm )
-			return *nm;
-
-		// builtin?
-		NativeFunction nf = GetBuiltin( sym.s );
-		if( nf.p )
-			return Object( nf );
-
-		// try extern symbol
-		obj = scopes->FindExternSymbol( sym.s );
-		if( obj )
-			return *obj;
-		
-		// type built-ins will conflict with each other,
-		// just put the symbol name back on the stack
-		//
-		// string builtin?
-		nf = GetStringBuiltin( sym.s );
-		if( nf.p )
-			return sym;
-		// vector builtin?
-		nf = GetVectorBuiltin( sym.s );
-		if( nf.p )
-			return sym;
-		// map builtin?
-		nf = GetMapBuiltin( sym.s );
-		if( nf.p )
-			return sym;
-
-		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
+		// TODO: this is less than completely efficient, since FindSymbolInAnyScope
+		// already checks to see if it is a builtin method of a builtin type...
+		if( obj->type == obj_native_function )
+		{
+			// type built-ins will conflict with each other,
+			// just put the symbol name back on the stack
+			//
+			// string builtin?
+			NativeFunction nf = GetStringBuiltin( sym.s );
+			if( nf.p )
+				return sym;
+			// vector builtin?
+			nf = GetVectorBuiltin( sym.s );
+			if( nf.p )
+				return sym;
+			// map builtin?
+			nf = GetMapBuiltin( sym.s );
+			if( nf.p )
+				return sym;
+		}
+		// otherwise, return the object for the symbol
+		return *obj;
 	}
-
-	return *obj;
+	else
+		throw RuntimeException( boost::format( "Undefined symbol '%1%'." ) % sym.s );
 }
 
 // recursively call constructors on an object and its base classes
