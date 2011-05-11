@@ -2,10 +2,6 @@ TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
 TODO 2011-05-10 @deva +veryhigh devash: redefining a class doesn't override the initial definition (local vars & fcns _are_ properly overridden)
 
-TODO 2011-05-10 @deva +high tab should do <something> in devash
-
-TODO 2011-05-10 @deva +high indentation in devash (?)
-
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
@@ -16,11 +12,18 @@ TODO 2011-02-04 @deva +high fix parser error messages - prevent things like "Mis
 
 TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
 
+TODO 2011-05-10 @deva +low tab should do <something> in devash
+
 TODO 2011-04-16 @deva +future list comprehensions ?
 
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-05-10 @deva +medium indentation in devash (?)
+    CLOSED: 2011-05-11 11:24:05
+    :LOGBOOK:
+        DONE: 2011-05-11 11:24:05
 
 DONE 2011-04-28 @deva +veryhigh implement devash (shell)
     CLOSED: 2011-05-10 21:25:31

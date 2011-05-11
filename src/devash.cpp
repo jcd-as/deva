@@ -77,9 +77,14 @@ const char* prompt( EditLine * e )
 	return ">>> ";
 }
 
+static int braces = 0;
+
 const char* continuation_prompt( EditLine * e )
 {
-	return "... ";
+	string s( "... " );
+	for( int i = 0; i < braces; i++ )
+		s += " ";
+	return s.c_str();
 }
 
 string get_input( EditLine *el, History *hist, HistEvent ev )
@@ -119,7 +124,9 @@ string get_input( EditLine *el, History *hist, HistEvent ev )
 		// get more input if:
 		//  - line doesn't end with a ';' or a '}' OR
 		//  - curly braces are open (mis-matched)
-		int braces = count( ret.begin(), ret.end(), '{' ) - count( ret.begin(), ret.end(), '}' );
+		braces = count( ret.begin(), ret.end(), '{' ) - count( ret.begin(), ret.end(), '}' );
+		if( braces < 0 )
+			break;
 		if( (cstr_in[chars_read-2] == ';' || cstr_in[chars_read-2] == '}' ) && braces == 0 )
 		{
 			done = true;
@@ -226,11 +233,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			// execute input as code
 			try
 			{
-				// TODO: this doesn't actually work
-				// ExecuteText() executes each input as a separate module, ala
-				// the 'eval()' builtin, BUT what we need is to execute each
-				// input as if it is a line/chunk added to main
-				//
 				// TODO: ret will be the symbol name for this block 
 				// (something like '[TEXT1]')
 				// should we do something with it?
