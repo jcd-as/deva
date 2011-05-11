@@ -151,7 +151,7 @@ public:
 	inline void PushStack( Object o ) { stack.push_back( o ); }
 	inline Object PopStack() { Object o = stack.back(); stack.pop_back(); return o; }
 
-	Object* FindSymbol( const char* name, Module* mod = NULL );
+	Object* FindSymbol( const char* const name, Module* mod = NULL );
 	const char* FindSymbolName( Object* o, bool local_only = false ) { return scopes->FindSymbolName( o, local_only ); }
 	inline Object* FindLocal( const char* name ) { return CurrentScope()->FindSymbol( name ); }
 
@@ -161,24 +161,22 @@ public:
 private:
 	Object* FindFunction( string name, string modulename, size_t offset );
 
+	Object* FindSymbolInGlobalModules( const char* const name );
+
 	// find a symbol in all current scopes, fcns, builtins, modules etc
 	Object* FindSymbolInAnyScope( Object sym );
 	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
 	Object ResolveSymbol( Object sym );
 
-	Module* AddModule( const char* name, const Code* c, Scope* s, Frame* f );
+	Module* AddModule( const char* name, const Code* c, Scope* s, Frame* f, bool global = false );
 	Object* GetModule( const char* const name );
 	const char* const GetModuleName( const char* const name );
 
 public:
 
-//	inline void AddNativeModule( const char* name, module_fcn_finder fcn ) { native_modules.insert( string( name ) ); /*module_names.insert( string(name) );*/ }
-//	inline void AddNativeModule( const char* name, NativeModule mod ) { native_modules.insert( make_pair( string( name ), mod ) ); }
 	inline void AddNativeModule( NativeModule* mod ) { native_modules.insert( make_pair( mod->name, Object( mod ) ) ); }
 	inline Object* GetNativeModule( const char* name )
 	{
-//		map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( name ) );
-//		map<string, NativeModule>::iterator i = imported_native_modules.find( string( name ) );
 		map<string, Object>::iterator i = imported_native_modules.find( string( name ) );
 		if( i != imported_native_modules.end() )
 			return &(i->second);
@@ -235,8 +233,7 @@ public:
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
 	void ExecuteCode( const Code* const code );
-	Object ExecuteText( const char* const text );
-	void ExecuteInCurrentScope( const char* const text );
+	Object ExecuteText( const char* const text, bool global = false, bool ignore_undefined_vars = false );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void ExecuteToReturn( bool is_destructor = false );
@@ -254,11 +251,9 @@ private:
 	void DeleteErrorObject(){ if( is_error ) DecRef( error ); }
 
 	// helper fcn for parsing and compiling a block of text
-	const Code* LoadText( const char* const text, const char* const name );
+	const Code* LoadText( const char* const text, const char* const name, bool ignore_undefined_vars = false );
 
 	bool ImportBuiltinModule( const char* module_name );
-	// helper to fixup the constants in compiled code (imported dvc file)
-//	void FixupConstants();
 	// helper fcn to find a loaded module (namespace)
 	vector< pair<string, ScopeTable*> >::iterator FindNamespace( string mod );
 	// helper fcn for ImportModule:

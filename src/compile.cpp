@@ -53,7 +53,8 @@ static vector< vector<dword>* > loop_break_locations;
 static vector<dword> fcn_scope_stack;
 
 
-Compiler::Compiler( const char* mod_name, Semantics* sem ) : 
+Compiler::Compiler( const char* mod_name, Semantics* sem, bool inter /*=false*/ ) : 
+	interactive( inter ),
 	emit_debug_info( true ),
 	max_scope_idx( 0 ),
 	module_name( mod_name ),
@@ -430,15 +431,12 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 		if( idx == INT_MIN )
 			idx = GetConstant( Object( obj_symbol_name, s ) );
 		if( idx == INT_MIN )
-			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
-
-		// try as a symbol name first
-//		idx = GetConstant( Object( obj_symbol_name, s ) );
-//		// then try as string
-//		if( idx == INT_MIN )
-//			idx = GetConstant( Object( s ) );
-//		if( idx == INT_MIN )
-//			throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		{
+			if( interactive )
+				throw RuntimeException( boost::format( "Cannot find constant '%1%'." ) % s );
+			else
+				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+		}
 
 		Emit( op_pushconst, (dword)idx );
 	}
@@ -478,7 +476,12 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 			// get the constant pool index for this identifier
 			int i = GetConstant( Object( obj_symbol_name, s ) );
 			if( i == INT_MIN )
-				throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+			{
+				if( interactive )
+					throw RuntimeException( boost::format( "Cannot find constant '%1%'." ) % s );
+				else
+					throw ICE( boost::format( "Cannot find constant '%1%'." ) % s );
+			}
 
 			Emit( op_pushconst, (dword)i );
 		}
@@ -619,7 +622,12 @@ void Compiler::ExternVar( char* n, bool is_assign, int line )
 	int idx = GetConstant( Object( obj_symbol_name, n ) );
 	// not found? error
 	if( idx == INT_MIN )
-		throw ICE( boost::format( "Cannot find constant '%1%'." ) % n );
+	{
+		if( interactive )
+			throw RuntimeException( boost::format( "Cannot find constant '%1%'." ) % n );
+		else
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % n );
+	}
 
 	// if this is an assignment, generate a store op
 	if( is_assign )
@@ -657,7 +665,12 @@ void Compiler::Assign( pANTLR3_BASE_TREE lhs_node, bool parent_is_assign, int li
 			int i = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
 			if( i == INT_MIN )
-				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			{
+				if( interactive )
+					throw RuntimeException( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+				else
+					throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			}
 
 			Emit( op_storeconst, (dword)i );
 		}
@@ -833,7 +846,12 @@ void Compiler::AugmentedAssignOp(  pANTLR3_BASE_TREE lhs_node, Opcode op, int li
 			int i = GetConstant( Object( obj_symbol_name, lhs ) );
 			// not found? error
 			if( i == INT_MIN )
-				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			{
+				if( interactive )
+					throw RuntimeException( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+				else
+					throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			}
 
 			switch( op )
 			{
@@ -927,7 +945,12 @@ void Compiler::IncOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 		int i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
 		if( i == INT_MIN )
-			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+		{
+			if( interactive )
+				throw RuntimeException( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			else
+				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+		}
 
 		Emit( op_pushconst, (dword)i );
 		Emit( op_inc );
@@ -1043,7 +1066,12 @@ void Compiler::DecOp( pANTLR3_BASE_TREE lhs_node, bool is_expression, int line )
 		int i = GetConstant( Object( obj_symbol_name, lhs ) );
 		// not found? error
 		if( i == INT_MIN )
-			throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+		{
+			if( interactive )
+				throw RuntimeException( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+			else
+				throw ICE( boost::format( "Non-local symbol '%1%' not found." ) % lhs );
+		}
 
 		Emit( op_pushconst, (dword)i );
 		Emit( op_dec );

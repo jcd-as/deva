@@ -97,6 +97,12 @@ string get_input( EditLine *el, History *hist, HistEvent ev )
 	{
 		// read a line
 		cstr_in = el_gets( el, &chars_read );
+		if( !cstr_in )
+		{
+			// error / EOF: bail
+			cout << endl;
+			exit( 0 );
+		}
 		if( chars_read > 0 )
 		{
 			// store in history
@@ -230,8 +236,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				// TODO: ret will be the symbol name for this block 
 				// (something like '[TEXT1]')
 				// should we do something with it?
-//				ex->ExecuteText( input.c_str() );
-				ex->ExecuteInCurrentScope( input.c_str() );
+				ex->ExecuteText( input.c_str(), true, true );
 			}
 			catch( RuntimeException & e )
 			{

@@ -654,12 +654,20 @@ void do_eval( Frame *frame )
 {
 	BuiltinHelper helper( NULL, "eval", frame );
 
-	helper.CheckNumberOfArguments( 1 );
+	helper.CheckNumberOfArguments( 1, 2 );
 
 	Object* s = helper.GetLocalN( 0 );
 	helper.ExpectType( s, obj_string );
 
-	Object ret = ex->ExecuteText( s->s );
+	bool global = false;
+
+	if( frame->NumArgsPassed() == 2 )
+	{
+		Object* o = helper.GetLocalN( 1 );
+		helper.ExpectType( o, obj_boolean );
+		global = o->b;
+	}
+	Object ret = ex->ExecuteText( s->s, global );
 
 	helper.ReturnVal( ret );
 }

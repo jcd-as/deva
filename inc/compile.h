@@ -114,6 +114,10 @@ private:
 	// code module object for this compile session
 	Code* code;
 
+	// if we're compiling an eval or text from an interactive session, 
+	// we may have undeclared symbols
+	bool interactive;
+
 	// compile with debug (line number) statements?
 	bool emit_debug_info;
 
@@ -177,7 +181,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	// functions for public consumption
 	/////////////////////////////////////////////////////////////////////////
-	Compiler( const char* mod_name, Semantics* sem );
+	Compiler( const char* mod_name, Semantics* sem, bool interactive = false );
 	~Compiler() { delete is; }
 
 	// get the Code block object for this compiled module. this is the

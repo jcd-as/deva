@@ -180,7 +180,7 @@ Object* Executor::FindFunction( string name, string modulename, size_t offset )
 }
 
 // locate a symbol, possibly in a given module
-Object* Executor::FindSymbol( const char* name, Module* mod /*= NULL*/ )
+Object* Executor::FindSymbol( const char* const name, Module* mod /*= NULL*/ )
 {
 	if( mod )
 	{
@@ -188,7 +188,7 @@ Object* Executor::FindSymbol( const char* name, Module* mod /*= NULL*/ )
 		return o;
 	}
 	else
-		return scopes->FindSymbol( name );
+		return FindSymbolInAnyScope( Object( obj_symbol_name, name ) );
 }
 
 Object* Executor::GetModule( const char* const name )
@@ -206,6 +206,24 @@ const char* const Executor::GetModuleName( const char* const name )
 		return name;
 	else
 		return NULL;
+}
+
+Object* Executor::FindSymbolInGlobalModules( const char* const name )
+{
+	// look in each global module, in reverse load-order
+	// (i.e. last-in wins)
+	for( vector<Module*>::reverse_iterator i = module_stack.rbegin(); i != module_stack.rend(); ++i )
+	{
+		// is it global?
+		if( (*i)->global )
+		{
+			// search its scopes for this symbol
+			Object* o = (*i)->scope->FindSymbol( name );
+			if( o )
+				return o;
+		}
+	}
+	return NULL;
 }
 
 Object* Executor::FindSymbolInAnyScope( Object sym )
@@ -229,16 +247,21 @@ Object* Executor::FindSymbolInAnyScope( Object sym )
 		if( obj )
 			return obj;
 
-		// builtin?
-		obj = GetBuiltinObjectRef( sym.s );
-		if( obj )
-			return obj;
-
 		// try extern symbol
 		obj = scopes->FindExternSymbol( sym.s );
 		if( obj )
 			return obj;
 		
+		// in a 'global' module??
+		obj = FindSymbolInGlobalModules( sym.s );
+		if( obj )
+			return obj;
+
+		// builtin?
+		obj = GetBuiltinObjectRef( sym.s );
+		if( obj )
+			return obj;
+
 		// string builtin?
 		obj = GetStringBuiltinObjectRef( sym.s );
 		if( obj )
@@ -511,7 +534,7 @@ void Executor::ExecuteCode( const Code* const code )
 // static used for importing modules and text (via eval())
 static Module* s_currently_importing_module = NULL;
 
-Object Executor::ExecuteText( const char* const text )
+Object Executor::ExecuteText( const char* const text, bool global /*= false*/, bool ignore_undefined_vars /*= false*/ )
 {
 	static dword count = 0;
 	ostringstream s;
@@ -520,7 +543,7 @@ Object Executor::ExecuteText( const char* const text )
 	string name = s.str();
 	// add the 'text module' name to the list of global constants 
 	AddGlobalConstant( Object( obj_symbol_name, copystr( name ) ) );
-	const Code* code = LoadText( text, name.c_str() );
+	const Code* code = LoadText( text, name.c_str(), ignore_undefined_vars );
 
 	Code* orig_code = cur_code;
 	byte* orig_ip = ip;
@@ -534,7 +557,7 @@ Object Executor::ExecuteText( const char* const text )
 	Scope* scope = new Scope( frame, false, true );
 	PushScope( scope );
 
-	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
+	Module* cur_module = AddModule( name.c_str(), code, scope, frame, global );
 
 	// currently importing text module, set the flag
 	Module* prev_mod = s_currently_importing_module;
@@ -546,8 +569,18 @@ Object Executor::ExecuteText( const char* const text )
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
 
-	// add the module to load-ordered stack (for deletion in depth first order)
+	// add the module to load-ordered stack (for deletion, searching etc)
 	module_stack.push_back( cur_module );
+
+	// if this was being added to the 'globals', we need to add its constants to
+	// the global constants
+	if( global )
+	{
+		for( int i = 0; i < code->NumConstants(); i++ )
+		{
+			AddGlobalConstant( code->GetConstant( i ) );
+		}
+	}
 
 	// pop the scope and frame
 	PopScope();
@@ -559,56 +592,6 @@ Object Executor::ExecuteText( const char* const text )
 	end = orig_end;
 
 	return Object( cur_module );
-}
-
-void Executor::ExecuteInCurrentScope( const char* const text )
-{
-	static dword count = 0;
-	ostringstream s;
-	s << "[TEXT" << count << "]";
-	count++;
-	string name = s.str();
-	// add the 'text module' name to the list of global constants 
-	AddGlobalConstant( Object( obj_symbol_name, copystr( name ) ) );
-	const Code* code = LoadText( text, name.c_str() );
-
-	Code* orig_code = cur_code;
-	byte* orig_ip = ip;
-	byte* orig_bp = bp;
-	byte* orig_end = end;
-
-	// find our 'module' function, "name@main"
-	Object *eval_main = FindFunction( "@main", name, 0 );
-	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, eval_main->f, true );
-	PushFrame( frame );
-	Scope* scope = new Scope( frame, false, true );
-	PushScope( scope );
-
-	Module* cur_module = AddModule( name.c_str(), code, scope, frame );
-
-	// currently importing text module, set the flag
-	Module* prev_mod = s_currently_importing_module;
-	s_currently_importing_module = cur_module;
-
-	// execute
-	ExecuteCode( code );
-	
-	// no longer importing this module, reset the flag
-	s_currently_importing_module = prev_mod;
-
-	// add the module to load-ordered stack (for deletion in depth first order)
-	module_stack.push_back( cur_module );
-
-	// pop the scope and frame
-	PopScope();
-	PopFrame();
-
-	cur_code = orig_code;
-	ip = orig_ip;
-	bp = orig_bp;
-	end = orig_end;
-
-//	return Object( cur_module );
 }
 
 void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
@@ -3728,7 +3711,7 @@ string Executor::FindModule( string mod )
 	throw RuntimeException( boost::format( "Unable to locate module '%1%' for import." ) % mod );
 }
 
-const Code* Executor::LoadText( const char* const text, const char* const name )
+const Code* Executor::LoadText( const char* const text, const char* const name, bool ignore_undefined_vars /*= false*/ )
 {
 	// load and parse the text
 	ParseReturnValue prv;
@@ -3742,8 +3725,10 @@ const Code* Executor::LoadText( const char* const text, const char* const name )
 
 	if( prv.successful )
 	{
-		PassOneFlags p1f; // currently no pass one flags
+		PassOneFlags p1f;
+		p1f.ignore_undefined_vars = ignore_undefined_vars;
 		PassTwoFlags p2f;
+		p2f.interactive = ignore_undefined_vars;
 
 		// PASS ONE: build the symbol table and check semantics
 		p1rv = PassOne( prv, p1f );
@@ -3806,49 +3791,13 @@ const Code* const Executor::LoadModule( string module_name, string fname )
 		throw RuntimeException( boost::format( "Unable to load module '%1%'." ) % fname );
 }
 
-Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f )
+Module* Executor::AddModule( const char* name, const Code* c, Scope* s, Frame* f, bool global /*= false*/ )
 {
 	// add the module to the collection
-	Module* mod = new Module( c, s, f );
+	Module* mod = new Module( c, s, f, global );
 	modules.insert( pair<string, Module*>(name, mod ) );
 	return mod;
 }
-
-//void Executor::FixupConstants()
-//{
-//	// delta to adjust constant indices is the number of constants defined in
-//	// the main module
-//	size_t delta = (ex->constants.size() - num_of_constant_symbols);
-//
-//	// find each 'pushconst' or 'storeconst' instruction and fixup its argument
-//	Opcode op = op_nop;
-//
-//	dword arg;
-//
-//	// save the ip
-//	byte* orig_ip = ip;
-//
-//	// execute until end
-//	while( ip < end && op < op_halt )
-//	{
-//		//op = ExecuteInstruction();
-//		// decode opcode
-//		Opcode op = (Opcode)*ip;
-//
-//		if( op == op_pushconst || op == op_storeconst )
-//		{
-//			// fixup the arg
-//			arg = *((dword*)ip);
-//			arg += delta;
-//			*((dword*)ip) = arg;
-//		}
-//		// next instruction
-//		SkipInstruction();
-//	}
-//
-//	// reset the ip
-//	ip = orig_ip;
-//}
 
 Object Executor::ImportModule( const char* module_name )
 {
@@ -3944,7 +3893,7 @@ Object Executor::ImportModule( const char* module_name )
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
 
-	// add the module to load-ordered stack (for deletion in depth first order)
+	// add the module to load-ordered stack (for deletion, search etc)
 	module_stack.push_back( cur_module );
 
 	// pop the scope and frame (because these are _module_-level scopes and
@@ -4788,6 +4737,9 @@ void Executor::DumpTrace( ostream & os )
 	// current (error) location:
 	size_t loc = GetOffsetForCallSite( callstack.back(), ip );
 	code = GetCode( bp );
+	// if there's no code block, there's nothing we can do but fail
+	if( !code )
+		return;
 	line = code->lines->FindLine( loc );
 	f = callstack.back();
 	if( f->IsNative() )

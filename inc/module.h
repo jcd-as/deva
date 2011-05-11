@@ -44,19 +44,17 @@ struct Module
 	const Code* code;
 	Scope* scope;
 	Frame* frame;
+	bool global;
 
-	Module( const Code* c, Scope* s, Frame* f ) : code( c ), scope( s ), frame( f ) {}
+	Module( const Code* c, Scope* s, Frame* f, bool g = false ) : code( c ), scope( s ), frame( f ), global( g ) {}
 	inline void DeleteScopeData() {  scope->DeleteData(); }
 	inline void DeleteScope() { delete scope; }
 	inline void DeleteFrame() { delete frame; }
 };
 
-//typedef NativeFunction (*module_fcn_finder)(const string&);
-
 struct NativeModule
 {
 	string name;
-//	module_fcn_finder fcn;
 	// ptr to array of functions
 	NativeFunction* functions;
 	// ptr to array of function names

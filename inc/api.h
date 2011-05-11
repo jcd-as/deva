@@ -73,6 +73,10 @@ struct PassOneFlags
 // TODO: currently no flags. do we need this?
 struct PassTwoFlags
 {
+	// an interactive session or eval() may have undefined symbols,
+	// need to throw a RuntimeException on these and not an ICE
+	bool interactive;
+	PassTwoFlags() : interactive( false ) {}
 };
 
 struct PassOneReturnValue

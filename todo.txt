@@ -1,11 +1,10 @@
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
-TODO 2011-04-28 @deva +veryhigh implement devash (shell)
-	difficulties at executing code in the context of @main (or any Frame) include:
-	x locals aren't expandable. they are stored in the Frame, but because Scopes have pointers directly to the locals, you can't just re-alloc the collection in the Frame (even if it is a std::vector, a resize() op can/will re-alloc and invalidate the pointers)
-	x semantic checking and compile-time symbol checking has to be relaxed - the current block won't have decls for the vars/fcns used
-	- var lookups: even locals become external lookups because the compiler doesn't see the other symbols as local in the code it is compiling. all symbols have to be added to the global const tables
-	- function calls don't work because we jump to the fcn offset in the wrong code block (@main's instead of the evaluated code's)
+TODO 2011-05-10 @deva +veryhigh devash: redefining a class doesn't override the initial definition (local vars & fcns _are_ properly overridden)
+
+TODO 2011-05-10 @deva +high tab should do <something> in devash
+
+TODO 2011-05-10 @deva +high indentation in devash (?)
 
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
@@ -22,6 +21,16 @@ TODO 2011-04-16 @deva +future list comprehensions ?
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-04-28 @deva +veryhigh implement devash (shell)
+    CLOSED: 2011-05-10 21:25:31
+    :LOGBOOK:
+        DONE: 2011-05-10 21:25:31
+	difficulties at executing code in the context of @main (or any Frame) include:
+	x locals aren't expandable. they are stored in the Frame, but because Scopes have pointers directly to the locals, you can't just re-alloc the collection in the Frame (even if it is a std::vector, a resize() op can/will re-alloc and invalidate the pointers)
+	x semantic checking and compile-time symbol checking has to be relaxed - the current block won't have decls for the vars/fcns used
+	x var lookups: even locals become external lookups because the compiler doesn't see the other symbols as local in the code it is compiling. all symbols have to be added to the global const tables
+	x function calls don't work because we jump to the fcn offset in the wrong code block (@main's instead of the evaluated code's)
 
 DONE 2011-05-08 @deva +high unify native (builtin) modules and deva module Objects. ISSUE: how can we determine what fcns are in a native module for dir()?
     CLOSED: 2011-05-09 23:13:43

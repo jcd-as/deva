@@ -126,9 +126,6 @@ void Semantics::DefineVar( char* name, int line, VariableModifier mod /*= mod_no
 // resolve a variable, in the current scope
 void Semantics::ResolveVar( char* name, int line )
 {
-	if( ignore_undefined_vars )
-		return;
-
 	// inside a method, always accept 'self'
 	if( in_class && strcmp( name, "self" ) == 0 )
 		return;
@@ -144,6 +141,9 @@ void Semantics::ResolveVar( char* name, int line )
 	{
 		// accept builtins
 		if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
+			return;
+
+		if( ignore_undefined_vars )
 			return;
 
 		// otherwise error out
@@ -176,9 +176,6 @@ void Semantics::DefineFun( char* name, char* classname, int line )
 // resolve a function, in the current scope
 void Semantics::ResolveFun( char* name, int line )
 {
-	if( ignore_undefined_vars )
-		return;
-
 	// TODO: modules???
 	// if we're on the rhs of a dot-op we need to add symbols referenced
 	if( rhs_of_dot )
@@ -186,6 +183,9 @@ void Semantics::ResolveFun( char* name, int line )
 		AddString( name );
 		DefineVar( name, line );
 	}
+
+	if( ignore_undefined_vars )
+		return;
 
 	// if it is a builtin fcn, nothing to do
 	if( IsBuiltin( string( name ) ) || IsVectorBuiltin( string( name ) ) || IsMapBuiltin( string( name ) ) )
