@@ -66,8 +66,6 @@ int _argc;
 char** _argv;
 }
 
-// global to enable tracing refcounts
-bool deva::reftrace;
 
 /////////////////////////////////////////////////////////////////////////////
 // functions
