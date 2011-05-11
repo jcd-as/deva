@@ -1,5 +1,9 @@
 import os;
-print( os.environ() );
+#local os = {"a" : 0};
+local c = eval( "extern os; local d = dir( os );", true );
+print( c );
+extern d;
+print( d );
 
 #eval( "class C
 #{

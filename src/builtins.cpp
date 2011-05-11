@@ -667,7 +667,7 @@ void do_eval( Frame *frame )
 		helper.ExpectType( o, obj_boolean );
 		global = o->b;
 	}
-	Object ret = ex->ExecuteText( s->s, global );
+	Object ret = ex->ExecuteText( s->s, global, global );
 
 	helper.ReturnVal( ret );
 }
