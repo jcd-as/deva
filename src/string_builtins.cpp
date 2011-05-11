@@ -406,7 +406,7 @@ void do_string_rfind( Frame *frame )
 	size_t sz_val = strlen( val->s );
 	// convert a start val of '-1' into end-of-string
 	if( start == -1 )
-		start = (int)string::npos;
+		start = (long)string::npos;
 	// if a sub-string length wasn't passed, use the entire search string
 	if( len == -1 )
 		len = (int)sz_val;

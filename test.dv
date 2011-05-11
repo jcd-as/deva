@@ -1,15 +1,18 @@
-eval( "class C
-{
-	def new( s )
-	{
-		self.s = s;
-#		print( self.s );
-	}
-	def foo() { print( self.s ); }
-}", true );
-extern C;
-local c = new C( "FUBAR" );
-c.foo();
+import os;
+print( os.environ() );
+
+#eval( "class C
+#{
+#	def new( s )
+#	{
+#		self.s = s;
+##		print( self.s );
+#	}
+#	def foo() { print( self.s ); }
+#}", true );
+#extern C;
+#local c = new C( "FUBAR" );
+#c.foo();
 
 #eval( "class C
 #{

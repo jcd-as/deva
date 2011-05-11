@@ -578,7 +578,10 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 	{
 		for( int i = 0; i < code->NumConstants(); i++ )
 		{
-			AddGlobalConstant( code->GetConstant( i ) );
+			Object ob = code->GetConstant( i );
+			if( ob.type == obj_string || ob.type == obj_symbol_name )
+				ob.s = copystr( ob.s );
+			AddGlobalConstant( ob );
 		}
 	}
 

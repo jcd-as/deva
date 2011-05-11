@@ -44,6 +44,12 @@ if( CMAKE_GENERATOR MATCHES "Visual Studio" )
 	option( MSVC ON )
 endif()
 
+# set flag for Mac OS X builds
+##############################
+#if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
+#	option( MACOSX ON )
+#endif()
+
 # find boost
 ############
 if( NOT MSVC )
@@ -73,7 +79,11 @@ find_library( EDIT edit )
 # configure defines and options
 ###############################
 if( ${UNIX} )
-	set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+	if( APPLE )
+		set( CMAKE_CXX_FLAGS "-DMAC_OS_X -DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+	else()
+		set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+	endif()
 	if( PROFILE )
 		set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE -pg" )
 		#set( CMAKE_CXX_FLAGS_RELEASE "-O2" )

@@ -37,12 +37,19 @@
 
 using namespace boost;
 
-#ifdef MS_WINDOWS
-#define chdir(x) _chdir(x)
-#include <direct.h>
-extern __declspec(dllimport) char** environ;
+// mac/bsd doesn't like environ being accessed from a shared lib
+#ifdef MAC_OS_X
+	#include <crt_externs.h>
 #else
-extern char** environ;
+	// ms-windows needs direct.h and a dllimport decl
+	#ifdef MS_WINDOWS
+		#define chdir(x) _chdir(x)
+		#include <direct.h>
+		extern __declspec(dllimport) char** environ;
+	// linux just needs the extern decl
+	#else
+		extern char** environ;
+	#endif
 #endif
 
 namespace deva
@@ -274,13 +281,14 @@ void do_os_exists( Frame* f )
 void do_os_environ( Frame* f )
 {
 	BuiltinHelper helper( "os", "environ", f, true );
-	helper.CheckNumberOfArguments( 1 );
+	helper.CheckNumberOfArguments( 0 );
 
-	Object* o = helper.GetLocalN( 0 );
-	helper.ExpectType( o, obj_string );
+#ifdef MAC_OS_X
+	// mac/bsd doesn't like environ being accessed from a shared lib
+	char** environ = *_NSGetEnviron();
+#endif
 
 	// create a map of the environment
-//	Map* m = new Map();
 	Map* m = CreateMap();
 	int i = 0;
 	while( environ[i] )
