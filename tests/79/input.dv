@@ -1,0 +1,14 @@
+# test class overriding
+class C
+{
+	def foo(){ print("foo");}
+}
+local c = new C();
+c.foo();
+class C
+{
+	def bar(){ print("bar");}
+}
+local c = new C();
+c.bar();
+

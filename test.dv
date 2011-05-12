@@ -1,40 +1,14 @@
-import os;
-#local os = {"a" : 0};
-local c = eval( "extern os; local d = dir( os );", true );
-print( c );
-extern d;
-print( d );
+class C
+{
+	# BUG: extraneous semicolon causes segfault
+	def foo(){};
+}
 
-#eval( "class C
-#{
-#	def new( s )
-#	{
-#		self.s = s;
-##		print( self.s );
-#	}
-#	def foo() { print( self.s ); }
-#}", true );
-#extern C;
-#local c = new C( "FUBAR" );
-#c.foo();
-
-#eval( "class C
-#{
-#	def new()
-#	{
-#		print( 'NO ARGS' );
-#	}
-#	def foo(){ print( 'FOO' ); }
-#}", true );
-#local c = new C( "FUBAR" );
-#local c = new C();
-#c.foo();
-
-#eval( "local g = 42; def foo( s ){ print( s ); }", true );
-#extern foo;
-#extern g;
-#foo( "fubar" );
-#print( g );
+#import os;
+#local c = eval( "extern os; local d = dir( os );", true );
+#extern d;
+#print( d );
+#print( dir( c ) );
 
 #import math;
 #print( math );
@@ -81,9 +55,9 @@ print( d );
 #	}
 #}
 #
-##local c = new C();
-##c.foo( "foobar" );
-##
+#local c = new C();
+#c.foo( "foobar" );
+#
 #print( dir( C ) );
 #local m = dir( C );
 #m.junk = 54;

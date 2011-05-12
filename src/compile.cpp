@@ -325,7 +325,19 @@ void Compiler::EndFun()
 }
 
 // define a class
-void Compiler::DefineClass( char* name, int line, pANTLR3_BASE_TREE bases )
+void Compiler::DefineClass( char* name, int line )
+{
+	// get the name of the class on the stack
+	int idx = GetConstant( Object( name ) );
+	if( idx == INT_MIN )
+		throw ICE( boost::format( "Cannot find constant '%1%'." ) % name );
+
+	// emit the def_class op
+	Emit( op_def_class, (dword)idx );
+}
+
+// create a class (on the stack)
+void Compiler::CreateClass( char* name, int line, pANTLR3_BASE_TREE bases )
 {
 	// get the number of base classes and emit the new_class instruction
 	int num_bases = bases->getChildCount( bases );

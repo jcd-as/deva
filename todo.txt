@@ -1,7 +1,5 @@
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
-TODO 2011-05-10 @deva +veryhigh devash: redefining a class doesn't override the initial definition (local vars & fcns _are_ properly overridden)
-
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
@@ -19,6 +17,12 @@ TODO 2011-04-16 @deva +future list comprehensions ?
 TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-05-10 @deva +veryhigh redefining a class doesn't override the initial definition (local vars & fcns _are_ properly overridden)
+    CLOSED: 2011-05-12 13:35:33
+    :LOGBOOK:
+        DONE: 2011-05-12 13:35:33
+	- new_class op gets the functions for the class by walking the list of fcns and comparing the class and adding methods (executor.cpp L1178)
 
 DONE 2011-05-10 @deva +medium indentation in devash (?)
     CLOSED: 2011-05-11 11:24:05

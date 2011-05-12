@@ -293,37 +293,40 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 			code = ex->ReadCode( out_fname );
 		}
 
-		// done compiling
-#ifdef DEBUG
-		if( debug_dump )
+		if( code )
 		{
-			// dump the constant data pool
-			ex->DumpConstantPool( code );
-			// dump the function objects
-			ex->DumpFunctions();
-		}
+			// done compiling
+#ifdef DEBUG
+			if( debug_dump )
+			{
+				// dump the constant data pool
+				ex->DumpConstantPool( code );
+				// dump the function objects
+				ex->DumpFunctions();
+			}
 #endif
 
-		if( disasm )
-		{
-			ex->Decode( code );
-		}
+			if( disasm )
+			{
+				ex->Decode( code );
+			}
 
-		// execute the code
-		if( !compile_only )
-		{
-			// set execution flags
-			ex->trace = trace;
-			// add built-in (native) modules
-			ex->AddNativeModule( GetModuleOs() );
-			ex->AddNativeModule( GetModuleBit() );
-			ex->AddNativeModule( GetModuleMath() );
-			ex->AddNativeModule( GetModuleRe() );
 			// execute the code
-			ex->Execute( code );
+			if( !compile_only )
+			{
+				// set execution flags
+				ex->trace = trace;
+				// add built-in (native) modules
+				ex->AddNativeModule( GetModuleOs() );
+				ex->AddNativeModule( GetModuleBit() );
+				ex->AddNativeModule( GetModuleMath() );
+				ex->AddNativeModule( GetModuleRe() );
+				// execute the code
+				ex->Execute( code );
+			}
+			else
+				delete code;
 		}
-		else
-			delete code;
 	}
 	catch( SemanticException & e )
 	{

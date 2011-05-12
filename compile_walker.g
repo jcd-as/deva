@@ -93,10 +93,10 @@ func_decl[char* classname]
 class_decl 
 @init { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = true; } }
 @after { if( PSRSTATE->backtracking == 0 ){ compiler->in_class = false; } }
-	:	^(Class id=ID 
+	:	^(Class id=ID { compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id) ); }
 		(^(Base_classes base_class*))
 		func_decl[(char*)$id.text->chars]*)
-		{ compiler->DefineClass( (char*)$id.text->chars, $id->getLine($id), $Base_classes ); }
+		{ compiler->CreateClass( (char*)$id.text->chars, $id->getLine($id), $Base_classes ); }
 	;
 
 base_class

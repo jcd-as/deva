@@ -97,12 +97,9 @@ class Executor
 	Module* main_module;
 
 	// available native modules
-//	map<string, module_fcn_finder> native_modules;
-//	map<string, NativeModule> native_modules;
 	map<string, Object> native_modules;
 
 	// native modules that have been imported
-//	map<string, module_fcn_finder> imported_native_modules;
 	map<string, Object> imported_native_modules;
 	
 	// list of possible module names (from compilation)
@@ -116,6 +113,9 @@ class Executor
 
 	// set of function objects
 	multimap<string, Object*> functions;
+
+	// set of classes
+	map<string, vector<Function*> > classes;
 
 	// set of constants (including all names)
 	vector<Object> constants;

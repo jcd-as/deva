@@ -154,6 +154,7 @@ const char* opcodeNames[] =
 	"rot3", 
 	"rot4", 
 	"import",
+	"def_class",
 	"halt",
 	"illegal",
 };

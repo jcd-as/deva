@@ -1045,35 +1045,40 @@ Opcode Executor::ExecuteInstruction()
 		arg3 = *((dword*)ip);
 		ip += sizeof( dword );
 
+		// find the function name
+		Object fcnname = GetConstant( arg );
+		if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
+			throw ICE( "def_method instruction called with an object that is not a class name." );
+		string function_name( fcnname.s );
+		// find the class name
+		Object clsname = GetConstant( arg2 );
+		if( clsname.type != obj_string && clsname.type != obj_symbol_name )
+			throw ICE( "def_method instruction called with an object that is not a class name." );
+		string class_name( clsname.s );
+
+		// find the constant for the module name
+		Object modname = GetConstant( arg4 );
+		if( modname.type != obj_string && modname.type != obj_symbol_name )
+			throw ICE( "def_function instruction called with an object that is not a module name." );
+		string module_name( modname.s );
+
+		// find the function
+		Object* objf = FindFunction( function_name, module_name, (size_t)arg3 );
+		if( !objf )
+			throw RuntimeException( boost::format( "Function '%1%' not found." ) % function_name );
+
+		// add the method to its class
+		map<string, vector<Function*> >::iterator i = classes.find( class_name );
+		if( i == classes.end() )
+			throw ICE( boost::format( "Class '%1' not found for def_method instruction." ) % class_name );
+		i->second.push_back( objf->f );
+
 		// if we're currently importing a module, set the functions module ptr
 		if( s_currently_importing_module )
 		{
-			// find the function name
-			Object fcnname = GetConstant( arg );
-			if( fcnname.type != obj_string && fcnname.type != obj_symbol_name )
-				throw ICE( "def_method instruction called with an object that is not a class name." );
-			string function_name( fcnname.s );
-			// find the class name
-			Object clsname = GetConstant( arg2 );
-			if( clsname.type != obj_string && clsname.type != obj_symbol_name )
-				throw ICE( "def_method instruction called with an object that is not a class name." );
-			string class_name( clsname.s );
-//			function_name += "@";
-//			function_name += class_name;
-
-			// find the constant for the module name
-			Object modname = GetConstant( arg4 );
-			if( modname.type != obj_string && modname.type != obj_symbol_name )
-				throw ICE( "def_function instruction called with an object that is not a module name." );
-			string module_name( modname.s );
-
-			// find the function
-			Object* objf = FindFunction( function_name, module_name, (size_t)arg3 );
-			if( !objf )
-				throw RuntimeException( boost::format( "Function '%1%' not found." ) % function_name );
-
 			objf->f->module = s_currently_importing_module;
 		}
+
 		}
 		break;
 	case op_new_map:
@@ -1175,18 +1180,21 @@ Opcode Executor::ExecuteInstruction()
 		m.m->insert( pair<Object, Object>( _bases, basesObj ) );
 
 		// add all of the methods for this class
-		for( multimap<string,Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
+		// find the class
+		map<string, vector<Function*> >::iterator i = classes.find( name );
+		if( i == classes.end() )
+			throw ICE( "Class for new_class instruction does not exist." );
+		vector<Function*> methods = i->second;
+		for( size_t idx = 0; idx != methods.size(); idx++ )
 		{
-			Function* f = i->second->f;
-			if( f->classname == name.s )
-			{
-				int i = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
-				if( i == INT_MIN )
-					throw ICE( boost::format( "Cannot find function name '%1%' for class construction." ) % f->name.c_str() );
-				Object fcnname = GetConstant( i );
-				m.m->insert( pair<Object, Object>( fcnname, Object( f ) ) );
-			}
+			Function* f = methods[idx];
+			int i = FindConstant( Object( obj_symbol_name, f->name.c_str() ) );
+			if( i == INT_MIN )
+				throw ICE( boost::format( "Cannot find function name '%1%' for class construction." ) % f->name.c_str() );
+			Object fcnname = GetConstant( i );
+			m.m->insert( pair<Object, Object>( fcnname, Object( f ) ) );
 		}
+		
 		// push the new class object onto the stack (it will be consumed by a
 		// following 'def_local' instruction)
 		IncRef( m );
@@ -1960,38 +1968,9 @@ Opcode Executor::ExecuteInstruction()
 		stack.pop_back();
 		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_native_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type with members." ) % lhs );
-		if( lhs.type == obj_symbol_name )
-		{
-			// TODO: is this runtime error or ICE?
-//			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
-//				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
-//			// see if there is a module with this name
-//			if( modules.count( string( lhs.s ) ) == 0 && imported_native_modules.count( string( lhs.s ) ) == 0 )
-//				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-//			else
-//			{
-//				// see if there is a native module with this name
-////				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
-//				map<string, NativeModule>::iterator i = imported_native_modules.find( string( lhs.s ) );
-//				if( i != imported_native_modules.end() )
-//				{
-//					// get the native function for this function
-//					NativeFunction nf = (i->second.fcn)( string( rhs.s ) );
-//					if( !nf.p )
-//						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
-//					Object fo( nf );
-//					stack.push_back( fo );
-//				}
-//				// no native module, try as a deva symbol/module
-//				else
-//				{
-//					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-//				}
-//			}
-			throw ICE( "Symbol name as lhs of tbl_load." );
-		}
+
 		// string:
-		else if( lhs.type == obj_string )
+		if( lhs.type == obj_string )
 		{
 			// handle string built-in methods
 			//
@@ -2066,7 +2045,7 @@ Opcode Executor::ExecuteInstruction()
 			stack.push_back( obj );
 		}
 		// map/class/instance:
-		else
+		else if( IsMapType( lhs.type ) )
 		{
 			// find the rhs (key in the lhs (map)
 			Map::iterator i = lhs.m->find( rhs );
@@ -2122,6 +2101,9 @@ Opcode Executor::ExecuteInstruction()
 			IncRef( i->second );
 			stack.push_back( i->second );
 		}
+		else
+			throw ICE( "Invalid type in tbl_load instruction." );
+
 		DecRef( lhs );
 		DecRef( rhs );
 		break;
@@ -2135,38 +2117,8 @@ Opcode Executor::ExecuteInstruction()
 		if( !IsRefType( lhs.type ) && lhs.type != obj_module && lhs.type != obj_native_module && lhs.type != obj_string && lhs.type != obj_symbol_name )
 			throw RuntimeException( boost::format( "'%1%' is not a type that has methods (string, vector, map, class, instance or module)." ) % lhs );
 
-		if( lhs.type == obj_symbol_name )
-		{
-			// TODO: is this runtime error or ICE?
-//			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
-//				throw ICE( boost::format( "'%1%' is not a valid type for a member." ) % rhs );
-//			// see if there is a module with this name
-//			if( modules.count( string( lhs.s ) ) == 0 && imported_native_modules.count( string( lhs.s ) ) == 0 )
-//				throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-//			else
-//			{
-//				// see if there is a native module with this name
-////				map<string, module_fcn_finder>::iterator i = imported_native_modules.find( string( lhs.s ) );
-//				map<string, NativeModule>::iterator i = imported_native_modules.find( string( lhs.s ) );
-//				if( i != imported_native_modules.end() )
-//				{
-//					// get the native function for this function
-//					NativeFunction nf = (i->second.fcn)( string( rhs.s ) );
-//					if( !nf.p )
-//						throw RuntimeException( boost::format( "Cannot find function '%1%' in native module '%2%'." ) % rhs.s % lhs.s );
-//					Object fo( nf );
-//					stack.push_back( fo );
-//				}
-//				// no native module, try as a deva symbol/module
-//				else
-//				{
-//					throw RuntimeException( boost::format( "Cannot find module '%1%'." ) % lhs.s );
-//				}
-//			}
-			throw ICE( "Symbol name as lhs of method_load" );
-		}
 		// string:
-		else if( lhs.type == obj_string )
+		if( lhs.type == obj_string )
 		{
 			if( rhs.type != obj_string && rhs.type != obj_symbol_name )
 				throw RuntimeException( boost::format( "Expected method name, found '%1%'." ) % rhs );
@@ -2232,7 +2184,7 @@ Opcode Executor::ExecuteInstruction()
 			break;
 		}
 		// map/class/instance:
-		else
+		else if( IsMapType( lhs.type ) )
 		{
 			// find the rhs (key in the lhs (map)
 			Map::iterator i = lhs.m->find( rhs );
@@ -2309,6 +2261,8 @@ Opcode Executor::ExecuteInstruction()
 			IncRef( i->second );
 			stack.push_back( i->second );
 		}
+		else
+			throw ICE( "Invalid type in method_load instruction." );
 
 		DecRef( lhs );
 		DecRef( rhs );
@@ -3165,19 +3119,19 @@ Opcode Executor::ExecuteInstruction()
 		IncRef( stack.back() );
 		break;
 	case op_dup2:
-		stack.push_back( stack.back() );
-		IncRef( stack.back() );
-		stack.push_back( stack.back() );
-		IncRef( stack.back() );
-		break;
+//		stack.push_back( stack.back() );
+//		IncRef( stack.back() );
+//		stack.push_back( stack.back() );
+//		IncRef( stack.back() );
+//		break;
 	case op_dup3:
-		stack.push_back( stack.back() );
-		IncRef( stack.back() );
-		stack.push_back( stack.back() );
-		IncRef( stack.back() );
-		stack.push_back( stack.back() );
-		IncRef( stack.back() );
-		break;
+//		stack.push_back( stack.back() );
+//		IncRef( stack.back() );
+//		stack.push_back( stack.back() );
+//		IncRef( stack.back() );
+//		stack.push_back( stack.back() );
+//		IncRef( stack.back() );
+//		break;
 	case op_dup_top_n:
 //			stack.push_back( stack[stack.size()-2] );
 		// TODO:
@@ -3187,6 +3141,7 @@ Opcode Executor::ExecuteInstruction()
 		// TODO:
 	case op_dup_top3:
 		// TODO:
+		throw ICE( "opcode not implemented." );
 	case op_swap:	// tos = tos1; tos1 = tos
 		// verify the stack
 		{
@@ -3250,6 +3205,26 @@ Opcode Executor::ExecuteInstruction()
 		if( o.type != obj_symbol_name )
 			throw ICE( "Invalid argument to 'import' instruction: not a symbol name." );
 		ImportModule( o.s );
+		break;
+	case op_def_class:
+		{
+		// 1 arg:
+		arg = *((dword*)ip);
+		ip += sizeof( dword );
+		// look-up the constant
+		o = GetConstant( arg );
+		if( o.type != obj_symbol_name && o.type != obj_string )
+			throw ICE( "Invalid argument to 'def_class' instruction: not a symbol name." );
+		string name( o.s );
+		// if the class already exists, empty its method list
+		if( classes.count( name ) != 0 )
+		{
+			classes.find( name )->second.clear();
+		}
+		// otherwise add an empty class to the class list
+		else
+			classes.insert( make_pair( name, vector<Function*>() ) );
+		}
 		break;
 	case op_halt:
 		break;
@@ -3389,6 +3364,7 @@ Opcode Executor::SkipInstruction()
 	case op_dup:
 	case op_rot:
 	case op_import:
+	case op_def_class:
 		ip += sizeof( dword );
 		break;
 
@@ -4636,6 +4612,14 @@ int Executor::PrintOpcode( const Code* code, Opcode op, const byte* b, byte* p )
 	case op_rot4:
 		break;
 	case op_import:
+		// 1 arg:
+		arg = *((dword*)p);
+		// look-up the constant
+		o = GetConstant( code, arg );
+		cout << "\t" << arg << " (" << o << ")";
+		ret = sizeof( dword );
+		break;
+	case op_def_class:
 		// 1 arg:
 		arg = *((dword*)p);
 		// look-up the constant

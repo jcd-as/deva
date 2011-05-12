@@ -147,6 +147,8 @@ enum Opcode
 
 	op_import,
 
+	op_def_class,
+
 	// 119 (update as opcodes are added above)
 	op_halt,
 	op_illegal = 255	// illegal operation, if exists there was a compiler error/fault

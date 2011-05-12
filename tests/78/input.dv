@@ -1,0 +1,31 @@
+# some eval tests
+eval( "class C
+{
+	def new( s )
+	{
+		self.s = s;
+#		print( self.s );
+	}
+	def foo() { print( self.s ); }
+}", true );
+extern C;
+local c = new C( "FUBAR" );
+c.foo();
+
+eval( "class C
+{
+	def new()
+	{
+		print( 'NO ARGS' );
+	}
+	def foo(){ print( 'FOO' ); }
+}", true );
+local c = new C();
+c.foo();
+
+eval( "local g = 42; def foo( s ){ print( s ); }", true );
+extern foo;
+extern g;
+foo( "fubar" );
+print( g );
+
