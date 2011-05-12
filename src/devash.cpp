@@ -147,6 +147,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 
 	reftrace = false;
 	bool trace = false;
+	bool vi = false;
 
 	// declare the command line options
 	po::options_description desc( "Supported options" );
@@ -154,6 +155,7 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 		( "help", "help message" )
 		( "version,v", "display program version" )
 		( "trace", "show execution trace" )
+		( "vi", "use vi mode for line editing" )
 		;
 	po::variables_map vm;
 	try
@@ -185,6 +187,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	{
 		trace = true;
 	}
+	if( vm.count( "vi" ) )
+	{
+		vi = true;
+	}
 
 	// line editor objects
 	EditLine* el = NULL;
@@ -194,7 +200,10 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 	// set-up the line editor and history
 	el = el_init( argv[0], stdin, stdout, stderr );
 	el_set( el, EL_PROMPT, &prompt );
-	el_set( el, EL_EDITOR, "emacs" );
+	if( vi )
+		el_set( el, EL_EDITOR, "vi" );
+	else
+		el_set( el, EL_EDITOR, "emacs" );
 	hist = history_init();
 	if( hist == 0 )
 	{
