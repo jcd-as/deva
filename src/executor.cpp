@@ -581,7 +581,8 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 			Object ob = code->GetConstant( i );
 			if( ob.type == obj_string || ob.type == obj_symbol_name )
 				ob.s = copystr( ob.s );
-			AddGlobalConstant( ob );
+			if( !AddGlobalConstant( ob ) )
+				delete [] ob.s;
 		}
 	}
 
@@ -1818,6 +1819,30 @@ Opcode Executor::ExecuteInstruction()
 			CallConstructors( callable, instance, arg );
 
 			stack.push_back( instance );
+		}
+		else if( callable.type == obj_instance )
+		{
+			// get the 'call' method ('()' operator) of this class and call it
+			Map::iterator it = o.m->find( Object( obj_symbol_name, "call" ) );
+			if( it != o.m->end() )
+			{
+				// push the new instance onto the stack
+				stack.push_back( callable );
+				IncRef( callable );
+
+				if( it->second.type != obj_function )
+					throw RuntimeException( "'call' object of instance is not a function object." );
+				if( !it->second.f->IsMethod() )
+					throw RuntimeException( "'call' object of instance is not a method." );
+
+				// call the method
+				ExecuteFunction( it->second.f, arg, true );
+
+				// if the method was actually called, the return op will dec
+				// ref the 'self' arg, so we don't need to decref the instance
+			}
+			else
+				throw RuntimeException( "Object must have a 'call' method in order to be used as a function." );
 		}
 		else
 			throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % callable );

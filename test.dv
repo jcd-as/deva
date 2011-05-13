@@ -1,8 +1,27 @@
-class C
+class accum
 {
-	# BUG: extraneous semicolon causes segfault
-	def foo(){};
+	def new( n ){ self.c = 0; self.n = n; }
+#	def f(){ self.c += self.n; return self.c; }
+	def call(){ self.c += self.n; return self.c; }
 }
+
+#local a = new accum( 1 );
+local a = accum( 1 );
+print( a() );
+print( a() );
+print( a() );
+
+#print( a.f() );
+#print( a.f() );
+#print( a.f() );
+#print( a.f() );
+
+
+#class C
+#{
+#	# BUG: extraneous semicolon causes segfault
+#	def foo(){};
+#}
 
 #import os;
 #local c = eval( "extern os; local d = dir( os );", true );

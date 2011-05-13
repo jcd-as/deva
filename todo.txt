@@ -18,6 +18,11 @@ TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
 
+DONE 2011-05-12 @deva +high class 'call' operator/fcn for simulation of closures via classes
+    CLOSED: 2011-05-13 10:50:46
+    :LOGBOOK:
+        DONE: 2011-05-13 10:50:46
+
 DONE 2011-05-10 @deva +veryhigh redefining a class doesn't override the initial definition (local vars & fcns _are_ properly overridden)
     CLOSED: 2011-05-12 13:35:33
     :LOGBOOK:
