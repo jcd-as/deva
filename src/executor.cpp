@@ -1070,7 +1070,7 @@ Opcode Executor::ExecuteInstruction()
 		// add the method to its class
 		map<string, vector<Function*> >::iterator i = classes.find( class_name );
 		if( i == classes.end() )
-			throw ICE( boost::format( "Class '%1' not found for def_method instruction." ) % class_name );
+			throw ICE( boost::format( "Class '%1%' not found for def_method instruction." ) % class_name );
 		i->second.push_back( objf->f );
 
 		// if we're currently importing a module, set the functions module ptr
