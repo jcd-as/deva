@@ -221,6 +221,8 @@ public:
 
 	// define a function
 	void DefineFun( char* name, char* classname, int line );
+	// define an anonymus function and put it on the stack
+	void DefineLambda( int line );
 	void EndFun();
 
 	// define a class

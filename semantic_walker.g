@@ -71,8 +71,8 @@ statement
 	;
 
 block 
-@init { semantics->PushScope(); }
-@after { semantics->PopScope(); }
+@init { if( PSRSTATE->backtracking == 0 ){ semantics->PushScope(); } }
+@after { if( PSRSTATE->backtracking == 0 ){ semantics->PopScope(); } }
 	:	^(Block statement*)
 	;
 
@@ -201,6 +201,15 @@ exp[bool invert]
 	|	value[invert]
 // TODO: this calls ResolveFun on every ID in, for example, 'a.b.c()'
 	|	ID  { if( semantics->making_call ) semantics->ResolveFun( (char*)$ID.text->chars, $ID->getLine($ID) ); else semantics->ResolveVar( (char*)$ID.text->chars, $ID->getLine($ID) ); }
+	|	lambda_exp
+	;
+
+lambda_exp
+@init { if( PSRSTATE->backtracking == 0 ){ semantics->in_for_loop.push_back( 0 ); semantics->in_while_loop.push_back( 0 ); } }
+@after { if( PSRSTATE->backtracking == 0 ){ semantics->in_fcn--; semantics->PopScope(); semantics->in_for_loop.pop_back(); semantics->in_while_loop.pop_back(); } }
+	:	^(Lambda { semantics->in_fcn++; semantics->PushScope( "" ); }
+			arg_list_decl { semantics->CheckAndResetFun( $Lambda->getLine($Lambda) ); }
+			block) 
 	;
 
 call_exp

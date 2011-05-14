@@ -24,6 +24,7 @@ tokens
 	Block;				// code block (body of if,else,while,for,function def)
 	Negate;				// unary '-' operator, to reduce confusion with binary '-'
 	Def;				// 'def' fcn
+	Lambda;				// anonymous fcn
 	Break;				// 'break'
 	Continue;			// 'continue'
 	Return;				// 'return'
@@ -124,7 +125,7 @@ compound_statement
 	;
 
 func_decl 
-	:	'def' ID arg_list_decl compound_statement		-> ^(Def ID arg_list_decl compound_statement)
+	:	'def' ID arg_list_decl compound_statement			-> ^(Def ID arg_list_decl compound_statement)
 	|	'def' 'new' arg_list_decl compound_statement		-> ^(Def 'new' arg_list_decl compound_statement)
 	;
 	
@@ -251,6 +252,7 @@ unary_exp
 	|	'!' primary_exp										-> ^(NOT_OP primary_exp)
 	|	'!!' primary_exp									-> ^(NOT_OP ^(NOT_OP primary_exp))
 	|	'-' primary_exp										-> ^(Negate primary_exp)
+	|	'lambda' arg_list_decl compound_statement			-> ^(Lambda arg_list_decl compound_statement)
 	;	
 
 // argument list use, not declaration ('()'s & contents)

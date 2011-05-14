@@ -1,0 +1,21 @@
+# lambda tests
+local v = [8, 3, 5, 2, 1, 99, 4, 0, 23];
+print( v );
+v.sort( 0, -1, lambda(a,b){ return a > b; } );
+print( v );
+v.sort( 0, -1, lambda(a,b){ return a < b; } );
+print( v );
+
+local c = {"f" : lambda(){ return "FUBAR"; } };
+local v = [lambda(){ return "FUBAR"; }];
+print( c.f() );
+print( v[0]() );
+
+local v = [0,1,2,3];
+v = v.map( lambda(n){ return n * n; } );
+print( v );
+
+local f = lambda(n){ print( n ); };
+f( "FOO" );
+
+

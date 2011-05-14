@@ -221,6 +221,15 @@ exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]
 	|	(map_op | vec_op)
 	|	value
 	|	ID { compiler->Identifier( (char*)$ID.text->chars, is_lhs_of_assign, $ID->getLine($ID) ); }
+	|	lambda_exp
+	;
+
+lambda_exp
+@init { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting++; compiler->in_for_loop.push_back(0); compiler->in_while_loop.push_back(0); } }
+@after { if( PSRSTATE->backtracking == 0 ){ compiler->fcn_nesting--; compiler->in_constructor = false; compiler->LeaveScope(); compiler->EndFun(); compiler->in_for_loop.pop_back(); compiler->in_while_loop.pop_back(); } }
+	:	^(Lambda { compiler->AddScope(); compiler->DefineLambda( $Lambda->getLine($Lambda) ); }
+			arg_list_decl 
+			block) 
 	;
 
 dot_exp[bool is_lhs_of_assign, pANTLR3_BASE_TREE parent]

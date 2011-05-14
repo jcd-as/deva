@@ -36,7 +36,6 @@
 #include "fileformat.h"
 
 #include <algorithm>
-#include <sstream>
 #include <fstream>
 #include <sstream>
 

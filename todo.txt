@@ -14,9 +14,12 @@ TODO 2011-05-10 @deva +low tab should do <something> in devash
 
 TODO 2011-04-16 @deva +future list comprehensions ?
 
-TODO 2011-04-16 @deva +future lambdas / anonymous functions ?
-
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-04-16 @deva +future lambdas / anonymous functions ?
+    CLOSED: 2011-05-13 19:28:33
+    :LOGBOOK:
+        DONE: 2011-05-13 19:28:33
 
 DONE 2011-05-12 @deva +high class 'call' operator/fcn for simulation of closures via classes
     CLOSED: 2011-05-13 10:50:46

@@ -20,6 +20,7 @@ endif
 " keywords
 syn keyword devaStatement	break continue 
 syn keyword devaStatement	def 
+syn keyword devaStatement	lambda
 syn keyword devaStatement	return
 syn keyword devaStatement	import
 syn keyword devaStatement	local
@@ -66,7 +67,7 @@ syn match   devaFieldVars	"\$\d\+"
 "catch errors caused by wrong parenthesis
 syn region	devaParen	transparent start="(" end=")" contains=ALLBUT,devaParenError,devaSpecialCharacter,devaArrayElement,devaArrayArray,devaTodo,devaRegExp,devaBrktRegExp,devaBrackets,devaCharClass
 syn match	devaParenError	display ")"
-syn match	devaInParen	display contained "[{}]"
+"syn match	devaInParen	display contained "[{}]"
 
 " 64 lines for complex &&'s, and ||'s in a big "if"
 syn sync ccomment devaParen maxlines=64

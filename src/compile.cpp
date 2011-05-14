@@ -38,6 +38,7 @@
 #include <iostream>
 #include <cmath>
 #include <climits>
+#include <sstream>
 
 namespace deva_compile
 {
@@ -304,6 +305,97 @@ void Compiler::DefineFun( char* name, char* classname, int line )
 
 	// add to the list of fcn objects
 	ex->AddFunction( name, fcn );
+}
+
+// define an anonymous function and put it on the stack
+void Compiler::DefineLambda( int line )
+{
+	// generate def_function/def_method op
+	static dword count = 0;
+	ostringstream s;
+	s << "[LAMBDA" << count << "]";
+	count++;
+	string name = s.str();
+
+	int i = code->NumConstants();
+	code->AddConstant( Object( obj_symbol_name, copystr( name ) ) );
+
+	string mod;
+	if( module_name )
+		mod = module_name;
+	else
+		mod = "";
+
+	// emit an op_def_function instruction
+	// get the constant index of this module
+	int i2 = GetConstant( Object( obj_symbol_name, mod.c_str() ) );
+	if( i2 == INT_MIN )
+		throw ICE( boost::format( "Cannot find constant '%1%' for module name." ) % mod );
+
+	// get the constant index of this function
+	// add the size of 'op_def_function <Op0> <Op1> <Op2>', 'jmp <Op0>' and 'pushconst <Op0>'
+	int sz = sizeof( dword ) * 5 + 3;
+	EmitLineNum( line );
+	Emit( op_def_function, (dword)i, (dword)i2, (dword)(is->Length() + sz) );
+	
+	// get the function object onto the stack
+	Emit( op_pushconst, (dword)i );
+
+	// generate jump around fcn so 'main' (or module 'global' as the case
+	// may be) doesn't execute its body inline
+	// emit the jump over fcn body
+	Emit( op_jmp, (dword)-1 );
+	AddPatchLoc();
+
+	// start a new count of scopes inside this fcn
+	fcn_scope_stack.push_back( 0 );
+
+	FunctionScope* scope = dynamic_cast<FunctionScope*>(CurrentScope());
+
+	// create a new Function object
+	Function* fcn = new Function();
+	fcn->name = string( name );
+	fcn->classname = string( "" );
+	fcn->filename = string( current_file );
+	fcn->first_line = line;
+	fcn->num_args = scope->NumArgs();
+	// set the code address for this function
+	fcn->addr = (dword)is->Length();
+
+	// compiling a module?
+	fcn->module = NULL;
+	fcn->modulename = module_name;
+
+	// add the locals
+	for( size_t i = 0; i < scope->GetLocals().size(); i++ )
+	{
+		fcn->local_names.push_back( scope->GetLocals().operator[]( i ) );
+	}
+	// add the default arg indices for this (function) scope
+	for( size_t i = 0; i < scope->GetDefaultArgVals().size(); i++ )
+	{
+		int idx = INT_MIN;
+		// find the index for this constant
+		Object obj = scope->GetDefaultArgVals().at( i );
+		if( obj.type == obj_string )
+		{
+			// strip the string of quotes and unescape it
+			string str( obj.s );
+			str = unescape( strip_quotes( str ) );
+			char* s = new char[str.length()+1];
+			strcpy( s, str.c_str() );
+			idx = GetConstant( Object( s ) );
+			delete [] s;
+		}
+		else
+			idx = GetConstant( obj );
+		if( idx == INT_MIN )
+			throw ICE( boost::format( "Cannot find constant '%1%'." ) % obj );
+		fcn->default_args.push_back( idx );
+	}
+
+	// add to the list of fcn objects
+	ex->AddFunction( name.c_str(), fcn );
 }
 
 void Compiler::EndFun()
