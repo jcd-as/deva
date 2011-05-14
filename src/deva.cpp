@@ -60,8 +60,8 @@ using namespace deva_compile;
 
 namespace deva
 {
-int _argc;
-char** _argv;
+extern int _argc;
+extern char** _argv;
 }
 
 
