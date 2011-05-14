@@ -3968,8 +3968,10 @@ void Executor::WriteCode( string filename, const Code* const code )
 		switch( o.type )
 		{
 		case obj_number:
-			qw = (qword)o.d;
+			{
+			int64_t qw = (int64_t)o.d;
 			file.write( (char*)&qw, sizeof( qword ) );
+			}
 			break;
 		case obj_string:
 			file << o.s;
