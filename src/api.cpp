@@ -184,13 +184,25 @@ Code* PassTwo( const char* module_name, PassOneReturnValue p1rv, PassTwoFlags fl
 	return compiler->GetCode();
 }
 
-PassOneReturnValue Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )
+Code* Compile( const char* module_name, PassOneFlags p1flags, PassTwoFlags p2flags )
+{
+	ParseReturnValue prv = Parse( module_name );
+	if( !prv.successful )
+		return NULL;
+
+	if( !current_file )
+		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
+
+	PassOneReturnValue p1rv = PassOne( prv, p1flags );
+	return PassTwo( module_name, p1rv, p2flags );
+}
+
+Code* Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )
 {
 	if( !current_file )
 		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
 	PassOneReturnValue p1rv = PassOne( prv, p1flags );
-	PassTwo( module_name, p1rv, p2flags );
-	return p1rv;
+	return PassTwo( module_name, p1rv, p2flags );
 }
 
 void FreePassOneReturnValue( PassOneReturnValue & p1rv )

@@ -95,7 +95,8 @@ ParseReturnValue Parse( const char* input, size_t length );
 void FreeParseReturnValue( ParseReturnValue & prv );
 PassOneReturnValue PassOne( ParseReturnValue prv, PassOneFlags flags );
 Code* PassTwo( const char* filename, PassOneReturnValue p1rv, PassTwoFlags flags );
-PassOneReturnValue Compile( const char* filename, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
+Code* Compile( const char* filename, PassOneFlags p1flags, PassTwoFlags p2flags );
+Code* Compile( const char* filename, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags );
 // free pass one/compilation memory, call after finished compiling, using ast
 void FreePassOneReturnValue( PassOneReturnValue & p1rv );
 

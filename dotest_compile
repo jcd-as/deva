@@ -21,6 +21,8 @@ if diff -I ^.*\.table.*$ '$$$RESULTS$$$' $2 ; then
 else
     echo "test failed"
 	# TODO: generate filename ('input.dvc') from $1 arg
-    rm -f '$$$RESULTS$$$' 'input.dvc'
+#    rm -f '$$$RESULTS$$$' 'input.dvc'
+	# don't remove the results file on failure, keep it for diagnostic purposes
+    rm -f 'input.dvc'
     exit -1
 fi

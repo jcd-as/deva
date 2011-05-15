@@ -1,0 +1,28 @@
+# test dir, os.environ, os.argv
+import os;
+local d = dir( os );
+local v = [];
+for( i, j in d )
+	v.append( i );
+print( v.join( ", " ) );
+
+local env = os.environ();
+if( length( env ) > 0 )
+	print( "non-empty environment" );
+else
+	print( "empty environment!" );
+local deva = env["DEVA"];
+if( deva )
+	print( "DEVA env var found" );
+else
+	print( "DEVA env var nout found!" );
+
+local args = os.argv();
+if( length( args ) == 0 )
+	print( "no command-line arguments" );
+else
+{
+	local fmt = "has %d command-line arguments: ";
+	print( fmt.format( [length( args )] ), " " );
+	print( args.join( ", " ) );
+}

@@ -38,6 +38,7 @@
 #include "opcodes.h"
 #include "object.h"
 #include "linemap.h"
+#include "semantics.h"
 #include "executor.h"
 
 #include <vector>

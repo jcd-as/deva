@@ -1,0 +1,4 @@
+argv, chdir, curdir, dirwalk, environ, exec, exists, extsep, getcwd, getdir, getenv, getext, getfile, isdir, isfile, joinpaths, pardir, pathsep, sep, splitpath
+non-empty environment
+DEVA env var found
+has 1 command-line arguments:  input.dv
