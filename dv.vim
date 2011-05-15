@@ -28,10 +28,38 @@ syn keyword devaStatement	const
 syn keyword devaStatement	extern
 syn keyword devaFunction	print
 syn keyword devaFunction	str
+syn keyword devaFunction	chr
+syn keyword devaFunction	num
 syn keyword devaFunction	append
 syn keyword devaFunction	copy
 syn keyword devaFunction	length
 syn keyword devaFunction	eval
+syn keyword devaFunction	open
+syn keyword devaFunction	close
+syn keyword devaFunction	stdin
+syn keyword devaFunction	stdout
+syn keyword devaFunction	stderr
+syn keyword devaFunction	flush
+syn keyword devaFunction	read
+syn keyword devaFunction	readstring
+syn keyword devaFunction	readline
+syn keyword devaFunction	readlines
+syn keyword devaFunction	write
+syn keyword devaFunction	writestring
+syn keyword devaFunction	writeline
+syn keyword devaFunction	writelines
+syn keyword devaFunction	seek
+syn keyword devaFunction	tell
+syn keyword devaFunction	exit
+syn keyword devaFunction	range
+syn keyword devaFunction	vector_of
+syn keyword devaFunction	format
+syn keyword devaFunction	join
+syn keyword devaFunction	error
+syn keyword devaFunction	seterror
+syn keyword devaFunction	geterror
+syn keyword devaFunction	raise
+syn keyword devaFunction	importmodule
 syn keyword devaFunction	concat
 syn keyword devaFunction	min
 syn keyword devaFunction	max
@@ -43,16 +71,55 @@ syn keyword devaFunction	rfind
 syn keyword devaFunction	count
 syn keyword devaFunction	reverse
 syn keyword devaFunction	sort
+syn keyword devaFunction	strip
+syn keyword devaFunction	lstrip
+syn keyword devaFunction	rstrip
+syn keyword devaFunction	split
+syn keyword devaFunction	upper
+syn keyword devaFunction	lower
+syn keyword devaFunction	isalpha
+syn keyword devaFunction	isalphanum
+syn keyword devaFunction	isdigit
+syn keyword devaFunction	isupper
+syn keyword devaFunction	islower
+syn keyword devaFunction	isspace
+syn keyword devaFunction	ispunct
+syn keyword devaFunction	iscntrl
+syn keyword devaFunction	isprint
+syn keyword devaFunction	isxdigit
 syn keyword devaFunction	map
 syn keyword devaFunction	reduce
 syn keyword devaFunction	filter
+syn keyword devaFunction	any
+syn keyword devaFunction	all
 syn keyword devaFunction	slice
 syn keyword devaFunction	keys
 syn keyword devaFunction	values
 syn keyword devaFunction	merge
-syn keyword devaFunction	and or xor 
+syn keyword devaFunction	rewind
+syn keyword devaFunction	next
 syn keyword devaFunction	name
 syn keyword devaFunction	type
+syn keyword devaFunction	dir
+syn keyword devaFunction	is_null
+syn keyword devaFunction	is_boolean
+syn keyword devaFunction	is_number
+syn keyword devaFunction	is_string
+syn keyword devaFunction	is_vector
+syn keyword devaFunction	is_map
+syn keyword devaFunction	is_function
+syn keyword devaFunction	is_native_function
+syn keyword devaFunction	is_class
+syn keyword devaFunction	is_instance
+syn keyword devaFunction	is_native_obj
+syn keyword devaFunction	is_size
+syn keyword devaFunction	is_symbol_name
+syn keyword devaFunction	is_module
+syn keyword devaFunction	is_native_module
+syn keyword devaFunction	and or xor complement shift_left shift_right
+syn keyword devaFunction	pi radians degrees cos sin tan acos asin atan cosh sinh tanh exp log log10 abs sqrt pow modf fmod floor ceil
+syn keyword devaFunction	exec getcwd chdir splitpath joinpaths getdir getfile getext exists environ getenv argv dirwalk isdir isfile sep extsep pathsep curdir pardir
+
 syn keyword devaBool		true false
 syn keyword devaStatement	null
 syn keyword devaObj		class new delete self
@@ -67,7 +134,6 @@ syn match   devaFieldVars	"\$\d\+"
 "catch errors caused by wrong parenthesis
 syn region	devaParen	transparent start="(" end=")" contains=ALLBUT,devaParenError,devaSpecialCharacter,devaArrayElement,devaArrayArray,devaTodo,devaRegExp,devaBrktRegExp,devaBrackets,devaCharClass
 syn match	devaParenError	display ")"
-"syn match	devaInParen	display contained "[{}]"
 
 " 64 lines for complex &&'s, and ||'s in a big "if"
 syn sync ccomment devaParen maxlines=64
@@ -170,7 +236,6 @@ if version >= 508 || !exists("did_deva_syn_inits")
   HiLink devaArrayElement	Special
 
   HiLink devaParenError		devaError
-  HiLink devaInParen		devaError
   HiLink devaError		Error
 
   delcommand HiLink
