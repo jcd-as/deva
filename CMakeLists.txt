@@ -21,13 +21,13 @@
 # for all platforms:
 # - java needs to be installed and on the path if the ANTLR grammars are changed
 # - ANTLR or ANTLRworks needs to be on the java CLASSPATH
-# - Boost 1.4.0+ needs to be installed
+# - Boost 1.4.6+ needs to be installed
 # - the ANTLR3 C library and headers need to be installed
 
 # for UNIX/Cygwin:
 
 # for MSVC/Windows:
-# - Boost 1.4.0+ needs to be installed and built appropriately and added to the system paths so MSVC can locate it (we're using the 'autolink' features so the toolset should find the appropriate libs to link to)
+# - Boost 1.4.6+ needs to be installed and built appropriately and added to the system paths so MSVC can locate it (we're using the 'autolink' features so the toolset should find the appropriate libs to link to)
 # - the ANTLR3 C library and headers need to be installed and built appropriately and the system INCLUDE and LIB paths set to point to it
 
 
@@ -53,12 +53,12 @@ endif()
 # find boost
 ############
 if( NOT MSVC )
-	find_package( Boost 1.40 COMPONENTS regex filesystem system program_options )
+	find_package( Boost 1.44 COMPONENTS regex filesystem system program_options )
 	set( BOOST_ROOT "${BOOST_ROOT}" CACHE PATH "Root directory of Boost install" )
 	set( Boost_USE_STATIC_LIBS OFF )
 	set( Boost_USE_MULTITHREADED ON )
 	set( Boost_USE_STATIC_RUNTIME OFF )
-	find_package( Boost 1.40.0 REQUIRED COMPONENTS filesystem system program_options )
+	find_package( Boost 1.44.0 REQUIRED COMPONENTS filesystem system program_options )
 	if( Boost_FOUND )
 		include_directories( ${Boost_INCLUDE_DIRS} )
 	endif()
@@ -80,9 +80,9 @@ find_library( EDIT edit )
 ###############################
 if( ${UNIX} )
 	if( APPLE )
-		set( CMAKE_CXX_FLAGS "-DMAC_OS_X -DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+		set( CMAKE_CXX_FLAGS "-DMAC_OS_X -DBOOST_FILESYSTEM_VERSION=3 -DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
 	else()
-		set( CMAKE_CXX_FLAGS "-DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
+		set( CMAKE_CXX_FLAGS "-DBOOST_FILESYSTEM_VERSION=3 -DDEVA_VERSION=\\\"2.0.0-alpha\\\"" )
 	endif()
 	if( PROFILE )
 		set( CMAKE_CXX_FLAGS_DEBUG "-g -Wall -DDEBUG -DREFCOUNT_TRACE -pg" )
@@ -95,7 +95,7 @@ if( ${UNIX} )
 	endif()
 endif()
 if( MSVC )
-	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -DDEVA_VERSION=\\\"2.0.0-alpha\\\" -MD -EHsc" )
+	set( CMAKE_CXX_FLAGS "-DMS_WINDOWS -DBOOST_FILESYSTEM_VERSION=3 -DDEVA_VERSION=\\\"2.0.0-alpha\\\" -MD -EHsc" )
 	set( CMAKE_CXX_FLAGS_DEBUG "-Od -Zi -DDEBUG -DREFCOUNT_TRACE" )
 	set( CMAKE_CXX_FLAGS_RELEASE "-O2" )
 endif()
@@ -263,7 +263,7 @@ endif()
 set( CPACK_PACKAGE_DESCRIPTION "The deva programming language" )
 set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "The deva programming language is a byte-code compiled language similar in syntax to C and bearing semantic similarities to Python. It is written in C++, and designed to be embedded into C++ programs. The guiding principle behind its design is to be as simple as possible, both to implement and to write code in." )
 set( CPACK_PACKAGE_NAME "deva" )
-set( CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), libgcc1 (>= 1:4.1), libstdc++6 (>= 4.4), libboost-dev (>= 1.40)" )
+set( CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), libgcc1 (>= 1:4.1), libstdc++6 (>= 4.4), libboost-dev (>= 1.44)" )
 set( CPACK_PACKAGE_CONTACT "Joshua Shepard " )
 set( CPACK_PACKAGE_VENDOR "" )
 set( CPACK_PACKAGE_VERSION_MAJOR "2" )

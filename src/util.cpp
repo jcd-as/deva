@@ -54,19 +54,19 @@ string get_cwd()
 string get_extension( string & path )
 {
 	filesystem::path p( path );
-	return p.extension();
+	return p.extension().string();
 }
 
 string get_stem( string & path )
 {
 	filesystem::path p( path );
-	return p.stem();
+	return p.stem().string();
 }
 
 string get_file_part( string & path )
 {
 	filesystem::path p( path );
-	return p.filename();
+	return p.filename().string();
 }
 
 string get_dir_part( string & path )
@@ -89,7 +89,7 @@ vector<string> split_path( string & path )
 	{
 		// don't push slashes and dots
 		if( *i != "." && *i != "/" )
-			paths.push_back( *i );
+			paths.push_back( (*i).string() );
 	}
 	return paths;
 }
