@@ -661,6 +661,11 @@ void do_vector_sort( Frame *frame )
 	}
 
 	size_t sz = self->v->size();
+	if( sz == 0 )
+	{
+		helper.ReturnVal( Object( obj_null ) );
+		return;
+	}
 
 	if( end == -1 )
 		end = (int)sz;
