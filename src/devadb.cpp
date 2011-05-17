@@ -645,7 +645,7 @@ start:
 								break;
 							// executing address (ip)
 							case 'x':
-								cout << (dword)ex->GetIP() << endl;
+								cout << ex->GetIP() << endl;
 								break;
 							// help
 							case '?':
