@@ -547,7 +547,7 @@ void Compiler::Identifier( char* s, bool is_lhs_of_assign, int line )
 	else
 	{
 		// is it a local?
-		int idx = CurrentScope()->ResolveLocalToIndex( s );
+		int idx = CurrentScope()->ResolveLocalToIndex( s, true );
 
 		// check to see if the local has been defined yet...
 		// if not, we can't use it, have to look it up as a non-local

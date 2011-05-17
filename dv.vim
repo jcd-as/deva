@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	deva
 " Maintainer:	Josh Shepard <josh.shepard@gmail.com>
-" Last Change:	2010 Dec 09 
+" Last Change:	2011 May 15 
 " loosely based on awk,c
 
 " cindent works well with deva if you set cinkeys to: 0{,0},0),:,!^F,o,O,e

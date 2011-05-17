@@ -52,7 +52,11 @@ using namespace deva_compile;
 #ifdef MS_WINDOWS
 #define chdir(x) _chdir(x)
 #include <direct.h>
+#else // linux / mac os x
+// for setrlimit (to increase stack space)
+#include <sys/resource.h>
 #endif
+
 
 /////////////////////////////////////////////////////////////////////////////
 // globals
@@ -75,6 +79,24 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 {
 	deva::_argc = argc;
 	deva::_argv = argv;
+
+	// TODO: increase stack size on ms-windows too
+	// increase the stack limit to allow for decently deep recursion
+#ifndef MS_WINDOWS
+	const rlim_t stackSize = 16 * 1024 * 1024;   // min stack size = 16 MB
+    struct rlimit rl;
+    int result;
+    result = getrlimit( RLIMIT_STACK, &rl );
+    if( result == 0 )
+    {
+        if( rl.rlim_cur < stackSize )
+        {
+            rl.rlim_cur = stackSize;
+            result = setrlimit( RLIMIT_STACK, &rl );
+            //if( result != 0 ) // ignore failure. too bad, so sad
+		}
+	}
+#endif
 
 	// declare the command line options
 	bool debug_dump = false;
@@ -259,7 +281,6 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 				}
 
 				// PASS TWO: compile
-//				code = PassTwo( "", p1rv, p2f );
 				string fp = get_file_part( fname );
 				string module_name = get_stem( fp );
 				code = PassTwo( module_name.c_str(), p1rv, p2f );

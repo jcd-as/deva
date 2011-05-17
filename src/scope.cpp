@@ -111,20 +111,24 @@ const Symbol* const LocalScope::Resolve( const string & n, SymbolType type ) con
 }
 
 // resolve a local to an index IN THIS SCOPE ONLY
-int LocalScope::ResolveLocalToIndexHelper( const string & name )
+int LocalScope::ResolveLocalToIndexHelper( const string & name, bool check_generated )
 {
 	map<const string, int>::iterator i = local_map.find( name );
 	int idx = -1;
 	if( i != local_map.end() )
+	{
 		idx = i->second;
+		if( check_generated && !HasLocalBeenGenerated( idx ) )
+			idx = -1;
+	}
 	return idx;
 }
 
 // resolve a local to an index
-int LocalScope::ResolveLocalToIndex( const string & name )
+int LocalScope::ResolveLocalToIndex( const string & name, bool check_generated /*= false*/ )
 {
 	// look in this scope first
-	int idx = ResolveLocalToIndexHelper( name );
+	int idx = ResolveLocalToIndexHelper( name, check_generated );
 	if( idx != -1 )
 		return idx;
 
@@ -249,12 +253,12 @@ bool FunctionScope::Define( const Symbol* const  s )
 }
 
 // resolve a local to an index
-int FunctionScope::ResolveLocalToIndex( const string & name )
+int FunctionScope::ResolveLocalToIndex( const string & name, bool check_generated /*= false*/ )
 {
 	// call base class fcn
 	// do NOT pass any further up the scope chain 
 	// (we're looking for a _local_!)
-	return LocalScope::ResolveLocalToIndexHelper( name );
+	return LocalScope::ResolveLocalToIndexHelper( name, check_generated );
 }
 
 void FunctionScope::Print()

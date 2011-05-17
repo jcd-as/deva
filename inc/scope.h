@@ -57,7 +57,7 @@ struct Scope
 	// resolve a symbol, returns NULL if cannot be found in this scope
 	virtual const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const = 0;
 	// resolve a local to an index
-	virtual int ResolveLocalToIndex( const string & name ) = 0;
+	virtual int ResolveLocalToIndex( const string & name, bool check_generated = false ) = 0;
 	// print the scope to stdout
 	virtual void Print() = 0;
 	// add to the parent function's list of names
@@ -89,7 +89,7 @@ protected:
 	// helper fcns
 	virtual FunctionScope* getParentFun();
 	// resolve a local to an index IN THIS SCOPE ONLY
-	int ResolveLocalToIndexHelper( const string & name );
+	int ResolveLocalToIndexHelper( const string & name, bool check_generated );
 
 public:
 	LocalScope( string n, Scope* p = NULL ) : name( n ), parent( p ) { }
@@ -101,7 +101,7 @@ public:
 	bool Define( const Symbol* const  s );
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
 	// resolve a local to an index
-	int ResolveLocalToIndex( const string & name );
+	int ResolveLocalToIndex( const string & name, bool check_generated = false );
 	// print the scope to stdout
 	void Print();
 	// add to the parent function's list of names
@@ -141,7 +141,7 @@ public:
 
 	// Scope "interface" overrides
 	const Symbol* const Resolve( const string & name, SymbolType type = sym_end ) const;
-	int ResolveLocalToIndex( const string & name );
+	int ResolveLocalToIndex( const string & name, bool check_generated = false );
 	bool Define( const Symbol* const  s );
 	void Print();
 	inline bool HasLocalBeenGenerated( int idx ) { return (generated_locals.find( idx ) != generated_locals.end()); }

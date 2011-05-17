@@ -60,8 +60,6 @@ namespace deva
 // number of 'global' constant symbols (true, false, null, 'delete', 'new' etc)
 extern const int num_of_constant_symbols;
 
-//typedef NativeFunction (*module_fcn_finder)(const string&);
-
 // singleton class for deva VM execution engine
 class Executor
 {
@@ -232,7 +230,10 @@ public:
 	void Execute( const Code* const code );
 	void CallConstructors( Object o, Object instance, int num_args = 0 );
 	void CallDestructors( Object o );
-	void ExecuteCode( const Code* const code );
+	// add a code block
+	void AddCode( const Code* const code ) { code_blocks.push_back( code ); }
+	// execute the current (top of stack) code block
+	void ExecuteCode();
 	Object ExecuteText( const char* const text, bool global = false, bool ignore_undefined_vars = false );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
@@ -277,8 +278,10 @@ public:
 
 	void DumpFunctions();
 	void DumpConstantPool( const Code* code );
-	void DumpStackTop();
+	void DumpStackTop( size_t n = 5, bool single_line = true );
 	void DumpTrace( ostream & os );
+
+	const byte* const GetIP() const { return ip; }
 
 	// process exit
 	// TODO: anything needs doing here? prevent the process from exit, just the

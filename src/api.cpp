@@ -194,7 +194,10 @@ Code* Compile( const char* module_name, PassOneFlags p1flags, PassTwoFlags p2fla
 		throw ICE( "Error: global current_file not set. SetCurrentFile() must be called before compilation." );
 
 	PassOneReturnValue p1rv = PassOne( prv, p1flags );
-	return PassTwo( module_name, p1rv, p2flags );
+	string mod( module_name );
+	string fp = get_file_part( mod );
+	string modname = get_stem( fp );
+	return PassTwo( modname.c_str(), p1rv, p2flags );
 }
 
 Code* Compile( const char* module_name, ParseReturnValue prv, PassOneFlags p1flags, PassTwoFlags p2flags )

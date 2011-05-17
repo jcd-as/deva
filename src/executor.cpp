@@ -133,6 +133,8 @@ Executor::Executor() :
 // all code must be finished executing and all Objects gone by the time Execute() completes!
 Executor::~Executor()
 {
+	instantiated = false;
+
 	// free the function objects
 	for( multimap<string, Object*>::iterator i = functions.begin(); i != functions.end(); ++i )
 	{
@@ -449,6 +451,8 @@ void Executor::Begin( const Code* const c /*= NULL*/ )
 	else
 		modname = "";
 	Object *main = FindFunction( string( "@main" ), modname, 0 );
+	if( !main )
+		throw ICE( "No main function in primary module." );
 	Frame* frame = new Frame( NULL, scopes, code->code, code->code, 0, main->f );
 	PushFrame( frame );
 
@@ -504,16 +508,19 @@ void Executor::Execute( const Code* const code )
 	Begin( code );
 
 	// execute until end
-	ExecuteCode( code );
+	AddCode( code );
+	ExecuteCode();
 
 	// shutdown and free resources
 	End();
 }
 
-void Executor::ExecuteCode( const Code* const code )
+// execute the current (top of stack) code block
+void Executor::ExecuteCode()
 {
-	// add this code block to our collection
-	code_blocks.push_back( code );
+	if( code_blocks.size() == 0 )
+		throw ICE( "No code blocks to execute." );
+	Code* code = (Code*)code_blocks.back();
 
 	Opcode op = op_nop;
 
@@ -563,7 +570,8 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 	s_currently_importing_module = cur_module;
 
 	// execute
-	ExecuteCode( code );
+	AddCode( code );
+	ExecuteCode();
 	
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
@@ -607,7 +615,7 @@ void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
 		op = ExecuteInstruction();
 		// if end, error, unless this is a destructor
 		if( !is_destructor && (ip >= end || op == op_halt ) )
-			throw ICE( "End of code encounted before function returned." );
+			throw ICE( "End of code encountered before function returned." );
 	}
 }
 
@@ -3417,6 +3425,11 @@ Opcode Executor::SkipInstruction()
 
 void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
 {
+	static int recursion_counter = 0;
+	recursion_counter++;
+	if( recursion_counter > 1000 )
+		throw RuntimeException( "Maximun call-stack depth exceeded." );
+
 	// if this is a method there's an extra arg for 'this'
 	dword args_passed = (dword)num_args;
 	if( f->IsMethod() )
@@ -3491,8 +3504,13 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	}
 	for( dword i = 0; i < args_passed; i++ )
 	{
+		// add args to the frame
 		Object ob = stack.back();
 		frame->SetLocal( num_args-i-1, ob );
+		// add the symbol to the scope so it can be found by name
+		// (for 'extern' vars)
+		scope->AddSymbol( frame->GetFunction()->local_names.operator[]( num_args-i-1 ), num_args-i-1 );
+		// remove it from the stack
 		stack.pop_back();
 	}
 	// but for op_call, 'self' is the last arg on the stack
@@ -3548,10 +3566,17 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 	end = orig_end;
 	bp = orig_bp;
 	ip = orig_ip;
+
+	recursion_counter--;
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )
 {
+	static int recursion_counter = 0;
+	recursion_counter++;
+	if( recursion_counter > 1000 )
+		throw RuntimeException( "Maximun call-stack depth exceeded." );
+
 	// if this is a method there's an extra arg for 'this'
 	int args_passed = num_args;
 	if( nf.is_method )
@@ -3581,8 +3606,10 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	}
 	for( int i = 0; i < args_passed; i++ )
 	{
+		// add arg to the frame
 		Object ob = stack.back();
 		frame->SetLocal( num_args-i-1, ob );
+		// remove the arg from the stack
 		stack.pop_back();
 	}
 	// but for op_call, 'self' is the last arg on the stack
@@ -3614,6 +3641,8 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 		throw ICE( "Native function corrupted the stack." );
 	PopScope();
 	PopFrame();
+
+	recursion_counter--;
 }
 
 void Executor::SetError( Object* err )
@@ -3891,7 +3920,8 @@ Object Executor::ImportModule( const char* module_name )
 	s_currently_importing_module = cur_module;
 
 	// execute it
-	ExecuteCode( code );
+	AddCode( code );
+	ExecuteCode();
 
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
@@ -4701,23 +4731,32 @@ void Executor::DumpConstantPool( const Code* code )
 	}
 }
 
-void Executor::DumpStackTop()
+void Executor::DumpStackTop( size_t num /*= 5*/, bool single_line /*= true*/ )
 {
 	// print the top five stack items
-	cout << "\t\t[";
-	size_t n = (stack.size() > 5 ? 5 : stack.size());
+	if( single_line )
+		cout << "\t\t[";
+	size_t n = (stack.size() > num ? num : stack.size());
 	if( n != 0 )
 	{
 		for( int i = (int)n-1; i >= 0; i-- )
 		{
 			cout << stack[stack.size()-(n-i)];
 			if( i > 0 )
-				cout << ", ";
+			{
+				if( single_line )
+					cout << ", ";
+				else
+					cout << endl;
+			}
 		}
 	}
-	cout << "]";
-	if( stack.size() > 5 )
-		cout << " +" << stack.size()-5 << " more";
+	if( single_line )
+		cout << "]";
+	else
+		cout << endl;
+	if( stack.size() > num )
+		cout << " +" << stack.size()-num << " more";
 	cout << endl;
 }
 
@@ -4814,7 +4853,7 @@ void Executor::DumpTrace( ostream & os )
 
 
 		// pad for callstack depth
-		for( int c = 0; c < depth; c++ )
+		for( int c = 0; c < (depth > 40 ? 40 : depth); c++ )
 			os << " ";
 
 		// display the stack frame info

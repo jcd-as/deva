@@ -1,12 +1,20 @@
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
+TODO 2011-05-16 @deva +high get tests running under win32/msvc... ?
+
+TODO 2011-05-17 @deva +high simple "exceed call depth max" (infinite recursion) test takes 10+ times longer to execute in deva than python (with 1000 as max depth)
+
 TODO 2011-03-02 @deva +high need add checks for (type==obj_end) whenever accessing a local so that accessing undefined local vars becomes a runtime error
+
+TODO 2011-05-16 @deva +high get devash & devadb building under Win32/MSVC
 
 TODO 2011-04-06 @deva +high put in a stack check under #ifdef DEBUG every time the stack is popped
 
 TODO 2011-02-01 @deva +high figure out how to turn off antlr error recovery in C
 
 TODO 2011-02-04 @deva +high fix parser error messages - prevent things like "Missing <invalid>"
+
+TODO 2011-05-16 @deva +medium get win32/msvc builds building/using deva-rt dll instead of static lib
 
 TODO 2011-03-06 @deva +medium check all memory allocations and ICE on out-of-memory
 

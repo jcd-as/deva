@@ -1,20 +1,28 @@
-class accum
-{
-	def new( n ){ self.c = 0; self.n = n; }
-	def call(){ self.c += self.n; return self.c; }
-}
-
-#local a = new accum( 1 );
-local a = accum( 1 );
-print( a() );
-print( a() );
-print( a() );
-
-#class C
+#def foo( x )
 #{
-#	# BUG: extraneous semicolon causes segfault
-#	def foo(){};
+#	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
+#	bar();
 #}
+#for( i in range( 0, 10 ) )
+#	foo( i );
+
+#def recur( n )
+#{
+#	recur( n + 1 );
+#}
+#recur( 1 );
+
+#class accum
+#{
+#	def new( n ){ self.c = 0; self.n = n; }
+#	def call(){ self.c += self.n; return self.c; }
+#}
+#
+##local a = new accum( 1 );
+#local a = accum( 1 );
+#print( a() );
+#print( a() );
+#print( a() );
 
 #import os;
 #local c = eval( "extern os; local d = dir( os );", true );
@@ -201,17 +209,6 @@ print( a() );
 #}
 #eval( "extern bar; bar();" );
 
-# BUG: extern scoping not working with args:
-#def foo( x )
-#{
-#	# call to bar results in error: Undefined symbol 'x'
-#	# (from pushconst op)
-#	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
-#	bar();
-#}
-#for( i in range( 0, 10 ) )
-#	foo( i );
-
 # test builtin os module
 #import os;
 #
@@ -234,6 +231,7 @@ print( a() );
 #Jam();
 
 # BUG / TODO: exit() builtin doesn't call destructors and tear-down scopes
+# should it???
 #local n = 0;
 #while( true )
 #{
