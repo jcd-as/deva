@@ -140,7 +140,12 @@ set_source_files_properties( devaLexer.c devaParser.c semantic_walker.c compile_
 
 # main library
 ##############
-add_library( deva-rt SHARED
+if( MSVC )
+	set( DEVA_LIB_TYPE STATIC )
+else()
+	set( DEVA_LIB_TYPE SHARED )
+endif()
+add_library( deva-rt ${DEVA_LIB_TYPE}
 	src/opcodes.cpp
 	src/scope.cpp
 	src/semantics.cpp
@@ -246,7 +251,7 @@ endif()
 ##################
 install( TARGETS deva RUNTIME DESTINATION bin )
 if( ${WIN32} )
-	install( TARGETS deva-rt RUNTIME DESTINATION lib )
+	#install( TARGETS deva-rt RUNTIME DESTINATION lib )
 	install( TARGETS deva-rt ARCHIVE DESTINATION lib )
 else()
 	install( TARGETS deva-rt LIBRARY DESTINATION lib )
