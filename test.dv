@@ -1,10 +1,10 @@
-#def foo( x )
-#{
-#	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
-#	bar();
-#}
-#for( i in range( 0, 10 ) )
-#	foo( i );
+def foo( x )
+{
+	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
+	bar();
+}
+for( i in range( 0, 10 ) )
+	foo( i );
 
 #def recur( n )
 #{

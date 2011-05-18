@@ -47,23 +47,21 @@ namespace deva
 
 
 // symbols that always exist
-const Object constant_symbols[] = 
+const char* const constant_strings[] = 
 {
-	Object( true ),
-	Object( false ),
-	Object( obj_null ),
-	Object( obj_symbol_name, copystr( "" ) ),			// empty string for 'main' module name
-	Object( obj_symbol_name, copystr( "__name__" ) ),
-	Object( obj_symbol_name, copystr( "__class__" ) ),
-	Object( obj_symbol_name, copystr( "__bases__" ) ),
-	Object( obj_symbol_name, copystr( "__module__" ) ),
-	Object( obj_symbol_name, copystr( "new" ) ),
-	Object( obj_symbol_name, copystr( "delete" ) ),
-	Object( obj_symbol_name, copystr( "self" ) ),
-	Object( obj_symbol_name, copystr( "rewind" ) ),
-	Object( obj_symbol_name, copystr( "next" ) )
+	"",			// empty string for 'main' module name
+	"__name__",
+	"__class__",
+	"__bases__",
+	"__module__",
+	"new",
+	"delete",
+	"self",
+	"rewind",
+	"next",
 };
-const int num_of_constant_symbols = sizeof( constant_symbols ) / sizeof( Object );
+// number of constant strings + true, false and null
+const int num_of_constant_strings = sizeof( constant_strings ) / sizeof( char* );
 
 /////////////////////////////////////////////////////////////////////////////
 // executive/VM functions and globals
@@ -83,7 +81,9 @@ Executor::Executor() :
 	scopes( NULL ),
 	is_error( false ),
 	debug( false ), 
-	trace( false )
+	trace( false ),
+	stop_at_breakpoints( false ),
+	stepping( false )
 {
 	if( instantiated )
 		throw ICE( "Executor is a singleton object, it cannot be instantiated twice." );
@@ -94,9 +94,12 @@ Executor::Executor() :
 	constants.reserve( 256 );
 
 	// add names that always exist
-	for( int i = 0; i < num_of_constant_symbols; i++ )
+	AddGlobalConstant( Object( true ) );
+	AddGlobalConstant( Object( false ) );
+	AddGlobalConstant( Object( obj_null ) );
+	for( int i = 0; i < num_of_constant_strings; i++ )
 	{
-		AddGlobalConstant( constant_symbols[i] );
+		AddGlobalConstant( Object( obj_symbol_name, copystr( constant_strings[i] ) ) );
 	}
 	// add the builtins, string builtins, vector builtins and map builtins to the constant pool
 	// builtins
@@ -433,14 +436,12 @@ void Executor::Begin( const Code* const c /*= NULL*/ )
 		code->lines = new LineMap();
 		code->code = new byte[1];
 		code->code[0] = op_halt;
-		//ex->ExecuteCode( code );
 		code_blocks.push_back( code );
 	}
 
 	scopes = new ScopeTable();
 
 	// a starting ('global') frame
-//	Object *main = FindFunction( string( "@main" ), string( "" ), 0 );
 	string modname;
 	if( current_file )
 	{
@@ -516,25 +517,107 @@ void Executor::Execute( const Code* const code )
 }
 
 // execute the current (top of stack) code block
-void Executor::ExecuteCode()
+// returns the line number stopped at, or -1 if it reached a 'halt'
+int Executor::ExecuteCode()
+{
+//	if( code_blocks.size() == 0 )
+//		throw ICE( "No code blocks to execute." );
+//	Code* code = (Code*)code_blocks.back();
+//
+//	Opcode op = op_nop;
+//
+//	// set the ip, bp and end 
+//	cur_code = (Code*)code;
+//	end = code->code + code->len;
+//	bp = code->code;
+//	ip = bp;
+
+	BeginExecution();
+	return ContinueExecution();
+
+	// execute until end or break
+//	while( ip < end && op < op_breakpoint )
+//	{
+//		op = ExecuteInstruction();
+//	}
+//	if( op == op_halt )
+//		return -1;
+//	else
+//	{
+//		size_t loc = ip - code->code;
+//		dword line = code->lines->FindLine( loc );
+//		return (int)line;
+//	}
+}
+
+void Executor::BeginExecution()
 {
 	if( code_blocks.size() == 0 )
 		throw ICE( "No code blocks to execute." );
 	Code* code = (Code*)code_blocks.back();
-
-	Opcode op = op_nop;
 
 	// set the ip, bp and end 
 	cur_code = (Code*)code;
 	end = code->code + code->len;
 	bp = code->code;
 	ip = bp;
+}
 
-	// execute until end
-	while( ip < end && op < op_halt )
+int Executor::ContinueExecution()
+{
+	Opcode op = op_nop;
+
+	// execute until end or break
+	while( ip < end && op < op_breakpoint )
 	{
 		op = ExecuteInstruction();
 	}
+	if( op == op_halt )
+		return -1;
+	else
+	{
+		size_t loc = ip - cur_code->code;
+		dword line = cur_code->lines->FindLine( loc );
+		return (int)line;
+	}
+}
+
+int Executor::StepOver()
+{
+	Opcode op = op_nop;
+
+	size_t loc = ip - cur_code->code;
+	dword start = cur_code->lines->FindLine( loc );
+
+	// keep executing instructions until we reach the next line,
+	// skipping calls
+	while( true )
+	{
+		while( ip < end && op < op_breakpoint )
+		{
+			op = ExecuteInstruction();
+
+			size_t loc = ip - cur_code->code;
+			dword line = cur_code->lines->FindLine( loc );
+			if( line != start )
+				return (int)line;
+		}
+		if( op == op_halt )
+			return -1;
+		else
+		{
+			size_t loc = ip - cur_code->code;
+			dword line = cur_code->lines->FindLine( loc );
+			if( line != start )
+				return (int)line;
+		}
+	}
+}
+
+// TODO: IMPLEMENT!
+int Executor::StepInto()
+{
+	return -1;
 }
 
 // static used for importing modules and text (via eval())
@@ -3258,6 +3341,8 @@ Opcode Executor::ExecuteInstruction()
 			classes.insert( make_pair( name, vector<Function*>() ) );
 		}
 		break;
+	case op_breakpoint:
+		break;
 	case op_halt:
 		break;
 	case op_illegal:
@@ -3359,6 +3444,7 @@ Opcode Executor::SkipInstruction()
 	case op_rot3:
 	case op_rot4:
 	case op_halt:
+	case op_breakpoint:
 	case op_inc:
 	case op_dec:
 		break;
@@ -4684,6 +4770,9 @@ int Executor::PrintOpcode( const Code* code, Opcode op, const byte* b, byte* p )
 		ret = sizeof( dword );
 		break;
 	case op_halt:
+		cout << "\t" << " ";
+		break;
+	case op_breakpoint:
 		cout << "\t" << " ";
 		break;
 	case op_illegal:

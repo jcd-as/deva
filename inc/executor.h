@@ -128,6 +128,8 @@ public:
 	// flags:
 	bool debug;
 	bool trace;
+	bool stop_at_breakpoints;
+	bool stepping;
 
 public:
 	Executor();
@@ -233,10 +235,14 @@ public:
 	// add a code block
 	void AddCode( const Code* const code ) { code_blocks.push_back( code ); }
 	// execute the current (top of stack) code block
-	void ExecuteCode();
+	int ExecuteCode();
 	Object ExecuteText( const char* const text, bool global = false, bool ignore_undefined_vars = false );
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
+	void BeginExecution();
+	int StepOver();
+	int StepInto();
+	int ContinueExecution();
 	void ExecuteToReturn( bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );

@@ -419,14 +419,15 @@ start:
 //					ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
 				}
 
-//				ex->StartExecutingCode( dvcode );
-
 				// run
 				char c = 0;
 				while( true )
 				{
 					if( running )
+					{
 						cout << "restarting program..." << endl;
+						ex->BeginExecution();
+					}
 					string input;
 					int chars_read;
 					const char* cstr_in;
@@ -437,6 +438,12 @@ start:
 					{
 						// get the input, sans newline
 						cstr_in = el_gets( el, &chars_read );
+						// if we got NULL input, bail
+						if( !cstr_in )
+						{
+							cout << endl;
+							exit( 0 );
+						}
 						input = string( cstr_in, chars_read-1 );
 						if( input.length() > 0 )
 						{
@@ -464,6 +471,7 @@ start:
 								if( !running )
 								{
 									cout << "starting program..." << endl;
+									ex->BeginExecution();
 									running = true;
 								}
 								// restart
@@ -476,7 +484,7 @@ start:
 								break;
 							// 'next'
 							case 'n':
-//								l = ex->StepOver();
+								l = ex->StepOver();
 								break;
 							// 'step'
 							case 's':
@@ -495,8 +503,9 @@ start:
 								break;
 							// 'continue'
 							case 'c':
-//								l = ex->Run();
-								ex->ExecuteCode();
+								{
+								l = ex->ContinueExecution();
+								}
 								break;
 							// 'print'
 							case 'p':

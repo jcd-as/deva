@@ -156,6 +156,7 @@ const char* opcodeNames[] =
 	"import",
 	"def_class",
 	"halt",
+	"breakpoint",
 	"illegal",
 };
 
