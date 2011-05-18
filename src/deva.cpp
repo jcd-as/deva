@@ -82,8 +82,9 @@ int ANTLR3_CDECL main( int argc, char *argv[] )
 
 	// TODO: increase stack size on ms-windows too
 	// increase the stack limit to allow for decently deep recursion
+	// (Mac OS X 64-bit needs >32MB, Linux 64-bit needs 32MB, Linux 32-bit needs 16MB)
 #ifndef MS_WINDOWS
-	const rlim_t stackSize = 16 * 1024 * 1024;   // min stack size = 16 MB
+	const rlim_t stackSize = 34 * 1024 * 1024;   // min stack size = 34 MB
     struct rlimit rl;
     int result;
     result = getrlimit( RLIMIT_STACK, &rl );

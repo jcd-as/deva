@@ -8,6 +8,7 @@ for( i in range( 0, 10 ) )
 
 #def recur( n )
 #{
+#	print( n, ", " );
 #	recur( n + 1 );
 #}
 #recur( 1 );

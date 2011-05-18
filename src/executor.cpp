@@ -3755,8 +3755,6 @@ Object Executor::GetError()
 
 bool Executor::ImportBuiltinModule( const char* module_name )
 {
-//	map<string, module_fcn_finder>::iterator i = native_modules.find( string( module_name ) );
-//	map<string, NativeModule>::iterator i = native_modules.find( string( module_name ) );
 	map<string, Object>::iterator i = native_modules.find( string( module_name ) );
 	if( i == native_modules.end() )
 		return false;
