@@ -49,6 +49,7 @@ Instructions:
   27: method_load	
   28: call_method		0
   33: pop		 
+5
   34: leave		 
   35: jmp		2
 7
@@ -71,6 +72,7 @@ Instructions:
   94: method_load	
   95: call_method		0
  100: pop		 
+13
  101: leave		 
  102: push_null		 
  103: return		0

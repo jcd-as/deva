@@ -134,12 +134,14 @@ Instructions:
 21
   99: push_true		 
  100: storelocal2		 
+22
  101: leave		 
 23
  102: pushlocal4		 
  103: push_one		 
  104: add		 
  105: storelocal4		 
+24
  106: leave		 
  107: jmp		57
 25
@@ -147,13 +149,16 @@ Instructions:
  113: push_one		 
  114: sub		 
  115: storelocal3		 
+26
  116: leave		 
  117: jmp		46
+27
  122: leave		 
  123: jmp		33
 28
  128: pushlocal0		 
  129: return		1
+29
  134: leave		 
 0
  135: new_vec		0
@@ -239,6 +244,7 @@ Instructions:
  345: pushconst		-13 (print)
  350: call		1
  355: pop		 
+48
  356: leave		 
  357: jmp		337
  362: pop		 
@@ -267,6 +273,7 @@ Instructions:
  413: pushconst		-13 (print)
  418: call		1
  423: pop		 
+60
  424: leave		 
  425: jmp		405
  430: pop		 

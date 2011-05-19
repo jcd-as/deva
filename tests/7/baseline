@@ -87,6 +87,7 @@ Instructions:
 5
   11: push_one		 
   12: def_local1		 
+6
   13: leave		 
   14: jmp		2
 21
@@ -96,12 +97,14 @@ Instructions:
 23
   26: push_zero		 
   27: storelocal0		 
+24
   28: leave		 
   29: jmp		19
 34
   34: def_function	0 11 (input # foo), 52
   47: jmp		60
   52: enter		 
+36
   53: leave		 
   54: push_null		 
   55: return		0
@@ -130,7 +133,9 @@ Instructions:
  104: pushconst		19 (z)
  109: call		0
  114: pop		 
+46
  115: leave		 
+47
  116: leave		 
 57
  117: pushlocal2		 
@@ -144,6 +149,7 @@ Instructions:
  131: pushconst		19 (z)
  136: call		0
  141: pop		 
+62
  142: leave		 
 63
  143: push_one		 
@@ -151,14 +157,17 @@ Instructions:
 64
  145: pushlocal4		 
  146: storelocal0		 
+65
  147: leave		 
 80
  148: pushlocal2		 
  149: jmpf		161
  154: enter		 
+83
  155: leave		 
  156: jmp		163
  161: enter		 
+87
  162: leave		 
 102
  163: def_function	0 15 (input # fcn), 181

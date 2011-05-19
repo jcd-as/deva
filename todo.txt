@@ -1,5 +1,7 @@
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
+TODO 2011-05-18 @deva +veryhigh StepOver sometimes ends up with a line number of 0 (which doesn't exist)... after stepping over a native fcn call??
+
 TODO 2011-05-16 @deva +high get tests running under win32/msvc... ?
 
 TODO 2011-05-17 @deva +high simple "exceed call depth max" (infinite recursion) test takes 10+ times longer to execute in deva than python (with 1000 as max depth)
@@ -23,6 +25,11 @@ TODO 2011-05-10 @deva +low tab should do <something> in devash
 TODO 2011-04-16 @deva +future list comprehensions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-05-18 @deva +veryhigh line numbers for end of if/else statements is wrong (makes it look like we execute code that we don't when stepping)
+    CLOSED: 2011-05-19 11:49:47
+    :LOGBOOK:
+        DONE: 2011-05-19 11:49:47
 
 DONE 2011-04-16 @deva +future lambdas / anonymous functions ?
     CLOSED: 2011-05-13 19:28:33

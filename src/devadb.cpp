@@ -138,7 +138,10 @@ void ReadFile( const char* const filename, vector<string> & vec )
 
 void ShowLine( vector<string> & lines, string file, int line )
 {
-	cout << "[" << file << ":" << line << "] " << lines[line-1];
+	if( line <= 0 )
+		cout << "[" << file << ":" << line << "] " << "<Invalid line>" << endl;
+	else
+		cout << "[" << file << ":" << line << "] " << lines[line-1];
 }
 
 const char* commands[] = 

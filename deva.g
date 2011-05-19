@@ -121,7 +121,7 @@ block
 	;
 
 compound_statement 
-	:	lc='{' statement* '}'								-> ^(Block[$lc, "Block"] statement*)
+	:	'{' statement* rc='}'								-> ^(Block[$rc, "Block"] statement*)
 	;
 
 func_decl 
@@ -130,7 +130,6 @@ func_decl
 	;
 	
 class_decl 
-//	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID+)? func_decl*)
 	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID*) func_decl*)
 	;
 

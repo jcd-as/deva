@@ -76,8 +76,10 @@ Instructions:
 9
   59: push_zero		 
   60: return		3
+10
   65: leave		 
   66: leave		 
+11
   67: leave		 
   68: push_null		 
   69: return		0
@@ -148,6 +150,7 @@ Instructions:
  211: method_load	
  212: call_method		1
  217: pop		 
+34
  218: leave		 
  219: jmp		170
  224: pop		 
@@ -171,6 +174,7 @@ Instructions:
  263: method_load	
  264: call_method		1
  269: pop		 
+43
  270: leave		 
  271: jmp		225
  276: halt		 

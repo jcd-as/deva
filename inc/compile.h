@@ -218,7 +218,7 @@ public:
 
 	// block
 	void EnterBlock();
-	void ExitBlock();
+	void ExitBlock( int line );
 
 	// define a function
 	void DefineFun( char* name, char* classname, int line );

@@ -173,8 +173,9 @@ void Compiler::EnterBlock()
 	Emit( op_enter );
 }
 
-void Compiler::ExitBlock()
+void Compiler::ExitBlock( int line )
 {
+	EmitLineNum( line );
 	// track the loop scopes
 	if( loop_scope_stack.size() > 0 )
 	{

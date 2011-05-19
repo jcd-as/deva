@@ -74,9 +74,9 @@ statement[pANTLR3_BASE_TREE parent]
 	;
 
 block 
-@init { if( PSRSTATE->backtracking == 0 ){ compiler->EnterBlock(); } }
-@after { if( PSRSTATE->backtracking == 0 ){ compiler->ExitBlock(); } }
-	:	^(Block statement[$block.start]*)
+	:	^(Block { compiler->EnterBlock(); }
+			statement[$block.start]* 
+			){ compiler->ExitBlock( $Block->getLine( $Block ) ); }
 	;
 
 func_decl[char* classname]
