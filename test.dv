@@ -1,10 +1,11 @@
-import foo;
+import foo;;
 foo.bar( "BAR" );
 def fcn( s )
-{
-	print( s );
-}
-fcn( "FOO" );
+{;;
+;;;	print( s );;
+;;}
+;
+;fcn( "FOO" );;
 
 #def foo( x )
 #{

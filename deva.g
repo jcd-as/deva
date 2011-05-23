@@ -113,6 +113,7 @@ statement
 	|	jump_statement
 	|	func_decl
 	|	assign_statement
+	|	empty_statement
 	;
 
 block 
@@ -190,6 +191,10 @@ assign_statement
 
 assign_rhs
 	:	exp	(ASSIGN_OP^ assign_rhs)?
+	;
+
+empty_statement
+	:	';'!
 	;
 
 /////////////////////////////////////////////////////////////////////////////
