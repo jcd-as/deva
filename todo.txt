@@ -4,8 +4,6 @@ TODO 2011-05-18 @deva +veryhigh StepOver sometimes ends up with a line number of
 
 TODO 2011-05-22 @deva +veryhigh organize & doc/comment headers, particularly executor.h 
 
-TODO 2011-05-21 @deva +veryhigh allow empty statements in grammar - make ';;' legal
-
 TODO 2011-05-16 @deva +high get tests running under win32/msvc... ?
 
 TODO 2011-05-17 @deva +high simple "exceed call depth max" (infinite recursion) test takes 10+ times longer to execute in deva than python (with 1000 as max depth)
@@ -29,6 +27,16 @@ TODO 2011-05-10 @deva +low tab should do <something> in devash
 TODO 2011-04-16 @deva +future list comprehensions ?
 
 TODO 2011-04-17 @deva +future generators / yield ?
+
+DONE 2011-05-22 @deva +veryhigh cannot inherit from a class in another module without aliasing it to a local first (e.g. 'import foo; local fooC = foo.C; class C : fooC {}') because the '.' doesn't parse
+    CLOSED: 2011-05-23 09:57:00
+    :LOGBOOK:
+        DONE: 2011-05-23 09:57:00
+
+DONE 2011-05-21 @deva +veryhigh allow empty statements in grammar - make ';;' legal
+    CLOSED: 2011-05-22 21:07:30
+    :LOGBOOK:
+        DONE: 2011-05-22 21:07:30
 
 DONE 2011-05-18 @deva +veryhigh line numbers for end of if/else statements is wrong (makes it look like we execute code that we don't when stepping)
     CLOSED: 2011-05-19 11:49:47

@@ -94,7 +94,7 @@ class_decl
 @after { semantics->in_class = false; }
 	:	^(Class id=ID 
 		{ semantics->DefineVar( (char*)$id.text->chars, $id->getLine($id), mod_local, sym_class ); semantics->constants.insert( Object( (char*)$id.text->chars ) ); }
-		(^(Base_classes ID*)) func_decl[(char*)$id.text->chars]*)
+		(^(Base_classes exp[false]*)) func_decl[(char*)$id.text->chars]*)
 	;
 
 while_statement 

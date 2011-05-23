@@ -131,7 +131,7 @@ func_decl
 	;
 	
 class_decl 
-	:	'class' ID (':' ID (',' ID)*)? '{' func_decl* '}' 	-> ^(Class ID ^(Base_classes ID*) func_decl*)
+	:	'class' ID (':' exp (',' exp)*)? '{' func_decl* '}' -> ^(Class ID ^(Base_classes exp*) func_decl*)
 	;
 
 while_statement 

@@ -1,11 +1,36 @@
-import foo;;
-foo.bar( "BAR" );
-def fcn( s )
-{;;
-;;;	print( s );;
-;;}
-;
-;fcn( "FOO" );;
+import foo;
+#local fooC = foo.C;
+#class A : fooC
+#class A : foo.C
+local f = lambda(mod){ return mod.C; };
+class A : f(foo)
+{
+#	def new( a, b, c ){ self.a = a; }
+	def new(){}
+}
+#class B : A
+#{
+##	def new( a, b, c ){ self.b = b; }
+#	def new(){}
+#}
+#class C : B
+#{
+##	def new( a, b, c ){ self.c = c; }
+#	def new(){}
+#}
+##local c = C( 1, 2, 3 );
+local c = A();
+print( A );
+print( c );
+
+#import foo;;
+#foo.bar( "BAR" );
+#def fcn( s )
+#{;;
+#;;;	print( s );;
+#;;}
+#;
+#;fcn( "FOO" );;
 
 #def foo( x )
 #{
@@ -17,7 +42,7 @@ def fcn( s )
 
 #def recur( n )
 #{
-#	print( n, ", " );
+##	print( n, ", " );
 #	recur( n + 1 );
 #}
 #recur( 1 );
