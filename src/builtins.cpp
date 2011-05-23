@@ -306,7 +306,7 @@ void do_print( Frame* frame )
 				IncRef( *o );
 				ex->PushStack( *o );
 				// call the function (takes no args)
-				ex->ExecuteFunction( it->second.f, 0, true );
+				ex->ExecuteFunctionToReturn( it->second.f, 0, true );
 				// get the result (return value)
 				Object retval = ex->PopStack();
 				if( retval.type != obj_string )
@@ -345,7 +345,7 @@ void do_str( Frame *frame )
 				IncRef( *o );
 				ex->PushStack( *o );
 				// call the function (takes no args)
-				ex->ExecuteFunction( it->second.f, 0, true );
+				ex->ExecuteFunctionToReturn( it->second.f, 0, true );
 				// get the result (return value)
 				Object retval = ex->PopStack();
 				if( retval.type != obj_string )

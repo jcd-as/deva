@@ -76,6 +76,10 @@ class Frame
 	// pointer at the scopes so symbols can be resolved from the frame object
 	ScopeTable* scopes;
 
+	// the stack depth when this frame was created (after the args for the fcn
+	// were pulled off and put in the frame)
+	size_t stack_depth;
+
 	// TODO: what else? debugging info?
 	
 public:
@@ -94,6 +98,8 @@ public:
 	inline byte* GetReturnAddress() const { return addr; }
 	inline byte* GetCallSite() const { return call_site; }
 	inline int NumArgsPassed() const { return num_args; }
+	inline size_t GetStackDepth() const { return stack_depth; }
+	inline void SetStackDepth( size_t d ) { stack_depth = d; }
 	inline void AddString( char* s ) { strings.push_back( s ); }
 	inline const char* AddString( string s ) { char* str = copystr( s.c_str() ); strings.push_back( str ); return str; }
 

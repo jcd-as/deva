@@ -606,7 +606,7 @@ public:
 		// call the function given
 		// (*must* be a two-arg fcn to be used as sort predicate)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 2, is_method ? true : false );
+			ex->ExecuteFunctionToReturn( o->f, 2, is_method ? true : false );
 		else if( o->type == obj_native_function )
 			ex->ExecuteFunction( o->nf, 2, is_method ? true : false );
 		// return the return value of the predicate fcn
@@ -769,7 +769,7 @@ void do_vector_map( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with map
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
+			ex->ExecuteFunctionToReturn( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
 			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value) and push it onto our return collection
@@ -840,7 +840,7 @@ void do_vector_filter( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with filter
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
+			ex->ExecuteFunctionToReturn( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
 			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value), but only add this item to the returned 
@@ -915,7 +915,7 @@ void do_vector_reduce( Frame *frame )
 	}
 	// call the function
 	if( o->type == obj_function )
-		ex->ExecuteFunction( o->f, 2, has_self ? true : false );
+		ex->ExecuteFunctionToReturn( o->f, 2, has_self ? true : false );
 	else if( o->type == obj_native_function )
 		ex->ExecuteFunction( o->nf, 2, has_self ? true : false );
 	Object retval = ex->PopStack();
@@ -938,7 +938,7 @@ void do_vector_reduce( Frame *frame )
 			// call the function given (*must* be a double arg fcn to be used with
 			// reduce builtin)
 			if( o->type == obj_function )
-				ex->ExecuteFunction( o->f, 2, has_self ? true : false );
+				ex->ExecuteFunctionToReturn( o->f, 2, has_self ? true : false );
 			else if( o->type == obj_native_function )
 				ex->ExecuteFunction( o->nf, 2, has_self ? true : false );
 			// get the result (return value) and push it onto our return collection
@@ -1007,7 +1007,7 @@ void do_vector_any( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with
 		// 'any' builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
+			ex->ExecuteFunctionToReturn( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
 			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value)
@@ -1074,7 +1074,7 @@ void do_vector_all( Frame *frame )
 		// call the function given (*must* be a single arg fcn to be used with 'all'
 		// builtin)
 		if( o->type == obj_function )
-			ex->ExecuteFunction( o->f, 1, has_self ? true : false );
+			ex->ExecuteFunctionToReturn( o->f, 1, has_self ? true : false );
 		else if( o->type == obj_native_function )
 			ex->ExecuteFunction( o->nf, 1, has_self ? true : false );
 		// get the result (return value)

@@ -354,7 +354,7 @@ void Executor::CallConstructors( Object o, Object instance, int num_args /*= 0*/
 
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'new' method of instance object is not a function." );
-		ExecuteFunction( it->second.f, num_args, true );
+		ExecuteFunctionToReturn( it->second.f, num_args, true );
 		// pop the (null) return value
 		stack.pop_back();
 
@@ -377,7 +377,7 @@ void Executor::CallDestructors( Object o )
 
 		if( it->second.type != obj_function )
 			throw RuntimeException( "'delete' method of instance object is not a function." );
-		ExecuteFunction( it->second.f, 0, true, true );
+		ExecuteFunctionToReturn( it->second.f, 0, true, true );
 		// pop the (null) return value
 		stack.pop_back();
 
@@ -582,7 +582,14 @@ int Executor::ContinueExecution()
 	}
 }
 
+// TODO: implement!!
+// (set the temporary breakpoint to the next available line in the current file)
 int Executor::StepOver()
+{
+	return -1;
+}
+
+int Executor::StepInto()
 {
 	Opcode op = op_nop;
 
@@ -614,12 +621,6 @@ int Executor::StepOver()
 	}
 }
 
-// TODO: IMPLEMENT!
-int Executor::StepInto()
-{
-	return -1;
-}
-
 // static used for importing modules and text (via eval())
 static Module* s_currently_importing_module = NULL;
 
@@ -647,6 +648,7 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 	PushScope( scope );
 
 	Module* cur_module = AddModule( name.c_str(), code, scope, frame, global );
+	eval_main->f->module = cur_module;
 
 	// currently importing text module, set the flag
 	Module* prev_mod = s_currently_importing_module;
@@ -713,6 +715,7 @@ bool if_step_ex( Object )
 		return true;
 }
 
+static size_t s_stack_depth = 0;
 Opcode Executor::ExecuteInstruction()
 {
 	dword arg, arg2, arg3;
@@ -1939,26 +1942,60 @@ Opcode Executor::ExecuteInstruction()
 		}
 		break;
 	case op_return:
+		{
+		// 1 arg: number of scopes to leave
+		arg = *((dword*)ip);
+
+		// get the frame
+		Frame* frame = callstack.back();
+		Function* f = frame->GetFunction();
+
+		// check the stack depth
+		if( stack.size() != frame->GetStackDepth() + 1 )
+		{
+			if( f )
+				throw ICE( boost::format( "Function '%1%' corrupted the stack." ) % f->name );
+			else
+				throw ICE( "Function corrupted the stack." );
+		}
+
 		// if a string is being returned (including inside a vector or map/class/instance),
 		// it needs to be copied to the calling frame! 
 		// (string mem in a frame is freed on frame exit)
-		{
 		Object o = stack.back();
 		stack.pop_back();
 		Object obj = CurrentFrame()->CopyStringsFromParent( o );
 		stack.push_back( obj );
 
-		// 1 arg: number of scopes to leave
-		arg = *((dword*)ip);
 		// leave the scopes
 		for( dword i = 0; i < arg; i++ )
 			PopScope();
-		// jump to the new frame's address
+
+		// jump to the frame's return address
 		ip = (byte*)CurrentFrame()->GetReturnAddress();
+
 		// pop the argument scope...
 		PopScope();
 		// ... and the current frame
 		PopFrame();
+
+		// if this is a module, pop the module scope and frame
+		if( f && f->InModule() )
+		{
+			// pop the module frame & scope
+			PopScope();
+			PopFrame();
+		}
+		// set cur_code, bp and end ptrs
+		f = CurrentFrame()->GetFunction();
+		if( f && f->InModule() )
+			cur_code = (Code*)f->module->code;
+		// not a module? must be 'main' 
+		else
+			cur_code = (Code*)code_blocks[0];
+		// restore the ip, bp, end ptrs
+		bp = cur_code->code;
+		end = bp + cur_code->len;
 		}
 		break;
 	case op_exit_loop:
@@ -2017,7 +2054,7 @@ Opcode Executor::ExecuteInstruction()
 				// dup the TOS (class/instance)
 				stack.push_back( stack.back() );
 				IncRef( stack.back() );
-				ExecuteFunction( it->second.f, 0, true );
+				ExecuteFunctionToReturn( it->second.f, 0, true );
 			}
 			// handle maps
 			else
@@ -3511,9 +3548,8 @@ Opcode Executor::SkipInstruction()
 
 void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
 {
-	static int recursion_counter = 0;
-	recursion_counter++;
-	if( recursion_counter > 1000 )
+	s_stack_depth = stack.size();
+	if( callstack.size() > 1000 )
 		throw RuntimeException( "Maximun call-stack depth exceeded." );
 
 	// if this is a method there's an extra arg for 'this'
@@ -3537,42 +3573,28 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 
 	// if this is a module, push the module scope and frame
 	// and set the ip, bp, end ptrs
-	Code* orig_code;
-	byte *orig_ip, *orig_bp, *orig_end;
+	byte *orig_ip;
 	if( f->InModule() )
 	{
 		// TODO: do we need to assert that the module was set??
 		// assert( f->module != NULL );
 		PushFrame( f->module->frame );
 		PushScope( f->module->scope );
-		orig_code = cur_code;
-		orig_end = end;
-		orig_bp = bp;
 		orig_ip = ip;
-		bp = f->module->code->code;
-		end = bp + f->module->code->len;
-		ip = bp;
 		cur_code = (Code*)f->module->code;
 	}
 	// otherwise this is 'main', set the module to 'main'
 	else
 	{
-		orig_code = cur_code;
-		orig_end = end;
-		orig_bp = bp;
 		orig_ip = ip;
-		bp = code_blocks[0]->code;
-		end = bp + code_blocks[0]->len;
-		ip = bp;
 		cur_code = (Code*)code_blocks[0];
 	}
+	bp = cur_code->code;
+	end = bp + cur_code->len;
+	ip = bp;
 
 	// create a frame for the fcn
-	// TODO: REVIEW: shouldn't we actually be passing 'orig_ip' in? (if we do we
-	// cause errors in tests that eval or import, complaining that end-of-code
-	// is reached before a fcn returns, but...)
-//	Frame* frame = new Frame( CurrentFrame(), scopes, orig_ip, orig_ip - sizeof(dword) - 1, num_args, f );
-	Frame* frame = new Frame( CurrentFrame(), scopes, ip, orig_ip - sizeof(dword) - 1, num_args, f );
+	Frame* frame = new Frame( CurrentFrame(), scopes, orig_ip, orig_ip - sizeof(dword) - 1, num_args, f );
 	Scope* scope = new Scope( frame, true );
 
 	// set the args for the frame
@@ -3623,37 +3645,32 @@ void Executor::ExecuteFunction( Function* f, int num_args, bool method_call_op, 
 		}
 	}
 
+	// set the stack depth for the frame
+	frame->SetStackDepth( stack.size() );
+
 	// push the frame onto the callstack
 	PushFrame( frame );
 	PushScope( scope );
 	// jump to the function
 	ip = (byte*)(bp + f->addr);
-	size_t stack_size = stack.size();
-	if( stack_size < 0 )
+	if( stack.size() < 0 )
 		throw ICE( "Stack underflow." );
 	// clear the error state/object
 	if( is_error )
 		DecRef( error );
 	is_error = false;
-	// execute until it returns
-	ExecuteToReturn( is_destructor );
-	if( stack.size() != stack_size + 1 )
-		throw ICE( boost::format( "Function '%1%' corrupted the stack." ) % f->name );
+}
 
-	// if this is a module, pop the module scope and frame
-	// and restore the ip, bp and end ptrs
-	if( f->InModule() )
+void Executor::ExecuteFunctionToReturn( Function* f, int num_args, bool method_call_op, bool is_destructor /*= false*/ )
+{
+	size_t stack_depth = callstack.size();
+	ExecuteFunction( f, num_args, method_call_op, is_destructor );
+	// execute until the matching return
+	do
 	{
-		PopScope();
-		PopFrame();
+		ExecuteToReturn( is_destructor );
 	}
-	// restore the ip, bp, end ptrs
-	cur_code = orig_code;
-	end = orig_end;
-	bp = orig_bp;
-	ip = orig_ip;
-
-	recursion_counter--;
+	while( callstack.size() != stack_depth );
 }
 
 void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_call_op )
@@ -3998,6 +4015,7 @@ Object Executor::ImportModule( const char* module_name )
 	Scope* scope = new Scope( frame, false, true );
 	PushScope( scope );
 	Module* cur_module = AddModule( mod.c_str(), code, scope, frame );
+	mod_main->f->module = cur_module;
 
 	// currently importing 'mod', set the flag
 	Module* prev_mod = s_currently_importing_module;

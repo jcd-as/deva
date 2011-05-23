@@ -143,7 +143,7 @@ public:
 	inline Frame* MainFrame() { return callstack[0]; }
 
 	inline void PushFrame( Frame* f ) { callstack.push_back( f ); }
-	inline void PopFrame() { if( !callstack.back()->IsModule() ) delete callstack.back(); callstack.pop_back(); }
+	inline void PopFrame() { if( !callstack.back()->IsModule() ){ delete callstack.back(); } callstack.pop_back(); }
 
 	inline void PushScope( Scope* s ) { scopes->PushScope( s ); }
 	inline void PopScope() { scopes->PopScope(); }
@@ -245,6 +245,7 @@ public:
 	int ContinueExecution();
 	void ExecuteToReturn( bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
+	void ExecuteFunctionToReturn( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
 
 	// .dv file reading/writing

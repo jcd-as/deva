@@ -1,3 +1,11 @@
+import foo;
+foo.bar( "BAR" );
+def fcn( s )
+{
+	print( s );
+}
+fcn( "FOO" );
+
 #def foo( x )
 #{
 #	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }

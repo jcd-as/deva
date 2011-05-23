@@ -491,7 +491,7 @@ start:
 								break;
 							// 'step'
 							case 's':
-//								l = ex->StepInto();
+								l = ex->StepInto();
 								break;
 							// 'next instruction'
 							case 'i':
