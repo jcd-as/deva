@@ -1436,13 +1436,37 @@ void do_dir( Frame* frame )
 	switch( o->type )
 	{
 	case obj_map:
-	case obj_class:
-	case obj_instance:
 		{
 		// create a new map object that is a copy of the one we received,
 		Map* m = CreateMap( *(o->m) );
 		Object ret = Object( m );
 		IncRefChildren( ret );
+		helper.ReturnVal( ret );
+		}
+		break;
+	case obj_class:
+	case obj_instance:
+		{
+		// create a new map object that is a copy, with strings instead of
+		// symbol names
+		Map* m = CreateMap();
+		for( Map::iterator it = o->m->begin(); it != o->m->end(); ++it )
+		{
+			Object ob = it->second;
+			IncRef( ob );
+			if( it->first.type == obj_symbol_name || it->first.type == obj_string )
+			{
+				const char* name = frame->GetParent()->AddString( string( it->first.s ) );
+				m->insert( make_pair( Object( name ), ob ) );
+			}
+			else
+			{
+				Object ob1 = it->first;
+				IncRef( ob1 );
+				m->insert( make_pair( ob1, ob ) );
+			}
+		}
+		Object ret = Object( m );
 		helper.ReturnVal( ret );
 		}
 		break;

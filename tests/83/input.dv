@@ -1,0 +1,9 @@
+;;import foo;;
+foo.bar( "BAR" );
+def fcn( s )
+{;;
+;;;	print( s );;
+;;}
+;
+;fcn( "FOO" );;
+;

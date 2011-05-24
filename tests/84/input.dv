@@ -1,0 +1,24 @@
+import foo;
+
+local f = lambda(mod){ return mod.C; };
+class A : f(foo)
+{
+	def goo(){}
+}
+class B : foo.C
+{
+	def jam(){}
+}
+local a = A();
+local b = B();
+print( "a: " + type( a ) );
+for( i,j in dir( a ) )
+{
+	print( i );
+}
+print( "b: " + type( b ) );
+for( i,j in dir( b ) )
+{
+	print( i );
+}
+
