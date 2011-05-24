@@ -1,3 +1,4 @@
+
 #def foo( x )
 #{
 #	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }

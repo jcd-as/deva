@@ -1237,7 +1237,7 @@ Opcode Executor::ExecuteInstruction()
 			Object base = stack.back();
 			stack.pop_back();
 			if( base.type != obj_class )
-				throw ICE( "Base class expected. Bad code gen? Corrupt stack?" );
+				throw RuntimeException( "Base class expected." );
 			// don't dec ref the base class here, because we're adding it to our
 			// bases vector, which is another ref on it
 

@@ -45,6 +45,7 @@
 #include "vector_builtins.h"
 #include "map_builtins.h"
 #include "code.h"
+#include "breakpoint.h"
 
 #include <vector>
 #include <set>
@@ -103,7 +104,7 @@ class Executor
 	// list of possible module names (from compilation)
 	set<string> module_names;
 
-	// modules that have been imported
+	// modules that have been imported or loaded
 	map<string, Object> modules;
 
 	// load-ordered list (stack) of modules
@@ -118,6 +119,10 @@ class Executor
 	// set of constants (including all names)
 	vector<Object> constants;
 	set<Object> constants_set;
+
+	// breakpoints
+	vector<Breakpoint> breakpoints;
+	Breakpoint temporary_breakpoint;
 
 	// error flag
 	bool is_error;
@@ -247,6 +252,12 @@ public:
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunctionToReturn( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
+
+	// breakpoint handling
+	vector<Breakpoint> GetBreakpoints() { return breakpoints; }
+//	void SetBreakpoint( const char* filename, int line );
+//	void SetBreakpoint( const char* function );
+//	void SetBreakpointAtNextLine();
 
 	// .dv file reading/writing
 	void WriteCode( string filename, const Code* const code );

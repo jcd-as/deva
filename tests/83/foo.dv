@@ -1,0 +1,11 @@
+def bar( s )
+{
+	print( s );
+}
+class C
+{
+	def new()
+	{
+		print( "foo.C" );
+	}
+}
