@@ -345,6 +345,7 @@ int main( int argc, char** argv )
 		string out_fname = fname + "c";
 
 		ex = new Executor();
+		ex->stop_at_breakpoints = true;
 
 		// compile the file
 		PassOneFlags p1flags;
@@ -388,7 +389,7 @@ int main( int argc, char** argv )
 		el_set( el, EL_HIST, history, hist );
 
 		// for saving/re-loading breakpoints between restarts
-		vector<pair<string, int> > breakpoints;
+		vector<Breakpoint> breakpoints;
 
 		cout << "devadb " << DEVA_VERSION << endl;
 re_start:
@@ -403,6 +404,7 @@ start:
 				if( !ex )
 				{
 					ex = new Executor();
+					ex->stop_at_breakpoints = true;
 					// add the code block
 					code = ex->ReadCode( out_fname );
 					ex->AddCode( code );
@@ -419,7 +421,7 @@ start:
 				// if we have saved breakpoints, re-load them
 				for( size_t i = 0; i < breakpoints.size(); ++i )
 				{
-//					ex->AddBreakpoint( breakpoints[i].first, breakpoints[i].second );
+					ex->SetBreakpoint( breakpoints[i].filename, breakpoints[i].line );
 				}
 
 				// run
@@ -435,7 +437,7 @@ start:
 					int chars_read;
 					const char* cstr_in;
 					vector<string> in;
-					int l = 1;
+					int l = code->lines->FindLine( 0 );
 					bool done = false;
 					while( !done )
 					{
@@ -487,7 +489,13 @@ start:
 								break;
 							// 'next'
 							case 'n':
-								l = ex->StepOver();
+								{
+								string file = GetExecutingFile();
+								if( files.find( file ) == files.end() )
+									ReadFile( file.c_str(), files[file] );
+								int end = files[file].size();
+								l = ex->StepOver( l, end );
+								}
 								break;
 							// 'step'
 							case 's':
@@ -557,47 +565,58 @@ start:
 							// 'breakpoint':
 							case 'b':
 								// verify there are sufficient args
-//								if( in.size() == 1 )
-//								{
-//									// no args: add a breakpoint on the current file & line
-//									ex->AddBreakpoint( GetExecutingFile(), l );
-//									break;
-//								}
-//								else if( in.size() == 2 )
-//								{
-//									// only one arg. is it a number? try to use
-//									// it as a line number to set a bp in the
-//									// current file
-//									ex->AddBreakpoint( GetExecutingFile(), atoi( in[1].c_str() ) );
-//									break;
-//								}
-//								else if( in.size() < 3 )
-//								{
-//									cout << "add breakpoint command requires filename and line number." << endl;
-//									break;
-//								}
-//								ex->AddBreakpoint( in[1], atoi( in[2].c_str() ) );
+								if( in.size() == 1 )
+								{
+									// no args: add a breakpoint on the current file & line
+									if( !ex->SetBreakpoint( GetExecutingFile(), l ) )
+										cout << "No valid code for breakpoint at this location" << endl;
+									break;
+								}
+								else if( in.size() == 2 )
+								{
+									// TODO: accept function names
+									//
+									// only one arg. is it a number? try to use
+									// it as a line number to set a bp in the
+									// current file
+									if( !ex->SetBreakpoint( GetExecutingFile(), atoi( in[1].c_str() ) ) )
+										cout << "No valid code for breakpoint at this location" << endl;
+									break;
+								}
+								else if( in.size() > 3 )
+								{
+									cout << "Invalid arguments. Syntax: 'breakpoint [file] [line]'" << endl;
+									break;
+								}
+								if( !ex->SetBreakpoint( in[1], atoi( in[2].c_str() ) ) )
+									cout << "No valid code for breakpoint at this location" << endl;
 								break;
 							// 'delete breakpoint':
 							case 'd':
-//								if( in.size() < 2 )
-//								{
-//									cout << "delete breakpoint command requires index of breakpoint to remove." << endl;
-//									break;
-//								}
-//								ex->RemoveBreakpoint( atoi( in[1].c_str() ) );
+								if( in.size() < 2 )
+								{
+									cout << "delete breakpoint command requires index of breakpoint to remove." << endl;
+									break;
+								}
+								ex->RemoveBreakpoint( atoi( in[1].c_str() ) );
 								break;
 							// 'display breakpoints':
 							case 'y':
-//								{
-//								vector<pair<string, int> > bpoints = ex->GetBreakpoints();
-//								cout << "breakpoints:" << endl;
-//								for( int i = 0; i < bpoints.size(); ++i )
-//								{
-//									cout << i << ": " << bpoints[i].first << ", line " << bpoints[i].second << endl;
-//								}
-//								break;
-//								}
+								{
+								vector<Breakpoint> bpoints = ex->GetBreakpoints();
+								if( bpoints.size() == 0 )
+									cout << "no breakpoints set" << endl;
+								else
+								{
+									cout << "breakpoints:" << endl;
+									for( size_t i = 0; i < bpoints.size(); ++i )
+									{
+										Breakpoint bp = bpoints[i];
+										cout << i << ": " << bp.filename << ", line " << bp.line << (bp.is_active ? ", active" : ", inactive") << endl;
+									}
+								}
+								break;
+								}
 								break;
 							// 'list' code:
 							case 'l':
@@ -685,11 +704,9 @@ start:
 						break;
 				}
 
-//				ex->EndGlobalScope();
-
 				// save breakpoints
 				breakpoints.clear();
-//				breakpoints = ex->GetBreakpoints();
+				breakpoints = ex->GetBreakpoints();
 
 
 				ex->End();
@@ -728,7 +745,7 @@ start:
 
 				// save breakpoints
 				breakpoints.clear();
-//				breakpoints = ex->GetBreakpoints();
+				breakpoints = ex->GetBreakpoints();
 
 				// restart
 				goto re_start;

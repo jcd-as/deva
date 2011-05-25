@@ -277,48 +277,91 @@ void do_print( Frame* frame )
 {
 	BuiltinHelper helper( NULL, "print", frame );
 
-	helper.CheckNumberOfArguments( 1, 2 );
+	helper.CheckNumberOfArguments( 0, 2 );
 
 	int args_passed = frame->NumArgsPassed();
 
-	const char *separator;
-	if( args_passed == 1 )
-		separator = "\n";
-	else if( args_passed == 2 )
-	{
-		Object* sep = helper.GetLocalN( 1 );
-		helper.ExpectType( sep, obj_string );
-		separator = sep->s;
-	}
-	Object* o = helper.GetLocalN( 0 );
-
+	Object* o = NULL;
+	Object* sep = NULL;
+	string separator;
 	string s;
-	// if this is an instance object, see if there is a 'repr' method
-	// and use the string returned from it, if it exists
-	if( o->type == obj_instance )
+	if( args_passed == 0 )
 	{
-		Map::iterator it = o->m->find( Object( obj_symbol_name, "repr" ) );
-		if( it != o->m->end() )
+		separator = "\n";
+		s = "";
+	}
+	else
+	{
+		if( args_passed == 1 )
+			separator = "\n";
+		else if( args_passed == 2 )
 		{
-			if( it->second.type == obj_function )
+			sep = helper.GetLocalN( 1 );
+		}
+		o = helper.GetLocalN( 0 );
+	}
+
+	// get the string for the separator object
+	if( sep )
+	{
+		// if this is an instance object, see if there is a 'repr' method
+		// and use the string returned from it, if it exists
+		if( sep->type == obj_instance )
+		{
+			Map::iterator it = sep->m->find( Object( obj_symbol_name, "repr" ) );
+			if( it != sep->m->end() )
 			{
-				// push the object ("self")
-				IncRef( *o );
-				ex->PushStack( *o );
-				// call the function (takes no args)
-				ex->ExecuteFunctionToReturn( it->second.f, 0, true );
-				// get the result (return value)
-				Object retval = ex->PopStack();
-				if( retval.type != obj_string )
-					throw RuntimeException( "The 'repr' method on a class did not return a string value." );
-				s = retval.s;
+				if( it->second.type == obj_function )
+				{
+					// push the object ("self")
+					IncRef( *sep );
+					ex->PushStack( *sep );
+					// call the function (takes no args)
+					ex->ExecuteFunctionToReturn( it->second.f, 0, true );
+					// get the result (return value)
+					Object retval = ex->PopStack();
+					if( retval.type != obj_string )
+						throw RuntimeException( "The 'repr' method on a class did not return a string value." );
+					separator = retval.s;
+				}
 			}
+			else
+				separator = obj_to_str( sep );
+		}
+		else
+			separator = obj_to_str( sep );
+	}
+
+	// get the string for the input object
+	if( o )
+	{
+		// if this is an instance object, see if there is a 'repr' method
+		// and use the string returned from it, if it exists
+		if( o->type == obj_instance )
+		{
+			Map::iterator it = o->m->find( Object( obj_symbol_name, "repr" ) );
+			if( it != o->m->end() )
+			{
+				if( it->second.type == obj_function )
+				{
+					// push the object ("self")
+					IncRef( *o );
+					ex->PushStack( *o );
+					// call the function (takes no args)
+					ex->ExecuteFunctionToReturn( it->second.f, 0, true );
+					// get the result (return value)
+					Object retval = ex->PopStack();
+					if( retval.type != obj_string )
+						throw RuntimeException( "The 'repr' method on a class did not return a string value." );
+					s = retval.s;
+				}
+			}
+			else
+				s = obj_to_str( o );
 		}
 		else
 			s = obj_to_str( o );
 	}
-	else
-		s = obj_to_str( o );
 
 	cout << s << separator;
 

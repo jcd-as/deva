@@ -39,6 +39,7 @@ class Module;
 
 struct Breakpoint
 {
+	string filename;
 	bool is_valid;
 	bool is_active;
 	Module* module;
@@ -46,7 +47,7 @@ struct Breakpoint
 	byte* location;
 
 	Breakpoint() : is_valid( false ), is_active( false ), module( NULL ), line( -1 ), location( NULL ) { }
-	Breakpoint( Module* mod, int l, byte* loc ) : is_valid( true ), is_active( false ), module( mod ), line (l ), location( loc ) { }
+	Breakpoint( string fn, Module* mod, int l, byte* loc ) : filename( fn ), is_valid( true ), is_active( false ), module( mod ), line (l ), location( loc ) { }
 
 	void Activate() { is_active = true; }
 	void Deactivate() { is_active = false; }

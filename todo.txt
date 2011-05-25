@@ -1,5 +1,7 @@
 TODO 2011-04-07 @deva +veryhigh implement devadb (debugger)
 
+TODO 2011-05-24 @deva +veryhigh devash: calling print on an instance with a repr() method causes ICE (works properly when called from deva)
+
 TODO 2011-05-18 @deva +veryhigh StepOver sometimes ends up with a line number of 0 (which doesn't exist)... after stepping over a native fcn call??
 
 TODO 2011-05-22 @deva +veryhigh organize & doc/comment headers, particularly executor.h 

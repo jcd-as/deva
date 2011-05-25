@@ -520,34 +520,8 @@ void Executor::Execute( const Code* const code )
 // returns the line number stopped at, or -1 if it reached a 'halt'
 int Executor::ExecuteCode()
 {
-//	if( code_blocks.size() == 0 )
-//		throw ICE( "No code blocks to execute." );
-//	Code* code = (Code*)code_blocks.back();
-//
-//	Opcode op = op_nop;
-//
-//	// set the ip, bp and end 
-//	cur_code = (Code*)code;
-//	end = code->code + code->len;
-//	bp = code->code;
-//	ip = bp;
-
 	BeginExecution();
 	return ContinueExecution();
-
-	// execute until end or break
-//	while( ip < end && op < op_breakpoint )
-//	{
-//		op = ExecuteInstruction();
-//	}
-//	if( op == op_halt )
-//		return -1;
-//	else
-//	{
-//		size_t loc = ip - code->code;
-//		dword line = code->lines->FindLine( loc );
-//		return (int)line;
-//	}
 }
 
 void Executor::BeginExecution()
@@ -582,11 +556,61 @@ int Executor::ContinueExecution()
 	}
 }
 
-// TODO: implement!!
-// (set the temporary breakpoint to the next available line in the current file)
-int Executor::StepOver()
+int Executor::StepOver( int line, int max_line )
 {
-	return -1;
+	Opcode op = op_nop;
+
+	size_t loc = ip - cur_code->code;
+	dword start = cur_code->lines->FindLine( loc );
+	Code* start_code = cur_code;
+
+	byte* return_addr = 0;
+
+	bool last_op_was_bp = false;
+	bool sab = stop_at_breakpoints;
+
+	// keep executing instructions until we reach the next line,
+	// skipping calls
+	while( true )
+	{
+		while( ip < end && op < op_breakpoint )
+		{
+			if( last_op_was_bp )
+				stop_at_breakpoints = false;
+
+			byte* old_ip = ip;
+			op = SkipInstruction();
+			if( (op == op_call || op == op_call_method ) && return_addr == 0 )
+				return_addr = ip;
+
+			ip = old_ip;
+			op = ExecuteInstruction();
+			if( return_addr == ip )
+				return_addr = 0;
+
+			stop_at_breakpoints = sab;
+
+			if( op == op_breakpoint )
+			{
+				op = op_nop;
+				last_op_was_bp = true;
+			}
+
+			size_t loc = ip - cur_code->code;
+			dword line = cur_code->lines->FindLine( loc );
+			if( return_addr == 0 && cur_code == start_code && line != start )
+				return (int)line;
+		}
+		if( op == op_halt )
+			return -1;
+		else
+		{
+			size_t loc = ip - cur_code->code;
+			dword line = cur_code->lines->FindLine( loc );
+			if( return_addr == 0 && cur_code == start_code && line != start )
+				return (int)line;
+		}
+	}
 }
 
 int Executor::StepInto()
@@ -596,13 +620,24 @@ int Executor::StepInto()
 	size_t loc = ip - cur_code->code;
 	dword start = cur_code->lines->FindLine( loc );
 
-	// keep executing instructions until we reach the next line,
-	// skipping calls
+	bool last_op_was_bp = false;
+	bool sab = stop_at_breakpoints;
+
+	// keep executing instructions until we reach the next line
 	while( true )
 	{
 		while( ip < end && op < op_breakpoint )
 		{
+			if( last_op_was_bp )
+				stop_at_breakpoints = false;
 			op = ExecuteInstruction();
+			stop_at_breakpoints = sab;
+
+			if( op == op_breakpoint )
+			{
+				op = op_nop;
+				last_op_was_bp = true;
+			}
 
 			size_t loc = ip - cur_code->code;
 			dword line = cur_code->lines->FindLine( loc );
@@ -656,7 +691,10 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 
 	// execute
 	AddCode( code );
+	bool sab = stop_at_breakpoints;
+	stop_at_breakpoints = false;
 	ExecuteCode();
+	stop_at_breakpoints = sab;
 	
 	// no longer importing this module, reset the flag
 	s_currently_importing_module = prev_mod;
@@ -690,18 +728,23 @@ Object Executor::ExecuteText( const char* const text, bool global /*= false*/, b
 	return Object( cur_module );
 }
 
-void Executor::ExecuteToReturn( bool is_destructor /*= false*/ )
+Opcode Executor::ExecuteToReturn( bool skip_breakpoints /*= false*/, bool is_destructor /*= false*/ )
 {
 	Opcode op = op_nop;
 
 	// execute until return
 	while( op != op_return )
 	{
+		bool sab = stop_at_breakpoints;
+		if( skip_breakpoints )
+			stop_at_breakpoints = false;
 		op = ExecuteInstruction();
+		stop_at_breakpoints = sab;
 		// if end, error, unless this is a destructor
 		if( !is_destructor && (ip >= end || op == op_halt ) )
 			throw ICE( "End of code encountered before function returned." );
 	}
+	return op;
 }
 
 // helper for slicing vectors in steps (see vector_builtins.cpp for fcn def)
@@ -729,6 +772,18 @@ Opcode Executor::ExecuteInstruction()
 		PrintOpcode( op, bp, ip );
 		// print the top five stack items
 		DumpStackTop();
+	}
+
+	// breakpoint??
+	if( stop_at_breakpoints )
+	{
+		if( temporary_breakpoint.is_active && temporary_breakpoint.location == ip + 1 )
+			return op_breakpoint;
+		for( vector<Breakpoint>::iterator i = breakpoints.begin(); i != breakpoints.end(); ++i )
+		{
+			if( i->is_active && i->location == ip + 1 )
+				return op_breakpoint;
+		}
 	}
 
 	ip++;
@@ -3668,7 +3723,7 @@ void Executor::ExecuteFunctionToReturn( Function* f, int num_args, bool method_c
 	// execute until the matching return
 	do
 	{
-		ExecuteToReturn( is_destructor );
+		ExecuteToReturn( true, is_destructor );
 	}
 	while( callstack.size() != stack_depth );
 }
@@ -3746,6 +3801,80 @@ void Executor::ExecuteFunction( NativeFunction nf, int num_args, bool method_cal
 	PopFrame();
 
 	recursion_counter--;
+}
+
+// breakpoints
+bool Executor::SetBreakpoint( string filename, int line )
+{
+	Module* mod = NULL;
+
+	// find the module with this filename
+	if( strcmp( filename.c_str(), current_file ) == 0 )
+	{
+		mod = main_module;
+	}
+	else
+	{
+		for( map<string, Object>::iterator i = modules.begin(); i != modules.end(); ++i )
+		{
+			string fn( i->first );
+			if( fn[0] == '[' )
+				break;
+			fn += ".dv";
+			if( fn == filename )
+			{
+				mod = i->second.mod;
+				break;
+			}
+		}
+	}
+	if( !mod )
+		return false;
+
+	// find this location (address) in the line map
+	dword loc = mod->code->lines->FindAddress( line );
+	if( loc == LineMap::end )
+		return false;
+
+	Breakpoint bp( filename, mod, line, (byte*)(mod->code->code + loc) );
+	bp.Activate();
+	breakpoints.push_back( bp );
+
+	return true;
+}
+
+bool Executor::SetBreakpoint( const char* function )
+{
+	Module* mod = NULL;
+
+	// TODO: 
+	// - specify by module??
+	// - this locates the first function of this name, but if it is a native fcn
+	// or class, returns false instead of looking further...
+
+	// find this function
+	Object* o = scopes->FindFunction( function );
+	if( !o )
+		return false;
+
+	if( o->type != obj_function )
+		return false;
+
+	Function* f = o->f;
+
+	// get the line number
+	int line = f->first_line;
+
+	// find this location (address ) in the line map
+	dword loc = f->module->code->lines->FindAddress( line );
+	if( loc == LineMap::end )
+		return false;
+
+	Breakpoint bp( f->filename, mod, line, (byte*)(mod->code->code + loc) );
+	bp.Activate();
+	breakpoints.push_back( bp );
+
+	return true;
 }
 
 void Executor::SetError( Object* err )

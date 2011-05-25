@@ -245,19 +245,20 @@ public:
 	Opcode SkipInstruction();
 	Opcode ExecuteInstruction();
 	void BeginExecution();
-	int StepOver();
+	int StepOver( int line, int max_line );
 	int StepInto();
 	int ContinueExecution();
-	void ExecuteToReturn( bool is_destructor = false );
+	Opcode ExecuteToReturn( bool skip_breakpoints, bool is_destructor = false );
 	void ExecuteFunction( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunctionToReturn( Function* f, int num_args, bool method_call_op, bool is_destructor = false );
 	void ExecuteFunction( NativeFunction f, int num_args, bool method_call_op );
 
 	// breakpoint handling
 	vector<Breakpoint> GetBreakpoints() { return breakpoints; }
-//	void SetBreakpoint( const char* filename, int line );
-//	void SetBreakpoint( const char* function );
-//	void SetBreakpointAtNextLine();
+	void AddBreakpoint( Breakpoint bp ) { breakpoints.push_back( bp ); }
+	void RemoveBreakpoint( size_t idx ) { breakpoints.erase( breakpoints.begin() + idx ); }
+	bool SetBreakpoint( string filename, int line );
+	bool SetBreakpoint( const char* function );
 
 	// .dv file reading/writing
 	void WriteCode( string filename, const Code* const code );
@@ -283,6 +284,8 @@ private:
 public:
 	Object ImportModule( const char* module_name );
 
+	// get the current code block
+	Code* GetCode() { return cur_code; }
 	// get the code block corresponding to a particular address
 	Code* GetCode( byte* address );
 

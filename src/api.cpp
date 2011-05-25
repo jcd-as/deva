@@ -40,7 +40,6 @@ namespace deva
 /////////////////////////////////////////////////////////////////////////////
 
 // global object to track current filename
-//const char* deva::current_file = NULL;
 const char* current_file = NULL;
 
 // global to enable tracing refcounts

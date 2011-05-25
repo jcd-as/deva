@@ -1,11 +1,23 @@
+def foo( x )
+{
+	def bar()
+	{
+		extern x;
+		if( x < 4 )
+			print( "BAR!" );
+	}
+	bar();
+}
+for( i in range( 0, 10 ) )
+	foo( i );
 
-#def foo( x )
+# BUG: this works if run via deva, but does NOT work inside devash
+#class C
 #{
-#	def bar(){ extern x; if( x < 4 ) print( "BAR!" ); }
-#	bar();
+#	def repr(){ return "class C"; }
 #}
-#for( i in range( 0, 10 ) )
-#	foo( i );
+#local c = C();
+#print( c );
 
 #def recur( n )
 #{
