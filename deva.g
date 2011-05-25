@@ -43,6 +43,8 @@ tokens
 	IncExp;				// increment _expression_
 	DecStat;			// decrement _statement_
 	DecExp;				// decrement _expression_
+
+	Dummy;				// dummy val - used to make jump statments have children to force line numbers
 	
 	NULLVAL = 'null';
 }
@@ -161,16 +163,16 @@ jump_statement
 	;
 
 break_statement 
-	:	'break' ';'											-> Break
+	:	brk='break' ';'										-> Break[$brk, "Break"] 
 	;
 
 continue_statement 
-	:	'continue' ';'										->Continue
+	:	con='continue' ';'									-> Continue[$con, "Continue"]
 	;
 
 return_statement 
 	:	'return' logical_exp ';'							-> ^(Return logical_exp)
-	|	'return' ';'										-> Return
+	|	ret='return' ';'									-> Return[$ret, "Return"]
 	;
 		
 assign_statement
@@ -296,7 +298,7 @@ map_item
 
 // vector construction op
 vec_op 
-	:	'[' (exp (',' exp)*)? ']' 							-> ^( Vec_init exp*)
+	:	'[' (exp (',' exp)*)? ']' 							-> ^(Vec_init exp*)
 	;
 
 module_name 
@@ -309,7 +311,7 @@ value
 
 default_arg_val
 	:	value | ID
-	|	'-' NUMBER											->^(Negate NUMBER)
+	|	'-' NUMBER											-> ^(Negate NUMBER)
 		;
 	
 atom
