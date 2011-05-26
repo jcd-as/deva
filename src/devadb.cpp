@@ -520,47 +520,56 @@ start:
 								break;
 							// 'print'
 							case 'p':
-//								{
-//								// verify there are sufficient args
-//								if( in.size() < 2 )
-//								{
-//									cout << "print command requires variable name or expression." << endl;
-//									break;
-//								}
-//								// if not a simple variable, eval the args and try printing the result
-//								Object* v = ex->find_symbol( Object( in[1].c_str(), sym_unknown ) );
-//								if( !v )
-//								{
-//									// strip the command off the input
-//									size_t idx = input.find( ' ' );
-//									string code( input, idx );
-//									code = string( "print( " ) + code + string( " );" );
-//									int stack_depth = ex->stack.size();
-//									// execute the rest as code
-//									char* s = new char[code.length() + 1];
-//									s[code.length()] = '\0';
-//									memcpy( s, code.c_str(), code.length() );
-//									try
-//									{
-//										ex->RunText( s );
-//									}
-//									catch( RuntimeException & e )
-//									{
-//										if( typeid( e ) == typeid( ICE ) )
-//											throw;
-//										cout << "Error: " << e.what() << endl;
-//										cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
-//									}
-//								}
-//								// otherwise, it is a simple var, just print it
-//								else
-//								{
-//									if( v->Type() == sym_string )
-//										cout << "'" << *v << "'" << endl;
-//									else
-//										cout << *v << endl;
-//								}
-//								}
+								{
+								// verify there are sufficient args
+								if( in.size() < 2 )
+								{
+									cout << "print command requires variable name or expression." << endl;
+									break;
+								}
+								// if not a simple variable, eval the args and try printing the result
+								Object sym( obj_symbol_name, in[1].c_str() );
+								Object* v = ex->FindSymbolInAnyScope( sym );
+								if( !v )
+								{
+									// strip the command off the input
+									size_t idx = input.find( ' ' );
+									string code( input, idx );
+									code = string( "print( " ) + code + string( " );" );
+									// execute the rest as code
+									char* s = new char[code.length() + 1];
+									s[code.length()] = '\0';
+									memcpy( s, code.c_str(), code.length() );
+									try
+									{
+										// TODO: this doesn't work so well since
+										// code is evaluated in a separate
+										// anonymous module and can't access the 
+										// constants from the current scope etc etc)
+										ex->ExecuteText( s, false, true );
+									}
+									catch( SemanticException & e )
+									{
+										cout << "Error: " << e.what() << endl;
+										cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
+									}
+									catch( RuntimeException & e )
+									{
+										if( typeid( e ) == typeid( ICE ) )
+											throw;
+										cout << "Error: " << e.what() << endl;
+										cout << "Cannot evaluate '" << string( input, idx ) << "'." << endl;
+									}
+								}
+								// otherwise, it is a simple var, just print it
+								else
+								{
+									if( v->type == obj_string )
+										cout << "'" << *v << "'" << endl;
+									else
+										cout << *v << endl;
+								}
+								}
 								break;
 							// 'breakpoint':
 							case 'b':

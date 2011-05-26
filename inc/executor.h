@@ -168,11 +168,13 @@ private:
 
 	Object* FindSymbolInGlobalModules( const char* const name );
 
+public:
 	// find a symbol in all current scopes, fcns, builtins, modules etc
 	Object* FindSymbolInAnyScope( Object sym );
 	// return a resolved symbol (find the symbol if 'sym' is a obj_symbol_name)
 	Object ResolveSymbol( Object sym );
 
+private:
 	Module* AddModule( const char* name, const Code* c, Scope* s, Frame* f, bool global = false );
 	Object* GetModule( const char* const name );
 	const char* const GetModuleName( const char* const name );

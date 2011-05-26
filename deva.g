@@ -269,7 +269,6 @@ primary_exp
 		|	indices=key_exp									-> ^(Key $primary_exp $indices	)
 		|	'.' id=ID										-> ^(DOT_OP $primary_exp $id)
 		)*
-		|	value
 	;
 
 arg_list_exp
@@ -318,6 +317,7 @@ atom
 	:	ID '++' 											-> ^(IncExp ID)
 	|	ID '--' 											-> ^(DecExp ID)
 	|	ID
+	|	value
 	| 	'('! exp ')'!
 	;
 

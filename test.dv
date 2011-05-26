@@ -1,15 +1,19 @@
-def foo( x )
-{
-	def bar()
-	{
-		extern x;
-		if( x < 4 )
-			print( "BAR!" );
-	}
-	bar();
-}
-for( i in range( 0, 10 ) )
-	foo( i );
+local n = (5 + 5);
+local s = ("ten is %d").format([n]);
+print( s );
+
+#def foo( x )
+#{
+#	def bar()
+#	{
+#		extern x;
+#		if( x < 4 )
+#			print( "BAR!" );
+#	}
+#	bar();
+#}
+#for( i in range( 0, 10 ) )
+#	foo( i );
 
 # BUG: this works if run via deva, but does NOT work inside devash
 #class C
