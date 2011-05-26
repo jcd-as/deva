@@ -1,0 +1,27 @@
+# test some permutations of using vectors/maps as lhs of '.', '()' and '[]'
+# test passing a non-vector arg to format and string format (for single
+# replacement value format strings)
+print( "foo"[1] );
+local n = (5 + 5);
+local s = "ten is %d".format([n]);
+print( s );
+print( "twenty is %i".format( 20 ) );
+print( format( "thirty is %i", 30 ) );
+print( [0,1].filter( lambda(n){ return n > 0; } ) );
+print( [0,1,2,3,4][1+1:3] );
+print( [0,1,2,3,4][1:$] );
+print( {"a":0, "b":1, "c":2}["b"] );
+print( {"a":0, "b":1, "c":2}.c );
+
+[0, lambda(){ print("foo"); }, 2][1]();
+# the () surrounding the map are needed because otherwise the parser will think
+# that it is a code block (it would work without them if it were in a context
+# where a block wasn't allowed, like as a fcn arg)
+({"a":0, "b":lambda(){ print("bar"); }, "c":2}["b"]());
+({"a":0, "b":lambda(){ print("bar"); }, "c":2})["b"]();
+
+# expressions besides variables and simple values (which incl maps/vectors) must be
+# wrapped in '()' to parse:
+(lambda(){ print( "goo" ); })();
+
+

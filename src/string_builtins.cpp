@@ -1094,17 +1094,26 @@ void do_string_format( Frame *frame )
 	Object* self = helper.GetLocalN( 0 );
 	helper.ExpectType( self, obj_string );
 	Object* args = helper.GetLocalN( 1 );
-	helper.ExpectType( args, obj_vector );
 
 	// format the string using boost's format library
 	boost::format formatter;
+	const char* ret;
 	try
 	{
 		formatter = boost::format( self->s );
-		for( Vector::iterator i = args->v->begin(); i != args->v->end(); ++i )
+		if( args->type == obj_vector )
 		{
-			formatter % *i;
+			for( Vector::iterator i = args->v->begin(); i != args->v->end(); ++i )
+			{
+				formatter % *i;
+			}
 		}
+		else
+		{
+			formatter % *args;
+		}
+
+		ret = frame->GetParent()->AddString( boost::str( formatter ) );
 	}
 	catch( boost::io::bad_format_string & e )
 	{
@@ -1118,8 +1127,6 @@ void do_string_format( Frame *frame )
 	{
 		throw RuntimeException( "The format of the string in string built-in method 'format' referred to more parameters than were passed in the parameter vector." );
 	}
-
-	const char* ret = frame->GetParent()->AddString( boost::str( formatter ) );
 
 	helper.ReturnVal( Object( ret ) );
 }
