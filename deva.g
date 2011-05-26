@@ -237,7 +237,6 @@ new_decl
 
 logical_exp 
 	:	relational_exp (logical_op^ relational_exp)*
-	|	(map_op | vec_op)
 	;
 
 relational_exp 
@@ -318,6 +317,7 @@ atom
 	|	ID '--' 											-> ^(DecExp ID)
 	|	ID
 	|	value
+	|	(map_op | vec_op)
 	| 	'('! exp ')'!
 	;
 

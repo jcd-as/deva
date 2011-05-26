@@ -1993,7 +1993,14 @@ Opcode Executor::ExecuteInstruction()
 				throw RuntimeException( "Object must have a 'call' method in order to be used as a function." );
 		}
 		else
-			throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % callable );
+		{
+			if( callable.type == obj_vector )
+				throw RuntimeException( "Object of type 'vector' is not a callable object." );
+			else if( callable.type == obj_map )
+				throw RuntimeException( "Object of type 'map' is not a callable object." );
+			else
+				throw RuntimeException( boost::format( "Object '%1%' is not a function." ) % callable );
+		}
 		}
 		break;
 	case op_return:
