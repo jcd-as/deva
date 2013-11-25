@@ -1,9 +1,0 @@
-# test eval
-eval( "def foo(){ print( \"foo\" ); }" );
-foo();
-def bar()
-{
-	s = "bar";
-	print( s );
-}
-eval( "bar();" );

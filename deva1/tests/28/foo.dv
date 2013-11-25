@@ -1,8 +1,0 @@
-def modulefcn()
-{
-	print( "foo.dv imported and foofcn() called!" );	
-}
-def foofcn()
-{
-	modulefcn();
-}

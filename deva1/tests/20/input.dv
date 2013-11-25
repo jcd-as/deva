@@ -1,9 +1,0 @@
-a = {};
-a["a"] = "A";
-a["b"] = "B";
-a["c"] = "C";
-a["d"] = "D";
-for( key,val in a )
-{
-	print( key + " : " + val );
-}

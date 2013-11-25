@@ -1,2 +1,0 @@
-# test compile check for non-"simple types" in chained assignment
-x = y = m.a = z;

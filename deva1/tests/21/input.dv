@@ -1,9 +1,0 @@
-def foo()
-{
-	print( "foo" );
-}
-a = {};
-#a.b = foo;
-a["b"] = foo;
-a.b();
-

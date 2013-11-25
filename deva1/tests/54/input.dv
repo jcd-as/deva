@@ -1,7 +1,0 @@
-# test string formatting
-d = 3.14159;
-s = "foobar";
-i = 32;
-fmt = "%+012d : %s : %i";
-print( fmt.format(  [d, s, i ] ) );
-print( format( "%+012d : %s : %i", [d, s, i ] ) );
